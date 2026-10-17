@@ -75,7 +75,9 @@ Unlike commercial e-readers (Kindle, Boox, reMarkable) that are locked behind cl
 ```
 /Users/raymondluong/dev/solardeck/
 ├── README.md                  <- Master architectural overview
+├── AGENTS.md                  <- Developer, AI agent, and hardware safety rules
 └── docs/
+    ├── MVP_ARCHITECTURE.md    <- Core MVP vs Modular Packs, anti-bricking, audio, power profiles
     ├── HARDWARE_SPEC.md       <- Complete schematic, pinout, and component documentation
     ├── SOFTWARE_SPEC.md       <- Linux kernel, E-ink waveform drivers, power profiles & apps
     └── BOM_COST_ESTIMATE.md   <- Bill of Materials, supplier links, and manufacturing breakdown
