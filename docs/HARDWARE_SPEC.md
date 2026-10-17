@@ -71,7 +71,7 @@ Detailed hardware architecture, component selection, bus topology, and electrica
 
 ### 2.3 Power Subsystem & Ambient Solar
 * **Battery Chemistry:** **LiFePO4 (Lithium Iron Phosphate)** 3.2V nominal, 3.65V peak.
-  * Capacity: 6,000 mAh to 8,000 mAh (19.2 to 25.6 Watt-hours).
+  * Capacity: 10,000 mAh (32 Watt-hours) 1S2P prismatic pack (safe to 65°C / 149°F, airline-compliant <100Wh).
   * Safe Operating Temperature: **-10°C to +65°C (14°F to 149°F)** with zero risk of thermal runaway.
   * Cycle Life: 3,000 to 5,000 full discharge cycles to 80% health.
 * **Solar Charge Controller:** Texas Instruments **BQ25895** or **BQ24650** Synchronous MPPT Buck Charger.

@@ -36,7 +36,7 @@ Written 2026-10-17 07:58 UTC in the Pi harness by antigravity/gemini-3.8-flash
     │   └── keyboard/          # ZMK / QMK keyboard firmware for nRF52840
     └── src/
         ├── drivers/           # Custom IT8951 LUTs, DRM/KMS patches
-        └── daemons/           # eink-refreshd, solar gesture listener, Horary/Zhen Tai Yang Shi
+        └── daemons/           # eink-refreshd, solar gesture listener, ambient-dashboard-daemon
 ```
 
 ---

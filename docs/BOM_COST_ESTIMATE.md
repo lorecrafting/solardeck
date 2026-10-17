@@ -14,7 +14,7 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **Display Panel** | 10.3" E-Ink Kaleido 3 (Color) + Capacitive Touch + Wacom EMR Layer | Waveshare / Good-Display / AliExpress | ED103TC2 / GDEW103W32 | $95.00 – $120.00 |
 | **Controller** | Electronic Paper Display Controller (EPDC) | Waveshare / ITE | IT8951 Board / IC | $18.00 |
 | **Stylus** | Wacom EMR Passive Stylus with Eraser | Amazon / B&H | Staedtler Noris Digital or Lamy AL-star | $28.00 |
-| **Battery** | 6,400 mAh 3.2V Prismatic LiFePO4 Cell Pack | Batteryhookup / AliExpress | IFR26650 / Custom Prismatic | $12.00 |
+| **Battery** | 10,000 mAh 3.2V (32 Wh) Prismatic LiFePO4 Pack (1S2P) | Batteryhookup / AliExpress | Custom Prismatic (2x 5,000mAh) | $16.00 |
 | **Power IC** | Synchronous MPPT Buck Battery Charger IC | Texas Instruments / Mouser | BQ25895RTWR | $3.50 |
 | **Power Gates** | Ultra-Low Leakage Load Switches (x4) | Texas Instruments / LCSC | TPS22918DBVR | $1.20 |
 | **Cellular** | M.2 Key-B 4G/LTE Cat-4 Modem Module | DigiKey / AliExpress | Quectel EC25-AFX | $28.00 |

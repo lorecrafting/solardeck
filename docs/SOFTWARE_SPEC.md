@@ -85,23 +85,22 @@ While the main CM4 is asleep, the RP2040 runs bare-metal C firmware:
 * **Voice Speech-to-Text (STT):**
   * **Offline Mode:** Uses `whisper.cpp` (Quantized `tiny.en` or `base.en` model) running locally on the Cortex-A72 cores using NEON SIMD instructions (transcription latency < 1.2 seconds).
   * **Cloud Mode:** Streams 16kHz audio from the I2S MEMS microphones directly to the Anthropic voice/audio API over 4G LTE.
-* **Local Medical & Diagnostics Copilot:**
-  * Integrates with locally installed small language models (via `llama.cpp` using 4-bit quantization) for completely air-gapped medical knowledge querying.
+* **Local Offline AI Copilot:**
+  * Integrates with locally installed small language models (via `llama.cpp` using 4-bit quantization) for completely air-gapped technical and code querying.
 
 ---
 
-## 5. Offline Knowledge & Clinical Stack
+## 5. Offline Knowledge & Engineering Stack
 
 * **Kiwix Offline Engine:**
   * Runs a local headless HTTP server indexing 100GB+ `.zim` archive files:
     * Complete English Wikipedia with full images (~95GB).
-    * Classical Chinese Medicine Canon: *Huangdi Neijing*, *Shanghan Lun*, *Shennong Bencao Jing*, *Zhenjiu Dacheng*.
-    * Western Medical Library: Merck Manual, PubMed clinical summaries, ICD-10 diagnostic codes.
-* **Zi Wu Liu Zhu (Acupuncture Horary Chronometer):**
-  * A custom Python daemon calculates **Honolulu True Solar Time (Zhen Tai Yang Shi)** based on longitude (157.8583° W):
-    * Displays current BaZi Heavenly Stems & Earthly Branches (Year, Month, Day, Hour).
-    * Calculates active 24 Solar Terms (*Jie Qi*).
-    * Highlights active open acupuncture channels and *Ling Gui Ba Fa* (Mysterious Turtle Eight Points) in real-time.
+    * Open-Source Software & Engineering Archives: Stack Overflow, ArchWiki, Linux man-pages.
+    * Scientific & Reference Library: ArXiv digests, emergency field manuals, standard dictionaries.
+* **Ambient LifeOps & Astronomical Telemetry:**
+  * A lightweight background daemon calculates local solar ephemeris and ambient system telemetry:
+    * Displays solar noon, day length, and twilight transitions based on live GNSS coordinates.
+    * Monitors ambient room lux, weather forecasts, and battery state-of-charge.
 
 ---
 

@@ -8,7 +8,7 @@
 
 ## 1. Executive Summary
 
-**SolarDeck** is a sovereign, distraction-free, sunlight-readable personal computing terminal engineered for writing, AI-assisted software development (Claude Code), medical practice, and emergency off-grid communication. 
+**SolarDeck** is a sovereign, distraction-free, sunlight-readable personal computing terminal engineered for writing, AI-assisted software development (Claude Code), engineering research, and emergency off-grid communication. 
 
 Unlike commercial e-readers (Kindle, Boox, reMarkable) that are locked behind closed proprietary Android runtimes, SolarDeck runs **pure, bare-metal Linux** on an open-hardware carrier board, granting total low-level control over display waveforms, kernel drivers, and power management.
 
@@ -36,11 +36,11 @@ Unlike commercial e-readers (Kindle, Boox, reMarkable) that are locked behind cl
 * Talk directly to Claude through the digital microphone array with local speech-to-text (`whisper.cpp`) or streaming cloud API.
 * Full-day battery life (7–9 hours of continuous AI coding and cellular connection).
 
-### B. The "Zen Reader & Scribe" (Field Medical Tablet)
+### B. The "Zen Reader & Scribe" (Field Technical Tablet)
 * Detach the keyboard. The device becomes a lightweight 10.3" slate.
-* **1:1 scale rendering** of medical textbooks, pathology slides, and acupuncture charts.
-* Battery-free **Wacom EMR stylus** with 4,096 levels of pressure and hardware palm rejection. Annotate margins and draw clinical patient intake diagrams directly into Obsidian.
-* **100GB Offline Kiwix Library:** Complete Wikipedia, classical Chinese medical canon (*Neijing*, *Shanghan Lun*), and Western medical databases fully searchable off-grid.
+* **1:1 scale rendering** of technical documentation, architectural schematics, and field manuals.
+* Battery-free **Wacom EMR stylus** with 4,096 levels of pressure and hardware palm rejection. Annotate margins and sketch diagrams directly into Obsidian.
+* **100GB Offline Kiwix Library:** Complete Wikipedia, scientific archives, and engineering reference databases fully searchable off-grid.
 
 ### C. The "Perpetual Desk Clock & LifeOps Dashboard"
 * Set the tablet on a desk kickstand or mount it to a wall dock.
@@ -63,7 +63,7 @@ Unlike commercial e-readers (Kindle, Boox, reMarkable) that are locked behind cl
 | **Cellular Internet**| M.2 Key-B 3042 Socket + Push-Push Nano-SIM Tray (Quectel EC25-AFX Cat-4 LTE, AT&T/T-Mobile/Verizon) |
 | **Mesh Radio** | Semtech SX1262 LoRa 915 MHz (Meshtastic firmware support) |
 | **RF / Hardware Hacking**| TI CC1101 (300–928MHz Sub-GHz) + Vishay IR Blaster/Receiver + NXP PN532 NFC + EM4095 125kHz RFID |
-| **Battery Chemistry**| 6,000 to 8,000 mAh **LiFePO4** (Lithium Iron Phosphate) — safe to 65°C / 149°F, 3,000+ cycles |
+| **Battery Chemistry**| 10,000 mAh **LiFePO4** (32 Wh) — safe to 65°C / 149°F, 3,000+ cycles, airline-compliant |
 | **Solar Harvesting** | Front Bezel Monocrystalline Strip + TI BQ25895 MPPT Solar Charge Controller |
 | **Ruggedization** | IP67 Waterproof & Dustproof, CNC 6061-T6 Aluminum, TPU armor corners, GORE ePTFE pressure vent |
 | **Fast Wake-Up** | Suspend-to-RAM (S2idle): **0.3-second instant resume** |
