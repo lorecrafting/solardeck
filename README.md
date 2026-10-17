@@ -30,11 +30,11 @@ Unlike commercial e-readers (Kindle, Boox, reMarkable) that are locked behind cl
 
 ## 2. The 3 Core Personas of SolarDeck
 
-### A. The "Workhorse" (Mobile AI Coding & Writing Station)
-* Dock the magnetic keyboard, enable 4G/LTE, and launch **Claude Code** in the terminal.
-* High-speed **20ms 1-bit monochrome typing mode** on e-paper eliminates typing lag.
+### A. The "Workhorse" (SnapDeck Mobile Coding & Writing Station)
+* **On-Screen Lapdeck Mode:** Snap the ultra-slim physical keyboard directly onto the bottom 1/3 of the landscape e-ink screen. Sway Wayland automatically resizes your terminal/Claude Code workspace into the top 2/3 (1872 × 950 px) with zero typing lag.
+* **Propped-Up Desktop Mode:** Deploy the rear friction kickstand and set the keyboard on the desk in front (supports both landscape and vertical portrait orientations for viewing 80+ lines of code).
 * Talk directly to Claude through the digital microphone array with local speech-to-text (`whisper.cpp`) or streaming cloud API.
-* Full-day battery life (7–9 hours of continuous AI coding and cellular connection).
+* Full-day battery life (10.5–11 hours of continuous AI coding and cellular connection on 10,000 mAh LiFePO4).
 
 ### B. The "Zen Reader & Scribe" (Field Technical Tablet)
 * Detach the keyboard. The device becomes a lightweight 10.3" slate.

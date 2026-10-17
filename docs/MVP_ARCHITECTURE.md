@@ -179,7 +179,50 @@ To achieve month-long e-reader battery life without sacrificing full Linux libra
 
 ---
 
-## 7. Expansion Interfaces & Topology
+## 7. The Magnetic "SnapDeck" Hybrid Keyboard System (On-Screen & Propped-Up Modes)
+
+To solve the fatal flaw of commercial e-paper tablets—where typing on flat glass lacks tactile feedback and carrying an external laptop keyboard is cumbersome—SolarDeck introduces the **SnapDeck** detachable mechanical keyboard system.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          THE 4 OPERATING POSTURES                           │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ POSTURE 1: ON-SCREEN LAPDECK (LANDSCAPE)                                    │
+│ • Keyboard rests magnetically on bottom 1/3 of the landscape screen.        │
+│ • Hall sensor triggers Sway Wayland to resize workspace to top 2/3          │
+│   (1872 × 950 px). Bottom 1/3 screen goes dormant (0W).                     │
+│ • Use Case: Typing on lap, in bed, on a bus, or airplane tray table.        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ POSTURE 2: PROPPED-UP LAPTOP (LANDSCAPE)                                    │
+│ • Rear friction kickstand props tablet upright at 65°–75° on desk.          │
+│ • Keyboard sits detached on the desk in front of the screen.                │
+│ • Sway expands display to full 1872 × 1404 pixels over BLE 5.0.             │
+│ • Use Case: Traditional laptop workstation at a coffee shop or desk.        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ POSTURE 3: VERTICAL CODER WORKSTATION (PORTRAIT)                            │
+│ • Kickstand props tablet upright in tall Portrait orientation.              │
+│ • 80+ lines of code visible vertically (like a programmer's vertical screen).│
+│ • Full-width keyboard sits detached on the desk.                            │
+│ • Use Case: Reading long source files, logs, and technical documentation.   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ POSTURE 4: PURE SLATE / SCRIBE MODE                                         │
+│ • Keyboard snaps magnetically onto the REAR of the tablet chassis.          │
+│ • Rear Hall sensor disables key presses to prevent accidental clicks.       │
+│ • Use Case: Lightweight handheld e-reader, PDF annotation, Wacom sketching. │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Mechanical & Electrical Design:
+1. **Key Switches:** Ultra-slim (3.5mm total thickness) Kailh X-Switch or scissor-switch mechanical keys with 1.2mm travel and crisp tactile actuation.
+2. **Controller & Firmware:** Powered by an **nRF52840** running open-source **ZMK Firmware**, supporting sub-millisecond wireless latency and multi-device Bluetooth switching.
+3. **Power & Docking:** Contains a thin 150 mAh LiPo cell that charges automatically via two magnetic gold pogo pins on the tablet bezel whenever docked on-screen or stored on the rear.
+4. **Dual Hall-Effect Interlocks:**
+   * **Front Bezel Hall Sensor:** Trips when keyboard is on the screen, instantly instructing Wayland to repartition the display to the top 2/3.
+   * **Rear Chassis Hall Sensor:** Trips when keyboard is snapped to the back, sleeping the keys so your fingers can grip the tablet firmly while reading.
+
+---
+
+## 8. Expansion Interfaces & Topology
 
 ```
 INTERFACE             FORM FACTOR           PINOUT / SIGNALS          APPLICATIONS
@@ -195,7 +238,7 @@ Gigabit Ethernet      M8 4-pin or slim RJ45 1000BASE-T (from CM4)     Direct 1 G
 
 ---
 
-## 8. Turnkey Manufacturing in Shenzhen & Delivery to Honolulu
+## 9. Turnkey Manufacturing in Shenzhen & Delivery to Honolulu
 
 A prototype can be 100% manufactured, clean-room assembled, QA tested, and boxed in Shenzhen, then shipped via DHL Express directly to Honolulu:
 
@@ -208,7 +251,7 @@ A prototype can be 100% manufactured, clean-room assembled, QA tested, and boxed
 
 ---
 
-## 9. Satellite & Cellular Economics
+## 10. Satellite & Cellular Economics
 
 1. **Cellular Connectivity on T-Mobile Essentials Choice 55:**
    * Standalone T-Mobile tablet add-on costs $15/mo ($20 without AutoPay); the $5 tier is restricted to Go5G Next.
@@ -222,7 +265,7 @@ A prototype can be 100% manufactured, clean-room assembled, QA tested, and boxed
 
 ---
 
-## 10. Bill of Materials: Core MVP vs. Modular Add-ons
+## 11. Bill of Materials: Core MVP vs. Modular Add-ons
 
 ### Core Tablet MVP Bill of Materials (Turnkey Qty 1–5):
 
