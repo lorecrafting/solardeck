@@ -242,6 +242,16 @@ SolarDeck operates five concurrent radio channels (LoRa 915 MHz, Cellular LTE Ca
 5. **5 GHz Wi-Fi Spectrum Steering:**
    * Linux network profiles default Wi-Fi connectivity to the **5.0 GHz band**, leaving the 2.4 GHz ISM band 100% clear for low-latency Bluetooth keyboard and audio pairing, arbitrated seamlessly by the BCM43455 combo chip's internal 3-wire Packet Traffic Arbitration (PTA).
 
+### 2.5.2 RF Front-End Precision: Pi-Matching Networks & Coaxial Strain Relief
+To guarantee peak radiation efficiency, prevent destructive transmitter reflection, and maintain impedance integrity across manufacturing tolerances:
+* **0402 Discrete Pi-Matching Networks:** Every antenna trace on the carrier board features a dedicated 3-element Pi-matching footprint ($C_{\text{shunt1}}$ – $L_{\text{series}}$ – $C_{\text{shunt2}}$ in 0402 surface-mount packaging with high-Q Murata / TDK RF components) immediately adjacent to its U.FL / SMA launch point:
+  * `RF_LORA`: Tuned specifically for 915 MHz (US) or 868 MHz (EU) to cancel chassis grounding reactance.
+  * `RF_LTE_MAIN` & `RF_LTE_DIV`: Tuned across wideband LTE 700–2600 MHz to achieve $\text{VSWR} < 2.0:1$ across all carrier aggregation bands.
+  * `RF_WIFI_BT`: Dual-band conjugate matching for 2.4 GHz and 5.8 GHz.
+  * `RF_GNSS`: High-rejection ceramic matching with DC bias choke for active LNA injection.
+* **Inner-Layer Ground Keepout:** A continuous **3.0 mm copper clearance void** is etched across all internal PCBA ground layers directly beneath each surface-mount U.FL pad, eliminating parasitic shunt capacitance that would otherwise detune high-frequency RF launches.
+* **Molded Coaxial Cable Retention Channels:** Internal chassis ribs feature recessed silicone-gasketed micro-routing channels that lock IPEX MHF4 / U.FL micro-coaxial pigtails securely in place, completely preventing cable detachment or microphonics during heavy vehicle vibration and 4-foot drops.
+
 ### 2.6 Dual-Camera Subsystem (Multimodal AI & Video Conferencing)
 SolarDeck leverages the Broadcom SoC's dual independent MIPI CSI-2 camera ports (`CAM0` and `CAM1`) and hardware Image Signal Processor (ISP) to deliver complete visual intelligence and teleconferencing with zero USB overhead:
 
@@ -308,6 +318,12 @@ Inspired by iconic ambient communicator status lights (Clicks, BlackBerry, Palm)
   * **Urgent Strobe Ruby Red (Environmental Hazard / Critical Battery):** Rapid barometric drop (storm warning) or battery $<5\%$.
   * **Steady Dim Warm White (Ambient Locator / Nightstand):** Ultra-faint glow for finding the tablet in complete darkness.
   * **Physical Airgap Cutoff:** LED VDD rail is routed through the Hardware Airgap Switch; in `STEALTH` mode, LED power is physically cut to 0.000V.
+
+### 2.7.2 Tactical Covert & Night Vision (NVG) Stealth Hardware Architecture
+For field operations, astronomy observation, and night maneuvers requiring zero white/colored light bloom and acoustic silence:
+* **Hardware Deep-Red Clamping (630 nm Monochromatic):** When switched to Covert Mode (`COVERT_MODE_EN` asserted), RP2350 hardware PWM permanently locks out Green and Blue LED drive channels. Red channel duty cycle is clamped to $<0.5\%$ ($<5\text{ µA}$ average drive current). The resulting ultra-dim $630\text{ nm}$ glow is fully readable with Gen 3+ Night Vision Goggles (NVG) and dark-adapted eyes, while undetectable to unaided eyes beyond 3 meters.
+* **Dual CCT Frontlight Floor Clamping:** The TI TPS61163 frontlight driver hardware locks out the Cold-White string entirely, allowing only the Warm-Amber string to illuminate at Step 1 of 2048 ($<0.05\text{ lux}$), preserving rod cell night adaptation.
+* **Acoustic Squelch:** Hardware gate pulls `MUTE` on the MAX98357A Class-D speaker amplifier and disables PWM oscillations to the SMT piezo buzzer, guaranteeing absolute zero sound emission.
 
 ### 2.8 Dual Independent I2C Buses & Address Conflict Elimination
 To completely eliminate bus arbitration lockups and the hardware address collision between the Goodix touch controller (`0x14`) and Bosch accelerometer (`0x14`), SolarDeck bifurcates I2C into two galvanically separated hardware domains:
@@ -734,6 +750,19 @@ To prevent the CM4’s dual 100-pin Hirose DF40 micro-connectors from unseating 
 * **CNC Anodized Aluminum Clamp Plate:** A precision CNC aluminum retention bracket clamps over the CM4 module, secured by 4 stainless steel Torx screws. This applies constant, uniform mechanical compression across both Hirose connectors, ensuring they can **never unseat or suffer intermittent contact during severe drops**.
 * **Integrated Thermal Conduction Bridge:** A 1.5mm high-conductivity thermal interface pad ($6.0\text{ W/m}\cdot\text{K}$) directly couples the Broadcom BCM2711 SoC silicon die to the aluminum clamp, which in turn bonds to the outer chassis backplate via graphite heat-spreading sheets, exhausting compute heat outward with zero thermal migration into the E-Ink panel.
 
+### 4.4 Hardware Anti-Tamper & Cryptographic Key Zeroization
+To protect sensitive private keys, encrypted credentials, and communications logs against physical capture or laboratory disassembly:
+* **Chassis Intrusion Micro-Switch:** A hermetically sealed sub-miniature limit switch (C&K PTS645 / Panasonic EVQ) is mounted to the carrier PCBA and held depressed by the CNC aluminum backplate.
+* **RP2350 TrustZone Zeroization NMI:**
+  * When the backplate is loosened or pried open while "Vault Security" is armed, the intrusion switch opens, asserting a Non-Maskable Interrupt (NMI) on the RP2350.
+  * In $<100\text{ ns}$, the RP2350 secure core wipes battery-backed retention SRAM containing the master filesystem encryption salt and passphrase fragments, instantly rendering encrypted F2FS partitions on the eMMC cryptographically unrecoverable.
+* **Manual Emergency Purge:** An operator can manually trigger immediate key zeroization and flash lockout by depressing the recessed `REC_MCU` pinhole switch continuously for 10 seconds.
+
+### 4.5 Micro-Solar Bezel Thermal Decoupling & Expansion Barrier
+* **Radiant Heat Problem:** In direct desert sunlight ($>900\text{ W/m}^2$), dark monocrystalline silicon solar cells reach surface temperatures of $65^\circ\text{C} \text{ to } 75^\circ\text{C}$. Direct contact with the E-Ink panel backplane causes microcapsule discoloration and localized pigment degradation.
+* **Aerogel Thermal Decoupling Barrier:** A **0.5 mm die-cut Pyrogel aerogel insulation strip** (thermal conductivity $<0.015\text{ W/m}\cdot\text{K}$) is laminated between the top micro-solar bezel and the E-Ink panel frame, blocking 95% of conductive heat migration into the display.
+* **PCBA Milled Thermal Relief Slot:** A 1.0 mm continuous routed slot in the carrier PCB isolates the BQ25504 nano-power boost harvester thermally from the low-noise analog sensor cluster and Wacom digitizer grounding plane.
+
 ---
 
 ## 5. Modular Tactical RF & SIGINT Backpack (Optional Add-on)
@@ -754,3 +783,28 @@ While the core tablet natively receives positioning and orbital timing from 4 GN
   3. **Direct Weather Satellite Imagery (137 MHz):** Direct reception of orbiting **NOAA 15/18/19** (APT) and **Meteor-M2** (LRPT) satellites as they pass overhead, decoding live infrared cloud maps via `satdump` with zero internet.
   4. **Marine AIS Vessel Tracking (161.975 / 162.025 MHz):** Tracks commercial cargo ships, tankers, and coastal vessel positions via `rtl-ais`.
 * **Thermal & Power Architecture:** An active SDR tuner draws **1.5W to 2.2W (300–450 mA @ 5V)** and runs warm. Housing it in the rear snap-on backpack keeps heat away from the battery and E-Ink display, while allowing the core tablet to maintain its 10+ hour workstation endurance when not scanning the skies.
+
+### 5.3 Modular Backpack Hermetic 8-Pin Interface: Dedicated Pinout & Make-First-Break-Last Hot-Plug Architecture
+To ensure high-speed USB 2.0 integrity, robust I2C enumeration, and absolute protection against hot-plug latch-up or arcing when snapping accessories on in the field:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│             SOLARDECK REAR 8-PIN HERMETIC EXPANSION POGO BUS                │
+├───────┬──────────────┬───────────────┬──────────────────────────────────────┤
+│ Pin # │ Signal Name  │ Voltage / Spec│ Functional Description               │
+├───────┼──────────────┼───────────────┼──────────────────────────────────────┤
+│ Pin 1 │ `VBUS_5V`    │ +5.0V @ 1.5A  │ Main backpack power via TPS22918     │
+│ Pin 2 │ `USB_D-`     │ 3.3V Diff     │ USB 2.0 High-Speed Negative          │
+│ Pin 3 │ `USB_D+`     │ 3.3V Diff     │ USB 2.0 High-Speed Positive          │
+│ Pin 4 │ `GND`        │ 0.0V Return   │ Heavy-copper system ground           │
+│ Pin 5 │ `I2C_SDA`    │ 3.3V (HOST)   │ EEPROM backpack ID & register config │
+│ Pin 6 │ `I2C_SCL`    │ 3.3V (HOST)   │ Fast-Mode 400 kHz clock              │
+│ Pin 7 │ `GPIO_IRQ`   │ 3.3V CMOS In  │ Low-latency interrupt (CC1101/PN532) │
+│ Pin 8 │ `BP_DETECT_L`│ 3.3V Pull-Up  │ Hardware Interlock Sense (Shorter Pin)│
+└───────┴──────────────┴───────────────┴──────────────────────────────────────┘
+```
+
+* **Make-First-Break-Last (MFBL) Protection:** Pin 8 (`BP_DETECT_L`) is manufactured **0.5 mm shorter** than Pins 1–7.
+  * **On Docking:** `GND`, `VBUS`, and data pins establish contact first; Pin 8 contacts last, pulling the line to ground. Only upon detecting `BP_DETECT_L == LOW` does the system assert the gate of the TPS22918 load switch to energize `VBUS_5V`.
+  * **On Undocking:** Pin 8 breaks contact first. The RP2350/CM4 instantly trips an interrupt, disabling `VBUS_5V` power within $<10\text{ µs}$ before data pins physically separate, completely eliminating hot-plug sparks, inductive kickback, and digital I/O latch-up.
+* **ESD & Signal Protection:** All 8 lines pass through an onboard Texas Instruments **TPD4E05U06** TVS array directly adjacent to the hermetic pogo barrel headers.

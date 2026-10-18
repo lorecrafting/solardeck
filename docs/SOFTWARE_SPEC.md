@@ -337,3 +337,68 @@ To prevent filesystem corruption from unexpected battery depletion, field discon
   * Co-processor resets into Bank B with a 5-second hardware watchdog armed.
   * Bank B firmware must initialize all power rails, test the BQ27441 fuel gauge, and assert `WATCHDOG_KICK`.
   * If the firmware hangs or locks up, the hardware watchdog reboots the RP2350 into Bank A (golden image), eliminating any risk of bricking the hardware power controller during field updates.
+
+---
+
+## 11. Temperature-Compensated Waveform LUT Matrix (`eink-refreshd`)
+
+Electrophoretic fluid viscosity varies significantly with temperature. Running fixed-duration waveforms across seasons results in severe ghosting in the cold and pigment bleeding in the heat. SolarDeck implements dynamic temperature-steered waveform switching in `eink-refreshd`:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│              DYNAMIC QUAD-ZONE TEMPERATURE WAVEFORM MATRIX                  │
+├────────────────────┬──────────────┬──────────────┬──────────────────────────┤
+│ Temperature Band   │ Backplane °C │ Active LUT   │ Waveform Strategy        │
+├────────────────────┼──────────────┼──────────────┼──────────────────────────┤
+│ 1. Cold Sub-Zero   │ T < 5°C      │ `LUT_COLD`   │ • 45ms DU pulse duration │
+│                    │              │              │ • Pulse width × 1.35     │
+│                    │              │              │ • Full GC16 every 15 keys│
+├────────────────────┼──────────────┼──────────────┼──────────────────────────┤
+│ 2. Normal Ambience │ 5°C ≤ T ≤ 35°C│ `LUT_NORMAL` │ • 20ms fast-typing DU    │
+│                    │              │              │ • 60ms A2 smooth motion  │
+│                    │              │              │ • 200ms GC16 crisp color │
+├────────────────────┼──────────────┼──────────────┼──────────────────────────┤
+│ 3. High Desert Heat│ 35°C < T ≤ 50°C│ `LUT_HOT`   │ • Drive voltage −10%     │
+│                    │              │              │ • Shortened settle time  │
+│                    │              │              │ • Zero pigment overshoot │
+├────────────────────┼──────────────┼──────────────┼──────────────────────────┤
+│ 4. Thermal Cutoff  │ T > 50°C     │ `LUT_PROTECT`│ • High-temp alert banner │
+│                    │              │              │ • Pauses high-rate A2    │
+└────────────────────┴──────────────┴──────────────┴──────────────────────────┘
+```
+
+* **Thermal Sensing Hook:** `eink-refreshd` polls the dedicated TI TMP112 sensor (`0x49` on `I2C_ALWAYS_ON`) coupled directly to the E-Ink panel backplane every 10 seconds.
+* **Seamless In-Flight Transition:** Waveform switching occurs between frame updates without dropped keystrokes or UI tearing.
+
+---
+
+## 12. Tactical Covert & NVG Mode Daemon (`solardeck-covert`)
+
+Provides one-touch blackout and night-vision optical configuration for covert field deployments and dark-sky astronomy:
+
+* **CLI & Rocker Control:**
+  ```bash
+  solardeck-covert on     # Engages NVG stealth profile
+  solardeck-covert status # Displays current luminance and squelch states
+  solardeck-covert off    # Restores standard daylight profile
+  ```
+* **Daemon Orchestration:**
+  1. **Optical Beacon Blackout:** Directs RP2350 via IPC to disable green and blue PWM channels on the Kingbright RGB LED, clamping the red channel to $630\text{ nm}$ monochromatic at $<0.5\%$ duty cycle.
+  2. **Frontlight Clamp:** Commands TPS61163 to power down cold-white LEDs and lock warm-amber LEDs to ultra-dim Step 1 of 2048 ($<0.05\text{ lux}$).
+  3. **Acoustic Mute:** Asserts hardware mute register on MAX98357A speaker amp and silences RP2350 micro-piezo tone generator.
+  4. **Display Palette Shift:** Inverts Sway terminal themes to high-contrast red-on-black or amber-on-black colorways to maintain natural human scotopic (rod cell) night adaptation.
+
+---
+
+## 13. Hardware Anti-Tamper & Cryptographic Zeroization Hook (`solardeck-vault`)
+
+Secures device data against physical chassis compromise, laboratory probing, or forensic acquisition:
+
+* **Intrusion Interrupt Processing:**
+  * The sealed chassis intrusion limit switch connects directly to a dedicated Non-Maskable Interrupt (NMI) on the RP2350 co-processor.
+  * When `solardeck-vault --arm` is engaged, opening the CNC backplate trips the switch.
+  * In $<100\text{ ns}$, RP2350 hardware TrustZone routine executes atomic memory zeroization:
+    * Battery-backed retention SRAM (holding master encryption salts and key fragments) is erased to all-zeros.
+    * Pulls CM4 reset line low and halts all bus communication.
+* **Emergency Zeroization Button:** Depressing the recessed `REC_MCU` pinhole switch continuously for 10 seconds triggers the same zeroization cascade with audible confirmation (3 micro-piezo clicks before wipe).
+* **Cryptographic Invalidation:** Because the transactional F2FS root and home partitions are encrypted via `fscrypt` with hardware-derived keys, zeroizing the RP2350 retention SRAM permanently renders all eMMC data unreadable.

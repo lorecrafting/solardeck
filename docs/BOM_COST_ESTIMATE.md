@@ -67,10 +67,14 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **Qwiic Port** | Sealed 4-Pin JST-SH 1.0mm I2C Connector + TVS + Power Gate | JST / LCSC | BM04B-SRSS-TB | $0.40 |
 | **JEITA Resistors** | 0.1% Precision Resistors (5.23k / 30.1k) for BQ25895 TS | Yageo / Panasonic 0603 | Precision Thin-Film (x2)| $0.15 |
 | **CM4 Retention** | CNC Aluminum CM4 Retention Bracket & Thermal Interface Pad | Custom CNC / Laird | Custom Bracket + Tflex | $1.80 |
+| **RF Pi-Matching** | Precision 0402 RF Inductors & C0G/NP0 Capacitors (5 nets) | Murata / TDK / LCSC | 0402 Precision RF Kit | $0.40 |
+| **Backpack MFBL** | 8-Pin Magnetic Pogo Bus with 0.5mm MFBL Recessed Pin | Custom Pogo / Top-Link | 8-Pin Hermetic Strip | $0.50 |
+| **Chassis Tamper Sw**| Sealed Sub-Miniature Chassis Intrusion Micro-Switch | C&K / Panasonic / LCSC | PTS645 / EVQ-P8 | $0.30 |
+| **Solar Aerogel** | 0.5mm Die-Cut Pyrogel Aerogel / Kapton Thermal Barrier | Aspen Aerogels / 3M | Pyrogel Insulation Strip | $0.60 |
 | **Airgap Switch** | Sub-Miniature 2-Position Gold Contact Slide Switch | C&K / E-Switch / LCSC | JS202011CQN | $0.45 |
 | **GORE Vent** | ePTFE Pressure Equalization Vent Plug | W. L. Gore / Amphenol | PMF100396 | $1.50 |
 | **Enclosure (PA12)**| SLS 3D-Printed PA12 Nylon Shell + 85A TPU Corner Bumpers | JLC3D / Craftcloud | Custom CAD Housing | $28.00 |
-| **Total Core BOM**| | | | **~$377 – $410** |
+| **Total Core BOM**| | | | **~$379 – $412** |
 
 ---
 
@@ -127,8 +131,8 @@ Because standard surface-mount components from JLCPCB's / PCBWay's Basic and Ext
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  SOLARDECK CORE TABLET (8GB + DUAL CAM)    │ ~$377 – $410   │
-│  (Or 4GB CM4 Base Config)                  │ ~$357 – $390   │
+│  SOLARDECK CORE TABLET (8GB + DUAL CAM)    │ ~$379 – $412   │
+│  (Or 4GB CM4 Base Config)                  │ ~$359 – $392   │
 ├─────────────────────────────────────────────────────────────┤
 │  SNAPDECK PARALLEL KEYBOARD ADD-ON         │ ~$47.10        │
 ├─────────────────────────────────────────────────────────────┤
