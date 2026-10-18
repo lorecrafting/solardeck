@@ -101,7 +101,13 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
     2. *Stage 2 (Hover Approach 10–15mm):* The Wacom resonant coil detects pen proximity and fires the hardware interrupt `PEN_PROX_INT`. In **< 2 milliseconds**, the system wakes to "Inking Standby": Core 0 runs throttled at 600 MHz (Cores 1–3 stay OFF) and the IT8951 primes its 1-bit Direct Update (DU) waveform buffer. Total standby power is ~350 mW—pre-armed before the pen even touches glass.
     3. *Stage 3 (Tip Contact & Active Drawing):* Tip switch closes (`BTN_TOUCH = 1`). Coordinates bypass the window compositor directly into the IT8951 partial line buffer (<18ms tip-to-ink latency, ~600 mW active power on Linux, or <15ms and ~220 mW when driven directly by the RP2350).
     4. *Stage 4 (Pen Lift & Retreat >500ms):* Stroke vector is committed to disk; system immediately drops back to 15 mW / 4.5 mW suspend.
-* **Touch Panel:** Capacitive multi-touch glass overlay with etched matte finish.
+* **Touch Panel & Hardware-Enforced Zero-Latency Palm Rejection:**
+  * **Sensor:** Capacitive multi-touch glass overlay with chemically etched anti-glare matte finish.
+  * **Direct Hardware Proximity Blanking Gate:** When the battery-free Wacom stylus approaches within **10–14 mm** of the glass, the Wacom digitizer asserts **`PEN_PROX_INT`** LOW. This signal is routed directly to a hardware logic gate on the Goodix GT911 touch interrupt line, **hardware-suppressing all capacitive touch coordinates** before they reach the CPU. The user can rest their entire hand and forearm on the glass while writing with 100% immunity to stray touch events, with zero software latency or CPU overhead.
+* **Ultra-Fast Linear Resonant Actuator (LRA) Haptic Engine:**
+  * **Driver IC:** Texas Instruments **DRV2605L** I2C Smart Haptic Driver ($0.85) featuring auto-resonance tracking, active reverse-phase braking, and Immersion TS2000 waveform ROM (mainline Linux `CONFIG_INPUT_DRV2605`).
+  * **Actuator:** Vybronics **VG0832012** 8.0mm hermetic Z-axis Linear Resonant Actuator ($0.95), mounted rigidly to the aluminum unibody frame directly beneath the lower bezel.
+  * **Sub-1.5ms Tactile Glass Confirmation:** Vibrates strictly perpendicular (Z-axis) into the glass lens towards the user's fingertip. When tapping virtual keys, terminal buttons, or toggles, the LRA fires a sharp 1.2ms impulse at **$t = 1.2\text{ ms}$**, tricking human Pacinian corpuscles into feeling an authentic mechanical switch click long before the 15–20ms E-ink pixel transition finishes.
 * **Dual CCT Frontlight Subsystem (Pitch-Black Reading & Circadian Amber):**
   * **Driver IC:** Texas Instruments **TPS61163** dual-channel constant-current step-up LED driver ($0.65).
   * **Dual Interleaved Bezel LED Strings:** 12 cold-white LEDs (5000K) and 12 warm-amber LEDs (2700K) embedded along the bottom-edge lightguide.
@@ -116,6 +122,15 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
     * Texas Instruments **BQ2970** battery protection IC paired with dual low-$R_{\text{DS(on)}}$ (12 mΩ) N-channel power MOSFETs (**TI CSD87330Q3D**, $0.55 total).
     * Completely autonomous from software and I2C: physically cuts off the battery pack if cell voltage drops below **2.50V** (over-discharge protection) or exceeds **3.65V/4.25V** (over-charge protection).
     * Instantaneous hardware short-circuit trip: physically disconnects in **< 10 microseconds** if load current exceeds **8.0A peak**.
+* **Battery Charger IC & Autonomous Hardware JEITA Thermal Protection:**
+  * Texas Instruments **BQ25895** I2C-controlled Synchronous Buck Charger (5V to 14V USB-PD / MaxCharge input).
+  * **Pure Silicon JEITA Cold-Weather Lockout Ladder (Zero Software Dependency):**
+    * The BQ25895 `TS` pin is configured with a precision 0.1% resistor divider network (5.23 kΩ pull-up $R_1$, 30.1 kΩ pull-down $R_2$) paired with a **10 kΩ NTC thermistor (Murata NCP18XH103F03RB, $\beta = 3950\text{K}$)** glued directly to the battery pouch cell.
+    * **$T < 0^\circ\text{C}$ (Freezing Lockout):** Charger automatically terminates charging completely ($I_{\text{CHG}} = 0.000\text{ A}$), preventing catastrophic metallic lithium plating and internal micro-shorts while still powering system loads from solar/USB.
+    * **$0^\circ\text{C} \le T < 10^\circ\text{C}$ (Cold Taper):** Charge current automatically throttled to $0.2\text{C}$ ($400\text{ mA}$) to protect chemistry.
+    * **$10^\circ\text{C} \le T \le 45^\circ\text{C}$ (Normal Band):** Full 20W fast charging ($3.0\text{A}$).
+    * **$45^\circ\text{C} < T \le 60^\circ\text{C}$ (Heat Taper):** Charge voltage throttled from 3.65V down to 3.40V.
+    * **$T > 60^\circ\text{C}$ (Overheat Lockout):** Complete charger shutdown.
 * **Dual-Stage Solar Harvesting Architecture:**
   1. *High-Power Field Solar (Fast Recharge via USB-C):* Standard USB-C Port 2 supports 5V–14V input from folding 15W–28W outdoor panels. The BQ25895's integrated dynamic input voltage management (**VINDPM / MPPT**) tracks optimal solar output to recharge the 35 Wh pack from empty to 100% in **1.5 to 2 hours**.
   2. *Dedicated Nano-Power Bezel Harvester (Texas Instruments BQ25504):*
@@ -301,10 +316,16 @@ To completely eliminate bus arbitration lockups and the hardware address collisi
 │    • 0x09: Wacom EMR Stylus Digitizer Controller (`wacom_w9013`)            │
 │    • 0x5D: Goodix GT911 Capacitive Multi-Touch Controller (Hardwired)       │
 │    • 0x6A: TI BQ25895 Synchronous Buck Battery Charger                      │
+│    • 0x5A: TI DRV2605L Linear Resonant Actuator Haptic Driver               │
+│    • External: Rugged Qwiic / Stemma QT 3.3V Expansion Port (Hot-pluggable) │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 * **Collision Resolved:** Hardwiring BMA400 `SDO = VDDIO` locks the accelerometer to `0x15`, completely clear of Goodix touch `0x14/0x5D`.
 * **Zero Bus Contention:** The RP2350 continuously samples sensors in deep sleep without ever colliding with Linux or waiting for bus arbitration.
+* **External Rugged Qwiic / Stemma QT 3.3V Sensor Port:**
+  * Flush 4-pin JST-SH (1.0 mm pitch) connector on side chassis sealed by a captive IP67 silicone plug.
+  * Connected to `I2C_HOST` through a TI TPS22918 load switch (software power-gated, 0.000W when empty) and protected by TI TPD4E05U06 TVS diodes.
+  * Instant plug-and-play CLI access (`i2cdetect -y 1`) for external environmental, thermal, gas, or radiation sensors without opening the sealed chassis.
 
 ### 2.9 Dual USB-C Power Architecture (Ideal Diode OR-ing & Current-Limiting)
 SolarDeck provides two rugged IP68 Type-C ports engineered with autonomous hardware protection against reverse currents and accidental cross-plugging:
@@ -670,7 +691,15 @@ The SnapDeck keyboard is co-engineered alongside the core tablet to guarantee me
 * The right chassis flank features a recessed magnetic channel paired with a low-profile mechanical spring retaining clasp.
 * Holds standard 8.0mm diameter EMR styluses (Staedtler Noris Digital, Lamy AL-star, or reMarkable Marker) securely during transit without accidental snagging.
 
-To protect the main tablet carrier board from RF de-tuning, heavy power consumption (1.5W–2.0W), and excessive thermal dissipation, the high-power radio analysis tools are isolated in an external modular snap-on backpack. It connects via the rear hermetic 8-pin magnetic pogo bus (supplying high-speed USB 2.0 D+/D-, gated 5V power, and SPI/I2C):
+### 4.3 Shock-Proof Compute Module Retention & Thermal Heat-Pipe Clamp
+To prevent the CM4’s dual 100-pin Hirose DF40 micro-connectors from unseating during 4-foot drops or high-vibration off-road vehicle transport:
+* **Mechanical Retention Standoffs:** Four M2 brass threaded standoffs soldered directly to the carrier board PCBA surrounding the CM4 perimeter.
+* **CNC Anodized Aluminum Clamp Plate:** A precision CNC aluminum retention bracket clamps over the CM4 module, secured by 4 stainless steel Torx screws. This applies constant, uniform mechanical compression across both Hirose connectors, ensuring they can **never unseat or suffer intermittent contact during severe drops**.
+* **Integrated Thermal Conduction Bridge:** A 1.5mm high-conductivity thermal interface pad ($6.0\text{ W/m}\cdot\text{K}$) directly couples the Broadcom BCM2711 SoC silicon die to the aluminum clamp, which in turn bonds to the outer chassis backplate via graphite heat-spreading sheets, exhausting compute heat outward with zero thermal migration into the E-Ink panel.
+
+---
+
+## 5. Modular Tactical RF & SIGINT Backpack (Optional Add-on)
 
 ### 5.1 Tactical RF Multi-Tool (Flipper Zero Suite)
 * **Sub-GHz Radio:** Texas Instruments **CC1101** transceiver (300–348 MHz, 387–464 MHz, 779–928 MHz) with dedicated tuned spring whip antenna for 315/433 MHz remote replay and decoding.

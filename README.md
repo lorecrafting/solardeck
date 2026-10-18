@@ -142,8 +142,9 @@ SolarDeck is a sovereign, sunlight-readable, distraction-free field workstation 
 | **Co-Processor** | Raspberry Pi RP2350 (Dual Cortex-M33 / RISC-V @ 150MHz) + 8MB QSPI PSRAM + DS3231 TCXO RTC |
 | **Display Isolator**| Texas Instruments **TMUX1575** 8-Channel SPDT Bus Switch (Fail-Safe Power-Off Protection) |
 | **Display Panel** | 10.3" E-Ink Kaleido 3 (Color 150 PPI / B&W 300 PPI, 1872×1404) or Carta 1200 + IT8951 EPDC |
+| **Haptic Feedback** | TI DRV2605L Smart Driver + 8.0mm Z-Axis Linear Resonant Actuator (<1.5ms mechanical click on glass) |
 | **Frontlight** | Dual CCT Bezel Lightguide (TI TPS61163 Step-Up Driver, 2048-step circadian warm amber/white) |
-| **Digitizer** | Laminated Wacom EMR (battery-free stylus) + 0.1mm Mu-Metal Shield + Matte Glass (<18ms inking) |
+| **Digitizer & Touch**| Laminated Wacom EMR (<18ms ink) + Hardware `PEN_PROX_INT` Palm Blanking Gate + 0.1mm Mu-Metal |
 | **Dual Cameras** | 12MP Sony IMX708 PDAF Macro Autofocus Rear + 5MP 1080p Front with mechanical ThinkShutter |
 | **Detachable Keyboard**| SnapDeck: Kailh X-Switches (3.5mm) + Blackberry RIM 9900 Optical Trackpad + nRF52840 (ZMK) |
 | **Cellular Internet**| M.2 Key-B 3042 (Quectel EG25-G, 30+ LTE bands) + Soldered Onboard MFF2 eSIM (`ST4SIM-200M`) |
@@ -151,15 +152,18 @@ SolarDeck is a sovereign, sunlight-readable, distraction-free field workstation 
 | **Antennas** | Linx ANT-916-CW-HWR Tactical LoRa Whip + Dual Internal Taoglas FXUB63 2×2 MIMO LTE FPCs |
 | **Airgap Switch** | Physical 2-position slide switch; cuts power to all radios, mic, & cameras to 0.000V via TPS22918 |
 | **Telemetry & Sensors**| TI INA3221 (3-rail ammeter) + BQ27441 (Coulomb counter) + Dual TMP112 (thermals) + OPT3001 (lux) + BMA400 (accel) + MMC5603NJ (compass) + BMP390 (baro) |
+| **External Sensor Bus**| External IP67 Silicone-Sealed 4-Pin Qwiic / Stemma QT 3.3V I2C Port (Hot-pluggable sensor hacking) |
 | **Audio & Alerts** | Knowles I2S MEMS mic + Hardware mute + MAX98357A 1W speaker + SMT Micro-Piezo Standby Buzzer |
 | **Status Beacon** | Programmable Multi-Color RGB Notification LED ("Signal Halo") with frosted glass light pipe |
 | **Recovery** | Dual Recessed IP67 Pinhole Buttons (`REC_RPI` eMMC recovery + `REC_MCU` UF2 bootloader) |
 | **Monitor Sink** | Texas Instruments TUSB320 Type-C DRP Controller (Driverless USB Gadget Secondary Display) |
 | **Expansion Bus**| Rear 8-Pin Hermetic Magnetic Pogo Bus for Modular Tactical RF & SIGINT Backpack |
-| **Battery & Safety**| 8,000–10,000 mAh (32–35 Wh) Pack + Hardware PCM (TI BQ2970, 8A trip) + Seiko 0.2F Supercap RTC |
+| **Battery & Safety**| 8,000–10,000 mAh Pack + Hardware PCM (TI BQ2970, 8A trip) + Pure Silicon JEITA Cold Lockout |
+| **Flash Reliability**| Read-Only SquashFS + Transactional F2FS + 150ms Emergency Hardware Sync Hook (`GPIO_PWR_FAIL`) |
 | **Solar Harvesting**| Dual-Stage: TI BQ25895 (20W USB-C PD / MPPT) + TI BQ25504 Nano-Power Harvester (Bezel Strip) |
 | **ESD & Rugged** | IEC 61000-4-2 Level 4 TVS Matrix (TI TPD4E05U06), IP67, PA12 / 6061 Aluminum, GORE vent |
 | **PCBA Stackup** | 6-Layer Impedance-Controlled (JLC2313 / Isola FR408HR) with continuous unbroken ground planes |
+| **Module Retention**| CNC Anodized Aluminum CM4 Retention Bracket & Thermal Interface Bridge (Drop-proof clamp) |
 | **Fast Wake-Up** | Suspend-to-RAM (S2idle): **0.3-second instant resume** |
 
 ---

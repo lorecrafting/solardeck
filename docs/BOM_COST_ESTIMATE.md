@@ -60,10 +60,15 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **Battery PCM** | Hardware Battery Safety IC + Dual N-Channel Power MOSFETs | Texas Instruments / Mouser | BQ2970 + CSD87330Q3D | $0.55 |
 | **ESD Suppression** | Low-Capacitance TVS Diode Arrays for USB & Pogo Pins (x4) | Texas Instruments / Mouser | TPD4E05U06 (x4) + SMAJ5.0A | $0.80 |
 | **Supercapacitor** | 0.2F 3.3V SMT Back-up Supercapacitor for DS3231 RTC | Seiko Instruments / Mouser | CPH3225A | $0.55 |
+| **Haptic Driver** | I2C Linear Resonant Actuator Haptic Driver IC | Texas Instruments / Mouser | DRV2605LDGSR | $0.85 |
+| **LRA Motor** | 8.0mm Z-Axis Linear Resonant Actuator Motor | Vybronics / Digi-Key | VG0832012 | $0.95 |
+| **Qwiic Port** | Sealed 4-Pin JST-SH 1.0mm I2C Connector + TVS + Power Gate | JST / LCSC | BM04B-SRSS-TB | $0.40 |
+| **JEITA Resistors** | 0.1% Precision Resistors (5.23k / 30.1k) for BQ25895 TS | Yageo / Panasonic 0603 | Precision Thin-Film (x2)| $0.15 |
+| **CM4 Retention** | CNC Aluminum CM4 Retention Bracket & Thermal Interface Pad | Custom CNC / Laird | Custom Bracket + Tflex | $1.80 |
 | **Airgap Switch** | Sub-Miniature 2-Position Gold Contact Slide Switch | C&K / E-Switch / LCSC | JS202011CQN | $0.45 |
 | **GORE Vent** | ePTFE Pressure Equalization Vent Plug | W. L. Gore / Amphenol | PMF100396 | $1.50 |
 | **Enclosure (PA12)**| SLS 3D-Printed PA12 Nylon Shell + 85A TPU Corner Bumpers | JLC3D / Craftcloud | Custom CAD Housing | $28.00 |
-| **Total Core BOM**| | | | **~$371 – $404** |
+| **Total Core BOM**| | | | **~$375 – $408** |
 
 ---
 
@@ -119,8 +124,8 @@ Because standard surface-mount components from JLCPCB's / PCBWay's Basic and Ext
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  SOLARDECK CORE TABLET (8GB + DUAL CAM)    │ ~$371 – $404   │
-│  (Or 4GB CM4 Base Config)                  │ ~$351 – $384   │
+│  SOLARDECK CORE TABLET (8GB + DUAL CAM)    │ ~$375 – $408   │
+│  (Or 4GB CM4 Base Config)                  │ ~$355 – $388   │
 ├─────────────────────────────────────────────────────────────┤
 │  SNAPDECK PARALLEL KEYBOARD ADD-ON         │ ~$45.70        │
 ├─────────────────────────────────────────────────────────────┤
