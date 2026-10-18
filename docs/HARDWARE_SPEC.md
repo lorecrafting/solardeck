@@ -861,3 +861,62 @@ To ensure high-speed USB 2.0 integrity, robust I2C enumeration, and absolute pro
   * **On Docking:** `GND`, `VBUS`, and data pins establish contact first; Pin 8 contacts last, pulling the line to ground. Only upon detecting `BP_DETECT_L == LOW` does the system assert the gate of the TPS22918 load switch to energize `VBUS_5V`.
   * **On Undocking:** Pin 8 breaks contact first. The RP2350/CM4 instantly trips an interrupt, disabling `VBUS_5V` power within $<10\text{ µs}$ before data pins physically separate, completely eliminating hot-plug sparks, inductive kickback, and digital I/O latch-up.
 * **ESD & Signal Protection:** All 8 lines pass through an onboard Texas Instruments **TPD4E05U06** TVS array directly adjacent to the hermetic pogo barrel headers.
+
+---
+
+## 6. Zero-Brick Hardware & Electrical Safeguards
+
+To enable fearless experimentation, on-the-fly firmware flashing, core architecture switching (ARM vs. RISC-V), and autonomous AI agent code execution without risk of bricking or physical hardware damage, SolarDeck implements an ironclad, multi-layer hardware defense matrix:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    THE 6-LAYER ZERO-BRICK DEFENSE MATRIX                    │
+├───────┬───────────────────────────┬─────────────────────────────────────────┤
+│ Layer │ Safeguard                 │ What It Prevents                        │
+├───────┼───────────────────────────┼─────────────────────────────────────────┤
+│ **1** │ Silicon Mask ROM (RP2350) │ Unbrickable hardware recovery bootloader│
+│ **2** │ Dual-Bank A/B Flash & WDT │ Auto-rollback if new code hangs or faults│
+│ **3** │ Current-Clamping Resistors│ Physical silicon pad burnout from shorts│
+│ **4** │ Analog Battery Comparators│ Thermal runaway (cannot be bypassed)    │
+│ **5** │ Immutable Linux OverlayFS │ OS corruption restored in 3 seconds     │
+│ **6** │ Hardware Recessed Boot Pin│ 1-click factory restore from any laptop │
+└───────┴───────────────────────────┴─────────────────────────────────────────┘
+```
+
+### 6.1 Silicon-Level Mask ROM Bootloader (RP2350)
+* **Factory Etched Silicon:** The RP2350 micro-coprocessor contains a factory bootloader etched into **physical silicon Mask ROM** at TSMC during chip fabrication.
+* **Permanence:** This code is physically part of the silicon die. It cannot be erased, overwritten, corrupted, or glitched by any software bug, root privilege escalation, or AI coding loop.
+* **Guaranteed Recovery:** Even if an experimental binary completely overwrites the external 16MB QSPI flash with random zeroes or corrupted code, the RP2350 ROM bootloader will execute upon hardware reset, exposing the internal Serial Wire Debug (SWD) interface to the CM4 (`/dev/spidev0.1` or GPIO bit-bang) and USB Mass Storage / UF2 mode to external host PCs.
+
+### 6.2 Dual-Bank A/B Flash Partitioning with Hardware Watchdog Rollback
+The 16MB Winbond W25Q128JVS QSPI NOR flash memory is partitioned into two distinct physical segments:
+1. **Bank A (0x000000 – 0x7FFFFF, 8MB): Factory "Golden Image" (Cryptographically Locked):**
+   * Contains the baseline, production-verified power management, S2idle wake listener, battery charging loop, and emergency IT8951 recovery waveforms.
+   * Marked read-only by the RP2350 internal memory protection unit (MPU).
+2. **Bank B (0x800000 – 0xFFFFFF, 8MB): "Playground / Experimental" Bank:**
+   * Receives live on-the-fly firmware flashes, custom RISC-V DSP routines, experimental PIO microcode, and alternative operating kernels (e.g., Zephyr / FreeRTOS).
+* **Hardware Watchdog Ping Gate (8-Second Timeout):**
+  * When booting Bank B, the hardware watchdog timer (RP2350 WDT) is configured for an 8-second window.
+  * The newly flashed firmware must execute its boot sequence, run an internal self-test, verify sensor communications, and toggle the hardware watchdog clear pin.
+  * If the experimental code hangs in an infinite loop, triggers a HardFault/Crash, or configures clocks incorrectly, the hardware watchdog trips. The boot ROM increments an internal boot-fail counter and **instantly rolls back execution to Bank A (Golden Image)** in $<2.5\text{ ms}$.
+
+### 6.3 Electrical Current-Limiting & Logic Contention Clamping
+* **The Contention Threat:** If buggy or AI-generated firmware inadvertently configures a GPIO connected to a shared bus (e.g., UART, SPI, or inter-processor interrupt lines) as a low-impedance output driving `3.3V` (HIGH) while the CM4 is simultaneously driving that same net to `0.0V` (LOW), a short circuit is created, causing excessive current draw and physical pad burnout.
+* **Hardware Protection:**
+  * All inter-processor digital signal lines passing between the BCM2711 (CM4) and RP2350 pass through **330 Ω to 1 kΩ series current-limiting resistors** or **TI TXU0104 unidirectional / TI TXS0108E auto-direction sensing level shifters** with integrated output clamping.
+  * **Current Limit:** $I_{\text{max}} = \frac{3.3\text{V}}{1,000\,\Omega} = 3.3\text{ mA}$.
+  * Even under continuous, indefinite pin-state contention, current is physically restricted to safe levels well below the 16 mA maximum pin rating of the Broadcom and RP2350 silicon pads.
+  * Peripheral load switch enable lines (TI TPS22918) incorporate 100 kΩ pull-down resistors to ground, ensuring that floating or uninitialized GPIOs during boot/reflash default safely to **OFF**.
+
+### 6.4 Autonomous Analog Battery & Thermal Protection
+* **Hardware-Autonomous Silicon Safety:** Over-temperature and over-voltage charging cutoffs do not rely on running firmware or operating system software.
+* **Dedicated NTC Analog Comparator:** The 10 kΩ NTC thermistor inside the LiFePO4 battery pouch connects directly to the `TS` (Temperature Sense) analog pin on the **Texas Instruments BQ25895** buck charger.
+* **Instant Analog Trip:** If cell temperature exceeds 45°C during charging or 60°C during discharge, internal analog comparators within the BQ25895 silicon instantly terminate charging current and disconnect the load switch in nanoseconds. This hardware interlock operates independently of the Linux kernel, RP2350 firmware, or software state.
+
+### 6.5 Physical Recessed Hardware Recovery Switch ("Dead-Man Recovery")
+* A miniature recessed tactile switch is located adjacent to USB-C Port 1 on the lower chassis flank, accessible via a standard paperclip or SIM-eject tool.
+* **Operation:**
+  * **Holding the switch while inserting USB-C:**
+    * Physically grounds the RP2350 `BOOTSEL` pin, forcing it into USB Mass Storage Mode (appears on any connected Mac, PC, or Linux machine as a USB flash drive for instant drag-and-drop `.uf2` image recovery).
+    * Connects CM4 `nRPIBOOT` pin to GND, placing the BCM2711 into USB slave bootloader mode (`rpiboot`).
+  * Allows a completely blank, wiped, or corrupted device to be completely re-provisioned and re-flashed in under 60 seconds from an external host using standard open-source tools.

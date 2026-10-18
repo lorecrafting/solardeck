@@ -249,11 +249,19 @@ SolarDeck is designed with **Generational Modular Longevity**:
   * Its 12 Programmable I/O (PIO) state machines can morph their hardware pin behavior on the fly.
 * It is soldered directly as a QFN-80 chip to keep the tablet chassis at a razor-thin **9.8mm depth**.
 
+### 5. The Zero-Brick Defense Matrix (Fearless AI & RISC-V Experimentation)
+Giving developers and autonomous AI agents root access to flash co-processor silicon, switch CPU architectures, and mutate hardware state machines carries zero bricking risk:
+* **Silicon Mask ROM:** Factory-etched into RP2350 silicon at TSMC; physically unbrickable.
+* **Dual-Bank A/B Flash & Hardware Watchdog:** Experimental firmware boots with an 8-second countdown. If new code hangs or faults, the hardware watchdog auto-rolls back to Bank A (Golden Image) in $<2.5\text{ ms}$.
+* **Current-Clamping Resistors:** All shared I/O lines incorporate 330Ω–1kΩ resistors, physically preventing pin burnout even during software logic contention.
+* **Autonomous Analog Battery Protection:** TI BQ25895 analog comparator cuts charging if cell thermals exceed limits, bypassing all software.
+* **Immutable Linux Rootfs with OverlayFS:** Base system is cryptographically locked with `dm-verity`; `solardeck-reset --safe` restores pristine factory OS in 3 seconds.
+
 ---
 
 ## Verification & Acceptance Gate (The North Star Metrics)
 
-Before any prototype PCBA or firmware build is declared ready for field release, it must be benchmarked against these five non-negotiable gates:
+Before any prototype PCBA or firmware build is declared ready for field release, it must be benchmarked against these six non-negotiable gates:
 
 | # | Metric | Target Threshold | Method of Verification |
 | :--- | :--- | :--- | :--- |
@@ -262,6 +270,7 @@ Before any prototype PCBA or firmware build is declared ready for field release,
 | **G3** | Zen Reading Power Consumption | **< 5.0 milliwatts** | TI INA3221 telemetry / Keithley precision source meter at VBAT. |
 | **G4** | Ambient Indoor Solar Sustainability | **Positive Net Energy** | Lux chamber @ 500 lux; verify battery charge current $> 0\text{ }\mu\text{A}$. |
 | **G5** | Airgap RF Radiation | **0.000 dBm (Noise Floor)** | Rohde & Schwarz / HackRF sweep in anechoic chamber across 50MHz–6GHz. |
+| **G6** | Zero-Brick Watchdog Auto-Rollback | **< 2.5 milliseconds** | Fault injected into Bank B; verify hardware WDT fallback to Golden Image. |
 
 ---
 

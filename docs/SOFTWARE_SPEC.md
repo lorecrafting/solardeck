@@ -484,3 +484,61 @@ Secures device data against physical chassis compromise, laboratory probing, or 
   * If the device powers down completely or the battery is removed for servicing, volatile session tokens are cleared, but the device is **not bricked**. Upon re-powering, entering the correct passphrase or BIP-39 mnemonic restores the session tokens.
 * **Emergency Zeroization Button:** Depressing the recessed `REC_MCU` pinhole switch continuously for 10 seconds triggers the same session zeroization cascade with audible confirmation (3 micro-piezo clicks before wipe).
 * **Cryptographic Invalidation:** Because the transactional F2FS root and home partitions are encrypted via `fscrypt` with hardware-derived keys, wiping the session tokens permanently locks the eMMC partitions against forensic recovery.
+
+---
+
+## 14. Zero-Brick Architecture: Dual-Bank A/B Flash, Watchdog Rollback & Immutable OverlayFS
+
+To guarantee that autonomous AI agents, experimental RISC-V assembly routines, kernel upgrades, or user modifications can **never soft-brick or permanently compromise the device**, SolarDeck implements a multi-tiered software and firmware safety net:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                 ZERO-BRICK SOFTWARE & FIRMWARE ARCHITECTURE                 │
+├───────────────────────┬─────────────────────────────────────────────────────┤
+│ Co-Processor Firmware │ • Dual-Bank A/B Partitioning (16MB QSPI Flash)      │
+│                       │ • 8-Second Hardware Watchdog Auto-Rollback          │
+│                       │ • `solardeck-coproc-flash` Safe Flashing CLI        │
+├───────────────────────┼─────────────────────────────────────────────────────┤
+│ Linux Host System     │ • Cryptographically Verified Read-Only Rootfs       │
+│                       │   (`dm-verity` + SquashFS)                          │
+│                       │ • Read-Write User Layer via OverlayFS               │
+│                       │ • `solardeck-reset --safe` (3-Second Factory Clean) │
+├───────────────────────┼─────────────────────────────────────────────────────┤
+│ Recovery & Emergency  │ • Dual-Kernel A/B Bootloader (`u-boot` fallback)    │
+│                       │ • Hardware Recessed Button USB Mass Storage / UF2   │
+└───────────────────────┴─────────────────────────────────────────────────────┘
+```
+
+### 14.1 Co-Processor Dual-Bank A/B Management (`solardeck-coproc-flash`)
+The co-processor flashing utility manages dynamic firmware upgrades and experimental RISC-V code loading directly from the Linux terminal or Claude Code agent:
+
+```bash
+# Safe flash to Bank B with automated watchdog verification:
+solardeck-coproc-flash --slot b --timeout 8 custom_riscv_dsp.elf
+
+# Force rollback to factory Bank A (Golden Image):
+solardeck-coproc-flash --rollback
+
+# Query co-processor health and active bank status:
+solardeck-coproc-flash --status
+```
+
+* **Flashing Flow:**
+  1. Linux tool writes the new binary into **Bank B (0x800000)** of the QSPI flash over high-speed SWD (`/dev/spidev0.1` or GPIO bitbang).
+  2. The utility sets the boot pointer to Bank B and configures the RP2350 hardware watchdog to an **8-second countdown**.
+  3. The utility asserts the `RUN` (reset) pin on the RP2350.
+  4. The newly loaded firmware executes its initial sanity test: verifies internal clocks, checks I2C sensor bus responses, and sends an atomic `ACK_BOOT_OK` token back across the UART link to Linux.
+  5. Upon receiving `ACK_BOOT_OK`, the Linux daemon clears the watchdog and marks Bank B as the active valid slot.
+  6. **Automatic Rollback:** If the new firmware faults, freezes, or fails to emit `ACK_BOOT_OK` within 8 seconds, the RP2350 hardware watchdog expires, forcing an immediate hardware reset into **Bank A (Factory Golden Image)**. The entire rollback completes in $<2.5\text{ ms}$ with zero user intervention.
+
+### 14.2 Immutable Linux Root Filesystem with OverlayFS
+To prevent broken package installs, rogue scripts, or corrupted libraries from breaking the desktop OS:
+* **The Base OS is Read-Only:** The base operating system (`/usr`, `/bin`, `/lib`, `/opt`) is mounted as a read-only, compressed SquashFS image protected by Linux kernel `dm-verity`. Any attempt to tamper with base system binaries is rejected at the block layer.
+* **The Writable Layer (OverlayFS):** All user configuration files, custom installed applications, home directory files (`/home/deck`), and Claude Code project workspaces write to a transactional F2FS read-write layer layered on top of the read-only base via `OverlayFS`.
+* **Instant 3-Second Factory Reset:**
+  If an experiment, dependency conflict, or corrupted library breaks the user environment:
+  ```bash
+  solardeck-reset --safe
+  ```
+  This command flushes the writable upperdir overlay, leaving the underlying base operating system completely intact. The system boots in **3 seconds** into a fresh, pristine factory state with all default window configurations, audio drivers, and telemetry daemons restored.
+* **Dual-Kernel Boot Fallback:** The U-Boot bootloader maintains primary (`kernel_A`) and fallback (`kernel_B`) images on eMMC. If a kernel update causes a kernel panic, the hardware watchdog trips the system into the fallback kernel automatically on the next reboot.
