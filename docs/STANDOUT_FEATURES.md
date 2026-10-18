@@ -12,13 +12,14 @@ To achieve legendary status, the engineering team must relentlessly zoom in on, 
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                 THE 5 SOLARDECK PILLARS TO HAMMER IN ON                     │
+│                 THE 6 SOLARDECK PILLARS TO HAMMER IN ON                     │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 1. THE DUAL-BRAIN INSTANT HANDOFF (<400ms Wake, 300-Day Zen / Infinite Desk)│
 │ 2. THE TYPEWRITER-ON-PAPER LATENCY ENGINE (<20ms Keystroke & Inking)        │
 │ 3. SUNLIGHT SOVEREIGNTY & PERPETUAL INDOOR HARVESTING (Zero-Glare, 0W Hold) │
 │ 4. THE SNAPDECK FORM-MORPHOLOGY (Rigid Lapdeck ⟷ 510g Slate ⟷ Desk Easel)   │
 │ 5. SOVEREIGN FIELD HARDENING (Hardware Airgap, Meshtastic LoRa, IP67 Rain)  │
+│ 6. THE MODULAR UPGRADE BRIDGE (ARM-to-RISC-V Swappability, M.2 NVMe, & RAM) │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -185,6 +186,68 @@ In an era of cloud-locked, fragile, spy-by-design hardware, SolarDeck is an **in
 3. **IP67 Enclosure & All-Weather "Water-Lock":**
    * SLS 3D-printed PA12 nylon or CNC 6061 aluminum enclosure with continuous silicone perimeter gaskets and a GORE ePTFE hydrophobic pressure-equalization vent.
    * **Torrential Rain "Water-Lock" Mode:** Capacitive touch screens go haywire when water droplets strike the surface. Flipping the water-lock switch cuts power to the Goodix capacitive touch overlay, while the **Wacom EMR digitizer and left-bezel 5-way tactical navigation rocker remain 100% immune to water**, enabling full terminal navigation in pouring rain.
+
+---
+
+## Pillar 6: The Modular Upgrade Bridge (ARM-to-RISC-V Swappability, RAM, & 2TB NVMe)
+
+### The Vision: A Computer That Never Becomes E-Waste
+Consumer electronics are designed for planned obsolescence: when Apple or Lenovo releases a faster chip, your $1,500 laptop must be thrown in the trash. The RAM is soldered, the SSD is soldered, and the CPU is locked.
+
+SolarDeck is designed with **Generational Modular Longevity**:
+* The expensive components—the **10.3" Color E-Ink glass**, the **Wacom EMR digitizer**, the **custom 35 Wh LiFePO4 battery**, the **precision CNC/SLS enclosure**, and the **carrier motherboard**—are built to last a decade.
+* The compute brain, RAM, and mass storage are **100% modular and field-upgradable in under 60 seconds with two screws**.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                 SOLARDECK MODULAR HARDWARE UPGRADE MATRIX                   │
+├──────────────────────┬──────────────────────┬───────────────────────────────┤
+│ Component            │ Modularity Mechanism │ Upgrade Path                  │
+├──────────────────────┼──────────────────────┼───────────────────────────────┤
+│ **Main CPU & RAM**   │ Dual Hirose DF40     │ • Swap CM4 4GB ⟷ CM4 8GB      │
+│                      │ Mezzanine Connectors │ • Swap ARM CM4 ⟷ RISC-V SOM   │
+│                      │ (Standard CM4 socket)│   (e.g. Milk-V Mars CM)       │
+│                      │                      │ • Drop-in upgrade to CM5      │
+├──────────────────────┼──────────────────────┼───────────────────────────────┤
+│ **Mass Storage**     │ Standard M.2 2230 /  │ • User-swappable NVMe SSD     │
+│                      │ 2242 PCIe Gen2 NVMe  │   (256GB to 2TB high-speed)   │
+│                      │ + MicroSDXC Slot     │ • 2TB offline Kiwix Wikipedia │
+├──────────────────────┼──────────────────────┼───────────────────────────────┤
+│ **Co-Processor**     │ RP2350B Dual-Arch    │ • Live software flash over SWD│
+│                      │ (Native RISC-V)      │ • No hardware swap needed:    │
+│                      │                      │   Already has 2x RISC-V cores!│
+└──────────────────────┴──────────────────────┴───────────────────────────────┘
+```
+
+### 1. The ARM-to-RISC-V Bridge
+* **The Strategy:** Today, ARM gives us 100% immediate software compatibility with Claude Code, Debian Linux, Neovim, and fast AI speech recognition.
+* **The Future-Proof Socket:** Because SolarDeck uses the open industrial **Hirose DF40 100-pin standard**, third-party manufacturers already produce drop-in RISC-V System-on-Modules (such as the *Milk-V Mars CM* featuring the StarFive JH7110 64-bit RISC-V quad-core).
+* **The Transition:** When RISC-V software reaches 100% parity with ARM, users can unclip the ARM CM4 and snap in a pure 64-bit RISC-V compute module. Zero chassis waste, zero motherboard redesign.
+
+### 2. Upgrading RAM (From 4GB to 8GB / 16GB)
+* In modern ultra-high-speed mobile systems, LPDDR4X memory operates at frequencies exceeding 4,000 MT/s, requiring sub-millimeter trace length matching directly adjacent to the silicon die.
+* On SolarDeck, RAM is upgraded by **swapping the compute module**:
+  * Step 1: Remove 2 mounting screws.
+  * Step 2: Unseat the CM4 4GB module.
+  * Step 3: Snap in a CM4 8GB module (or next-gen CM5 with 16GB RAM).
+  * Takes 30 seconds, zero soldering required.
+
+### 3. Upgrading Mass Storage (From 32GB to 2TB NVMe SSD)
+* SolarDeck provides a multi-tiered storage architecture:
+  1. **Primary OS (32GB eMMC):** Soldered onto the SOM for ultra-fast, tamper-resistant system boots.
+  2. **MicroSDXC Edge Slot:** Accepts up to **2TB MicroSD** for instant off-grid distro swapping, field logs, or airgapped data transfer.
+  3. **High-Speed M.2 NVMe SSD Socket (PCIe Gen 2 x1):**
+     * Located on the underside of the carrier motherboard.
+     * Accepts standard **M.2 2230 and 2242 NVMe SSDs** (the exact form factor used in the Steam Deck and Surface Pro).
+     * Speeds exceeding **400 MB/s**, enabling instant storage expansion up to **2 Terabytes** for multi-gigabyte local LLMs, full offline Kiwix encyclopedias, and complete offline codebases.
+
+### 4. What About the Co-Processor? (Why It's Already Future-Proof)
+* You never need to replace the co-processor hardware because **the RP2350 ALREADY HAS NATIVE DUAL RISC-V CORES INSIDE IT**.
+* It can be reconfigured in software at any time:
+  * You can boot it as pure dual-core RISC-V.
+  * You can reprogram its firmware from Linux in 1.2 seconds over the internal SWD bus.
+  * Its 12 Programmable I/O (PIO) state machines can morph their hardware pin behavior on the fly.
+* It is soldered directly as a QFN-80 chip to keep the tablet chassis at a razor-thin **9.8mm depth**.
 
 ---
 

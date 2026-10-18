@@ -79,10 +79,16 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
 ### 2.1 Compute & Low-Power Co-Processing
 * **Universal Modular Compute Socket (Dual Hirose DF40 100-Pin Footprint):**
   * Rather than locking the hardware to a single soldered SoC, the carrier board integrates standard dual Hirose DF40 100-pin board-to-board receptacles (55mm × 40mm mechanical envelope).
-  * **Drop-in Interchangeability:**
+  * **Drop-in Interchangeability & Silicon-Agnostic Modularity:**
     * **Raspberry Pi CM4 (Baseline Specification):** Model `CM4108032` (Quad Cortex-A72 @ 1.8GHz, Wi-Fi 5, Bluetooth 5.0, **8GB LPDDR4 RAM**, 32GB eMMC). The 8GB configuration is the official engineering baseline: it provides zero-lag AST parsing in Claude Code CLI, parallel compilation (`cargo build -j4`), and runs local quantized 3B LLMs (`llama.cpp`) with zero swap thrashing, while keeping S2idle self-refresh current to ~18 mW.
+    * **The Bridge to Pure 64-Bit RISC-V (Milk-V Mars CM):** Drop-in pin-compatible module featuring the **StarFive JH7110 Quad-Core 64-bit RISC-V CPU (RV64GC @ 1.5GHz)** with 4GB/8GB LPDDR4. As the RISC-V Linux ecosystem matures, users can literally unclip the ARM CM4 and snap in the Milk-V Mars CM module, transforming SolarDeck into a 100% pure RISC-V workstation with zero PCB or chassis redesign.
     * **Raspberry Pi CM5 (Drop-in Horsepower Upgrade):** Quad Cortex-A76 @ 2.4GHz with 3x faster compilation throughput for heavy local builds.
     * **Radxa CM3 / Pine64 SOQuartz (Rockchip RK3566 Alternative):** Quad Cortex-A55 @ 1.8GHz on 22nm node for 40% lower active power draw.
+  * **RAM Upgradability:** Because high-frequency LPDDR4X memory signals (>4,000 MT/s) cannot travel across long traces without degradation, RAM is tightly coupled on the SOM. Upgrading RAM from 4GB to 8GB or next-gen 16GB is accomplished in under 30 seconds by unclipping the SOM and seating a higher-capacity module.
+  * **Multi-Tiered Mass Storage Architecture (Up to 4TB+ Total Capacity):**
+    * **Tier 1 (Base System OS):** 32GB high-speed eMMC soldered on the compute module for an immutable, tamper-resistant Linux root filesystem.
+    * **Tier 2 (Hot-Swappable Edge MicroSDXC Slot):** Accessible on the outer chassis edge; supports up to **2TB UHS-I MicroSDXC cards** for instant off-grid distro hopping, encrypted backups, and airgapped dataset transport.
+    * **Tier 3 (High-Speed M.2 2230/2242 PCIe NVMe SSD Socket):** An M.2 Key-M socket situated on the carrier board underside wired directly to the PCIe Gen 2 x1 lane. Accommodates standard ultra-compact **M.2 2230 and 2242 NVMe SSDs** (Steam Deck / Surface Pro form-factor) from **256GB to 2TB** with transfer speeds exceeding **400 MB/s**, enabling instant storage for full offline Kiwix Wikipedia/StackOverflow archives, git repositories, and multi-gigabyte local LLM weights.
 * **Low-Power Co-Processor:** Raspberry Pi **RP2350B** (Dual ARM Cortex-M33 with FPU/DSP or Dual Hazard3 RISC-V cores @ 150MHz).
   * **Ultra-Low Dormant Sleep:** Drops from 180 µA (RP2040) down to **10 µA (~0.033 mW)**—an **18x reduction in sleep current**.
   * **Storage & Memory:**

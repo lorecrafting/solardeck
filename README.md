@@ -55,6 +55,10 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
    * *Physical Hardware Airgap Switch:* Mechanically breaks power enable nets to LTE, LoRa, Wi-Fi/BT, GPS, and microphone to **0.000V** (zero EMF / 0.000 dBm).
    * *Autonomous Meshtastic Node:* Integrated Semtech SX1262 LoRa (868/915 MHz) permanently owned by RP2350 acts as an off-grid emergency mesh repeater for **80+ days**.
    * *Torrential Rain Water-Lock:* Cuts capacitive touch power during downpours, leaving the Wacom stylus and left-bezel 5-way tactical rocker 100% operational in pouring rain.
+6. **The Modular Upgrade Bridge (ARM-to-RISC-V Swappability, RAM, & 2TB NVMe):**
+   * *Silicon-Agnostic CM4 Socket:* Uses standard dual Hirose DF40 connectors. ARM provides 100% instant software compatibility today; users can unclip the ARM CM4 and snap in a drop-in 64-bit RISC-V SOM (e.g. Milk-V Mars CM) tomorrow with zero chassis or PCB waste.
+   * *Instant RAM Swaps:* Upgrade from 4GB to 8GB or next-gen 16GB simply by swapping the modular compute module in 30 seconds.
+   * *Multi-Tiered Mass Storage:* 32GB onboard eMMC + 2TB MicroSDXC edge slot + high-speed M.2 2230/2242 PCIe NVMe SSD socket (up to 2TB @ 400+ MB/s) for massive offline LLM weights and Wikipedia datasets.
 
 ---
 
