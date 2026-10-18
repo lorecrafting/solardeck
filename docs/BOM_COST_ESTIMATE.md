@@ -65,8 +65,8 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **Chem Strap Sw** | Sub-Miniature Slide Switch (LiFePO4 3.65V vs Li-ion 4.20V Lock) | C&K / E-Switch / LCSC | JS102011SAQN | $0.35 |
 | **ESD Suppression** | Low-Capacitance TVS Diode Arrays for USB & Pogo Pins (x4) | Texas Instruments / Mouser | TPD4E05U06 (x4) + SMAJ5.0A | $0.80 |
 | **RTC Backup Battery**| 3.3V Rechargeable Lithium Micro-Battery (5.5 mAh, >100 days hold)| Seiko Instruments / Mouser | MS621FE-FL11E | $0.65 |
-| **Haptic Driver** | I2C Linear Resonant Actuator Haptic Driver IC | Texas Instruments / Mouser | DRV2605LDGSR | $0.85 |
-| **LRA Motor** | 8.0mm Z-Axis Linear Resonant Actuator Motor | Vybronics / Digi-Key | VG0832012 | $0.95 |
+| **Spatial Haptic Drivers**| Dual Ultra-Low-Power CapDrive Piezo Drivers (Energy Recovery) | Boréas Technologies / Mouser | BOS1901CD-TR (x2) | $2.90 |
+| **Quad Piezo Actuators**| 4x Miniature High-Acceleration Piezo Actuators (Corner Array)| TDK / Mouser / Digi-Key | PowerHap 0904H014V060 (x4)| $5.00 |
 | **Qwiic Port** | Sealed 4-Pin JST-SH 1.0mm I2C Connector + TVS + Power Gate | JST / LCSC | BM04B-SRSS-TB | $0.40 |
 | **JEITA Resistors** | 0.1% Precision Resistors (5.23k / 30.1k) for BQ25895 TS | Yageo / Panasonic 0603 | Precision Thin-Film (x2)| $0.15 |
 | **CM4 Retention** | CNC Aluminum CM4 Retention Bracket & Thermal Interface Pad | Custom CNC / Laird | Custom Bracket + Tflex | $1.80 |
@@ -77,9 +77,9 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **Airgap Switch** | Sub-Miniature 2-Position Gold Contact Slide Switch | C&K / E-Switch / LCSC | JS202011CQN | $0.45 |
 | **GORE Vent** | ePTFE Pressure Equalization Vent Plug | W. L. Gore / Amphenol | PMF100396 | $1.50 |
 | **Enclosure (PA12)**| SLS 3D-Printed PA12 Nylon Shell + 85A TPU Corner Bumpers | JLC3D / Craftcloud | Custom CAD Housing | $28.00 |
-| **Total Core BOM**| **(Mathematically Verified Sum of 66 Core Line Items)** | | | **$410.55 – $435.55** |
+| **Total Core BOM**| **(Mathematically Verified Sum of 66 Core Line Items)** | | | **$416.65 – $441.65** |
 
-*(Note: Specifying the 4GB RAM CM4 base configuration reduces the Total Core BOM to **$390.55 – $415.55**).*
+*(Note: Specifying the 4GB RAM CM4 base configuration reduces the Total Core BOM to **$396.65 – $421.65**).*
 
 ---
 
@@ -140,8 +140,8 @@ Because standard surface-mount components from JLCPCB's / PCBWay's Basic and Ext
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  SOLARDECK CORE TABLET (8GB + DUAL CAM)    │ $410 – $436    │
-│  (Or 4GB CM4 Base Config)                  │ $390 – $416    │
+│  SOLARDECK CORE TABLET (8GB + DUAL CAM)    │ $417 – $442    │
+│  (Or 4GB CM4 Base Config)                  │ $397 – $422    │
 ├─────────────────────────────────────────────────────────────┤
 │  SNAPDECK PARALLEL KEYBOARD ADD-ON         │ $47.55         │
 ├─────────────────────────────────────────────────────────────┤

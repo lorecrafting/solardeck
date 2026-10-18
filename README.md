@@ -31,7 +31,34 @@ SolarDeck is a sovereign, sunlight-readable, distraction-free field workstation 
 
 ---
 
-## 2. Master System Blueprint
+## 2. The 5 Standout Pillars (What We Must Get Flawlessly Right)
+
+*(See [`docs/STANDOUT_FEATURES.md`](docs/STANDOUT_FEATURES.md) for the full architectural specification, latency budgets, and acceptance gates.)*
+
+If SolarDeck is to be legendary, engineering must relentlessly focus on and master these five non-negotiable capabilities:
+
+1. **The "Dual-Brain" Instant Handoff (<400ms Glass-to-Glass):**
+   * *Never off, yet never dies:* Sips ~110 µW as a perpetual indoor solar desk clock and 300-day Zen reader on the RP2350 co-processor.
+   * *Zero boot friction:* The millisecond you touch a key or pen, the Linux CM4 wakes from S2idle in **<300 milliseconds**, restoring your terminal, Neovim buffers, and Claude Code sessions on screen in **under 400ms total**.
+2. **The "Typewriter-on-Paper" Latency Engine (<20ms Keystroke, Inking & Localized Piezo Haptics):**
+   * *Zero perceptible lag:* Hardware-synchronized 1-bit Direct Update (DU) waveforms deliver crisp keystroke rendering in **18–20 milliseconds**, eliminating the sluggishness of traditional e-paper.
+   * *Intelligent Anti-Ghosting (`eink-refreshd`):* Zero flashes during fast typing bursts; silently sweeps micro-ghosting during natural 1.2-second pauses in human thought.
+   * *Sub-18ms Wacom EMR Inking:* Battery-free, 4096-level pressure pen laminated behind the display with zero optical distortion or parallax.
+   * *Coordinate-Targeted Piezo Haptics:* 4× TDK PowerHap corner actuators + dual Boréas BOS1901 drivers concentrate sub-1ms tactile clicks directly under the touching finger on bare glass.
+3. **Sunlight Sovereignty & Perpetual Indoor Life:**
+   * *The brighter the sun, the better it gets:* 10.3" Color E-Ink (Carta 1200 / Kaleido 4, 300 PPI B&W / 150 PPI Color) with 0% glare and zero power to hold a static page. 24–32 hours of active terminal coding under direct noon sun with 0W backlight.
+   * *Perpetual Indoor Harvesting:* High-efficiency indoor a-Si micro-strip + TI BQ25504 nano-boost yields a **net positive power balance under 500 lux indoor room light**, allowing SolarDeck to live on a desk or shelf forever without ever plugging into a wall.
+4. **The SnapDeck Form-Morphology (Lapdeck ⟷ Slate ⟷ Easel):**
+   * *Solves the 2-in-1 dilemma:* Snaps magnetically over the lower 1/3 of the screen with a rigid hinge for rock-solid lap typing (Wayland auto-tiles terminal to upper 2/3).
+   * Detaches in 0.5s into a 510g, 9.8mm slim IP67 waterproof reading/inking slate, or stands vertically as an 80-line coding easel over wireless BLE 5.0.
+5. **Sovereign Field Hardening (Airgap, LoRa, & IP67 All-Weather):**
+   * *Physical Hardware Airgap Switch:* Mechanically breaks power enable nets to LTE, LoRa, Wi-Fi/BT, GPS, and microphone to **0.000V** (zero EMF / 0.000 dBm).
+   * *Autonomous Meshtastic Node:* Integrated Semtech SX1262 LoRa (868/915 MHz) permanently owned by RP2350 acts as an off-grid emergency mesh repeater for **80+ days**.
+   * *Torrential Rain Water-Lock:* Cuts capacitive touch power during downpours, leaving the Wacom stylus and left-bezel 5-way tactical rocker 100% operational in pouring rain.
+
+---
+
+## 3. Master System Blueprint
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -68,7 +95,7 @@ SolarDeck is a sovereign, sunlight-readable, distraction-free field workstation 
 
 ---
 
-## 3. The 6 Pillars of Engineering Innovation
+## 4. Deep-Dive Architectural Innovations (The 8 Engineering Pillars)
 
 ### I. The Dual-Brain Display Mux (Zero-Leakage 300-Day Reader & Mesh Node)
 * **The Problem:** Linux processors (like the CM4) draw 1.5W–3W just sitting idle, draining large batteries in hours.
@@ -128,7 +155,7 @@ SolarDeck is a sovereign, sunlight-readable, distraction-free field workstation 
 
 ---
 
-## 4. The 3 Operational Personas
+## 5. The 3 Operational Personas
 
 ```
 ┌──────────────────────────────┬──────────────────────────────┬──────────────────────────────┐
@@ -145,7 +172,7 @@ SolarDeck is a sovereign, sunlight-readable, distraction-free field workstation 
 
 ---
 
-## 5. Specifications Matrix
+## 6. Specifications Matrix
 
 | Subsystem | Specification |
 | :--- | :--- |
@@ -155,7 +182,7 @@ SolarDeck is a sovereign, sunlight-readable, distraction-free field workstation 
 | **Display Panel** | 10.3" E-Ink Kaleido 3 / Kaleido 4 (1872×1404, 227 PPI B&W / 114–150 PPI Color) + Wacom EMR |
 | **Display Bus & Video**| Dual-Path: 2-Lane MIPI-DSI (24 FPS Cinema Video Engine) + TMUX1575 SPI (4.5 mW Zen Reader) |
 | **Waveform Engine** | Dynamic Quad-Zone Temperature-Compensated Waveform LUT Matrix (-10°C to +50°C in `eink-refreshd`) |
-| **Haptic Feedback** | TI DRV2605L Smart Driver + 8.0mm Z-Axis Linear Resonant Actuator (<1.5ms mechanical click on glass) |
+| **Haptic Feedback** | Quad-Corner TDK PowerHap Piezo Matrix + Dual Boréas BOS1901 CapDrive Drivers (Localized (X,Y) glass click) |
 | **Frontlight** | Dual CCT Bezel Lightguide (TI TPS61163 Step-Up Driver, 2048-step circadian warm amber/white) |
 | **Digitizer & Touch**| Laminated Wacom EMR (<18ms ink) + Hardware `PEN_PROX_INT` Palm Blanking Gate + 0.1mm Mu-Metal |
 | **All-Weather Rain** | Torrential Rain "Water-Lock" Mode (TPS22918 capacitive touch cutoff; 100% water-immune Wacom stylus) |
@@ -191,13 +218,14 @@ SolarDeck is a sovereign, sunlight-readable, distraction-free field workstation 
 
 ---
 
-## 6. Repository Architecture & Documentation
+## 7. Repository Architecture & Documentation
 
 ```
 .
 ├── README.md                  # Master manifesto, problem statement, and executive architecture
 ├── AGENTS.md                  # Developer, AI agent, and hardware safety rules
 └── docs/
+    ├── STANDOUT_FEATURES.md   # The 5 Core Standout Pillars & Engineering North Stars (Latency/Power)
     ├── MVP_ARCHITECTURE.md    # Core MVP vs Modular Packs, anti-bricking, audio, power profiles
     ├── HARDWARE_SPEC.md       # Complete schematic, pinout, antenna engineering, and bus topology
     ├── SOFTWARE_SPEC.md       # Linux kernel, E-ink waveform drivers, power profiles & apps

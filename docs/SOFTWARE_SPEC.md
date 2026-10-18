@@ -400,6 +400,23 @@ To prevent filesystem corruption from unexpected battery depletion, field discon
   * Bank B firmware must initialize all power rails, test the BQ27441 fuel gauge, and assert `WATCHDOG_KICK`.
   * If the firmware hangs or locks up, the hardware watchdog reboots the RP2350 into Bank A (golden image), eliminating any risk of bricking the hardware power controller during field updates.
 
+### 10.5 Spatial Acoustic Piezo Haptic Daemon (`solardeck-hapticd`)
+* **Purpose:** Drives the quad-corner TDK PowerHap piezoelectric actuator array via dual Boréas BOS1901 CapDrive controllers to deliver coordinate-targeted, localized tactile clicks during bare-glass on-screen typing.
+* **Low-Latency Event Pipeline:**
+  1. Hooks into `/dev/input/event*` (Goodix GT911 touch device) at high thread priority (`SCHED_FIFO`, priority 85).
+  2. Upon receiving `EV_KEY` or `BTN_TOUCH` with absolute coordinates $(X, Y)$, maps the touch location relative to the four corner actuators:
+     * $A_1 = \text{Top-Left } (0, 0)$
+     * $A_2 = \text{Top-Right } (1872, 0)$
+     * $A_3 = \text{Bottom-Left } (0, 1404)$
+     * $A_4 = \text{Bottom-Right } (1872, 1404)$
+  3. Calculates localized acoustic phase and amplitude weighting ($w_i \propto 1 / d_i^\alpha$).
+  4. Dispatches differential SPI write transactions to the dual BOS1901 drivers in **< 0.4 milliseconds**:
+     * Primary drive pulse: 1.2ms 140Vpp square-ramp waveform to the nearest corner actuator.
+     * Inverse cancellation pulse: 180° phase-inverted damping pulse to distant actuators to suppress chassis shell vibration.
+* **Autonomous Power Gating & Energy Recovery:**
+  * Uses Boréas CapDrive bidirectional charge recycling, recovering **>80% of pulse energy** back into the power bus (net consumption **~18 mW per key click**).
+  * **SnapDeck Docking Bypass:** When `ID_SENSE` indicates that the physical SnapDeck keyboard is docked, `solardeck-hapticd` immediately places the BOS1901 drivers into deep sleep ($I_Q < 0.1\text{ }\mu\text{A}$), completely eliminating phantom power consumption.
+
 ---
 
 ## 11. Temperature-Compensated Waveform LUT Matrix (`eink-refreshd`)
