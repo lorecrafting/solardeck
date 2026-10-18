@@ -37,7 +37,7 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **Rear Camera** | 12MP Sony IMX708 with Motorized PDAF Macro Autofocus | Raspberry Pi / DigiKey | Official Cam Module 3 sensor | $12.50 |
 | **Front Camera**| 5MP Sony IMX219 / OV5647 1080p Fixed-Focus Camera | Raspberry Pi / LCSC | Official Cam Module 2 sensor | $4.80 |
 | **Privacy Shutter**| Mechanical "ThinkShutter" Bezel Sliding Door | Custom / JLC3D | Molded Delrin Slider | $0.80 |
-| **Audio** | Single I2S MEMS Mic + I2S 3.2W Class-D Amp + Sealed Speaker | Knowles / Maxim / PUI Audio | SPH0645LM4H + MAX98357A + AS03008MR | $4.00 |
+| **Audio** | Dual-MEMS Acoustic Array (2x SPH0645) + I2S Class-D Amp + Speaker| Knowles / Maxim / PUI Audio | SPH0645LM4H (x2) + MAX98357A + AS03008MR | $5.10 |
 | **Docking Bus** | 5-Pin Hermetic Magnetic Gold Pogo Connector (Front Bezel) | LCSC / AliExpress | Magsafe-style Pogo 2.54mm | $2.50 |
 | **Expansion Bus**| 8-Pin Hermetic Magnetic Pogo Connector (Rear Backpack) | LCSC / AliExpress | 8-Pin Spring Pogo Bus | $3.00 |
 | **Passives/Ports**| 2x IP68 USB-C Ports, Qwiic Jack, 1,000µF Poly Caps, SMD Passives | LCSC / JLCPCB SMT Library | Standard SMD 0402/0603 | $9.80 |
@@ -46,6 +46,7 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **Motion Sensor** | Ultra-Low-Power 3-Axis Accelerometer (3.5µA Pick-up Wake) | Bosch Sensortec / Mouser | BMA400 | $1.10 |
 | **Compass** | High-Precision 3-Axis Digital Magnetometer | Memsic / LCSC | MMC5603NJ | $0.80 |
 | **Barometer** | Precision Atmospheric Pressure & Altimeter Sensor | Bosch Sensortec / Mouser | BMP390 | $1.20 |
+| **5-Way Rocker** | IP67 Sealed Micro Navigation Joystick (Up/Down/Left/Right/Press)| ALPS / Panasonic / Mouser | SKRHABE010 | $0.85 |
 | **Power Telemetry**| 3-Channel High-Side Current & Power Monitor IC | Texas Instruments / Mouser | INA3221AIRGVR | $1.20 |
 | **Coulomb Counter**| Impedance Track™ Battery Fuel Gauge & Health IC | Texas Instruments / Mouser | BQ27441-G1A | $1.10 |
 | **Thermal Triad** | Dual Precision Digital Temperature Sensors (Batt + E-Ink) | Texas Instruments / LCSC | TMP112AIDRLR (x2) | $0.60 |
@@ -58,6 +59,7 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **Bezel Solar MPPT**| Nano-Power Solar Boost Harvester IC (Cold-Start 330mV, 80% FOCV)| Texas Instruments / Mouser | BQ25504RGTR | $1.80 |
 | **Frontlight Driver**| Dual-Channel Constant-Current Step-Up LED Driver (2048-step CCT)| Texas Instruments / Mouser | TPS61163YFFR | $0.65 |
 | **Battery PCM** | Hardware Battery Safety IC + Dual N-Channel Power MOSFETs | Texas Instruments / Mouser | BQ2970 + CSD87330Q3D | $0.55 |
+| **Chem Strap Sw** | Sub-Miniature Slide Switch (LiFePO4 3.65V vs Li-ion 4.20V Lock) | C&K / E-Switch / LCSC | JS102011SAQN | $0.35 |
 | **ESD Suppression** | Low-Capacitance TVS Diode Arrays for USB & Pogo Pins (x4) | Texas Instruments / Mouser | TPD4E05U06 (x4) + SMAJ5.0A | $0.80 |
 | **Supercapacitor** | 0.2F 3.3V SMT Back-up Supercapacitor for DS3231 RTC | Seiko Instruments / Mouser | CPH3225A | $0.55 |
 | **Haptic Driver** | I2C Linear Resonant Actuator Haptic Driver IC | Texas Instruments / Mouser | DRV2605LDGSR | $0.85 |
@@ -68,7 +70,7 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **Airgap Switch** | Sub-Miniature 2-Position Gold Contact Slide Switch | C&K / E-Switch / LCSC | JS202011CQN | $0.45 |
 | **GORE Vent** | ePTFE Pressure Equalization Vent Plug | W. L. Gore / Amphenol | PMF100396 | $1.50 |
 | **Enclosure (PA12)**| SLS 3D-Printed PA12 Nylon Shell + 85A TPU Corner Bumpers | JLC3D / Craftcloud | Custom CAD Housing | $28.00 |
-| **Total Core BOM**| | | | **~$375 – $408** |
+| **Total Core BOM**| | | | **~$377 – $410** |
 
 ---
 
@@ -85,7 +87,8 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **Docking Bus** | 5-Pin Magnetic Pogo Mating Header + N52 Magnets | LCSC / AliExpress | 5-Pin Female Pogo Strip | $3.00 |
 | **PCB & Assembly**| Ultra-Thin 0.8mm 2-Layer Keyboard Matrix PCB + SMT | JLCPCB | Turnkey Assembly | $8.00 |
 | **Enclosure** | SLS PA12 Nylon Keyboard Backplate & Shell | JLC3D | Custom CAD Shell | $6.50 |
-| **Total SnapDeck**| | | | **~$45.70** |
+| **Ergonomic Cant** | Magnetic Hinge Flap (7° Typing Cant) + Dual Alignment Pins | Custom Tooling / 304 SS | Custom Hinge + Pins | $1.40 |
+| **Total SnapDeck**| | | | **~$47.10** |
 
 ---
 
@@ -124,10 +127,10 @@ Because standard surface-mount components from JLCPCB's / PCBWay's Basic and Ext
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  SOLARDECK CORE TABLET (8GB + DUAL CAM)    │ ~$375 – $408   │
-│  (Or 4GB CM4 Base Config)                  │ ~$355 – $388   │
+│  SOLARDECK CORE TABLET (8GB + DUAL CAM)    │ ~$377 – $410   │
+│  (Or 4GB CM4 Base Config)                  │ ~$357 – $390   │
 ├─────────────────────────────────────────────────────────────┤
-│  SNAPDECK PARALLEL KEYBOARD ADD-ON         │ ~$45.70        │
+│  SNAPDECK PARALLEL KEYBOARD ADD-ON         │ ~$47.10        │
 ├─────────────────────────────────────────────────────────────┤
 │  reMarkable 2 (Monochrome, No Backlight)   │ $399 – $449    │
 │  Kindle Scribe 10.2" (Closed DRM Amazon)   │ $369 – $419    │

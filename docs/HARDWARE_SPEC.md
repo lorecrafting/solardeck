@@ -68,6 +68,14 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
     * **Radxa CM3 / Pine64 SOQuartz (Rockchip RK3566 Alternative):** Quad Cortex-A55 @ 1.8GHz on 22nm node for 40% lower active power draw.
 * **Low-Power Co-Processor:** Raspberry Pi **RP2350** (Dual ARM Cortex-M33 with FPU/DSP or Dual Hazard3 RISC-V cores @ 150MHz).
   * **Ultra-Low Dormant Sleep:** Drops from 180 µA (RP2040) down to **10 µA (~0.033 mW)**—an **18x reduction in sleep current**.
+  * **Storage & Memory:**
+    * **NOR Flash:** 16MB QSPI NOR Flash (**Winbond W25Q128JVS**).
+    * **Dual-Bank A/B Firmware Partitioning & Hardware Watchdog Rollback:**
+      * **Slot 0 (0x000000 – 0x00FFFF, 64 KB):** Permanent, immutable hardware-protected Bootloader.
+      * **Bank A (0x010000 – 0x40FFFF, 4 MB):** Active golden firmware partition.
+      * **Bank B (0x410000 – 0x80FFFF, 4 MB):** Staged OTA / developer test firmware partition.
+      * **Data & Telemetry Pool (0x810000 – 0xFFFFFF, 8 MB):** Non-volatile shadow sensor barograph and telemetry logs.
+      * **Hardware Watchdog Fallback:** The bootloader boots into the target bank with a **5-second hardware watchdog window**. Newly flashed firmware must execute a self-test and assert `WATCHDOG_KICK`. If the watchdog trips twice without a kick, the bootloader automatically reverts to the previous known-good golden bank, guaranteeing the power arbiter and S2idle wake logic cannot be bricked.
   * **External High-Speed Memory:** Paired with an **8MB QSPI PSRAM chip** (APMemory `APS6404L` / Winbond, $0.75).
   * **The 5 RP2350 Superpowers:**
     1. **Full-Screen Autonomous Framebuffering (30ms Zen Reader):** Holds two uncompressed 1872×1404 8-bit framebuffers (2.62MB each). Pre-caches eBook pages and executes sub-30ms paper-fast page turns without waking the CM4, dropping reading power to **4.5 mW (300+ days battery life)**.
@@ -118,6 +126,11 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
 * **Battery Chemistry & Secondary Hardware Protection:**
   * **Chemistry:** **1S Li-ion / LiPo** (3.7V nominal, 4.2V peak) or **1S2P LiFePO4** (3.2V nominal, 3.65V peak).
   * **Target Capacity:** 8,000 to 10,000 mAh (32–35 Wh) pouch pack (airline-compliant <100Wh).
+  * **Physical Battery Chemistry Strap (`CHEM_SEL` LiFePO4 vs. Li-ion Hardware Lock):**
+    * A dedicated 3-pin solder-bridge / sub-miniature slide switch (**C&K JS102011SAQN**, $0.35) located on the PCBA under the battery cover rigidly straps the hardware charging ceiling:
+      * **Position 1 (GND / LiFePO4 Mode):** Hardwires the BQ25895 resistor network / default register pin to clamp maximum charge voltage strictly to **3.60V / 3.65V**. Prevents destructive 4.2V overcharging even if Linux OS, config files, or I2C bus are corrupted.
+      * **Position 2 (VDD / Li-ion Mode):** Unlocks standard **4.20V** charging for standard lithium polymer chemistry.
+      * **Fuel Gauge Auto-Profile:** Connected directly to RP2350 `GPIO 15` on Power-On Reset (POR). The co-processor reads the physical strap state and automatically configures the BQ27441 fuel gauge with the appropriate chemical Open-Circuit Voltage (OCV) profile table.
   * **Hardware Battery PCM (Pure Silicon Secondary Protection):**
     * Texas Instruments **BQ2970** battery protection IC paired with dual low-$R_{\text{DS(on)}}$ (12 mΩ) N-channel power MOSFETs (**TI CSD87330Q3D**, $0.55 total).
     * Completely autonomous from software and I2C: physically cuts off the battery pack if cell voltage drops below **2.50V** (over-discharge protection) or exceeds **3.65V/4.25V** (over-charge protection).
@@ -270,10 +283,12 @@ SolarDeck leverages the Broadcom SoC's dual independent MIPI CSI-2 camera ports 
   * **E-Ink Meeting UX:** Inbound screen-shared code/slides render with paper-sharp 16-bit grayscale (GC16), while participant video thumbnails render in 2-bit A2 motion mode (60–75ms) or update on active speaker change, eliminating screen flicker while maintaining real-time audio.
 
 ### 2.7 Audio & Standby Alert Subsystem
-* **Microphone:** Single Knowles **SPH0645LM4H-B** (or InvenSense ICS-43434) I2S digital MEMS microphone.
-  * Dynamic range: 65 dB SNR.
-  * Placed on upper bezel inside a molded silicone acoustic boot for clean voice capture in Claude Code.
-* **Physical Privacy Switch:** Hardware slide switch that physically breaks VDD to the microphone (hardware-guaranteed un-hackable mute).
+* **Dual-MEMS Noise-Cancelling Acoustic Array (Broadside Beamforming):**
+  * **Sensors:** Dual matched Knowles **SPH0645LM4H-B** (or InvenSense ICS-43434) high-SNR I2S digital MEMS microphones.
+  * **Acoustic Geometry:** Spaced **65 mm apart** along the top front bezel inside molded acoustic elastomer isolation boots with hydrophobic ePTFE dust/wind acoustic grilles.
+  * **Bus Architecture:** Connected to the Broadcom I2S bus configured for stereo L/R time-division multiplexing over a single data line (`I2S_DIN`).
+  * **Acoustic Beamforming & Wind Rejection:** Processed in Linux via PipeWire / WebRTC audio processing DSP (`solardeck-beamformd`). Computes differential phase delay between Left and Right microphones, forming an elliptical 60° directional voice pickup cone targeted at the operator's face while attenuating 18–24 dB of ambient wind gusts, road noise, and office chatter. Yields clean, near-studio 16 kHz voice streams for 99%+ accuracy in local Whisper and Claude Code voice prompts.
+* **Physical Privacy Switch:** Hardware slide switch that physically breaks VDD to both microphones simultaneously (hardware-guaranteed un-hackable mute).
 * **Primary Audio Output (Linux Master):** Texas Instruments **MAX98357A** I2S Class-D amplifier driving an internal 1W sealed acoustic chamber micro-box speaker.
 * **Standby Alert Piezo (Co-Processor Master):** SMT **5.0mm micro-piezo acoustic buzzer** (75 dB @ 10cm, $0.25) directly connected to RP2350 PWM pin `RP2350_GPIO18`.
   * Sounds immediate chime tones for incoming 24/7 Meshtastic LoRa messages, RTC alarms, and barometric storm alerts without cold-booting Linux (draws < 2 mW during chirp).
@@ -575,6 +590,21 @@ To eliminate EMI radiation from dual 1 Gbps MIPI-CSI camera interfaces, guarante
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
+### 2.12 Tactical Field Controls & All-Weather Torrential Rain Mode
+To provide 100% mission reliability in severe sub-zero weather, dust storms, and driving tropical rains where gloves must be worn and touchscreens fail:
+* **IP67 Sealed 5-Way Tactical Navigation Rocker (Left Bezel):**
+  * Sub-miniature multi-directional tactical joystick (**ALPS SKRHABE010** / Panasonic EVQ-W, $0.85) integrated into the left chassis grip area.
+  * Sealed behind an overmolded silicone rubber boot (IP67 certified).
+  * Direct electrical connection to 5 dedicated RP2350 GPIO inputs (`NAV_UP`, `NAV_DOWN`, `NAV_LEFT`, `NAV_RIGHT`, `NAV_PRESS`) with hardware RC debounce filtering.
+  * **Functions:**
+    * **Single-Handed Gloved Navigation:** Operators wearing thick winter or Kevlar tactical gloves can flip pages, scroll terminal command history, cycle Sway Wayland workspaces, and select menu items without touching the glass.
+    * **Direct Hardware Dimming:** Holding `NAV_PRESS` and rocking Up/Down adjusts frontlight circadian brightness smoothly.
+* **Torrential Rain / Water-Lock Mode (Wacom-Only Operating Mode):**
+  * **The Problem:** Water droplets falling on capacitive glass act as conductive finger touches, creating erratic cursor jumps and phantom clicks in heavy downpours.
+  * **The Solution:** A dedicated hardware-assisted **Water-Lock Mode**, toggled by holding the 5-way rocker center-press for 2 seconds (or via the terminal command `solardeck-waterlock on`).
+  * **Mechanism:** Shuts off power to the Goodix capacitive touch controller completely via its dedicated TPS22918 load switch.
+  * **Why It Works:** The battery-free **Wacom EMR digitizer operates on electromagnetic resonance (~560 kHz)** and is completely unaffected by surface water or liquid sheets. With capacitive touch deactivated, the user can write, sketch, annotate maps, and navigate terminal apps with the stylus while water streams down the display.
+
 ---
 
 ## 3. The SnapDeck Hybrid Detachable Keyboard (Parallel Co-Design)
@@ -589,13 +619,15 @@ The SnapDeck keyboard is co-engineered alongside the core tablet to guarantee me
 │ 2. FIRMWARE:     ZMK (Open-source, ultra-low power, instant BLE switching)  │
 │ 3. SWITCHES:     Kailh X-Switch (ultra-low 3.5mm profile, tactile scissor)  │
 │ 4. NAVIGATION:   Blackberry RIM 9900 Optical Trackpad centered below space  │
-│ 5. BATTERY:      Thin 300 mAh LiPo pouch cell inside keyboard shell         │
-│ 6. DOCK BUS:     5-Pin Magnetic Pogo (5V Charge, GND, USB D+, USB D-, ID)   │
-│ 7. CHASSIS MATE: Matching PA12 / 6061-T6 shell with N52 neodymium magnets   │
+│ 5. ERGONOMICS:   Folding Magnetic Hinge Flap (7° Natural Typing Cant Angle) │
+│ 6. ALIGNMENT:    Dual Chamfered 1.5mm Stainless Steel Dowel Guide Pins      │
+│ 7. BATTERY:      Thin 300 mAh LiPo pouch cell inside keyboard shell         │
+│ 8. DOCK BUS:     5-Pin Magnetic Pogo (5V Charge, GND, USB D+, USB D-, ID)   │
+│ 9. CHASSIS MATE: Matching PA12 / 6061-T6 shell with N52 neodymium magnets   │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 3.1 Pogo-Pin Docking Interface
+### 3.1 Pogo-Pin Docking & Self-Locating Mechanical Interface
 * **Connector:** 5-pin hermetic magnetic spring-loaded gold Pogo connector (2.54 mm pitch).
 * **Pinout:**
   1. `VBUS` (+5.0V Power from tablet to keyboard / charging circuit)
@@ -603,6 +635,11 @@ The SnapDeck keyboard is co-engineered alongside the core tablet to guarantee me
   3. `USB_D+` (USB 2.0 Differential Data Positive)
   4. `GND` (Ground)
   5. `ID_SENSE` (Grounded inside keyboard for hardware insertion detection)
+* **Dual Stainless Steel Alignment Guide Pins:**
+  * Two chamfered 1.5mm 304-stainless steel guide dowels flank the 5-pin pogo array on the keyboard deck, mating with CNC receiver wells on the tablet lower bezel.
+  * Ensures blind, instantaneous magnetic capture with **zero lateral shearing force** on the spring-loaded gold pogo pins.
+* **Ergonomic 7° Magnetic Folding Cant Flap:**
+  * A secondary folding magnetic strip along the keyboard top edge allows the keyboard to rest either completely flat (0° Lapdeck mode) or propped up at a comfortable **7° ergonomic typing cant** on desks or tables, relieving wrist strain during multi-hour programming sprints.
 
 ### 3.2 Operating Modes & Wayland Integration
 1. **On-Screen Lapdeck Mode (Docked):**

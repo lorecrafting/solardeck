@@ -298,3 +298,42 @@ To prevent filesystem corruption from unexpected battery depletion, field discon
   2. Freezes write queues via `fsfreeze -f /home`.
   3. Sends `SIGTERM` to active Claude Code and tmux sessions, saving buffer state to disk.
   4. Signals the RP2350 that eMMC is parked; RP2350 then issues a graceful power-down.
+
+---
+
+## 10. Tactical Field Daemons, Acoustic Beamforming & All-Weather Rain Handling
+
+### 10.1 Dual-Microphone Acoustic Beamforming Daemon (`solardeck-beamformd`)
+* Integrates directly into PipeWire via the `libpipewire-module-echo-cancel` and WebRTC Audio Processing (AEC/NS/AGC) engine.
+* **Broadside Spatial Filtering:**
+  * Uses the 65 mm physical separation between the dual Knowles SPH0645 MEMS microphones.
+  * Measures inter-aural time difference (ITD) to synthesize an elliptical 60° forward-facing acoustic pickup beam centered on the operator’s mouth.
+  * Attenuates off-axis sounds by 18–24 dB, eliminating outdoor wind buffeting, rain splatter, and background conversations.
+  * Direct pipe into local Whisper (`whisper.cpp`) and Claude Code CLI for 99%+ speech-to-text accuracy in harsh outdoor environments.
+
+### 10.2 Torrential Rain / Water-Lock Daemon (`solardeck-waterlock`)
+* Manages capacitive touch rejection when operating in heavy precipitation or marine environments:
+  * **Triggering:** Activated by holding the 5-way tactical rocker center-press for 2 seconds, or via CLI:
+    ```bash
+    solardeck-waterlock on   # Cuts power to Goodix touch controller
+    solardeck-waterlock off  # Restores capacitive multi-touch
+    ```
+  * **Hardware Action:** Controls the TPS22918 load switch supplying `VDD_TOUCH`. Disabling this rail drops capacitive sensor power to 0.000V.
+  * **Digitizer Continuity:** The Wacom EMR digitizer (`wacom_w9013`) remains powered and 100% active. Stylus hover, pressure, tilt, and button clicks operate flawlessly under direct sheeting water with zero phantom taps.
+
+### 10.3 Tactical 5-Way Navigation Rocker Daemon (`solardeck-navd`)
+* Captures raw input events from the left-bezel ALPS 5-way rocker connected to RP2350 GPIOs.
+* Injects standard Linux input events into `uinput`:
+  * `NAV_UP` $\to$ `KEY_UP` (or Page Up / Terminal scrollback)
+  * `NAV_DOWN` $\to$ `KEY_DOWN` (or Page Down)
+  * `NAV_LEFT` $\to$ `KEY_LEFT` (Previous Workspace / PDF Chapter)
+  * `NAV_RIGHT` $\to$ `KEY_RIGHT` (Next Workspace / PDF Chapter)
+  * `NAV_PRESS` $\to$ `KEY_ENTER` (Select / Open)
+* **Gloved Mode:** Enables seamless 1-handed terminal browsing, document reading, and system controls with heavy winter or tactical gloves on.
+
+### 10.4 Co-Processor A/B Firmware Slotting & Hardware Watchdog Verification
+* The RP2350 co-processor firmware incorporates a fail-safe A/B update daemon:
+  * New firmware is flashed over SPI/UART to the inactive partition (Bank B).
+  * Co-processor resets into Bank B with a 5-second hardware watchdog armed.
+  * Bank B firmware must initialize all power rails, test the BQ27441 fuel gauge, and assert `WATCHDOG_KICK`.
+  * If the firmware hangs or locks up, the hardware watchdog reboots the RP2350 into Bank A (golden image), eliminating any risk of bricking the hardware power controller during field updates.
