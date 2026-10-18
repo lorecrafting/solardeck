@@ -1,6 +1,6 @@
 # SolarDeck MVP & Modular System Architecture
 
-Written 2026-10-17 17:35 UTC in the Pi harness by antigravity/gemini-3.8-flash
+Written 2026-10-18 02:58 UTC in the Pi harness by antigravity/gemini-3.8-flash
 
 ---
 
@@ -11,14 +11,16 @@ SolarDeck is a sovereign, general-purpose open-hardware computing platform desig
 1. **The Core MVP Tablet:** The standalone sovereign device containing the essential platform:
    * Bare-metal Linux coding & computing platform (Raspberry Pi CM4)
    * Sunlight-readable 10.3" e-paper reader and Wacom EMR digitizer slate
-   * Built-in off-grid mesh communicator (Semtech SX1262 LoRa / Meshtastic)
+   * Built-in Worldwide 4G/LTE (Quectel EG25-G) with soldered onboard MFF2 **eSIM (eUICC)**
+   * Built-in off-grid mesh communicator (Semtech SX1262 LoRa / Meshtastic 915/868 MHz)
    * Worldwide Multi-Constellation Satellite Navigation (u-blox MAX-M10S: GPS + BeiDou-3 + Galileo + QZSS + GLONASS)
-   * Dual-brain ultra-low-power supervisor (RP2040) for perpetual desk clock & Kindle modes
-   * Maximum-capacity **10,000 mAh (32 Wh) LiFePO4** battery (safe to 65°C, 3,000+ cycles, airline-compliant)
-   * Lightweight, rugged SLS 3D-printed PA12 Nylon enclosure
-2. **Modular Expansion Packs:** High-complexity or specialized payloads offloaded to snap-on or USB-C modules:
-   * **RF Multi-Tool Pod:** Flipper Zero suite (Sub-GHz CC1101, NFC, RFID, IR blaster)
-   * **Cellular M.2 Pod:** Worldwide Quectel EG25-G (30+ global LTE bands) + onboard eSIM
+   * Dual-brain ultra-low-power supervisor (RP2350 + 8MB PSRAM) with **TI TMUX1574 display bus isolation** for 4.5 mW 30ms Zen reading, 24/7 LoRa mesh repeating, and 300+ day desk clock modes
+   * Dual MIPI CSI-2 camera subsystem (12MP Sony IMX708 PDAF Macro rear camera + 5MP 1080p front camera with mechanical ThinkShutter)
+   * Top-bezel **IP67 Bulkhead SMA female connector** for tactical tuned LoRa whip, plus internal Taoglas FXUB63 2×2 MIMO cellular antennas
+   * High-capacity **8,000–10,000 mAh (30–32 Wh) Li-ion/LiFePO4** battery (airline-compliant <100Wh)
+   * Lightweight, rugged SLS 3D-printed PA12 Nylon enclosure or CNC 6061-T6 aluminum with RF window cap
+2. **Modular Expansion Packs:** Specialized RF payloads offloaded to snap-on or USB-C modules:
+   * **Tactical RF Backpack:** Flipper Zero suite (Sub-GHz CC1101, NFC, RFID, IR blaster) connecting via the rear 8-pin magnetic pogo bus
    * **Satellite SOS Pod:** Commercial two-way satellite transceivers (RockBLOCK 9603 Iridium / Swarm)
    * **Industrial Deck Link:** CAN Bus 2.0B / M8 Gigabit Ethernet bridge
 
@@ -26,37 +28,42 @@ SolarDeck is a sovereign, general-purpose open-hardware computing platform desig
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                       SOLARDECK MVP (THE CORE TABLET)                       │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 1. BRAIN:     Raspberry Pi CM4 (4GB RAM, 32GB eMMC, Wi-Fi/BT)               │
-│ 2. CO-PROC:   RP2040 (24/7 Power Supervisor, Clock Tick, Instant Wake)      │
-│ 3. SCREEN:    10.3" E-Ink (Carta 1200 or Kaleido 3) + Wacom EMR + Touch    │
-│ 4. COMMS:     Built-In Semtech SX1262 LoRa (868–928MHz Global Wideband)     │
-│ 5. GNSS:      u-blox MAX-M10S (GPS, BeiDou-3, Galileo, QZSS, GLONASS)       │
-│ 6. MOTION:    6-Axis IMU (ST LSM6DS3: Auto-Rotate, Heading, Tap-to-Wake)    │
-│ 7. AUDIO:     Sealed Micro-Box Speaker + Smart Amp + MEMS Mic + Mute Switch │
-│ 8. BATTERY:   10,000 mAh (32 Wh) LiFePO4 (200g, 65°C Safe, 3,000+ Cycles)   │
-│ 9. EXPAND:    1x Qwiic (I2C) + 2x IP68 USB-C + 8-Pin Rear Magnetic Pogo Bus │
-│ 10. CHASSIS:  SLS 3D-Printed PA12 Nylon + 85A TPU Armor Corners (~510g total)│
+│ 1. BRAIN:     Raspberry Pi CM4 (8GB RAM, 32GB eMMC, Wi-Fi/BT)               │
+│ 2. CO-PROC:   RP2350 (Cortex-M33/RISC-V) + 8MB PSRAM (300-Day Zen Reader)   │
+│ 3. ISOLATOR:  TI TMUX1574 Quad SPDT Bus Switch (CM4/RP2350 Display Mux)     │
+│ 4. SCREEN:    10.3" E-Ink (Carta 1200 or Kaleido 3) + Wacom EMR + Touch    │
+│ 5. CAMERAS:   Dual MIPI: 12MP Sony IMX708 PDAF Rear + 5MP 1080p Front       │
+│ 6. CELLULAR:  M.2 Quectel EG25-G LTE + Onboard Soldered MFF2 eSIM (ST4SIM)  │
+│ 7. MESH/GNSS: Built-In Semtech SX1262 LoRa (868–928MHz) + u-blox MAX-M10S   │
+│ 8. ANTENNAS:  Top-Edge IP67 SMA (LoRa) + Internal Taoglas FXUB63 MIMO (LTE) │
+│ 9. SENSORS:   Bosch BMA400 Accel + MMC5603NJ Compass + BMP390 Barometer/Alt │
+│ 10. AIRGAP SW: Physical Hardware RF Kill Switch (Zero EMF / 0.000 dBm Cutoff)│
+│ 11. AUDIO:    Sealed Micro-Box Speaker + MAX98357A Amp + MEMS Mic + Mute SW │
+│ 12. BATTERY:  8,000–10,000 mAh (32–35 Wh) Pack (Airline-Compliant, 65°C Safe│
+│ 13. EXPAND:   1x Qwiic (I2C) + 2x IP68 USB-C (Monitor Sink) + 8-Pin Pogo    │
+│ 14. CHASSIS:  SLS 3D-Printed PA12 Nylon + 85A TPU Armor Corners (~510g total)│
 └──────────────────────────────────────┬──────────────────────────────────────┘
                                        │
             ┌──────────────────────────┴──────────────────────────┐
             ▼                                                     ▼
-┌───────────────────────────────┐     ┌───────────────────────────────────────┐
-│ FUTURE MODULE 1: RF BACKPACK  │     │ FUTURE MODULE 2: TACTICAL / SATELLITE │
-│ • Flipper Zero Sub-GHz CC1101 │     │ • Worldwide 4G/LTE (Quectel EG25-G)   │
-│ • 13.56MHz NFC & 125kHz RFID  │     │ • Onboard eSIM (eUICC) + Nano-SIM     │
-│ • IR Blaster & Receiver       │     │ • Iridium / Swarm Satellite SOS       │
-│ • Connects via USB-C or Pogo  │     │ • CAN Bus 2.0B / Industrial M8 Bridge │
-└───────────────────────────────┘     └───────────────────────────────────────┘
+┌───────────────────────────────────────┐     ┌───────────────────────────────┐
+│ SNAPDECK KEYBOARD (PARALLEL BUILD)    │     │ MODULAR TACTICAL RF BACKPACK  │
+│ • Kailh X-Switches (Ultra-slim 3.5mm) │     │ • Flipper Zero Sub-GHz CC1101 │
+│ • Blackberry RIM 9900 Optical Trackpad│     │ • 13.56MHz NFC & 125kHz RFID  │
+│ • Nordic nRF52840 (ZMK + BLE 5.0)     │     │ • Dual High-Power IR TX/RX    │
+│ • 5-Pin Magnetic Gold Pogo Bus        │     │ • Snaps to Rear 8-Pin Pogo    │
+│ • Wayland Auto-Resize to Top 2/3      │     │ • Independent Shielded Cavity │
+└───────────────────────────────────────┘     └───────────────────────────────┘
 ```
 
 ---
 
 ## 2. Battery Sizing & Weight Optimization
 
-To achieve the absolute maximum field battery life without creating an excessively heavy device:
+To achieve maximum field battery life without an excessively heavy device:
 
-### The Engineering Sweet Spot: 10,000 mAh (32 Watt-hours) LiFePO4
-* **Configuration:** 1S2P prismatic pouch cell pack (two flat 5,000 mAh 3.2V cells in parallel with integrated hardware PCM protection circuit).
+### The Engineering Sweet Spot: 8,000–10,000 mAh (30–32 Watt-hours)
+* **Configuration:** 1S Li-ion/LiPo (3.7V nominal) or 1S2P LiFePO4 (3.2V nominal) prismatic pouch pack with integrated hardware PCM protection circuit.
 * **Dimensions:** ~5.5 mm thick × 130 mm × 130 mm (occupies the flat recessed cavity directly behind the 10.3" e-paper display).
 * **Weight:** **~200 grams** (~7.0 oz).
 * **Total Tablet Device Weight:** **~510 grams** (1.12 lbs). For comparison:
@@ -64,36 +71,45 @@ To achieve the absolute maximum field battery life without creating an excessive
   * Onyx Boox Note Air 3C: ~430 grams (with small 3,700 mAh battery)
   * Panasonic Toughbook tablet: ~1,100 grams
 * **FAA / TSA Airline Compliance:** The international limit for passenger aircraft is **100 Watt-hours (Wh)**. At 32 Wh, SolarDeck is less than 1/3 of the legal threshold, flying on all commercial airlines worldwide without restrictions.
-* **Extreme Heat Safety:** Unlike standard Lithium-Polymer (which swells and risks thermal runaway above 45°C), **LiFePO4 is rated safe up to 65°C (149°F)** with zero fire hazard. The tablet can sit in direct tropical sunlight or on a vehicle dashboard safely.
+* **Extreme Heat Safety:** Rated safe up to 65°C (149°F). The tablet can sit in direct sunlight or on a vehicle dashboard safely.
 
-### Real-World Runtime on 10,000 mAh (32 Wh):
-* **Full AI Workstation Mode (CM4 Quad-Core @ ~3.0W):** **10.5 to 11 Hours** of continuous Claude Code development, compilation, and terminal work.
-* **Scholar / Study Mode (CM4 with S2idle @ ~0.3W avg):** **100+ Hours** of active reading and Wacom stylus note-taking.
-* **Pure Kindle Mode (RP2040 Driven @ ~0.001W):** **6 to 9 MONTHS** of daily book reading (2 hours/day) on a single charge.
-* **Ambient Desk Clock Mode (RP2040 1-Sec Tick @ ~0.008W):** **166 DAYS (5.5 Months)** of a live ticking desk clock without ever plugging into a wall.
+### Real-World Runtime on 35 Wh:
+* **Tier 0: Dormant Standby (< 0.1 mW):** **10+ Years** shelf life.
+* **Tier 1: Zen Reader Mode (RP2350 Driven @ ~4.5 mW):** **300+ DAYS (10 Months)** of daily book reading on a single charge with 30ms page turns.
+* **Tier 2: Perpetual LoRa Mesh Repeater (RP2350 @ 12–15 mW):** **80+ DAYS (2.6 Months)** of continuous off-grid packet hopping without waking Linux.
+* **Tier 3: Paper-Feel Scribe Slate (CM4 1-Core @ ~0.60W):** **58 Hours** continuous active writing (460+ hours study mode with S2idle).
+* **Tier 4: Adaptive Mixed Workstation (Web/Discord/Claude @ ~1.40W avg):** **25 Hours** continuous screen-on time (3 to 6 real-world days).
+* **Tier 5: Video Teleconference Mode (Front Cam + Mic + H.264 @ ~2.10W):** **16.5 Hours** of continuous client video calls.
+* **Tier 6: AI Compile Turbo (CM4 Quad 1.8GHz @ ~3.2W):** **10 to 11 Hours** continuous parallel compiling and cellular connection.
 
 ---
 
-## 3. Global Satellite Navigation & Multi-Region Wireless
+## 3. Cellular & RF Antenna Engineering
 
-To ensure SolarDeck works natively in the Americas, Europe, and Asia:
+### 3.1 Cellular Modem & Onboard eSIM
+* **Modem:** M.2 Key-B 3042 socket with **Quectel EG25-G** (30+ global LTE bands, worldwide carrier certifications).
+* **eSIM Hardware:** STMicroelectronics **ST4SIM-200M** or Infineon **SLM97** soldered down in an industrial **MFF2 DFN-8 (5×6mm)** package.
+  * Eliminates the physical SIM tray cutout, rubber gaskets, and water ingress points.
+  * Direct 4-wire ISO 7816 connection to modem SIM pins.
+* **Linux Management:** Managed natively by **`lpac`** (open-source C Local Profile Assistant) via `ModemManager`. Activation QR codes are downloaded directly from consumer SM-DP+ servers using standard AT channel commands (`AT+CCHO`/`AT+CGLA`).
 
-1. **Global Multi-Constellation GNSS (u-blox MAX-M10S):**
-   * Concurrent reception of **all 4 global constellations**: US GPS, Chinese **BeiDou-3**, European **Galileo**, and Russian **GLONASS**, plus Japanese **QZSS (Michibiki)**.
-   * BeiDou-3 and QZSS provide superior coverage across East Asia, Southeast Asia, Hawaii, and the Pacific basin, delivering instant fixes even in urban canyons or mountainous terrain.
-   * 15 mW ultra-low-power operation; feeds standard NMEA data to Linux `gpsd` for Google Maps, OsmAnd, and FoxtrotGPS.
-2. **Worldwide Off-Grid Mesh (Semtech SX1262 LoRa):**
-   * Equipped with a **wideband 868–928 MHz tuned antenna**.
-   * Software-switchable between **US915** (Americas/Hawaii), **EU868** (Europe), and **AS923** (Asia/Oceania) with zero hardware modifications (`meshtastic --set-region <REGION>`).
-3. **Worldwide Cellular Compatibility (Add-On / Tethering):**
-   * Cellular carrier lines: T-Mobile Essentials phone hotspot provides $0 free data sharing. For dedicated SIMs, **Tello** provides 2GB LTE for $6/month on the T-Mobile network.
-   * Modular cellular pod utilizes the global **Quectel EG25-G** (30+ global LTE bands) with physical Nano-SIM and onboard MFF2 **eSIM (eUICC)** for instant local digital data plans in 150+ countries.
+### 3.2 Antenna Architecture & Reception Optimization
+1. **LoRa Mesh (Meshtastic 915/868 MHz):**
+   * Top-edge **IP67 Bulkhead SMA female connector** with silicone O-ring gasket.
+   * Field antenna: **Linx Technologies `ANT-916-CW-HWR-SMA`** (1/2-wave center-fed dipole, 3.2 dBi gain, operates without ground plane dependency).
+   * Pocket antenna: **Linx `ANT-916-CW-RH-SMA`** (50mm compact rubber ducky).
+2. **Cellular LTE 2×2 MIMO:**
+   * **Main (TX/RX):** Optional second top-edge SMA jack for high-gain field whips (Taoglas `TG.30` Apex) or internal flexible PCB.
+   * **Diversity (RX Only):** Internal **Taoglas `FXUB63`** ultra-wideband flexible PCB antenna (698–3000 MHz) adhered to inner chassis wall, delivering 2×2 spatial diversity for maximum download throughput.
+3. **Wi-Fi 5 & Bluetooth 5.0:**
+   * Internal **Molex `1461530100`** balanced dual-band (2.4/5.8 GHz) dipole FPC connected to CM4 U.FL port. Balanced dipole tuning prevents hand-grip detuning.
+4. **RF Windowing (Physics Constraint):**
+   * In PA12 SLS Nylon, RF radiates freely through the chassis.
+   * In CNC 6061 Aluminum, the top 25mm bezel is a modular PA12/Delrin "RF Window" cap to prevent Faraday cage attenuation.
 
 ---
 
 ## 4. Hardware Anti-Bricking & Recovery Architecture
-
-To ensure experimental kernel hacking, DRM waveform tuning, and firmware updates cannot permanently brick the sealed device:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -121,67 +137,64 @@ To ensure experimental kernel hacking, DRM waveform tuning, and firmware updates
 │    • 10-second power button hold physically bypasses software load switches,│
 │      forcing clean 5V/3.3V power rails to CM4.                              │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 6. IT8951 EPDC DC-Bias Guard:                                               │
-│    • 200ms hardware watchdog discharges high-voltage VCOM/gate rails to     │
-│      ground if Linux hangs mid-refresh, preventing pigment burn-in.         │
+│ 6. Display Bus Multiplexer & Bias Guard (TMUX1574):                         │
+│    • Physical isolation of CM4 lines in sleep; discharges VCOM/gate rails   │
+│      if host crashes mid-refresh, preventing pigment burn-in.               │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 7. Autonomous PMIC Safety:                                                  │
 │    • TI BQ25895 50-second I2C watchdog resets to conservative autonomous    │
-│      LiFePO4 charging defaults if OS kernel crashes.                        │
+│      charging defaults if OS kernel crashes.                                │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 5. Far-Field Audio & Acoustic Engineering
+## 5. Audio & Acoustic Engineering
 
-To enable rich voice interaction with Claude Code and far-field voice recognition (10–15 ft):
+To enable clean voice interaction with Claude Code and dictation:
 
-1. **Acoustic Output (Speakers):**
-   * **Drivers:** Dual pre-engineered sealed acoustic micro-box speakers (PUI Audio `AS03008MR-5-R` or AAC `1524`). Pre-welded airtight 1.0cc resonant chambers provide clean low-frequency vocal body without chassis rattle.
-   * **Smart Amplifier:** Texas Instruments **TAS2563** (5.7W Class-D with integrated boost converter and real-time IV-sense coil protection).
-2. **Acoustic Input (Far-Field Beamforming):**
-   * **Mics:** Dual Knowles `SPH0645LM4H-B` or InvenSense `ICS-43434` I2S digital MEMS microphones spaced 180mm apart on the top bezel.
-   * **Isolation:** Mounted inside molded silicone acoustic boots to decouple speaker vibrations from the chassis.
-   * **Barge-In DSP:** Linux PipeWire WebRTC acoustic echo cancellation (`module-echo-cancel`) subtracts the tablet's voice output in real-time, allowing interruptions mid-sentence.
-3. **Physical Privacy:** Hardware 2-pole slide switch physically cuts VDD to the microphones.
+1. **Acoustic Output (Speaker):**
+   * Single pre-engineered sealed acoustic micro-box speaker (PUI Audio `AS03008MR-5-R` or AAC `1524`). Pre-welded airtight 1.0cc resonant chamber provides clean vocal reproduction without chassis buzz.
+   * **Amplifier:** Texas Instruments **MAX98357A** (I2S Class-D mono amplifier, 3.2W into 4Ω).
+2. **Acoustic Input:**
+   * Single Knowles **SPH0645LM4H-B** (or InvenSense `ICS-43434`) I2S digital MEMS microphone placed on top bezel.
+   * Mounted inside a molded silicone acoustic boot to decouple chassis vibrations.
+3. **Physical Privacy:** Hardware slide switch physically disconnects VDD power to the microphone.
 
 ---
 
-## 6. The "Smart-Cache Handoff" Kindle Reading Mode
-
-To achieve month-long e-reader battery life without sacrificing full Linux library management:
+## 6. Dual-Brain Direct Drive & Low-Power Sipping Pipeline
 
 ```
 [STEP 1: BROWSE ON FULL LINUX (CM4)]
-• User wakes CM4 (0.3s resume).
-• Full Linux manages Calibre, KOReader, or custom UI across 100GB+ storage.
-• User selects book to read.
+• User wakes CM4 (0.3s S2idle resume).
+• Full Linux manages Calibre, KOReader, or terminal workspace.
+• User selects book or activates ambient dashboard.
                               │
                               ▼
-[STEP 2: 0.5-SECOND HANDOFF]
-• Linux pre-renders the book/chapters into compressed page buffers on MicroSD.
-• CM4 updates RP2040 via I2C: "Reading Book X, Page Y".
-• CM4 Linux powers completely down (0.000 mW).
+[STEP 2: 0.5-SECOND HANDOFF & ISOLATION]
+• Linux renders page buffers to shared storage.
+• CM4 signals RP2040 via I2C: "Taking over display".
+• CM4 toggles TMUX1574 SELECT line to RP2040 and cuts CM4 power (0.000 mW).
+• TMUX1574 completely isolates CM4 pins, preventing leakage into unpowered SoC.
                               │
                               ▼
-[STEP 3: AUTONOMOUS RP2040 READING]
-• RP2040 reads page buffers from SD card and pushes them over SPI to IT8951.
-• Between page turns, RP2040 sleeps at 0.05 mW.
-• Screen draws 0 mW while reading.
-• Battery life: 6 to 9 MONTHS on single charge!
+[STEP 3: AUTONOMOUS RP2040 SIPPING MODE]
+• RP2040 pushes pages/digits over SPI to IT8951.
+• Between updates, RP2040 sleeps at 12 MHz (~2 mW).
+• IT8951 sleeps at ~0.1 mW. Total system draw: 5–8 mW.
+• Battery runtime: 160+ DAYS on single charge!
                               │
                               ▼
-[STEP 4: SWITCH BOOKS]
-• Tap "Library" or double-tap chassis (IMU interrupt).
-• CM4 resumes in 0.3s to pick another book or start coding.
+[STEP 4: RESUME FULL LINUX]
+• Tap key, touch screen, or double-tap IMU.
+• RP2040 asserts GPIO 17 wake line to CM4.
+• TMUX1574 switches bus back to CM4. Linux resumes in 0.3 seconds.
 ```
 
 ---
 
-## 7. The Magnetic "SnapDeck" Hybrid Keyboard System (On-Screen & Propped-Up Modes)
-
-To solve the fatal flaw of commercial e-paper tablets—where typing on flat glass lacks tactile feedback and carrying an external laptop keyboard is cumbersome—SolarDeck introduces the **SnapDeck** detachable mechanical keyboard system.
+## 7. The SnapDeck Hybrid Detachable Keyboard System
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -212,88 +225,21 @@ To solve the fatal flaw of commercial e-paper tablets—where typing on flat gla
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Mechanical & Electrical Design:
-1. **Key Switches:** Ultra-slim (3.5mm total thickness) Kailh X-Switch or scissor-switch mechanical keys with 1.2mm travel and crisp tactile actuation.
-2. **Controller & Firmware:** Powered by an **nRF52840** running open-source **ZMK Firmware**, supporting sub-millisecond wireless latency and multi-device Bluetooth switching.
-3. **Power & Docking:** Contains a thin 150 mAh LiPo cell that charges automatically via two magnetic gold pogo pins on the tablet bezel whenever docked on-screen or stored on the rear.
-4. **Dual Hall-Effect Interlocks:**
-   * **Front Bezel Hall Sensor:** Trips when keyboard is on the screen, instantly instructing Wayland to repartition the display to the top 2/3.
-   * **Rear Chassis Hall Sensor:** Trips when keyboard is snapped to the back, sleeping the keys so your fingers can grip the tablet firmly while reading.
+### Co-Design Technical Specifications:
+1. **Key Switches:** Ultra-slim (3.5mm total thickness) Kailh X-Switch tactile scissor keys with 1.2mm travel.
+2. **Trackpad:** Blackberry RIM 9900 optical trackpad centered directly below the spacebar for thumb cursor control without lifting hands.
+3. **Controller & Firmware:** Nordic **nRF52840** running open-source **ZMK Firmware**, supporting wired USB and sub-millisecond BLE 5.0 wireless.
+4. **Docking Bus:** 5-pin hermetic magnetic gold pogo pins (5V, GND, USB D+, USB D-, ID_SENSE). Automatically charges internal 300 mAh LiPo while docked.
 
 ---
 
-## 8. Expansion Interfaces & Topology
-
-```
-INTERFACE             FORM FACTOR           PINOUT / SIGNALS          APPLICATIONS
-─────────────────────────────────────────────────────────────────────────────────────────────
-Qwiic / STEMMA QT     4-pin JST-SH 1.0mm    3.3V, GND, SDA, SCL       Daisy-chained environmental sensors, CO2
-USB-C Port 1 (PD)     IP68 Sealed Type-C    USB 2.0 OTG + 20W PD      Charging, PC rescue, early dmesg UART
-USB-C Port 2 (Host)   IP68 Sealed Type-C    USB 2.0 Host (5V @ 2A)    RTL-SDR radio dongle, thermal camera, drives
-Rear Expansion Bus    8-pin Magnetic Pogo   VBAT, GND, USB+/-,        Snap-on RF pod, Satellite SOS, RTK GPS
-                                            UART TX/RX, I2C, Wake
-CAN Bus 2.0B          3-Pin Rugged Jack     CAN_H, CAN_L, GND         Automotive OBD-II, robotics, deck link
-Gigabit Ethernet      M8 4-pin or slim RJ45 1000BASE-T (from CM4)     Direct 1 Gbps inter-deck mesh cluster
-```
-
----
-
-## 9. Turnkey Manufacturing in Shenzhen & Delivery to Honolulu
+## 8. Turnkey Manufacturing in Shenzhen & Delivery to Honolulu
 
 A prototype can be 100% manufactured, clean-room assembled, QA tested, and boxed in Shenzhen, then shipped via DHL Express directly to Honolulu:
 
 * **Turnkey Box-Build Vendors:** PCBWay, Seeed Studio Fusion, Makerfab.
-* **Battery Shipping Advantage (UN3481):** Because the 10,000 mAh LiFePO4 battery is pre-installed inside the assembled enclosure, it qualifies under UN3481 (Lithium batteries contained in equipment, Section II). It ships via standard commercial air cargo without hazardous materials surcharges.
+* **Battery Shipping Advantage (UN3481):** Because the 32 Wh battery is pre-installed inside the assembled enclosure, it qualifies under UN3481 (Lithium batteries contained in equipment, Section II). It ships via standard commercial air cargo without hazardous materials surcharges.
 * **Lead Time:** ~3 weeks from file submission to delivery in Honolulu.
 * **Prototype Costs Delivered to Honolulu:**
-  * **Qty 1 (Single Turnkey Prototype):** **~$430 – $480 total out-of-pocket**
-  * **Qty 5 (Small Batch Run):** **~$1,250 – $1,350 total** (~$250 – $270 per finished tablet)
-
----
-
-## 10. Satellite & Cellular Economics
-
-1. **Cellular Connectivity on T-Mobile Essentials Choice 55:**
-   * Standalone T-Mobile tablet add-on costs $15/mo ($20 without AutoPay); the $5 tier is restricted to Go5G Next.
-   * **Zero-Cost Path:** Tether to phone Wi-Fi/Bluetooth hotspot ($0/mo, included with Essentials).
-   * **Low-Cost Dedicated SIM:** **Tello** (runs on T-Mobile network) data SIM at **$6/month for 2GB LTE**.
-2. **Satellite Transceiver Economics:**
-   * **Downlink (Receiving): 100% FREE.** Using an RTL-SDR dongle on USB-C, SolarDeck decodes live NOAA-15/18/19 weather imagery (137 MHz APT), Meteor-M2 digital Earth photos, and GNSS atomic time worldwide for $0.
-   * **Uplink (Commercial): Paid.** RockBLOCK 9603 (Iridium) costs ~$250 hardware + $15/mo line rental + $0.06–$0.12/msg; Swarm (SpaceX IoT) costs ~$5/mo.
-   * **Uplink (Amateur Radio / Ham): 100% FREE.** With a standard Technician license, users can transmit digital APRS packets and text messages through the International Space Station (145.825 MHz digipeater) and amateur cubesats for $0.
-   * **Local Off-Grid Mesh: 100% FREE.** The internal Semtech SX1262 LoRa radio (915 MHz) provides perpetual, encrypted, license-free messaging across 5–15 miles via Meshtastic.
-
----
-
-## 11. Bill of Materials: Core MVP vs. Modular Add-ons
-
-### Core Tablet MVP Bill of Materials (Turnkey Qty 1–5):
-
-| Category | Component Description | Primary Supplier / Model | Est. Cost (Qty 1-5) |
-| :--- | :--- | :--- | :--- |
-| **Compute** | Raspberry Pi CM4 (4GB RAM, 32GB eMMC, Wi-Fi/BT) | PiShop / DigiKey (`CM4104032`) | $55.00 |
-| **Co-Processor** | Dual Cortex-M0+ Microcontroller | Raspberry Pi `RP2040` | $1.00 |
-| **RTC** | High-Precision TCXO Real-Time Clock | Maxim `DS3231SN#` | $2.50 |
-| **Motion / IMU** | 6-Axis Accelerometer / Gyroscope | ST `LSM6DS3TR-C` or `LIS3DH` | $0.85 |
-| **Navigation** | Multi-Constellation GNSS Receiver | u-blox `MAX-M10S` (Wideband Ant) | $14.00 |
-| **Display Panel** | 10.3" E-Ink (Carta 1200 / Kaleido 3) + Touch + EMR | Good-Display / Waveshare | $110.00 – $135.00 |
-| **EPDC Controller**| IT8951 Controller Board & Flat Cable | Waveshare / ITE | $18.00 |
-| **Stylus** | Wacom EMR Passive Stylus with Eraser | Staedtler Noris Digital | $25.00 |
-| **Off-Grid Radio** | Semtech SX1262 868–928 MHz LoRa Module (+22dBm) | Ebyte `E22-900M22S` | $5.50 |
-| **Battery** | 10,000 mAh 3.2V (32 Wh) Prismatic LiFePO4 Pack | Batteryhookup / Custom (1S2P) | $16.00 |
-| **Power PMIC** | Synchronous MPPT I2C Buck Charger | Texas Instruments `BQ25895RTWR` | $3.50 |
-| **Audio** | Dual AAC Micro-Box Speakers + TI TAS2563 Amp | PUI Audio / TI `TAS2563` | $7.30 |
-| **Mics & Switch** | Dual I2S MEMS Mics + Hardware Mute Switch | Knowles `SPH0645` + C&K Slide | $3.00 |
-| **Connectors** | Qwiic JST-SH + 2x IP68 USB-C + 8-Pin Rear Pogo | LCSC / Amphenol | $6.50 |
-| **Carrier PCBA** | 4-Layer ENIG Motherboard + SMT Assembly | JLCPCB Turnkey | ~$25.00 |
-| **Chassis** | SLS 3D-Printed PA12 Nylon + TPU Bumpers | JLC3D / Craftcloud | $25.00 |
-| **TOTAL CORE MVP**| *(Everything to build the fully functional tablet)* | | **~$318 – $343** *(Qty 1)*<br>**~$235 – $265** *(Batch Qty 5)* |
-
-### Modular Add-On Packs (Optional / Phase 2):
-
-| Add-On Pack | Components Included | Est. Module Cost |
-| :--- | :--- | :--- |
-| **RF Multi-Tool Pod** | ESP32-S3 + CC1101 Sub-GHz + PN532 NFC + EM4095 RFID + IR TX/RX + LiPo | ~$28.00 |
-| **Worldwide Cellular Pod** | Quectel EG25-G Global LTE + eSIM + Nano-SIM Tray + Antennas | ~$38.00 |
-| **Satellite SOS Pod** | RockBLOCK 9603 (Iridium) or Swarm M138 IoT Transceiver | ~$115.00 – $260.00 |
-| **Industrial / CAN Pod**| Microchip MCP2515 CAN controller + M8 Gigabit Ethernet receptacle | ~$18.00 |
+  * **Qty 1 (Single Turnkey Prototype):** **~$390 – $440 total out-of-pocket**
+  * **Qty 5 (Small Batch Run):** **~$1,150 – $1,250 total** (~$230 – $250 per finished tablet)
