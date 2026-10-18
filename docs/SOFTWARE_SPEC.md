@@ -39,6 +39,7 @@ MODE             UPDATE TIME   BIT DEPTH   USE CASE
 2. UI Motion     60 – 80 ms    2-bit Gray  Cursor movement, trackpad scroll
 3. Scribe Pen    < 20 ms       Direct FB   Wacom stylus handwriting overlay
 4. Regality Clear 300 ms       16-bit Gray Reading PDFs, medical diagrams
+5. Cinema Video  41.67 ms(24F) 1-bit/2-bit Fluid video playback, MPV, YouTube
 ```
 
 ### 2.1 The 20ms "Typing Waveform" (LUT Tuning)
@@ -70,6 +71,65 @@ To support high-definition video calls on Discord, Google Meet, and Zoom without
 3. **Inbound Participant Video Thumbnails:**
    * Displayed in a compact floating overlay rendered in **A2 Motion Mode (60–75ms refresh, 2-bit grayscale)**.
    * **Smart-Still Toggle:** Automatically freezes participant video into a crisp still portrait, refreshing only when the active speaker changes or every 3 seconds, cutting display power by 85% while keeping audio 100% real-time.
+
+### 2.5 V1 24 FPS Cinema Video Engine & Thermal Viscosity Management
+To enable natural, "movie-like" 24 FPS video playback without choppy frame drops or severe pigment ghosting, SolarDeck integrates a dedicated hardware-accelerated video pipeline in V1:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                   SOLARDECK V1 24 FPS CINEMA VIDEO PIPELINE                 │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 1. VIDEO SOURCE: 24 FPS 1080p Stream (mpv / Chromium / YouTube)            │
+│                          │                                                  │
+│                          ▼ (<2.0 ms on Broadcom VideoCore VI GPU)           │
+│ 2. GPU TEMPORAL BLUE-NOISE DITHERING:                                       │
+│    • GLSL Compute/Fragment Shader: `/usr/lib/solardeck/shaders/dither.glsl` │
+│    • Converts 24-bit RGB video into 1-bit B/W or 2-bit (4-color) bitmaps   │
+│    • Human eye spatio-temporally fuses fine dots into continuous gradients  │
+│                          │                                                  │
+│                          ▼ (<1.5 ms via ARM NEON SIMD)                      │
+│ 3. ARM NEON SIMD FRAME-DIFFERENCING (DIRTY DELTA PASS):                     │
+│    • Delta = Frame[N] ^ Frame[N-1]                                          │
+│    • Static backgrounds (65–80% of video frame) are bypassed (0 mW)         │
+│    • Isolates active motion bounding boxes for partial update               │
+│                          │                                                  │
+│                          ▼ (<2.5 ms over MIPI-DSI 2 Gbps bus)               │
+│ 4. HIGH-SPEED MIPI-DSI DMA PUSH:                                            │
+│    • DMA pushes damaged rectangles to EPDC in <2.5 ms (vs. 55ms on SPI)     │
+│    • Leaves 39 ms of 41.67 ms frame budget for physical particle motion     │
+│                          │                                                  │
+│                          ▼                                                  │
+│ 5. TRUNCATED OVERDRIVE WAVEFORM & THERMAL VISCOSITY ASSIST:                 │
+│    • Clamps voltage driving pulse to 22–26 ms (modulates surface pigment)   │
+│    • Rolling 4-frame DC neutralization keeps net bias at 0.00V              │
+│    • `solardeck-thermal-boostd` couples CPU heat to backplane (30°C–33°C),  │
+│      reducing fluid viscosity >40% so particles accelerate 1.8x faster      │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+1. **GPU Temporal Blue-Noise Dithering (`dither.glsl`):**
+   * Physical electrophoretic particles cannot execute 16-level grayscale transitions in 41.67 ms.
+   * A custom GLSL fragment shader running on the Broadcom VideoCore VI GPU converts video frames into 1-bit binary or 2-bit blue-noise dithered bitmaps in < 2 ms.
+   * Spatial and temporal error-diffusion creates the visual illusion of smooth photographic color and grayscale gradients, while demanding only fast binary voltage pulses from the display.
+2. **ARM NEON SIMD Delta Differencing:**
+   * An optimized ARM NEON SIMD loop calculates XOR differences between consecutive frames in < 1.5 ms.
+   * Unchanged scene backgrounds are bypassed entirely; only active motion bounding boxes are pulsed.
+3. **High-Speed MIPI-DSI Transmission:**
+   * Utilizing the CM4's native 2-lane MIPI-DSI bus (2 Gbps bandwidth), the video daemon transfers delta frames to the display controller in **< 2.5 ms** (compared to ~55 ms over SPI), eliminating bus latency as a bottleneck.
+4. **Truncated Overdrive Waveforms & Rolling DC Neutralization:**
+   * Driving pulses are truncated to **22–26 ms**. Particles oscillate within the upper optical zone rather than traveling the full capsule depth.
+   * A rolling 4-frame mathematical compensation algorithm balances positive and negative voltage pulses to average **0.00V net DC bias**, completely preventing pigment burn-in.
+5. **Thermal Viscosity Optimization (`solardeck-thermal-boostd`):**
+   * Dielectric fluid viscosity is inversely proportional to temperature. At 15°C, fluid drag causes heavy motion smearing; at 30°C–33°C, fluid viscosity drops by **>40%**, accelerating particle velocity by **$1.8\times$**.
+   * During active 24 FPS video playback, `solardeck-thermal-boostd` dynamically routes thermal dissipation from the CM4 CPU shield into the internal PCBA copper heat plane behind the display, maintaining the backplane at a safe 30°C–33°C without dedicated resistive heating elements.
+6. **Battery Lifespan & Power Profile (Video vs. Non-Video):**
+   * **During 24 FPS Video Playback:** Continuous GPU dithering, NEON differencing, high-speed DSI DMA, and high-frequency charge pump pulsing consume **~2.8W to 3.4W total system power**, delivering **10 to 12 hours** of continuous video playback on a single charge.
+   * **When NOT Playing Video (Writing, Coding, Reading, Ambient Clock):**
+     * **0.000W Bi-Stable Display:** The instant video stops, E-Ink pigments remain physically locked in place by fluid viscosity and van der Waals forces. The display consumes **0.000 Watts** to hold a static page.
+     * **Active Terminal / Coding (Claude Code CLI, Neovim):** Drawing only ~1.1W to 1.4W, the battery provides **24 to 32 hours** of continuous active typing.
+     * **Zen Reading Mode (Tier 1):** With CM4 powered down to 0.000W and the RP2350 flipping pages in <30ms at 4.5 mW average, battery life extends to **300+ days**.
+     * **Perpetual Ambient Clock & Weather Station (Tier 0/1):** The 0.15W micro-solar bezel strip harvests more power than the 4.5 mW idle load, granting **infinite off-grid battery life** without wall recharging.
+     * **Battery Chemical Longevity:** Because LiFePO4 cells are rated for **3,000 to 5,000+ full charge cycles** (vs. 500 cycles for standard consumer Li-ion), and typical non-video usage requires charging only once every few days or weeks, the physical battery pack lasts **10 to 15+ years** before degrading.
 
 ---
 

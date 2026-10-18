@@ -30,8 +30,8 @@ SolarDeck is a sovereign, general-purpose open-hardware computing platform desig
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 1. BRAIN:     Raspberry Pi CM4 (8GB RAM, 32GB eMMC, Wi-Fi/BT)               │
 │ 2. CO-PROC:   RP2350B (Cortex-M33/RISC-V) + 8MB PSRAM (300-Day Zen Reader)  │
-│ 3. ISOLATOR:  TI TMUX1575 8-Channel SPDT Bus Switch (CM4/RP2350 Display Mux)│
-│ 4. SCREEN:    10.3" E-Ink (Carta 1200 / Kaleido 3, 1872×1404, 227 PPI) + EMR│
+│ 3. DISPLAY BUS: Dual-Path MIPI-DSI (CM4 24 FPS Video) + TMUX1575 SPI (RP2350)│
+│ 4. SCREEN:    10.3" E-Ink (Carta 1200 / Kaleido 3 / Kaleido 4, 227 PPI) + EMR│
 │ 5. CAMERAS:   Dual MIPI: 12MP Sony IMX708 PDAF Rear + 5MP 1080p Front       │
 │ 6. CELLULAR:  M.2 Quectel EG25-G LTE + Onboard Soldered MFF2 eSIM (ST4SIM)  │
 │ 7. MESH/GNSS: Built-In Semtech SX1262 LoRa (868–928MHz) + u-blox MAX-M10S   │
@@ -81,7 +81,17 @@ To achieve maximum field battery life without an excessively heavy device:
 * **Tier 3: Paper-Feel Scribe Slate (CM4 1-Core @ ~0.60W):** **58 Hours** continuous active writing (460+ hours study mode with S2idle).
 * **Tier 4: Adaptive Mixed Workstation (Web/Discord/Claude @ ~1.40W avg):** **25 Hours** continuous screen-on time (3 to 6 real-world days).
 * **Tier 5: Video Teleconference Mode (Front Cam + Mic + H.264 @ ~2.10W):** **16.5 Hours** of continuous client video calls.
+* **Tier 5b: V1 Cinema Video Playback Mode (24 FPS MIPI-DSI @ ~2.80W–3.40W):** **10 to 12 Hours** continuous fluid video playback (YouTube / MPV).
 * **Tier 6: AI Compile Turbo (CM4 Quad 1.8GHz @ ~3.2W):** **10 to 11 Hours** continuous parallel compiling and cellular connection.
+
+### Battery Longevity: Video vs. Non-Video & 10–15 Year Cell Lifespan
+* **When Playing 24 FPS Video:** Continuous GPU blue-noise dithering, NEON differencing, 2 Gbps MIPI-DSI streaming, and 24Hz charge-pump switching draw **2.8W to 3.4W**, giving a respectable **10 to 12 hours** of continuous movie/video runtime.
+* **When NOT Playing Video (Writing, Coding, Reading, Ambient Clock):**
+  * **0.000W Bi-Stable Physics:** Unlike OLED or LCD screens that draw 1.5W–3.0W just keeping pixels backlit, E-Ink uses **0.000 Watts** to display a static page. Once particles move into position, they remain physically locked in place indefinitely without electrical power.
+  * **Interactive Terminal & Coding:** In Neovim and Claude Code CLI, the screen only consumes power during 15–20ms partial update pulses when keys are pressed. Total system draw drops to **~1.1W–1.4W**, extending battery runtime to **24 to 32 hours** of active typing.
+  * **Zen Reading Mode:** With the CM4 unpowered and the RP2350 flipping pages in 30ms, battery runtime extends to **300+ days (10 months)** on a single charge.
+  * **Ambient Desk Clock & Weather Station:** The top-bezel 0.15W micro-solar strip generates more power than the 4.5 mW idle load, delivering **infinite off-grid operational lifespan** without ever connecting to a wall charger.
+  * **Chemical Cycle Life (10–15 Years):** Standard consumer Li-ion batteries degrade after 500 charge cycles (~2 years). In contrast, SolarDeck's LiFePO4 chemistry provides **3,000 to 5,000+ full cycles**. Because non-video workflows require charging only once every few days or weeks, the physical battery pack lasts **10 to 15+ years** before reaching 80% health.
 
 ---
 

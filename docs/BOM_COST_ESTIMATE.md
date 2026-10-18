@@ -15,9 +15,9 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **Co-Proc PSRAM** | 8MB Ultra-Low-Power QSPI PSRAM (Page Double-Buffer) | Mouser / LCSC | APMemory APS6404L-3SQR-SN | $0.75 |
 | **Bus Multiplexer**| High-Speed 8-Channel SPDT Display Bus Isolator / Switch | Texas Instruments / Mouser | TMUX1575PWR | $0.55 |
 | **RTC** | High-Precision TCXO Real-Time Clock | Mouser / LCSC | DS3231SN# | $2.50 |
-| **Display Panel** | 10.3" E-Ink Kaleido 3 (Color) + Capacitive Touch + Wacom EMR Layer | Waveshare / Good-Display / AliExpress | ED103TC2 / GDEW103W32 (227 PPI) | $95.00 – $120.00 |
+| **Display Panel** | 10.3" E-Ink Kaleido 3 / Kaleido 4 (Color) + Capacitive Touch + Wacom EMR | Waveshare / Good-Display / Linshu | ED103TC2 / Kaleido 4 (227 PPI) | $95.00 – $120.00 |
 | **EMR Shielding** | 0.1mm High-Permeability Mu-Metal / Ferrite Flux Absorber Sheet | 3M / Wurth / AliExpress | Custom Die-Cut Shield Foil | $1.80 |
-| **Controller** | Electronic Paper Display Controller (EPDC) | Waveshare / ITE | IT8951 Board / IC | $18.00 |
+| **Controller** | High-Speed EPDC with MIPI-DSI Video Bridge (24 FPS Engine) | Waveshare / ITE / TI / Lattice | IT8951 / IT8961 + SN65DSI83 Bridge | $18.00 |
 | **Stylus** | Wacom EMR Passive Stylus with Eraser | Amazon / B&H | Staedtler Noris Digital or Lamy AL-star | $28.00 |
 | **Battery** | 8,000–10,000 mAh 3.7V Li-ion or 3.2V LiFePO4 Prismatic Pack | Batteryhookup / AliExpress | Custom 1S / 1S2P Slim Pack (26-32Wh / 30-37Wh) | $16.00 |
 | **Power IC** | Synchronous Buck Battery Charger IC | Texas Instruments / Mouser | BQ25895RTWR | $3.50 |

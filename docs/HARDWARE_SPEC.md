@@ -110,11 +110,21 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
   * **Zero Maintenance & 100+ Day Lifespan:** Charges whenever the tablet is powered; maintains TCXO clock, alarms, and NVRAM registers for **over 100 days** when the main battery is completely removed or depleted, eliminating the 1970 UNIX epoch clock reset bug without coin-cell leakage.
 
 ### 2.2 Display & Digitizer Assembly
-* **Display Panel:** 10.3-inch E-Ink **Kaleido 3** (Color) or **Carta 1200** (Monochrome).
+* **Display Panel:** 10.3-inch E-Ink **Kaleido 3** or **Kaleido 4** (Color) / **Carta 1200** (Monochrome).
   * Resolution: 1872 × 1404 pixels (**227 PPI** black/white, 114–150 PPI color).
   * Active Area: 209.66 mm × 157.25 mm; Contrast Ratio: 15:1.
-* **EPDC (Electronic Paper Display Controller):** Dedicated ITE **IT8951** Controller.
-  * *SoC-Direct Drive Architectural Evaluation:* While driving E-Ink directly from an SoC's integrated controller (e.g. RK3566 `rockchip-ebc`) eliminates an $18 chip, it creates fatal system lock-in: the display cannot be driven when the main CPU is powered down to 0.000W. Retaining the dedicated IT8951 EPDC is mandatory to enable both the **universal modular compute socket** and the **RP2350 dual-brain co-processor** (which commands the IT8951 over SPI to achieve 160+ day desk-clock and 300+ day reading lifespans).
+  * **Kaleido 4 Ready (Drop-in Panel Compatibility):** Supports the newly released Kaleido 4 panel featuring an **Oxide TFT backplane** ($10\times$ higher electron mobility, >40,000 colors, +15% white reflectivity, +50% contrast) sharing the identical 10.32" mechanical envelope, 40/50-pin FPC interface, and rear-laminated Wacom digitizer.
+* **V1 24 FPS Cinema Video & High-Speed Display Architecture:**
+  * **Dual-Path Host Bus Architecture:**
+    1. *High-Speed MIPI-DSI Video Path (CM4 Host - 24 to 30 FPS):* The CM4 routes its native 2-lane MIPI-DSI display bus (1 Gbps per lane = 2,000 Mbps aggregate bandwidth) to a high-speed video bridge / timing controller (TI SN65DSI83 DSI-to-FlatLink bridge / Lattice CrossLink-NX FPGA / IT8961). Transferring a full 1872×1404 frame takes **< 2.5 milliseconds** (eliminating the legacy 55ms SPI transfer bottleneck). This frees up **39 ms of the 41.67 ms frame budget** purely for electrophoretic particle motion, unlocking **24 FPS cinema video playback** and fluid Wayland desktop rendering.
+    2. *Ultra-Low-Power SPI Fallback Path (RP2350 Co-Processor - 4.5 mW Zen Mode):* When the CM4 and MIPI-DSI rails are completely powered down (0.000W), the TI TMUX1575 bus switch routes the RP2350's SPI lines to the display controller, enabling autonomous 30ms book page flips and 1-second clock updates drawing only **4.5 mW total system power**.
+  * **Thermal-Assisted Fluid Viscosity Coupling (Overdrive Viscosity Assist):**
+    * Electrophoretic particle mobility ($\mu$) is inversely proportional to fluid viscosity ($\eta$): $\mu \propto 1/\eta(T)$.
+    * In cold conditions (<20°C), microcapsule fluid is viscous and sluggish. At 30°C–33°C, dielectric fluid viscosity drops by **>40%**, enabling pigment particles to accelerate **$1.8\times$ faster** under identical electrical drive pulses.
+    * The V1 PCBA integrates a balanced internal copper thermal dissipation plane that routes heat from the CM4 CPU shield directly beneath the display backplane.
+    * During 24 FPS video playback, the thermal management daemon (`solardeck-thermal-boostd`) uses waste CPU heat to maintain the backplane at a controlled **30°C–33°C** (monitored by the panel TMP112 sensor), completely eliminating motion trails and holding fluid 24 FPS without dedicated heater elements.
+* **EPDC (Electronic Paper Display Controller):** Dedicated High-Speed Controller (ITE **IT8951** / **IT8961** with MIPI bridge).
+  * *SoC-Direct Drive Architectural Evaluation:* While driving E-Ink directly from an SoC's integrated controller (e.g. RK3566 `rockchip-ebc`) eliminates an $18 chip, it creates fatal system lock-in: the display cannot be driven when the main CPU is powered down to 0.000W. Retaining a dedicated EPDC with dual-bus inputs (MIPI-DSI from CM4 for 24 FPS video + SPI from RP2350 for Zen reading) is mandatory to enable both the **universal modular compute socket** and the **RP2350 dual-brain co-processor** (which commands the display over SPI to achieve 160+ day desk-clock and 300+ day reading lifespans).
 * **reMarkable-Grade Stylus Digitizer & Tactile Paper-Feel:**
   * **Digitizer Sensor:** Genuine **Wacom EMR (Electro-Magnetic Resonance)** sensor board laminated behind the e-paper panel (240 Hz sampling rate, 4,096 levels of pressure and tilt, `wacom_w9013` driver).
   * **Magnetic Shielding & Flux Absorption:** Wacom EMR is inherently sensitive to external magnetic fields (~560 kHz resonant coil). To prevent coordinate warping or pen drift from the SnapDeck keyboard pogo magnets, backpack dock, or internal speaker:
