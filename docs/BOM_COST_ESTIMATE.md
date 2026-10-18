@@ -55,10 +55,15 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **VBUS OR-ing** | Dual Low-Ron Ideal Diode Power OR-ing Controller (x2) | Texas Instruments / Mouser | LM66100DCKR (x2) | $0.70 |
 | **Host VBUS Sw** | 1.5A Current-Limited USB Host Distribution Power Switch | Texas Instruments / Mouser | TPS2051BDBVR | $0.45 |
 | **Recovery Sw** | Sub-Miniature IP67 Pinhole Micro-Tactile Switches (x2) | C&K / Panasonic / LCSC | KMR2 / EVQ-P8 | $0.40 |
+| **Bezel Solar MPPT**| Nano-Power Solar Boost Harvester IC (Cold-Start 330mV, 80% FOCV)| Texas Instruments / Mouser | BQ25504RGTR | $1.80 |
+| **Frontlight Driver**| Dual-Channel Constant-Current Step-Up LED Driver (2048-step CCT)| Texas Instruments / Mouser | TPS61163YFFR | $0.65 |
+| **Battery PCM** | Hardware Battery Safety IC + Dual N-Channel Power MOSFETs | Texas Instruments / Mouser | BQ2970 + CSD87330Q3D | $0.55 |
+| **ESD Suppression** | Low-Capacitance TVS Diode Arrays for USB & Pogo Pins (x4) | Texas Instruments / Mouser | TPD4E05U06 (x4) + SMAJ5.0A | $0.80 |
+| **Supercapacitor** | 0.2F 3.3V SMT Back-up Supercapacitor for DS3231 RTC | Seiko Instruments / Mouser | CPH3225A | $0.55 |
 | **Airgap Switch** | Sub-Miniature 2-Position Gold Contact Slide Switch | C&K / E-Switch / LCSC | JS202011CQN | $0.45 |
 | **GORE Vent** | ePTFE Pressure Equalization Vent Plug | W. L. Gore / Amphenol | PMF100396 | $1.50 |
 | **Enclosure (PA12)**| SLS 3D-Printed PA12 Nylon Shell + 85A TPU Corner Bumpers | JLC3D / Craftcloud | Custom CAD Housing | $28.00 |
-| **Total Core BOM**| | | | **~$365 – $398** |
+| **Total Core BOM**| | | | **~$371 – $404** |
 
 ---
 
@@ -100,13 +105,13 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 
 Because standard surface-mount components from JLCPCB's / PCBWay's Basic and Extended Parts Library are used, fabrication can be 100% automated:
 
-* **Motherboard PCB:** 4-Layer FR-4, ENIG surface finish, 50Ω controlled impedance traces on RF lines.
+* **Motherboard PCB:** Professional 6-Layer JLC2313 / Isola FR408HR stackup, ENIG surface finish, 100Ω differential pairs for MIPI-CSI cameras and 50Ω coplanar waveguides for RF antennas.
 * **SMT Turnkey Assembly:** Automated pick-and-place of all passives, ICs, M.2 socket, and Hirose connectors.
 * **Turnkey Batch Prototype Costs (5 Units at JLCPCB/PCBWay):**
-  * Bare PCBA fabrication (5 boards): $24.00
+  * Bare PCBA fabrication (5 boards, 6-Layer): $32.00
   * SMT Stencils & Machine Setup: $30.00
-  * Motherboard components & assembly: ~$115.00 per board
-  * Per-finished-tablet turnkey assembly (excluding CM4/Display): ~$145.00 each.
+  * Motherboard components & assembly: ~$122.00 per board
+  * Per-finished-tablet turnkey assembly (excluding CM4/Display): ~$152.00 each.
 
 ---
 
@@ -114,8 +119,8 @@ Because standard surface-mount components from JLCPCB's / PCBWay's Basic and Ext
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  SOLARDECK CORE TABLET (8GB + DUAL CAM)    │ ~$365 – $398   │
-│  (Or 4GB CM4 Base Config)                  │ ~$345 – $378   │
+│  SOLARDECK CORE TABLET (8GB + DUAL CAM)    │ ~$371 – $404   │
+│  (Or 4GB CM4 Base Config)                  │ ~$351 – $384   │
 ├─────────────────────────────────────────────────────────────┤
 │  SNAPDECK PARALLEL KEYBOARD ADD-ON         │ ~$45.70        │
 ├─────────────────────────────────────────────────────────────┤

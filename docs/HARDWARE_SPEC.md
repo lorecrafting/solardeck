@@ -80,7 +80,9 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
   * Completely isolates all 6 EPDC control and data lines: `SPI_MOSI`, `SPI_MISO`, `SPI_SCLK`, `SPI_CS`, `HRDY` (status flag), and `RESET`.
   * **Zero-Leakage Isolation Safety:** When CM4 is powered down to 0.000V, the TMUX1575 completely disconnects CM4 lines to eliminate parasitic back-powering and pin leakage ($I_{\text{leak}} < 10\text{ nA}$), allowing the RP2350 to update the display in deep sleep while drawing only **4.5 mW total system power**.
 * **Real-Time Clock (RTC):** Maxim **DS3231** temperature-compensated crystal oscillator (TCXO).
-  * Drift: < 2 minutes per year. Powered by an ultra-thin ML414 / MS621 rechargeable coin cell.
+  * Drift: < 2 minutes per year ($\pm 2$ ppm).
+  * **Supercapacitor Power Reservoir:** Powered by a high-reliability SMT **0.2F 3.3V supercapacitor** (Seiko `CPH3225A` / Panasonic `EEC-EN0F204AK`, $0.55) paired with a reverse-blocking Schottky diode.
+  * **Zero Maintenance & Infinite Lifespan:** Charges from 0% to 100% in 15 seconds whenever the tablet is plugged in; maintains the TCXO clock, alarms, and NVRAM registers for **over 35 days** when the main battery is completely removed or depleted, eliminating the 1970 UNIX epoch clock reset bug without leaking coin cells.
 
 ### 2.2 Display & Digitizer Assembly
 * **Display Panel:** 10.3-inch E-Ink **Kaleido 3** (Color) or **Carta 1200** (Monochrome).
@@ -100,19 +102,27 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
     3. *Stage 3 (Tip Contact & Active Drawing):* Tip switch closes (`BTN_TOUCH = 1`). Coordinates bypass the window compositor directly into the IT8951 partial line buffer (<18ms tip-to-ink latency, ~600 mW active power on Linux, or <15ms and ~220 mW when driven directly by the RP2350).
     4. *Stage 4 (Pen Lift & Retreat >500ms):* Stroke vector is committed to disk; system immediately drops back to 15 mW / 4.5 mW suspend.
 * **Touch Panel:** Capacitive multi-touch glass overlay with etched matte finish.
+* **Dual CCT Frontlight Subsystem (Pitch-Black Reading & Circadian Amber):**
+  * **Driver IC:** Texas Instruments **TPS61163** dual-channel constant-current step-up LED driver ($0.65).
+  * **Dual Interleaved Bezel LED Strings:** 12 cold-white LEDs (5000K) and 12 warm-amber LEDs (2700K) embedded along the bottom-edge lightguide.
+  * **Autonomous Circadian Dimming:** Controlled by the RP2350 via 2048-step logarithmic PWM dimming; automatically transitions from crisp white in dim daylight to soft amber (zero blue light emission) after sunset based on RTC time and OPT3001 lux readings.
+  * **Zero Idle Drain:** Draws **0.000 µA** when turned off during sunlight reading.
 
 ### 2.3 Power Subsystem & Multi-Tier Voltage Regulation
-* **Battery Chemistry:** **1S Li-ion / LiPo** (3.7V nominal, 4.2V peak) or **1S2P LiFePO4** (3.2V nominal, 3.65V peak).
-  * Target Capacity: 8,000 to 10,000 mAh (32–35 Wh) pouch pack (airline-compliant <100Wh).
-  * Integrated PCM protection circuit (over-voltage, under-voltage, over-current cutoffs).
-* **Battery Charger IC:** Texas Instruments **BQ25895** I2C-controlled Synchronous Buck Charger.
-  * USB Type-C Input: 5V to 14V MaxCharge / USB-PD compliant (up to 20W charging).
-  * High-efficiency synchronous rectification (>92%).
-  * Autonomous safety watchdog: Resets to safe hardware default charge voltage if host OS crashes.
-  * Direct NTC thermistor input glued to cell pouch for hardware thermal cutoff.
-* **Dual Solar Harvesting Architecture (Option C):**
-  1. *High-Power Field Solar (Fast Recharge):* Standard USB-C Port 2 supports 5V–14V input from folding 15W–28W outdoor panels. The BQ25895's integrated dynamic input voltage management (**VINDPM / MPPT**) tracks optimal solar output to recharge the 35 Wh pack from empty to 100% in **1.5 to 2 hours**.
-  2. *Ambient Trickle Bezel Strip (Perpetual Standby):* A flush, top-bezel monocrystalline micro-solar strip (**IXYS / PowerFilm**, 0.8W–1.2W peak) feeds directly into the charger input rail through an ultra-low reverse-leakage Schottky diode. In indoor ambient or outdoor sunlight, this generates 10–50 mW, perpetually powering the 4.5 mW RP2350 Zen reader and 1-second clock indefinitely with zero net battery drain.
+* **Battery Chemistry & Secondary Hardware Protection:**
+  * **Chemistry:** **1S Li-ion / LiPo** (3.7V nominal, 4.2V peak) or **1S2P LiFePO4** (3.2V nominal, 3.65V peak).
+  * **Target Capacity:** 8,000 to 10,000 mAh (32–35 Wh) pouch pack (airline-compliant <100Wh).
+  * **Hardware Battery PCM (Pure Silicon Secondary Protection):**
+    * Texas Instruments **BQ2970** battery protection IC paired with dual low-$R_{\text{DS(on)}}$ (12 mΩ) N-channel power MOSFETs (**TI CSD87330Q3D**, $0.55 total).
+    * Completely autonomous from software and I2C: physically cuts off the battery pack if cell voltage drops below **2.50V** (over-discharge protection) or exceeds **3.65V/4.25V** (over-charge protection).
+    * Instantaneous hardware short-circuit trip: physically disconnects in **< 10 microseconds** if load current exceeds **8.0A peak**.
+* **Dual-Stage Solar Harvesting Architecture:**
+  1. *High-Power Field Solar (Fast Recharge via USB-C):* Standard USB-C Port 2 supports 5V–14V input from folding 15W–28W outdoor panels. The BQ25895's integrated dynamic input voltage management (**VINDPM / MPPT**) tracks optimal solar output to recharge the 35 Wh pack from empty to 100% in **1.5 to 2 hours**.
+  2. *Dedicated Nano-Power Bezel Harvester (Texas Instruments BQ25504):*
+     * Resolves the primary charger's 3.9V Under-Voltage Lockout ($V_{\text{UVLO}}$) ceiling.
+     * Dedicated ultra-low-quiescent boost converter ($1.80) wired directly to the top-bezel monocrystalline micro-solar strip (IXYS/PowerFilm, ~2.0V open circuit).
+     * Cold-starts from as low as **330 mV** and continuously harvests down to **100 mV**.
+     * Executes autonomous 80% Fractional Open-Circuit Voltage (FOCV) MPPT sampling, boosting micro-solar energy directly into the battery rail with >90% efficiency, keeping the 4.5 mW RP2350 Zen reader topped off indefinitely even under indoor lighting.
 * **Rigid Voltage Regulators (Anti-Brownout Engineering):**
   1. *Main 5.0V System Boost:* Texas Instruments **TPS61088** synchronous boost converter steps up 3.0V–4.2V battery voltage to a rigid 5.0V @ 3.5A rail, delivering up to 17.5W peak power for CM4 turbo compilation, USB peripheral bus power, and display supply.
   2. *Cellular Modem 3.8V Buck-Boost:* Texas Instruments **TPS63020** 3.8V 2.5A synchronous buck-boost converter dedicated exclusively to the M.2 Quectel EG25-G modem, accompanied by a **1,000 µF low-ESR polymer capacitor array**. This completely buffers the modem's 2.0A transient GSM/LTE transmit bursts, preventing battery rail sag and system brownouts even when the battery is depleted to 3.0V.
@@ -484,6 +494,65 @@ To guarantee true 0.000V electrical isolation and zero phantom leakage across al
 | **Tier 4: Adaptive Mixed Workstation**| CM4 (Dynamic DVFS 0.6–1.5G)| IT8951 (Dynamic Waveforms)| Wi-Fi/LTE, Web, Twitter, Discord, Claude Code CLI | **~1.40 W** | **25 Hours** screen-on (3–6 days) |
 | **Tier 5: Video Teleconference Mode**| CM4 (Hardware H.264 ISP) | IT8951 (A2 Motion / GC16)| Front 5MP Cam, Knowles Mic, Speaker, Wi-Fi/LTE | **~2.10 W** | **16.5 Hours** continuous calls |
 | **Tier 6: AI Compile Turbo** | CM4 (1.8GHz Quad A72) | IT8951 (Sway Wayland) | All Radios, SnapDeck Keyboard, Parallel Compiles | **2.8 W to 3.8 W** | **9 to 12 Hours** continuous |
+
+---
+
+### 2.11 Industrial ESD & Transient Voltage Suppression Matrix
+To withstand field operations where exposed gold pogo pins and USB-C ports touch metallic surfaces, wet desks, or receive high-voltage human-body static shocks in dry environments, SolarDeck integrates an exhaustive, multi-tier ESD protection network complying with **IEC 61000-4-2 Level 4 (±15 kV air discharge, ±8 kV contact discharge)**:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    SOLARDECK ESD & TRANSIENT SUPPRESSION                    │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 1. HIGH-SPEED DATA LINES (USB-C Ports 1 & 2, SnapDeck & Backpack Pogo):    │
+│    • TI TPD4E05U06 4-Channel Bidirectional Ultra-Low Capacitance TVS Array  │
+│    • Capacitance: 0.5 pF (guarantees zero attenuation of 480 Mbps signals)  │
+│    • Clamping Voltage: 8.5V @ 5A (instantaneous absorption < 1 ns)          │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 2. EXPOSED POWER RAILS (VBUS 5V & Battery Input Rails):                     │
+│    • Vishay SMAJ5.0A / SMF05C High-Surge Clamping TVS Diodes (400W peak)    │
+│    • Absorbs inductive kickback when snapping magnetic keyboard on/off      │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 3. CO-PROCESSOR & SENSOR I/O PINS (Buttons, Airgap Switch, Bezel Touch):    │
+│    • Bourns CD0603-T05C Miniature Bidirectional TVS Diodes on all lines    │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 2.12 PCBA Signal Integrity & 6-Layer Impedance-Controlled Stackup
+To eliminate EMI radiation from dual 1 Gbps MIPI-CSI camera interfaces, guarantee 50Ω coplanar waveguide matching for LTE/LoRa RF traces, and prevent digital noise from leaking into sensitive GPS and audio LNAs, SolarDeck mandates a **6-layer impedance-controlled board stackup** (Standard JLC2313 / Isola FR408HR):
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                   SOLARDECK 6-LAYER PCBA LAYER ASSIGNMENT                   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Layer 1 (Top Signal & RF):                                                  │
+│ • 50Ω Coplanar Waveguides (LoRa SMA, Quectel LTE Main/Div, GPS L1 RF traces)│
+│ • 90Ω Differential Pairs for USB 2.0 (Port 1, Port 2, Pogo Docks)           │
+│ • SMT Component Pads & Local Decoupling                                     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Layer 2 (Inner 1 - Continuous Ground Plane):                                │
+│ • Solid 1oz unbroken copper plane across entire 10.3" footprint             │
+│ • Provides ultra-low-impedance return path for all Top Layer signals        │
+│ • Zero slots or breaks under RF or high-speed differential pairs            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Layer 3 (Inner 2 - High-Speed Routing):                                     │
+│ • 100Ω Differential Pairs for Dual MIPI-CSI (Sony IMX708 PDAF & IMX219)     │
+│ • 24 MHz SPI Display Bus to IT8951 EPDC (MOSI, MISO, SCLK, CS)              │
+│ • Sandwiched between Layer 2 and Layer 4 ground pours (Stripline Shielding) │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Layer 4 (Inner 3 - Power Plane & Secondary Ground):                         │
+│ • Power Distribution Islands: VDD_5V0 (Boost), VDD_3V8 (Modem), VDD_3V3, 1V8│
+│ • Star-ground copper pours around analog audio and BQ25895 switching nodes  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Layer 5 (Inner 4 - Solid Ground Plane):                                     │
+│ • Continuous secondary reference plane isolating digital and power switching│
+├─────────────────────────────────────────────────────────────────────────────┤
+│ Layer 6 (Bottom Signal & Test Points):                                      │
+│ • Low-Speed Busses (I2C_ALWAYS_ON, I2C_HOST, UART, GPIOs)                   │
+│ • 1.27mm Gold Bed-of-Nails Automated Factory Test Pads                      │
+│ • Heat-Spreading Copper Thermal Vias coupling CM4/Modem heat to chassis     │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 

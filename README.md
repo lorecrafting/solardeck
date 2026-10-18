@@ -142,6 +142,7 @@ SolarDeck is a sovereign, sunlight-readable, distraction-free field workstation 
 | **Co-Processor** | Raspberry Pi RP2350 (Dual Cortex-M33 / RISC-V @ 150MHz) + 8MB QSPI PSRAM + DS3231 TCXO RTC |
 | **Display Isolator**| Texas Instruments **TMUX1575** 8-Channel SPDT Bus Switch (Fail-Safe Power-Off Protection) |
 | **Display Panel** | 10.3" E-Ink Kaleido 3 (Color 150 PPI / B&W 300 PPI, 1872×1404) or Carta 1200 + IT8951 EPDC |
+| **Frontlight** | Dual CCT Bezel Lightguide (TI TPS61163 Step-Up Driver, 2048-step circadian warm amber/white) |
 | **Digitizer** | Laminated Wacom EMR (battery-free stylus) + 0.1mm Mu-Metal Shield + Matte Glass (<18ms inking) |
 | **Dual Cameras** | 12MP Sony IMX708 PDAF Macro Autofocus Rear + 5MP 1080p Front with mechanical ThinkShutter |
 | **Detachable Keyboard**| SnapDeck: Kailh X-Switches (3.5mm) + Blackberry RIM 9900 Optical Trackpad + nRF52840 (ZMK) |
@@ -155,8 +156,10 @@ SolarDeck is a sovereign, sunlight-readable, distraction-free field workstation 
 | **Recovery** | Dual Recessed IP67 Pinhole Buttons (`REC_RPI` eMMC recovery + `REC_MCU` UF2 bootloader) |
 | **Monitor Sink** | Texas Instruments TUSB320 Type-C DRP Controller (Driverless USB Gadget Secondary Display) |
 | **Expansion Bus**| Rear 8-Pin Hermetic Magnetic Pogo Bus for Modular Tactical RF & SIGINT Backpack |
-| **Battery & Solar** | 8,000–10,000 mAh (32–35 Wh) Pack + TI BQ25895 20W Charger + Top-Bezel Micro-Solar Trickle Strip |
-| **Ruggedization** | IP67 Waterproof & Dustproof, SLS PA12 Nylon / CNC 6061-T6 Aluminum, TPU bumpers, GORE vent |
+| **Battery & Safety**| 8,000–10,000 mAh (32–35 Wh) Pack + Hardware PCM (TI BQ2970, 8A trip) + Seiko 0.2F Supercap RTC |
+| **Solar Harvesting**| Dual-Stage: TI BQ25895 (20W USB-C PD / MPPT) + TI BQ25504 Nano-Power Harvester (Bezel Strip) |
+| **ESD & Rugged** | IEC 61000-4-2 Level 4 TVS Matrix (TI TPD4E05U06), IP67, PA12 / 6061 Aluminum, GORE vent |
+| **PCBA Stackup** | 6-Layer Impedance-Controlled (JLC2313 / Isola FR408HR) with continuous unbroken ground planes |
 | **Fast Wake-Up** | Suspend-to-RAM (S2idle): **0.3-second instant resume** |
 
 ---
