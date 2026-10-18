@@ -1,6 +1,6 @@
 # AGENTS.md — SolarDeck Engineering Guide
 
-Written 2026-10-17 07:58 UTC in the Pi harness by antigravity/gemini-3.8-flash
+Written 2026-10-18 17:35 UTC in the Pi harness by antigravity/gemini-3.8-flash
 
 ---
 
@@ -11,11 +11,11 @@ Written 2026-10-17 07:58 UTC in the Pi harness by antigravity/gemini-3.8-flash
 ### Key Architecture Tenets
 * **Compute Split ("Dual-Brain"):**
   * **Main Processor:** Raspberry Pi Compute Module 4 (CM4: Quad Cortex-A72 @ 1.8GHz, 4GB/8GB RAM, 32GB eMMC) running Linux 6.6 LTS, Sway/Wayland, Claude Code CLI, offline Kiwix, and Neovim.
-  * **Ultra-Low-Power Co-Processor:** Raspberry Pi RP2040 (Dual Cortex-M0+ @ 12MHz, ~2mW) running bare-metal C for perpetual 1-second RTC clock ticks, ambient solar voltage sampling (ADC shadow gestures), and 0.3s S2idle instant-wake triggering via GPIO interrupt.
-* **Display & Waveform:** 10.3" E-Ink Kaleido 3 / Carta 1200 via IT8951 EPDC with customized 1-bit 20ms fast-typing waveforms and an asynchronous anti-ghosting daemon (`eink-refreshd`). Laminated Wacom EMR digitizer with battery-free stylus bypassing compositor for sub-20ms pen latency.
-* **Power & Energy Harvesting:** 6,000–8,000 mAh LiFePO4 chemistry (-10°C to +65°C safe, 3,000+ cycle life) managed by TI BQ25895 MPPT buck charger, front-facing monocrystalline micro-solar bezel strip, and TPS22918 peripheral power load switches.
-* **Comms & Hardware Multi-Tool:** M.2 4G/LTE (Quectel EC25-AFX), 915 MHz LoRa (SX1262 / Meshtastic), TI CC1101 Sub-GHz, Vishay IR TX/RX, NXP PN532 NFC, and EM4095 125kHz RFID.
-* **Dock & Enclosure:** 5-pin hermetic magnetic pogo-pin dock (USB 2.0 + power + sense) mating to a silicone-gasketed scissor keyboard running ZMK on Nordic nRF52840 (BLE fallback). IP67 CNC 6061 aluminum or PA12 SLS enclosure with GORE ePTFE pressure vent and 85A TPU bumpers.
+  * **Ultra-Low-Power Co-Processor:** Raspberry Pi RP2350B (Dual Cortex-M33 / Hazard3 RISC-V @ 150MHz, 10 µA sleep / 4.5 mW Zen reader mode) running bare-metal C for perpetual RTC clock ticks, ambient solar voltage sampling (ADC shadow gestures), 8MB QSPI PSRAM framebuffer caching, and 0.3s S2idle instant-wake triggering via GPIO interrupt.
+* **Display & Waveform:** 10.3" E-Ink Kaleido 3 / Carta 1200 (1872×1404, 227 PPI) via IT8951 EPDC isolated by TI TMUX1575 8-channel SPDT bus switch, with customized 1-bit 20ms fast-typing waveforms and an asynchronous anti-ghosting daemon (`eink-refreshd`). Laminated Wacom EMR digitizer with battery-free stylus for sub-20ms pen latency.
+* **Power & Energy Harvesting:** 8,000–10,000 mAh LiFePO4 chemistry (26–32 Wh, 3.2V nominal, -10°C to +65°C safe, 3,000+ cycle life) managed by TI BQ25895 buck charger with dedicated USB-PD sink controller (STUSB4500 / CH224K for 20W PD), front-facing monocrystalline micro-solar bezel strip (IXYS SM141K06L, 0.15W peak trickle top-up), dedicated Always-On 3.3V low-IQ buck-boost (TI TPS62840, 60 nA IQ), and TPS22918 peripheral power load switches.
+* **Comms & Hardware Multi-Tool:** M.2 Key-B 4G/LTE (Quectel EG25-G Global), 915 MHz LoRa (SX1262 / Meshtastic dedicated to RP2350), and rear 8-pin hermetic magnetic pogo bus mating to Modular RF Backpack with onboard bridge MCU and USB hub driving RTL2832U SDR, TI CC1101 Sub-GHz, Vishay IR TX/RX, NXP PN532 NFC, and EM4095 125kHz RFID.
+* **Dock & Enclosure:** 5-pin hermetic magnetic pogo-pin dock (USB 2.0 + power + sense) mating to a silicone-gasketed scissor keyboard running ZMK on Nordic nRF52840 with MCP73831T LiPo charger. IP67 CNC 6061 aluminum or PA12 SLS enclosure with GORE ePTFE pressure vent and 85A TPU bumpers.
 
 ---
 
@@ -26,17 +26,18 @@ Written 2026-10-17 07:58 UTC in the Pi harness by antigravity/gemini-3.8-flash
 ├── README.md                  # Executive overview, core personas, specs table
 ├── AGENTS.md                  # Developer & AI agent instructions (this document)
 ├── docs/
+│   ├── MVP_ARCHITECTURE.md    # Dual-brain architecture, power state transitions, block diagrams
 │   ├── HARDWARE_SPEC.md       # Carrier board schematic, bus topology, pinouts, RF & power
 │   ├── SOFTWARE_SPEC.md       # Linux kernel, DRM waveform drivers, power profiles, daemons
 │   └── BOM_COST_ESTIMATE.md   # Bill of materials, supplier sourcing, turnkey cost breakdown
 └── (Planned tree additions)
     ├── hardware/              # KiCad schematics, PCB layout, Gerber/BOM exports, STEP 3D models
     ├── firmware/
-    │   ├── rp2040/            # Bare-metal C/Pico-SDK co-processor firmware (RTC, ADC, S2idle wake)
+    │   ├── rp2350/            # Bare-metal C/Pico-SDK co-processor firmware (RTC, ADC, S2idle wake)
     │   └── keyboard/          # ZMK / QMK keyboard firmware for nRF52840
     └── src/
         ├── drivers/           # Custom IT8951 LUTs, DRM/KMS patches
-        └── daemons/           # eink-refreshd, solar gesture listener, ambient-dashboard-daemon
+        └── daemons/           # eink-refreshd, solar gesture listener, solardeck-telemetryd
 ```
 
 ---

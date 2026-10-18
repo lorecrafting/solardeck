@@ -2,7 +2,7 @@
 
 > **The Sovereign, Sunlight-Readable 10.3" Color E-Ink Mobile Workstation & Tactical LifeOps Terminal.**
 > 
-> *Written 2026-10-18 06:50 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+> *Written 2026-10-18 17:35 UTC in the Pi harness by antigravity/gemini-3.8-flash*
 > 
 > *Open-Hardware Linux • AI Coding Terminal • Dual MIPI Cameras • Wacom Stylus Slate • Meshtastic LoRa Node • Worldwide 4G LTE with Soldered eSIM • 300-Day Ambient Desk Clock • Parallel SnapDeck Keyboard • Hardware Airgap Switch • IP67 Rugged Enclosure.*
 
@@ -38,9 +38,9 @@ SolarDeck is a sovereign, sunlight-readable, distraction-free field workstation 
 │                       SOLARDECK MVP (THE CORE TABLET)                       │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 1. BRAIN:     Raspberry Pi CM4 (Quad A72 @ 1.8GHz, 8GB RAM, 32GB eMMC, Wi-Fi)│
-│ 2. CO-PROC:   RP2350 (Cortex-M33 / RISC-V) + 8MB PSRAM (300-Day Zen Reader)  │
-│ 3. ISOLATOR:  TI TMUX1574 Quad SPDT Bus Switch (CM4/RP2350 Display Mux)    │
-│ 4. SCREEN:    10.3" E-Ink (Carta 1200 or Kaleido 3) + Wacom EMR + Touch    │
+│ 2. CO-PROC:   RP2350B (Cortex-M33 / RISC-V) + 8MB PSRAM (300-Day Zen Reader) │
+│ 3. ISOLATOR:  TI TMUX1575 8-Channel SPDT Bus Switch (CM4/RP2350 Display Mux)│
+│ 4. SCREEN:    10.3" E-Ink (Carta 1200 / Kaleido 3, 1872×1404, 227 PPI) + EMR│
 │ 5. CAMERAS:   Dual MIPI: 12MP Sony IMX708 PDAF Rear + 5MP 1080p Front       │
 │ 6. CELLULAR:  M.2 Quectel EG25-G LTE + Onboard Soldered MFF2 eSIM (ST4SIM)  │
 │ 7. MESH/GNSS: Built-In Semtech SX1262 LoRa (868–928MHz) + u-blox MAX-M10S   │
@@ -48,9 +48,10 @@ SolarDeck is a sovereign, sunlight-readable, distraction-free field workstation 
 │ 9. AIRGAP SW: Physical Hardware RF Kill Switch (Zero EMF / 0.000 dBm Cutoff)│
 │ 10. SENSORS:  Bosch BMA400 Accel + MMC5603NJ Compass + BMP390 Barometer/Alt │
 │ 11. AUDIO:    Sealed Micro-Box Speaker + MAX98357A Amp + MEMS Mic + Mute SW │
-│ 12. POWER:    8,000–10,000 mAh (32–35 Wh) Pack (Airline-Compliant, 65°C Safe│
-│ 13. EXPAND:   Driverless USB-C Secondary Monitor + Rear 8-Pin Tactical Pogo │
-│ 14. CHASSIS:  SLS 3D-Printed PA12 Nylon + 85A TPU Armor Corners (~510g total)│
+│ 12. POWER:    8,000–10,000 mAh (26–32 Wh LiFePO4 / 30–37 Wh Li-ion) Pack    │
+│ 13. USB ARCH: Dedicated PCIe USB Host / Hub (Peripherals) + Port 1 OTG Sink │
+│ 14. EXPAND:   Driverless USB-C Secondary Monitor + Rear 8-Pin Tactical Pogo │
+│ 15. CHASSIS:  SLS 3D-Printed PA12 Nylon + 85A TPU Armor Corners (~510g total)│
 └──────────────────────────────────────┬──────────────────────────────────────┘
                                        │
             ┌──────────────────────────┴──────────────────────────┐
@@ -71,7 +72,7 @@ SolarDeck is a sovereign, sunlight-readable, distraction-free field workstation 
 
 ### I. The Dual-Brain Display Mux (Zero-Leakage 300-Day Reader & Mesh Node)
 * **The Problem:** Linux processors (like the CM4) draw 1.5W–3W just sitting idle, draining large batteries in hours.
-* **The Genius Fix:** A **Raspberry Pi RP2350** microcontroller (Dual Cortex-M33 / RISC-V) with **8MB QSPI PSRAM** acts as a secondary brain. When Linux is powered completely off (0.000W), the RP2350 takes over the E-Ink display via a **Texas Instruments TMUX1574** high-speed bus switch.
+* **The Genius Fix:** A **Raspberry Pi RP2350B** microcontroller (Dual Cortex-M33 / RISC-V) with **8MB QSPI PSRAM** acts as a secondary brain. When Linux is powered completely off (0.000W), the RP2350 takes over the E-Ink display via a **Texas Instruments TMUX1575** 8-channel high-speed bus switch, isolating all SPI and control signals (`SPI_MOSI`, `SPI_MISO`, `SPI_SCLK`, `SPI_CS`, `HRDY`, `RESET`).
 * **30ms Zen Reading:** Double-buffers full 1872×1404 page images in PSRAM, handling reading page turns at ~4.5 mW (**300+ days battery life**).
 * **24/7 Meshtastic Repeater:** Directly interfaces with the Semtech SX1262 LoRa radio, autonomously relaying encrypted emergency mesh packets across off-grid networks for **80+ days** without ever waking the Linux SoC.
 
@@ -96,7 +97,7 @@ SolarDeck is a sovereign, sunlight-readable, distraction-free field workstation 
 
 ### V. Driverless USB-C External Monitor Mode
 * Connect a single USB-C cable from any MacBook, Windows PC, or Linux laptop to SolarDeck's Port 1.
-* Managed by an autonomous **Texas Instruments TUSB320** Type-C controller, SolarDeck enumerates as a high-speed composite USB Gadget device.
+* Managed by an autonomous **USB-PD Sink Controller (STUSB4500 / CH224K)** and Type-C CC logic, SolarDeck safely negotiates power contracts while the dedicated BCM2711 USB OTG controller enumerates as a high-speed composite USB Gadget display sink. Peripheral devices (modem, keyboard, backpack) run unhindered on a separate PCIe USB host controller / USB hub.
 * **E-Ink Optimized Rendering:** Using lightweight screen-casting (Weylus/Deskreen), SolarDeck renders only updated bounding boxes using 20ms fast-typing waveforms, completely bypassing the flickering and ghosting of conventional 60 FPS video feeds.
 * **Simultaneous Charging:** The host laptop powers and charges the SolarDeck over the same cable, giving you a sunlight-readable secondary terminal monitor that never drains battery.
 
@@ -113,7 +114,7 @@ SolarDeck is a sovereign, sunlight-readable, distraction-free field workstation 
   * **Coulomb Counter (TI BQ27441-G1):** Measures internal battery impedance and State-of-Health to double pack life to 10+ years.
   * **Thermal Triad (Dual TMP112 + SoC):** Dynamically compensates E-ink waveform Look-Up Tables (LUTs) across winter cold and summer heat.
   * **Ambient Lux Sensor (TI OPT3001):** Optimizes sunlight contrast and calculates optimal folding solar panel angles.
-* **The AI Evolution Loop:** A rolling circular SQLite database (`/var/log/solardeck/telemetry.db`) feeds structured physics logs to Claude Code. Because SolarDeck is designed in **plain-text KiCad S-expressions**, the LLM analyzes months of real-world inrush currents, thermal maps, and feature usage to **automatically generate the updated KiCad schematics and netlists for Rev 2**.
+* **The AI Evolution Loop:** A rolling circular SQLite database (`/var/log/solardeck/telemetry.db`) feeds structured physics logs to Claude Code CLI. Because SolarDeck is documented in plain text and open-source formats, engineers and AI assistants can query real-world inrush currents, thermal maps, and battery impedance over time to guide precise component sizing and layout optimizations for Rev 2.
 
 ---
 
@@ -126,9 +127,9 @@ SolarDeck is a sovereign, sunlight-readable, distraction-free field workstation 
 ├──────────────────────────────┼──────────────────────────────┼──────────────────────────────┤
 │ • SnapDeck keyboard docked   │ • Detached keyboard (510g)   │ • Propped on desk kickstand  │
 │ • Sway tiles terminal to 2/3 │ • Wacom EMR pen (4096 lvl)   │ • Linux CM4 dead (0.000W)    │
-│ • Claude Code AI CLI active  │ • 100GB Offline Kiwix docs   │ • RP2040 direct-drives EPDC  │
+│ • Claude Code AI CLI active  │ • 100GB Offline Kiwix docs   │ • RP2350 direct-drives EPDC  │
 │ • Worldwide 4G LTE connected │ • Airgap Switch ON (Zero EMF)│ • 1-sec TCXO live clock tick │
-│ • 10.5–11 Hours continuous   │ • 35–42 Hours active reading │ • 160+ DAYS on single charge │
+│ • 10.5–11 Hours continuous   │ • 35–42 Hours active reading │ • 300+ DAYS on single charge │
 └──────────────────────────────┴──────────────────────────────┴──────────────────────────────┘
 ```
 
@@ -139,9 +140,9 @@ SolarDeck is a sovereign, sunlight-readable, distraction-free field workstation 
 | Subsystem | Specification |
 | :--- | :--- |
 | **Main Compute** | Raspberry Pi Compute Module 4 (CM4) — Quad Cortex-A72 @ 1.8GHz, 8GB RAM, 32GB eMMC (or CM5 / RK3566) |
-| **Co-Processor** | Raspberry Pi RP2350 (Dual Cortex-M33 / RISC-V @ 150MHz) + 8MB QSPI PSRAM + DS3231 TCXO RTC |
-| **Display Isolator**| Texas Instruments **TMUX1575** 8-Channel SPDT Bus Switch (Fail-Safe Power-Off Protection) |
-| **Display Panel** | 10.3" E-Ink Kaleido 3 (Color 150 PPI / B&W 300 PPI, 1872×1404) or Carta 1200 + IT8951 EPDC |
+| **Co-Processor** | Raspberry Pi RP2350B (Dual Cortex-M33 / RISC-V @ 150MHz) + 8MB QSPI PSRAM + DS3231 TCXO RTC |
+| **Display Isolator**| Texas Instruments **TMUX1575** 8-Channel SPDT Bus Switch (Fail-Safe Power-Off Protection, all 6 lines) |
+| **Display Panel** | 10.3" E-Ink Kaleido 3 / Carta 1200 (1872×1404, 227 PPI B&W / 114–150 PPI Color) + IT8951 EPDC |
 | **Waveform Engine** | Dynamic Quad-Zone Temperature-Compensated Waveform LUT Matrix (-10°C to +50°C in `eink-refreshd`) |
 | **Haptic Feedback** | TI DRV2605L Smart Driver + 8.0mm Z-Axis Linear Resonant Actuator (<1.5ms mechanical click on glass) |
 | **Frontlight** | Dual CCT Bezel Lightguide (TI TPS61163 Step-Up Driver, 2048-step circadian warm amber/white) |
@@ -149,25 +150,28 @@ SolarDeck is a sovereign, sunlight-readable, distraction-free field workstation 
 | **All-Weather Rain** | Torrential Rain "Water-Lock" Mode (TPS22918 capacitive touch cutoff; 100% water-immune Wacom stylus) |
 | **Tactical Controls**| Left-Bezel IP67 Sealed 5-Way Tactical Navigation Rocker (ALPS SKRH; gloved 1-handed terminal/reading) |
 | **Dual Cameras** | 12MP Sony IMX708 PDAF Macro Autofocus Rear + 5MP 1080p Front with mechanical ThinkShutter |
-| **Detachable Keyboard**| SnapDeck: Kailh X-Switches (3.5mm) + RIM 9900 Trackpad + 7° Ergonomic Cant Flap + Guide Pins + ZMK |
+| **Detachable Keyboard**| SnapDeck: Kailh X-Switches (3.5mm) + RIM 9900 Trackpad + 7° Ergonomic Cant Flap + MCP73831T LiPo Charger |
 | **Cellular Internet**| M.2 Key-B 3042 (Quectel EG25-G, 30+ LTE bands) + Soldered Onboard MFF2 eSIM (`ST4SIM-200M`) |
-| **Off-Grid Radio** | Semtech SX1262 LoRa 915/868 MHz (Meshtastic) with Top-Edge **IP67 Bulkhead SMA female jack** |
+| **Off-Grid Radio** | Semtech SX1262 LoRa 915/868 MHz (Meshtastic) dedicated to RP2350 with Top-Edge **IP67 Bulkhead SMA female jack** |
 | **RF Front-End** | 0402 Precision Pi-Matching Networks + 3.0mm U.FL Keepout + Molded Coaxial Retention Channels |
 | **Antennas** | Linx ANT-916-CW-HWR Tactical LoRa Whip + Dual Internal Taoglas FXUB63 2×2 MIMO LTE FPCs |
-| **Airgap Switch** | Physical 2-position slide switch; cuts power to all radios, mic, & cameras to 0.000V via TPS22918 |
+| **Airgap Switch** | Physical 2-position slide switch; breaks power enable nets to all radios, mic, & cameras to 0.000V |
 | **Tactical Stealth** | NVG Covert Mode (Monochromatic 630nm Red <0.5% PWM + Amber-only floor + Hardware Audio Squelch) |
-| **Anti-Tamper** | Chassis Intrusion Micro-Switch + Sub-100ns RP2350 TrustZone Cryptographic Key Zeroization |
+| **Anti-Tamper** | Chassis Intrusion Micro-Switch + RP2350 TrustZone Session Token Zeroization & BIP-39 Recovery Fallback |
 | **Telemetry & Sensors**| TI INA3221 (3-rail ammeter) + BQ27441 (Coulomb counter) + Dual TMP112 (thermals) + OPT3001 (lux) + BMA400 (accel) + MMC5603NJ (compass) + BMP390 (baro) |
 | **External Sensor Bus**| External IP67 Silicone-Sealed 4-Pin Qwiic / Stemma QT 3.3V I2C Port (Hot-pluggable sensor hacking) |
-| **Audio & Acoustics**| Dual-MEMS Noise-Cancelling Acoustic Array (65mm Broadside Beamforming) + 1W Speaker + Standby Piezo |
+| **Audio & Acoustics**| Dual-MEMS Noise-Cancelling Acoustic Array + Maxim/ADI MAX98357A 1W Speaker Amp + Standby Piezo |
 | **Status Beacon** | Programmable Multi-Color RGB Notification LED ("Signal Halo") with frosted glass light pipe |
 | **Recovery** | Dual Recessed IP67 Pinhole Buttons (`REC_RPI` eMMC recovery + `REC_MCU` UF2 bootloader) |
-| **Monitor Sink** | Texas Instruments TUSB320 Type-C DRP Controller (Driverless USB Gadget Secondary Display) |
+| **Monitor Sink** | Standalone USB-PD Sink Controller (CH224K / STUSB4500) + Dedicated BCM2711 USB Gadget OTG Port 1 |
+| **USB Host / Hub** | Dedicated PCIe USB Host Controller (VIA VL805 / ASM1042A) or Industrial Hub (USB2514B) for Modem & Docks |
 | **Expansion Bus**| Rear 8-Pin Hermetic Magnetic Pogo Bus with Make-First-Break-Last (MFBL) Hot-Plug Protection |
 | **Battery & Safety**| Hardware `CHEM_SEL` Strap (LiFePO4 3.65V vs Li-ion 4.20V) + Pure Silicon JEITA + TI BQ2970 PCM |
 | **Firmware Failsafe**| RP2350 Dual-Bank A/B Flash Partitioning with 5-Second Autonomous Hardware Watchdog Rollback |
 | **Flash Reliability**| Read-Only SquashFS + Transactional F2FS + 150ms Emergency Hardware Sync Hook (`GPIO_PWR_FAIL`) |
-| **Solar Harvesting**| Dual-Stage: TI BQ25895 (20W USB-C PD / MPPT) + TI BQ25504 Nano-Power Harvester (Bezel Strip) |
+| **Power Architecture**| Dedicated Always-On 3.3V Low-IQ Buck-Boost (TI TPS62840, 60 nA IQ) for RP2350/RTC/Sensors |
+| **RTC Backup** | Seiko MS621FE Rechargeable Lithium Micro-Battery (5.5 mAh, 100+ days hold without power) |
+| **Solar Harvesting**| Dual-Stage: TI BQ25895 (20W USB-C PD / MPPT) + TI BQ25504 Nano-Power Harvester (Bezel Strip, ~0.15W peak) |
 | **Solar Decoupling**| 0.5mm Die-Cut Aerogel Thermal Insulation Barrier + 1.0mm PCBA Milled Thermal Break Slot |
 | **ESD & Rugged** | IEC 61000-4-2 Level 4 TVS Matrix (TI TPD4E05U06), IP67, PA12 / 6061 Aluminum, GORE vent |
 | **PCBA Stackup** | 6-Layer Impedance-Controlled (JLC2313 / Isola FR408HR) with continuous unbroken ground planes |

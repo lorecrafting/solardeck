@@ -1,6 +1,6 @@
 # SolarDeck MVP & Modular System Architecture
 
-Written 2026-10-18 02:58 UTC in the Pi harness by antigravity/gemini-3.8-flash
+Written 2026-10-18 17:35 UTC in the Pi harness by antigravity/gemini-3.8-flash
 
 ---
 
@@ -14,10 +14,10 @@ SolarDeck is a sovereign, general-purpose open-hardware computing platform desig
    * Built-in Worldwide 4G/LTE (Quectel EG25-G) with soldered onboard MFF2 **eSIM (eUICC)**
    * Built-in off-grid mesh communicator (Semtech SX1262 LoRa / Meshtastic 915/868 MHz)
    * Worldwide Multi-Constellation Satellite Navigation (u-blox MAX-M10S: GPS + BeiDou-3 + Galileo + QZSS + GLONASS)
-   * Dual-brain ultra-low-power supervisor (RP2350 + 8MB PSRAM) with **TI TMUX1574 display bus isolation** for 4.5 mW 30ms Zen reading, 24/7 LoRa mesh repeating, and 300+ day desk clock modes
+   * Dual-brain ultra-low-power supervisor (RP2350B + 8MB PSRAM) with **TI TMUX1575 8-channel display bus isolation** for 4.5 mW 30ms Zen reading, 24/7 LoRa mesh repeating, and 300+ day desk clock modes
    * Dual MIPI CSI-2 camera subsystem (12MP Sony IMX708 PDAF Macro rear camera + 5MP 1080p front camera with mechanical ThinkShutter)
    * Top-bezel **IP67 Bulkhead SMA female connector** for tactical tuned LoRa whip, plus internal Taoglas FXUB63 2×2 MIMO cellular antennas
-   * High-capacity **8,000–10,000 mAh (30–32 Wh) Li-ion/LiFePO4** battery (airline-compliant <100Wh)
+   * High-capacity **8,000–10,000 mAh (26–32 Wh LiFePO4 / 30–37 Wh Li-ion)** battery (airline-compliant <100Wh)
    * Lightweight, rugged SLS 3D-printed PA12 Nylon enclosure or CNC 6061-T6 aluminum with RF window cap
 2. **Modular Expansion Packs:** Specialized RF payloads offloaded to snap-on or USB-C modules:
    * **Tactical RF Backpack:** Flipper Zero suite (Sub-GHz CC1101, NFC, RFID, IR blaster) connecting via the rear 8-pin magnetic pogo bus
@@ -29,9 +29,9 @@ SolarDeck is a sovereign, general-purpose open-hardware computing platform desig
 │                       SOLARDECK MVP (THE CORE TABLET)                       │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 1. BRAIN:     Raspberry Pi CM4 (8GB RAM, 32GB eMMC, Wi-Fi/BT)               │
-│ 2. CO-PROC:   RP2350 (Cortex-M33/RISC-V) + 8MB PSRAM (300-Day Zen Reader)   │
-│ 3. ISOLATOR:  TI TMUX1574 Quad SPDT Bus Switch (CM4/RP2350 Display Mux)     │
-│ 4. SCREEN:    10.3" E-Ink (Carta 1200 or Kaleido 3) + Wacom EMR + Touch    │
+│ 2. CO-PROC:   RP2350B (Cortex-M33/RISC-V) + 8MB PSRAM (300-Day Zen Reader)  │
+│ 3. ISOLATOR:  TI TMUX1575 8-Channel SPDT Bus Switch (CM4/RP2350 Display Mux)│
+│ 4. SCREEN:    10.3" E-Ink (Carta 1200 / Kaleido 3, 1872×1404, 227 PPI) + EMR│
 │ 5. CAMERAS:   Dual MIPI: 12MP Sony IMX708 PDAF Rear + 5MP 1080p Front       │
 │ 6. CELLULAR:  M.2 Quectel EG25-G LTE + Onboard Soldered MFF2 eSIM (ST4SIM)  │
 │ 7. MESH/GNSS: Built-In Semtech SX1262 LoRa (868–928MHz) + u-blox MAX-M10S   │
@@ -39,9 +39,10 @@ SolarDeck is a sovereign, general-purpose open-hardware computing platform desig
 │ 9. SENSORS:   Bosch BMA400 Accel + MMC5603NJ Compass + BMP390 Barometer/Alt │
 │ 10. AIRGAP SW: Physical Hardware RF Kill Switch (Zero EMF / 0.000 dBm Cutoff)│
 │ 11. AUDIO:    Sealed Micro-Box Speaker + MAX98357A Amp + MEMS Mic + Mute SW │
-│ 12. BATTERY:  8,000–10,000 mAh (32–35 Wh) Pack (Airline-Compliant, 65°C Safe│
-│ 13. EXPAND:   1x Qwiic (I2C) + 2x IP68 USB-C (Monitor Sink) + 8-Pin Pogo    │
-│ 14. CHASSIS:  SLS 3D-Printed PA12 Nylon + 85A TPU Armor Corners (~510g total)│
+│ 12. BATTERY:  8,000–10,000 mAh (26–32 Wh LiFePO4 / 30–37 Wh Li-ion) Pack    │
+│ 13. USB ARCH: Dedicated PCIe USB Host / Hub (Peripherals) + Port 1 OTG Sink │
+│ 14. EXPAND:   1x Qwiic (I2C) + 2x IP68 USB-C (Monitor Sink) + 8-Pin Pogo    │
+│ 15. CHASSIS:  SLS 3D-Printed PA12 Nylon + 85A TPU Armor Corners (~510g total)│
 └──────────────────────────────────────┬──────────────────────────────────────┘
                                        │
             ┌──────────────────────────┴──────────────────────────┐
@@ -62,18 +63,18 @@ SolarDeck is a sovereign, general-purpose open-hardware computing platform desig
 
 To achieve maximum field battery life without an excessively heavy device:
 
-### The Engineering Sweet Spot: 8,000–10,000 mAh (30–32 Watt-hours)
-* **Configuration:** 1S Li-ion/LiPo (3.7V nominal) or 1S2P LiFePO4 (3.2V nominal) prismatic pouch pack with integrated hardware PCM protection circuit.
-* **Dimensions:** ~5.5 mm thick × 130 mm × 130 mm (occupies the flat recessed cavity directly behind the 10.3" e-paper display).
+### The Engineering Sweet Spot: 8,000–10,000 mAh (26–32 Wh LiFePO4 / 30–37 Wh Li-ion)
+* **Configuration:** 1S Li-ion/LiPo (3.7V nominal, 4.2V charge limit) or 1S2P LiFePO4 (3.2V nominal, 3.65V charge limit) prismatic pouch pack with integrated hardware PCM protection circuit.
+* **Dimensions:** ~5.5 mm thick × 130 mm × 130 mm (occupies the flat recessed cavity coplanar with the PCBA directly behind the 10.3" e-paper display).
 * **Weight:** **~200 grams** (~7.0 oz).
 * **Total Tablet Device Weight:** **~510 grams** (1.12 lbs). For comparison:
   * iPad Pro 11" with case: ~680 grams
   * Onyx Boox Note Air 3C: ~430 grams (with small 3,700 mAh battery)
   * Panasonic Toughbook tablet: ~1,100 grams
-* **FAA / TSA Airline Compliance:** The international limit for passenger aircraft is **100 Watt-hours (Wh)**. At 32 Wh, SolarDeck is less than 1/3 of the legal threshold, flying on all commercial airlines worldwide without restrictions.
+* **FAA / TSA Airline Compliance:** The international limit for passenger aircraft is **100 Watt-hours (Wh)**. At 26–37 Wh, SolarDeck is less than 1/3 of the legal threshold, flying on all commercial airlines worldwide without restrictions.
 * **Extreme Heat Safety:** Rated safe up to 65°C (149°F). The tablet can sit in direct sunlight or on a vehicle dashboard safely.
 
-### Real-World Runtime on 35 Wh:
+### Real-World Runtime on 32 Wh Pack:
 * **Tier 0: Dormant Standby (< 0.1 mW):** **10+ Years** shelf life.
 * **Tier 1: Zen Reader Mode (RP2350 Driven @ ~4.5 mW):** **300+ DAYS (10 Months)** of daily book reading on a single charge with 30ms page turns.
 * **Tier 2: Perpetual LoRa Mesh Repeater (RP2350 @ 12–15 mW):** **80+ DAYS (2.6 Months)** of continuous off-grid packet hopping without waking Linux.
@@ -121,12 +122,12 @@ To achieve maximum field battery life without an excessively heavy device:
 │    • Triggered without opening case via external magnetic reed switch.      │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 2. Microcontroller UART Console Bridge:                                     │
-│    • CM4 UART0 (GPIO 14/15) routes to RP2040 UART.                          │
-│    • RP2040 exposes a USB CDC serial port (`/dev/ttyACM0`) over USB-C.      │
+│    • CM4 UART0 (GPIO 14/15) routes to RP2350 UART.                          │
+│    • RP2350 exposes a USB CDC serial port (`/dev/ttyACM0`) over USB-C.      │
 │    • Stream early kernel dmesg / panic logs even if screen is dead.         │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 3. RP2040 ROM `BOOTSEL` Recovery:                                           │
-│    • External button / pin pull drops RP2040 into `RPI-RP2` USB drive mode  │
+│ 3. RP2350 ROM `BOOTSEL` Recovery:                                           │
+│    • External button / pin pull drops RP2350 into `RPI-RP2` USB drive mode  │
 │      for instant drag-and-drop `.uf2` firmware recovery.                    │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 4. A/B Dual-Root Partitioning:                                              │
@@ -137,7 +138,7 @@ To achieve maximum field battery life without an excessively heavy device:
 │    • 10-second power button hold physically bypasses software load switches,│
 │      forcing clean 5V/3.3V power rails to CM4.                              │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 6. Display Bus Multiplexer & Bias Guard (TMUX1574):                         │
+│ 6. Display Bus Multiplexer & Bias Guard (TMUX1575):                         │
 │    • Physical isolation of CM4 lines in sleep; discharges VCOM/gate rails   │
 │      if host crashes mid-refresh, preventing pigment burn-in.               │
 ├─────────────────────────────────────────────────────────────────────────────┤
@@ -155,7 +156,7 @@ To enable clean voice interaction with Claude Code and dictation:
 
 1. **Acoustic Output (Speaker):**
    * Single pre-engineered sealed acoustic micro-box speaker (PUI Audio `AS03008MR-5-R` or AAC `1524`). Pre-welded airtight 1.0cc resonant chamber provides clean vocal reproduction without chassis buzz.
-   * **Amplifier:** Texas Instruments **MAX98357A** (I2S Class-D mono amplifier, 3.2W into 4Ω).
+   * **Amplifier:** Maxim Integrated / Analog Devices **MAX98357A** (I2S Class-D mono amplifier, 3.2W into 4Ω).
 2. **Acoustic Input:**
    * Single Knowles **SPH0645LM4H-B** (or InvenSense `ICS-43434`) I2S digital MEMS microphone placed on top bezel.
    * Mounted inside a molded silicone acoustic boot to decouple chassis vibrations.
@@ -174,22 +175,22 @@ To enable clean voice interaction with Claude Code and dictation:
                               ▼
 [STEP 2: 0.5-SECOND HANDOFF & ISOLATION]
 • Linux renders page buffers to shared storage.
-• CM4 signals RP2040 via I2C: "Taking over display".
-• CM4 toggles TMUX1574 SELECT line to RP2040 and cuts CM4 power (0.000 mW).
-• TMUX1574 completely isolates CM4 pins, preventing leakage into unpowered SoC.
+• CM4 signals RP2350 via I2C: "Taking over display".
+• CM4 toggles TMUX1575 SELECT line to RP2350 and cuts CM4 power (0.000 mW).
+• TMUX1575 completely isolates all 6 CM4 lines, preventing leakage into unpowered SoC.
                               │
                               ▼
-[STEP 3: AUTONOMOUS RP2040 SIPPING MODE]
-• RP2040 pushes pages/digits over SPI to IT8951.
-• Between updates, RP2040 sleeps at 12 MHz (~2 mW).
-• IT8951 sleeps at ~0.1 mW. Total system draw: 5–8 mW.
-• Battery runtime: 160+ DAYS on single charge!
+[STEP 3: AUTONOMOUS RP2350 SIPPING MODE]
+• RP2350 pushes pages/digits over SPI to IT8951 from 8MB PSRAM double-buffer.
+• Between updates, RP2350 deep-sleeps at 10 µA.
+• IT8951 sleeps at ~0.1 mW. Total system draw: ~4.5 mW.
+• Battery runtime: 300+ DAYS on single charge!
                               │
                               ▼
 [STEP 4: RESUME FULL LINUX]
 • Tap key, touch screen, or double-tap IMU.
-• RP2040 asserts GPIO 17 wake line to CM4.
-• TMUX1574 switches bus back to CM4. Linux resumes in 0.3 seconds.
+• RP2350 asserts GPIO 17 wake line to CM4.
+• TMUX1575 switches bus back to CM4. Linux resumes in 0.3 seconds.
 ```
 
 ---
@@ -229,7 +230,7 @@ To enable clean voice interaction with Claude Code and dictation:
 1. **Key Switches:** Ultra-slim (3.5mm total thickness) Kailh X-Switch tactile scissor keys with 1.2mm travel.
 2. **Trackpad:** Blackberry RIM 9900 optical trackpad centered directly below the spacebar for thumb cursor control without lifting hands.
 3. **Controller & Firmware:** Nordic **nRF52840** running open-source **ZMK Firmware**, supporting wired USB and sub-millisecond BLE 5.0 wireless.
-4. **Docking Bus:** 5-pin hermetic magnetic gold pogo pins (5V, GND, USB D+, USB D-, ID_SENSE). Automatically charges internal 300 mAh LiPo while docked.
+4. **Docking Bus:** 5-pin hermetic magnetic gold pogo pins (5V, GND, USB D+, USB D-, ID_SENSE). Automatically charges internal 300 mAh LiPo via onboard MCP73831T linear charger with PCM while docked.
 
 ---
 

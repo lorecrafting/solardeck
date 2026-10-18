@@ -50,12 +50,15 @@ MODE             UPDATE TIME   BIT DEPTH   USE CASE
   * While the user is actively typing, the screen remains locked in Fast 1-bit Mode.
   * When keystrokes pause for **1.5 seconds**, the daemon quietly triggers an asynchronous anti-ghosting micro-clear. The user experiences LCD-like speed while typing, and paper-sharp clarity when reading.
 
-### 2.3 Direct Zero-Compositor Pen Overlay Daemon (`solardeck-inkd`)
-* To achieve true paper-like handwriting latency (**< 18ms tip-to-ink**), stylus strokes completely bypass Wayland, Sway, and windowing frameworks:
+### 2.3 Low-Latency Pen Overlay Daemon (`solardeck-inkd`) & DRM Serialization
+* To achieve true paper-like handwriting latency (**< 18ms tip-to-ink**) without corrupting concurrent display flushes from Sway or terminal windows:
   1. `solardeck-inkd` reads raw coordinates directly from `/dev/input/event*` (Wacom EMR 240 Hz stream) in non-blocking mode.
   2. A fast Bresenham line algorithm calculates the micro-line bounding box between sequential coordinates (e.g., a tiny 12×18 pixel rectangle).
-  3. Writes the damaged rectangle directly into the IT8951 EPDC memory over 24 MHz SPI using the **1-bit Direct Update (DU)** waveform register (`IT8951_CMD_WRITE_PIXEL_AREA`), applying a single 12ms pulse.
-  4. When the pen lifts for $>500\text{ ms}$, the daemon asynchronously delivers the complete vector stroke (`x, y, pressure, tilt, timestamp`) to the active document application (Xournal++, Obsidian, or Zathura) to commit the layer to disk, followed by a regal anti-ghosting micro-clear.
+  3. **Kernel SPI Bus Synchronization (Race Condition Elimination):**
+     * Direct userspace writes to `/dev/spidev0.0` while the kernel DRM driver (`tinydrm/it8951.c`) is actively flushing frames will interleave SPI transactions and crash the EPDC controller.
+     * To prevent bus collisions, `solardeck-inkd` submits damaged rectangles via a dedicated in-kernel character interface (`/dev/it8951_ink`) with an internal kernel mutex lock, OR commits partial damage updates through standard KMS atomic commits (`DRM_IOCTL_MODE_ATOMIC_COMMIT`).
+     * The kernel driver applies the single 12ms pulse using the IT8951's **1-bit Direct Update (DU)** waveform register (`IT8951_CMD_WRITE_PIXEL_AREA`).
+  4. When the pen lifts for $>500\text{ ms}$, the daemon asynchronously delivers the complete vector stroke (`x, y, pressure, tilt, timestamp`) to the active document application (Xournal++, Obsidian, or Zathura) to commit the layer to disk, followed by a quiet anti-ghosting micro-clear.
 
 ### 2.4 Teleconference & Video Call Engine ("Conference Mode")
 To support high-definition video calls on Discord, Google Meet, and Zoom without overwhelming the E-Ink display:
@@ -63,7 +66,7 @@ To support high-definition video calls on Discord, Google Meet, and Zoom without
    * Captured by the front 5MP Sony IMX219 sensor via `libcamera` and Broadcom hardware ISP.
    * Encoded directly in silicon via hardware H.264/H.265 encoder at 30 FPS, transmitting crisp color video to remote participants.
 2. **Inbound Presentation & Shared Screens:**
-   * Incoming screen shares (slides, code, whiteboards) render in full 16-bit grayscale (GC16) at 300 PPI with exceptional readability.
+   * Incoming screen shares (slides, code, whiteboards) render in full 16-bit grayscale (GC16) at 227 PPI with exceptional readability.
 3. **Inbound Participant Video Thumbnails:**
    * Displayed in a compact floating overlay rendered in **A2 Motion Mode (60–75ms refresh, 2-bit grayscale)**.
    * **Smart-Still Toggle:** Automatically freezes participant video into a crisp still portrait, refreshing only when the active speaker changes or every 3 seconds, cutting display power by 85% while keeping audio 100% real-time.
@@ -77,7 +80,7 @@ To support high-definition video calls on Discord, Google Meet, and Zoom without
   * When sleep is triggered, Linux freezes userspace tasks, flushes file caches, cuts peripheral power switches (TPS22918), and drops the LPDDR4 memory controller into Self-Refresh mode.
   * Power draw drops to **15 mW**.
 * **Instant Wake (0.3 Seconds):**
-  * Touching any key or tapping the touch bar sends a hardware interrupt from the RP2040 to GPIO 17 on the CM4.
+  * Touching any key or tapping the touch bar sends a hardware interrupt from the RP2350 to GPIO 17 on the CM4.
   * The CM4 restores CPU clock lines and resumes execution directly from RAM in **under 300 milliseconds**. All open terminal windows and Claude sessions remain intact.
 
 ### 3.2 The Ambient LifeOps Mode (RP2350 Firmware)
@@ -112,10 +115,10 @@ Rather than relying on static, hardcoded power profiles, SolarDeck continuously 
 │                                  │                                          │
 │         ┌────────────────────────┼────────────────────────┐                 │
 │         ▼                        ▼                        ▼                 │
-│ [TIER 1: IMMEDIATE LOCAL]  [TIER 2: RUNTIME AI TUNING] [TIER 3: HARDWARE REV 2]│
+│ [TIER 1: IMMEDIATE LOCAL]  [TIER 2: RUNTIME AI TUNING] [TIER 3: HARDWARE EVOLUTION]│
 │ • Waveform LUT Temp Comp   • `solardeck-optimize`     • Long-term Inrush/Heat│
 │ • 0% Frontlight in Sun     • Claude Code CLI Tuning   • Feature Usage (YAGNI)│
-│ • Dead Cellular Power-Cycle• Custom power.conf & udev • Automated KiCad Gen │
+│ • Dead Cellular Power-Cycle• Custom power.conf & udev • PCB Rev 2 Sizing Recs│
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -146,12 +149,11 @@ The background daemon `solardeck-telemetryd` logs all physical metrics into a co
      solardeck-cli telemetry export --last 24h --json | claude "Analyze power anomalies and generate tuned /etc/solardeck-power.conf"
      ```
    * The LLM identifies parasitic drains, optimizes core parking thresholds, and adjusts charging currents to preserve battery longevity.
-3. **Tier 3: Long-Term Hardware Evolution Loop (Rev 1 $\to$ Rev 2 PCB Redesign):**
-   * Once a hardware board is built, silicon is set in stone—**unless your design files are machine-readable**.
-   * Because SolarDeck's schematics and layouts are maintained in plain-text KiCad format (`.kicad_sch` and `.kicad_pcb`), an LLM can analyze months of real-world operational logs and generate the engineering revisions for Rev 2:
-     * **Capacitor & Regulator Right-Sizing:** If peak inrush logs show the Quectel LTE modem never pulls more than 1.6A, the oversized 470µF tantalum decoupling capacitor is safely downsized to two compact 100µF ceramic capacitors in Rev 2, saving board area and cost.
-     * **Thermal Gradient Relief:** If thermal logs show a 12°C gradient between the CM4 CPU and the battery pouch during long Claude Code compile sessions, the LLM generates a KiCad PCB layout modification script (using KiCad's `pcbnew` Python API) to rotate the module and insert copper-pour thermal vias to vent heat out the chassis edge.
-     * **Hardware YAGNI Pruning:** If peripheral telemetry logs show that an expansion rail or auxiliary port was utilized less than 0.1% over six months, the LLM flags it for deletion in Rev 2, reducing weight, BOM cost, and trace complexity.
+3. **Tier 3: Long-Term Hardware Evolution Analysis (Rev 1 $\to$ Rev 2 Redesign Recommendations):**
+   * Rather than attempting speculative, error-prone automated PCB trace rerouting via scripts, SolarDeck leverages machine-readable SQLite telemetry to generate rigorous, human-reviewed engineering recommendations for Rev 2:
+     * **Capacitor & Regulator Right-Sizing:** If 6 months of peak inrush logs demonstrate the Quectel LTE modem never pulls more than 1.6A in the field, the oversized 470µF tantalum capacitor is flagged for replacement with compact ceramic capacitors in Rev 2, saving board area and BOM cost.
+     * **Thermal Gradient Analysis:** If thermal logs record sustained gradients between the CM4 CPU and battery pouch during long Claude Code compile sessions, the toolchain generates specific mechanical and layout guidance (e.g., thermal pad thickness adjustments, copper pour relief) for the hardware team.
+     * **Hardware YAGNI Pruning:** If telemetry reveals an auxiliary expansion rail or sensor was active $<0.01\%$ of the time over hundreds of field hours, it is flagged for deletion in Rev 2, shedding weight, cost, and complexity.
 
 ---
 
@@ -367,7 +369,7 @@ Electrophoretic fluid viscosity varies significantly with temperature. Running f
 └────────────────────┴──────────────┴──────────────┴──────────────────────────┘
 ```
 
-* **Thermal Sensing Hook:** `eink-refreshd` polls the dedicated TI TMP112 sensor (`0x49` on `I2C_ALWAYS_ON`) coupled directly to the E-Ink panel backplane every 10 seconds.
+* **Thermal Sensing Hook:** `eink-refreshd` polls the display backplane TMP112 sensor via the RP2350 inter-processor telemetry bridge (`I2C_HOST` target address `0x42` or `/run/solardeck/telemetry.sock`) every 10 seconds.
 * **Seamless In-Flight Transition:** Waveform switching occurs between frame updates without dropped keystrokes or UI tearing.
 
 ---
@@ -392,13 +394,16 @@ Provides one-touch blackout and night-vision optical configuration for covert fi
 
 ## 13. Hardware Anti-Tamper & Cryptographic Zeroization Hook (`solardeck-vault`)
 
-Secures device data against physical chassis compromise, laboratory probing, or forensic acquisition:
+Secures device data against physical chassis compromise, laboratory probing, or forensic acquisition without risking permanent bricking during routine battery maintenance:
 
 * **Intrusion Interrupt Processing:**
   * The sealed chassis intrusion limit switch connects directly to a dedicated Non-Maskable Interrupt (NMI) on the RP2350 co-processor.
   * When `solardeck-vault --arm` is engaged, opening the CNC backplate trips the switch.
   * In $<100\text{ ns}$, RP2350 hardware TrustZone routine executes atomic memory zeroization:
-    * Battery-backed retention SRAM (holding master encryption salts and key fragments) is erased to all-zeros.
+    * Volatile session decryption tokens in retention SRAM are erased to all-zeros.
     * Pulls CM4 reset line low and halts all bus communication.
-* **Emergency Zeroization Button:** Depressing the recessed `REC_MCU` pinhole switch continuously for 10 seconds triggers the same zeroization cascade with audible confirmation (3 micro-piezo clicks before wipe).
-* **Cryptographic Invalidation:** Because the transactional F2FS root and home partitions are encrypted via `fscrypt` with hardware-derived keys, zeroizing the RP2350 retention SRAM permanently renders all eMMC data unreadable.
+* **Routine Battery Maintenance & Tamper Recovery:**
+  * Master partition encryption keys are derived from RP2350 hardware-locked OTP with TrustZone protection combined with a user passphrase.
+  * If the device powers down completely or the battery is removed for servicing, volatile session tokens are cleared, but the device is **not bricked**. Upon re-powering, entering the correct passphrase or BIP-39 mnemonic restores the session tokens.
+* **Emergency Zeroization Button:** Depressing the recessed `REC_MCU` pinhole switch continuously for 10 seconds triggers the same session zeroization cascade with audible confirmation (3 micro-piezo clicks before wipe).
+* **Cryptographic Invalidation:** Because the transactional F2FS root and home partitions are encrypted via `fscrypt` with hardware-derived keys, wiping the session tokens permanently locks the eMMC partitions against forensic recovery.
