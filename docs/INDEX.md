@@ -103,6 +103,14 @@ The SolarDeck repository contains comprehensive, mathematically verified specifi
 | **Barometric Storm & Flood Radar**| `docs/SOFTWARE_SPEC.md` §29 | `solardeck-stormd` | 10cm BMP390 Pressure Drop Warning & Elevation |
 | **GPU Display Steganography** | `docs/SOFTWARE_SPEC.md` §30 | `solardeck-stegod` | Blue-Noise LSB Photographic Leak Attribution |
 | **Cold Storage Vault & Desiccant Pocket**| `docs/HARDWARE_SPEC.md` §4.6 | 3x MicroSD + 1g/2g Desiccant | IP67 Hatch Cavity / 100+ Regen Cycles |
+| **Sub-Surface Geophone & Radar Hotpack**| `docs/OFFGRID_TACTICAL_SENSORS.md` §8.9| Hotpack 7 (`solardeck-geophoned`)| SM-24 Geophone + 100mm Spike + 24-bit ADC|
+| **Direct-Satellite Weather Fax Decoder**| `docs/SOFTWARE_SPEC.md` §31 | `solardeck-satweathd` | NOAA-15/18/19 & Meteor-M2 137MHz APT Storm|
+| **Hands-Free Trauma Medic AI** | `docs/SOFTWARE_SPEC.md` §32 | `solardeck-traumad` | Touch-Free Whisper + 3B LLM + Medical ZIM |
+| **Campervan Alternator & Battery Profiler**| `docs/SOFTWARE_SPEC.md` §33 | `solardeck-alternatord` | 50kHz ADC 12V Diode Ripple & Cranking Sag|
+| **8-Channel Logic Analyzer & CAN Sniffer**| `docs/SOFTWARE_SPEC.md` §34 | `solardeck-logicanalyzerd` | RP2350 PIO 100MSPS DMA & Sigrok/PulseView |
+| **Radio Direction-Finding Foxhunt Pointer**| `docs/SOFTWARE_SPEC.md` §35 | `solardeck-foxhuntd` | Hotpack 1 SDR Directional Bearing Needle |
+| **Stargazing Monochromatic 660nm Red Mode**| `docs/SOFTWARE_SPEC.md` §36 | `solardeck-nvgd` | Zero Photopic Glare Dark-Adaptation & NVG |
+| **Autonomous Trailhead Community Mailbox**| `docs/SOFTWARE_SPEC.md` §37 | `solardeck-trailboxd` | 12mW Meshtastic ?WEATHER/?TRAIL/?SOS Resp |
 
 ---
 

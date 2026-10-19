@@ -790,6 +790,7 @@ To guarantee decadal survival in remote areas where the custom internal LiFePO4 
     * 3x or 4x standard AA/AAA alkaline or NiMH batteries in series (3.6V–6.0V).
     * A 12V vehicle cigarette lighter / lead-acid battery via standard wire leads.
     * A raw 12V / 18V folding camping solar panel without an external charge controller.
+    * **Thermoelectric Generator (TEG) / Peltier Fire Powering:** Connect a standard Seebeck TEG tile ($15) placed on a campervan woodstove or camp stove with snow/water on top. The 150°C thermal gradient produces 3.9V–8.0V DC at 500mA–1A (3W–8W) to run and recharge SolarDeck continuously through arctic winter blizzards with zero sunlight.
 * **Decoupled Operation:** An internal jumper or software command allows the BQ25895 to operate in pure "bus-converter mode," running the CM4 and display directly from the auxiliary input with the internal pouch cell 100% disconnected.
 
 ### 2.25 3-Position Hardware Privacy & Stealth Disconnect Switch

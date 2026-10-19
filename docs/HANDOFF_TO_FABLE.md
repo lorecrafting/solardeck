@@ -209,6 +209,22 @@ The following high-reliability and field-recovery enhancements have been codifie
     * RP2350 logs BMP390 atmospheric pressure every 30s during S2idle sleep; triggers autonomous high-contrast alert if pressure drops $>3.0\text{ hPa}$ in 3 hours, warning of sudden flash floods or alpine squalls.
 15. **GPU Display Steganography & Photographic Watermarking (`solardeck-stegod`):**
     * Broadcom GPU shader modulates 1 LSB blue-noise dither to redundantly embed a cryptographic device UUID and timestamp watermark across the screen, enabling 2D Fourier recovery of leak sources from smartphone photos.
+16. **Sub-Surface Geophone & 360° Perimeter Radar (Hotpack 7 / `solardeck-geophoned`):**
+    * Moving-coil SM-24 geophone with 100mm soil spike and 24-bit delta-sigma ADC; combines seismic Rayleigh wave arrival with acoustic air speed to draw a 360° radar tracking footsteps, vehicles, and wildlife.
+17. **Direct-Satellite Weather Fax Decoder (`solardeck-satweathd`):**
+    * Pulls live overhead APT/LRPT weather satellite images from NOAA-15/18/19 and Meteor-M2 directly from space on 137 MHz via Hotpack 1 (SDR) with zero internet.
+18. **Hands-Free Voice-Activated Trauma Medic AI (`solardeck-traumad`):**
+    * Offline `whisper.cpp` + 3B LLM cross-referenced against 120GB medical Kiwix ZIM; allows bloodied-hands surgical triage guidance via voice and E-Ink diagrams.
+19. **Campervan Alternator Diode Ripple & Battery Health Profiler (`solardeck-alternatord`):**
+    * High-speed 50 kHz ADC sampling on 12V terminal diagnoses failing alternator rectifier diodes (AC ripple $>50\text{mV}$) and calculates starter battery cranking resistance ($R_i$).
+20. **8-Channel Digital Logic Analyzer & CAN-Bus Sniffer (`solardeck-logicanalyzerd`):**
+    * RP2350 dual PIO state machines capture 8 digital channels at 100 MSPS into DMA buffers; integrates with `sigrok` and `PulseView` for in-field automotive and circuit debugging.
+21. **Radio Direction-Finding "Foxhunt" Bearing Pointer (`solardeck-foxhuntd`):**
+    * Directional antenna on Hotpack 1 SDR locates lost hikers' 121.5/406 MHz emergency locator beacons or unauthorized drone control uplinks via an analog compass crosshair HUD.
+22. **Stargazing Monochromatic 660nm Red NVG Mode (`solardeck-nvgd`):**
+    * Tri-CCT frontlight activates 660nm deep red LEDs and clamps GPU color matrix to pure red monochrome, preserving human dark-adaptation and preventing tactical optical detection.
+23. **Autonomous Trailhead Community Mailbox & Weather Beacon (`solardeck-trailboxd`):**
+    * Runs 24/7 at 12 mW on RP2350/SX1262 LoRa; answers remote `?WEATHER`, `?TRAIL`, and logs `?SOS` requests from passing hikers.
 
 ---
 

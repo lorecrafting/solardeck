@@ -1088,3 +1088,80 @@ solardeck-stegod --extract leaked_screen_photo.jpg
 ```
 * Even if photographed at an oblique angle or re-compressed by messaging apps (Signal, Telegram, Twitter), a 2D spatial Fourier transform extracts the embedded carrier watermark, mathematically proving origin and timestamp without altering document readability.
 
+---
+
+## 31. Direct-Satellite Weather Fax Decoder (`solardeck-satweathd`)
+
+*Written 2026-10-19 15:20 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+
+Operates directly with Hotpack 1 (RTL-SDR) to pull raw satellite weather telemetry from space with zero internet:
+* Decodes **NOAA-15, NOAA-18, NOAA-19 (137 MHz VHF APT)** and **Meteor-M2 (137.9 MHz LRPT)** polar-orbiting satellites.
+* Predicts orbital overpasses using offline NORAD TLE ephemeris, wakes the SDR tuner automatically, and applies Doppler frequency correction in real time.
+* Directly maps raw infrared and visible scanlines into a full-screen, high-contrast cloud cover and storm thermal map on the 10.3" E-Ink screen.
+
+---
+
+## 32. Hands-Free Voice-Activated Trauma Medic AI (`solardeck-traumad`)
+
+*Written 2026-10-19 15:20 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+
+Enables completely touch-free emergency medical triage during backcountry accidents or mass-casualty scenarios:
+* Uses the Knowles dual-MEMS microphone array and offline `whisper.cpp` engine.
+* Operator speaks emergency queries (e.g. tension pneumothorax, arterial bleed, snakebite triage).
+* The local Qwen 2.5 3B / Llama 3.2 3B LLM queries the 120GB offline medical Kiwix repository (Merck Manual, Wilderness Medical Society Guidelines).
+* SolarDeck speaks step-by-step instructions via Piper TTS while painting anatomical diagrams and needle decompression landmarks on the E-Ink display.
+
+---
+
+## 33. Campervan Alternator Diode Ripple & Battery Health Profiler (`solardeck-alternatord`)
+
+*Written 2026-10-19 15:20 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+
+Leverages the high-speed ADC sampling on the auxiliary JST-PH 12V terminal to prevent vehicle stranding:
+* **Alternator Diode Ripple Test:** Samples the vehicle's 14.4V DC charging rail at 50 kHz. An AC ripple voltage $>50\text{ mV}$ flags a blown alternator rectifier diode before it drains the battery or destroys van electronics.
+* **Cranking Voltage Sag & Internal Resistance ($R_i$):** Measures millisecond voltage drop during starter motor turnover to calculate battery health, sulfation level, and true remaining cold-cranking amps.
+
+---
+
+## 34. 8-Channel Digital Logic Analyzer & CAN-Bus Sniffer (`solardeck-logicanalyzerd`)
+
+*Written 2026-10-19 15:20 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+
+Transforms SolarDeck into an outdoor electronic test bench for field repairs:
+* Uses the RP2350's dual Programmable I/O (PIO) blocks to capture 8 digital channels simultaneously at up to **100 MSPS** directly into circular DMA buffers.
+* Integrates seamlessly with open-source `sigrok-cli` and `PulseView` to decode SPI, I2C, UART, 1-Wire, and automotive CAN-bus packets without benchtop test equipment.
+
+---
+
+## 35. Radio Direction-Finding "Foxhunt" Bearing Pointer (`solardeck-foxhuntd`)
+
+*Written 2026-10-19 15:20 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+
+Enables tactical search-and-rescue and unauthorized drone tracking using Hotpack 1 (SDR):
+* Connects to a directional handheld antenna (Moxon or Yagi) or dual-antenna phase array.
+* Tracks emergency locator beacons (121.5 MHz / 406 MHz), APRS transmitters, or 2.4 GHz drone control uplinks.
+* Displays an analog directional compass crosshair on the E-Ink screen indicating the exact physical bearing toward the signal transmitter as the operator sweeps the horizon.
+
+---
+
+## 36. Stargazing Rhodopsin-Preserving True Red NVG Mode (`solardeck-nvgd`)
+
+*Written 2026-10-19 15:20 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+
+Prevents night-blindness and maintains military-grade optical covertness:
+* Interacts with the frontlight driver to disable all photopic white/amber LEDs and activate dedicated **660nm deep monochromatic red LEDs**.
+* Clamps the DRM color transform matrix into pure red monochrome with zero green or blue photon emissions.
+* Preserves human rhodopsin dark adaptation for astronomical telescope viewing and prevents detection by ambient optical surveillance.
+
+---
+
+## 37. Autonomous Trailhead Community Mailbox & Weather Beacon (`solardeck-trailboxd`)
+
+*Written 2026-10-19 15:20 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+
+Operates continuously at 12 mW on the RP2350 / SX1262 LoRa radio while parked at remote trailheads:
+* Automatically answers remote LoRa packet queries from passing hikers:
+  * `?WEATHER`: Returns current barometric altitude, ambient temperature, and 12-hour barometric trend forecast.
+  * `?TRAIL`: Returns crowdsourced water source statuses, blowdowns, and wildlife alerts left by other hikers.
+  * `?SOS`: Triggers van audible horn, records GPS coordinates to non-volatile storage, and rebroadcasts distress beacon across the regional mesh.
+

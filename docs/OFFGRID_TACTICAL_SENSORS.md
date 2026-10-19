@@ -393,6 +393,27 @@ To achieve true physical reliability, zero-leakage battery efficiency, and foolp
 * **Complementary 406 MHz Cospas-Sarsat Companion Protocol:**
   * For military-grade search-and-rescue, SolarDeck integrates with certified commercial PLBs (e.g. Ocean Signal rescueME PLB1, 116g, 7-year battery). SolarDeck reads the PLB diagnostic status over NFC and triggers automated digital coordinates via USB-C Hotpack 6 while the certified 5W transmitter pulses the international 406.037 MHz satellite payload.
 
+---
+
+### 8.9 Hotpack 7: Sub-Surface Acoustic & Perimeter Geophone Module (`solardeck-geophoned`)
+* **Operational Doctrine:** 360-degree covert ground surveillance in zero-visibility conditions (dense fog, smoke, pitch black) with **zero RF emissions and zero optical signature**. Detects and classifies approaching vehicles, human footsteps, and wildlife by tracking Rayleigh seismic ground waves and acoustic transients.
+* **Silicon & Transducer Architecture:**
+  1. **Moving-Coil Electrodynamic Geophone:** Miniature **SM-24 / GS-11D** moving-coil geophone (4.5 Hz / 10 Hz natural resonance frequency, $28.8\text{ V/m/s}$ sensitivity, high-permeability neodymium magnet).
+  2. **Direct Ground Coupling:** Includes a detachable 100mm threaded stainless-steel spike that screws into the Hotpack chassis and inserts into sub-surface soil, bypassing surface acoustic damping.
+  3. **Ultra-Low-Noise Seismic Signal Chain:**
+     * TI INA188 / AD8429 instrumentation amplifier ($1\text{ nV}/\sqrt{\text{Hz}}$ voltage noise).
+     * TI ADS1282 / ADS1256 24-bit Delta-Sigma seismic ADC delivering **130 dB dynamic range**.
+* **Seismic-Acoustic Multi-Modal Fusion:**
+  * **Exact Radial Distance:** Compares the millisecond arrival delta ($\Delta t = t_{\text{air}} - t_{\text{ground}}$) between slow ground Rayleigh waves (250–500 m/s) and airborne sound (343 m/s) detected by the Knowles MEMS array.
+  * **360° Azimuth Angle (Hodogram):** Orthogonal X/Y horizontal shear geophone coils compute the wave polarization ellipse to calculate exact cardinal bearing (0° to 360°).
+* **TinyML Edge Wavelet Classifier:**
+  * **Human Footstep:** 1.6–2.1 Hz cadence with 15–35 Hz heel-strike transients.
+  * **Large Animals (Bear/Boar/Deer):** 3.2–5.0 Hz 4-beat trot/gallop cadence.
+  * **Vehicles:** Continuous narrow-band engine shaft vibrations (20–40 Hz) and tire hum (60–120 Hz).
+* **Tactical E-Ink Polar HUD:** Renders a 360-degree circular radar ring showing bearing, estimated distance, and target classification icons with 0.000W bi-stable persistence.
+
+---
+
 *Appended 2026-10-19 14:10 UTC in the Pi harness by antigravity/gemini-3.8-flash*
 
 The following custom software utilities and daemons leverage SolarDeck's bi-stable E-Ink display, dual-brain architecture, tactical radios, and sensor array:
