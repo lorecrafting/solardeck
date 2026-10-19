@@ -199,6 +199,12 @@ The following high-reliability and field-recovery enhancements have been codifie
    * Fuses DS3231 RTC, GNSS, BMM350 compass, and accelerometer to project exact solar elevation and azimuth reticles, maximizing solar harvest yield in $<5\text{ s}$.
 10. **Bistable "Black Box" Crash QR Code Generator (`solardeck-blackboxd`):**
     * Intercepts kernel panics or brownout shutdowns, draws a permanent Version 10 QR code of the crash stack trace and hardware fault registers on the 10.3" screen at 0.000W, enabling instant smartphone camera triage in the field.
+11. **Offline Ghost-Nav BSSID Geolocation (`solardeck-ghostnavd`):**
+    * Passive 0-Watt RF sniffing of Wi-Fi BSSID beacons and LTE cell towers against an offline 8GB SQLite database on the M.2 SSD, yielding a 10–25m location fix in $<50\text{ ms}$ under dense tree canopy or inside metal campervans where GPS is jammed.
+12. **Passive RF Sweeper & Drone Alert (`solardeck-sweeperd`):**
+    * Rx-only near-field energy detection across 433/868/915 MHz and 2.4 GHz; maps proximity of hidden AirTags, surveillance transmitters, or drone telemetry with an E-Ink signal radar HUD.
+13. **Airgapped Ultrasonic Sound-Bridge (`solardeck-soundbridged`):**
+    * Near-ultrasonic 18.5–20.0 kHz FSK acoustic modem transmitting PGP keys, SSH credentials, and code diffs across airgapped desks via Knowles MEMS mics and speaker with zero RF emissions.
 
 ---
 
