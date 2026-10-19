@@ -111,6 +111,21 @@ The SolarDeck repository contains comprehensive, mathematically verified specifi
 | **Radio Direction-Finding Foxhunt Pointer**| `docs/SOFTWARE_SPEC.md` §35 | `solardeck-foxhuntd` | Hotpack 1 SDR Directional Bearing Needle |
 | **Stargazing Monochromatic 660nm Red Mode**| `docs/SOFTWARE_SPEC.md` §36 | `solardeck-nvgd` | Zero Photopic Glare Dark-Adaptation & NVG |
 | **Autonomous Trailhead Community Mailbox**| `docs/SOFTWARE_SPEC.md` §37 | `solardeck-trailboxd` | 12mW Meshtastic ?WEATHER/?TRAIL/?SOS Resp |
+| **Detached LUKS & Dual-PIN Decoy Boot**| `docs/SOFTWARE_SPEC.md` §38 | `solardeck-stealthluks` | Plausible Deniability & Zero Metadata |
+| **Rogue Cellular Tower & Stingray Watchdog**| `docs/SOFTWARE_SPEC.md` §39 | `solardeck-stingrayd` | Anti-Stingray 2G Downgrade Kill Switch|
+| **Airgapped e-Passport NFC Inspector** | `docs/SOFTWARE_SPEC.md` §40 | `solardeck-epassport` | ICAO 9303 RFID & Sovereign Clone Backup|
+| **Camera Sign OCR & Currency Arbitrage** | `docs/SOFTWARE_SPEC.md` §41 | `solardeck-lensworld` | Offline Neural Translation & PPP Forex |
+| **Consular Emergency Evacuation Navigator**| `docs/SOFTWARE_SPEC.md` §42 | `solardeck-evacd` | 195-Nation Embassy & Airstrip Vectors |
+| **Parasite & Tick Morphology Triage AI** | `docs/SOFTWARE_SPEC.md` §43 | `solardeck-parasited` | 12MP Macro Cam Lyme & Venom Triage |
+| **Soil pH & Agronomy Chemistry Profiler**| `docs/SOFTWARE_SPEC.md` §44 | `solardeck-soild` | Galvanic Dual-Probe 3.5–9.0 pH & Moisture|
+| **Timber Energy & Bow-Drill Firecraft** | `docs/SOFTWARE_SPEC.md` §45 | `solardeck-timberd` | Wood BTU Density & Friction Fire Pairs |
+| **Microscopic Water Pathogen Lens Guide**| `docs/SOFTWARE_SPEC.md` §46 | `solardeck-microbed` | 100x Smartphone Lens Giardia & Algae Guide|
+| **Perpetual Solar Living Wall Clock** | `docs/SOFTWARE_SPEC.md` §47 | `solardeck-zen-clock` | 4.5mW Astronomical Calendar & Baro HUD |
+| **Perpetual Solar Entertainment & Games**| `docs/SOFTWARE_SPEC.md` §48 | `solardeck-zen-games` | E-Ink Chess, Puzzles & Infocom Z-Machine|
+| **Zen Stoic & Tao Te Ching Daily Oracle**| `docs/SOFTWARE_SPEC.md` §49 | `solardeck-zen-oracle` | 10,000 Text Dawn Typographic Inking |
+| **Hardware USB Shield & Port Isolation** | `docs/HARDWARE_SPEC.md` §2.26 | TS3USB221A Analog SPST | D+/D- Mechanical Break Juice-Jacking Cut|
+| **Chassis Intrusion & Zeroization Sensor**| `docs/HARDWARE_SPEC.md` §2.27 | TEMT6200 Phototransistor| NMI RAM Key Wiping (<3ms Case Breach) |
+| **Dual-Bezel IBC Solar Array & Zombie Mode**| `docs/HARDWARE_SPEC.md` §2.28 | 1.24W IBC Cells + 1.0F Supercap| Direct Solar Cold-Boot (Zero Battery) |
 
 ---
 

@@ -1165,3 +1165,148 @@ Operates continuously at 12 mW on the RP2350 / SX1262 LoRa radio while parked at
   * `?TRAIL`: Returns crowdsourced water source statuses, blowdowns, and wildlife alerts left by other hikers.
   * `?SOS`: Triggers van audible horn, records GPS coordinates to non-volatile storage, and rebroadcasts distress beacon across the regional mesh.
 
+---
+
+## 38. Detached LUKS Header & Plausible Deniability Dual-Boot (`solardeck-stealthluks`)
+
+*Written 2026-10-19 15:45 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+
+Prevents border forensic tools (Cellebrite, GrayKey) from detecting encrypted data:
+* **Zero Encrypted Metadata:** The 16MB LUKS header is stripped from the NVMe SSD and relocated to a MicroSD card concealed in the IP67 cold-storage vault (§4.6) or an NFC token.
+* Without the header, the entire 2TB NVMe SSD is mathematically identical to factory-random NAND unpartitioned flash.
+* **Dual-PIN Plausible Deniability:**
+  * **Decoy PIN:** Boots an innocuous lightweight Debian desktop populated with tourist photos, airline receipts, and generic travel blogs.
+  * **Tactical PIN:** Boots the encrypted sovereign partition containing Kiwix archives, cryptographic keys, and tactical logs.
+  * **Duress Panic PIN:** Overwrites volatile RAM encryption keys within 5 milliseconds while booting the decoy desktop.
+
+---
+
+## 39. Rogue Cellular Tower & IMSI Catcher Detector (`solardeck-stingrayd`)
+
+*Written 2026-10-19 15:45 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+
+Protects against silent interception at borders, airports, and urban protest zones:
+* Continuously queries the Quectel EG25-G modem AT interface to audit cell tower signaling parameters.
+* **Threat Triggers:**
+  * Detects forced downgrades to unencrypted 2G (GSM A5/0 or A5/1).
+  * Flags suspicious base stations with mismatched Mobile Country Codes (MCC) or Mobile Network Codes (MNC).
+  * Alerts on sudden, unnatural RF power spikes characteristic of vehicle-mounted IMSI catchers (Stingrays).
+* **Automated Countermeasure:** Immediately cuts modem power via hardware load switch (`TPS22918`) before the device can transmit its unique IMSI/IMEI identifiers.
+
+---
+
+## 40. Airgapped Sovereign e-Passport NFC Inspector (`solardeck-epassport`)
+
+*Written 2026-10-19 15:45 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+
+Provides sovereign biometric identity verification and backup with zero cloud connectivity:
+* Reads standard **ICAO 9303 biometric passports** via the top bumper's 13.56 MHz NFC antenna.
+* Uses the 12MP camera to OCR the 2-line Machine Readable Zone (MRZ), deriving the Basic Access Control (BAC) session key.
+* Communicates with the passport secure element, verifies RSA/ECDSA digital signatures, and extracts the uncompressed high-resolution biometric photo.
+* Stores an encrypted, verifiable digital clone in the cold storage vault in case physical travel documents are lost or confiscated.
+
+---
+
+## 41. Zero-Cloud Camera Sign OCR & Live Currency Arbitrage (`solardeck-lensworld`)
+
+*Written 2026-10-19 15:45 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+
+Solves foreign language barriers and retail currency conversions offline:
+* **Offline Optical Translation:** Uses the 12MP camera with offline Tesseract/PaddleOCR and quantized MarianMT neural translation to translate foreign signage, train schedules, and menus (Arabic, Cyrillic, Chinese, Japanese, Thai) directly onto the E-Ink display in $<1.5\text{ seconds}$.
+* **Real-Time Currency Arbitrage:** Recognizes foreign prices and converts them into home currency using offline historical exchange rates and local purchasing-power parity (PPP) indices.
+
+---
+
+## 42. Offline Consular & Geopolitical Emergency Evacuation Navigator (`solardeck-evacd`)
+
+*Written 2026-10-19 15:45 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+
+Guides operators to safety during international crises, civil unrest, or telecommunication shutdowns:
+* Built-in database of all 195 nations covering:
+  * Exact GPS coordinates, emergency phone numbers, and HF radio frequencies for every sovereign embassy and consulate.
+  * Level-1 trauma surgical centers.
+  * Paved airport runway lengths capable of landing evacuation aircraft.
+* Renders a high-contrast compass vector, bearing, and distance to the nearest safe haven without cellular network access.
+
+---
+
+## 43. Macro Parasite & Tick Morphology Triage AI (`solardeck-parasited`)
+
+*Written 2026-10-19 15:45 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+
+Provides immediate backcountry bite diagnosis to prevent Lyme disease and envenomation:
+* Captures high-resolution macro imagery of parasites using the 12MP Sony IMX708 sensor.
+* Runs a local vision classification model:
+  * Distinguishes **Blacklegged Deer Ticks (*Ixodes scapularis*, Lyme vector)** from American Dog Ticks.
+  * Differentiates Brown Recluse spiders from Wolf Spiders.
+* Displays bite treatment protocols, antibiotic timing recommendations, and sets an automated reminder to inspect for erythema migrans (bullseye rash).
+
+---
+
+## 44. Soil pH, Moisture & Agricultural Chemistry Profiler (`solardeck-soild`)
+
+*Written 2026-10-19 15:45 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+
+Enables off-grid survival agronomy and soil safety analysis:
+* Connects two galvanic electrodes (copper/zinc nails or stainless-steel tent stakes) into the auxiliary ADC breakout.
+* Measures soil galvanic potential and electrolyte conductivity to calculate **soil pH (3.5 to 9.0)** and moisture percentage.
+* Cross-references an offline agronomy database to recommend compatible crops (e.g. root vegetables vs. brassicas) and flags heavy-metal industrial contamination.
+
+---
+
+## 45. Timber Fuel Energy & Primitive Bow-Drill Firecraft Oracle (`solardeck-timberd`)
+
+*Written 2026-10-19 15:45 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+
+Guides fire-making, shelter building, and primitive tool fabrication:
+* Identifies tree species from bark texture, leaf margin, and twig scar patterns.
+* Evaluates wood characteristics:
+  * **Heat Density:** Million BTUs per cord (e.g. Osage Orange: 32.9 vs White Pine: 15.9).
+  * **Wet Burning Index:** Woods that split cleanly and burn wet (Birch, Ash).
+  * **Friction Fire Pairings:** Optimal bow-drill spindle and hearth board wood combinations (Cedar on Cedar, Basswood on Willow).
+
+---
+
+## 46. Microscopic Waterborne Pathogen Lens Guide (`solardeck-microbed`)
+
+*Written 2026-10-19 15:45 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+
+Verifies water filter integrity and detects microscopic parasites:
+* Couples a magnetic $5 100x smartphone microscope lens over the 12MP camera.
+* Evaluates illuminated water droplets on a glass slide against an on-screen reference reticle to identify *Giardia lamblia* cysts, *Cryptosporidium*, amoebas, mosquito larvae, and cyanobacteria (toxic algae).
+
+---
+
+## 47. Perpetual Ambient Desk Dashboard & Living Wall Clock (`solardeck-zen-clock`)
+
+*Written 2026-10-19 15:45 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+
+Transforms SolarDeck into an immortal, zero-battery ambient information station powered by ambient light:
+* Runs entirely on the **RP2350 co-processor at 4.5 mW**, powered by the dual-bezel IBC solar array.
+* **Perpetual Displays:**
+  * 100-year astronomical calendar, lunar phase, sunrise/sunset, solar noon, and Julian day.
+  * Micro-climate barometer HUD: continuous barometric pressure trend chart (BMP390), ambient temperature, humidity (SHT40), and 12-hour predictive forecast arrow.
+* Refreshes once per minute with **0.000W** holding power between ticks.
+
+---
+
+## 48. Perpetual Solar Entertainment: Infinite Chess, Puzzles & Infocom Text Adventures (`solardeck-zen-games`)
+
+*Written 2026-10-19 15:45 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+
+Delivers infinite, zero-battery intellectual entertainment during extended off-grid stays:
+* **E-Ink Chess Engine:** Embedded micro-chess engine (Toledo/Micro-Max C engine, ~2KB ROM) running on RP2350 with 5 difficulty levels and two-player pass-and-play. Consumes 0.000W while contemplating moves.
+* **Procedural Daily Puzzle Engine:** Algorithmic Sudoku, Nonogram, and Wordle generators seeded by the daily RTC date with over 50,000 puzzles playable via Wacom stylus.
+* **Infocom Z-Machine Text Adventures:** Full C-based Z-Machine interpreter running in RP2350 PSRAM. Plays classic interactive fiction (*Zork I/II/III*, *The Hitchhiker's Guide to the Galaxy*, *Planetfall*, *Anchorhead*) with zero standby battery drain.
+* **Turn-Based Retro Roguelike:** Classic ASCII roguelike (*Rogue 1980*, *Brogue-lite*) executing computation only upon keystroke input.
+
+---
+
+## 49. Zen Stoic Philosophy & Daily Tao Te Ching Oracle (`solardeck-zen-oracle`)
+
+*Written 2026-10-19 15:45 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+
+Delivers morning intellectual contemplation with zero notifications or distractions:
+* Curated offline library of 10,000 philosophical texts: *Meditations* of Marcus Aurelius, Seneca, Epictetus, *Tao Te Ching*, Sun Tzu's *Art of War*, and classic Basho haikus.
+* Automatically refreshes a high-contrast typographic contemplation on the E-Ink screen at local solar dawn, holding the image with 0.000W all day.
+

@@ -225,6 +225,28 @@ The following high-reliability and field-recovery enhancements have been codifie
     * Tri-CCT frontlight activates 660nm deep red LEDs and clamps GPU color matrix to pure red monochrome, preserving human dark-adaptation and preventing tactical optical detection.
 23. **Autonomous Trailhead Community Mailbox & Weather Beacon (`solardeck-trailboxd`):**
     * Runs 24/7 at 12 mW on RP2350/SX1262 LoRa; answers remote `?WEATHER`, `?TRAIL`, and logs `?SOS` requests from passing hikers.
+24. **Hostile Border Defense & Anti-Forensics (`solardeck-stealthluks` & Decoy Boot):**
+    * Detached LUKS header leaves 2TB NVMe SSD looking like random NAND noise to Cellebrite kiosks; dual-PIN decoy desktop boots innocuous travel photos under physical inspection.
+25. **Rogue Cellular Tower & IMSI Catcher Watchdog (`solardeck-stingrayd`):**
+    * Detects forced 2G downgrades and suspicious base stations, cutting modem power via hardware load switch before IMSI broadcast.
+26. **Airgapped Sovereign e-Passport NFC Inspector (`solardeck-epassport`):**
+    * Reads ICAO 9303 RFID passport chips via 13.56 MHz NFC coil, authenticating digital signatures and storing encrypted biometric identity clones in cold storage.
+27. **Zero-Cloud Camera Sign OCR & Live Currency Arbitrage (`solardeck-lensworld`):**
+    * Translates non-Latin signage offline (Arabic, Cyrillic, Asian scripts) and converts price tags using offline historical forex and PPP indices.
+28. **Consular & Geopolitical Emergency Evacuation Navigator (`solardeck-evacd`):**
+    * Offline 195-nation database of embassies, trauma surgical clinics, and paved airstrips with great-circle compass vectors.
+29. **Macro Parasite & Tick Morphology Triage AI (`solardeck-parasited`):**
+    * Macro camera analysis distinguishes Lyme deer ticks from dog ticks and venomous spiders, setting automated erythema rash reminders.
+30. **Galvanic Soil pH & Survival Agronomy Probe (`solardeck-soild`):**
+    * Dual tent-stake probes measure galvanic redox potential to calculate soil pH (3.5–9.0) and moisture for survival crop planning.
+31. **Timber Fuel Energy & Bow-Drill Firecraft Oracle (`solardeck-timberd`):**
+    * Identifies firewood BTU density, wet-splitting index, and friction-fire bow-drill spindle/hearth board pairings.
+32. **Microscopic Waterborne Pathogen Lens Guide (`solardeck-microbed`):**
+    * Couples a $5 100x smartphone lens to inspect water droplets on-screen for *Giardia*, *Cryptosporidium*, and toxic algae.
+33. **Perpetual Solar Living Wall Clock & Barometer HUD (`solardeck-zen-clock`):**
+    * Runs at 4.5 mW on RP2350 with dual-bezel IBC solar array; displays 100-year astronomical calendar and 12-hour predictive weather arrow.
+34. **Perpetual Solar Entertainment: Infinite Chess, Puzzles & Infocom (`solardeck-zen-games`):**
+    * Zero-battery mind games: embedded C chess engine, daily algorithmic Sudoku/Wordle, and Infocom Z-Machine text adventures (*Zork*).
 
 ---
 

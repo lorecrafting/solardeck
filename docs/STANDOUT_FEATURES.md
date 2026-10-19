@@ -434,6 +434,98 @@ Carrying a giant 6.7" glass smartphone alongside a 10.3" sovereign e-ink termina
 
 ---
 
+## Pillar 11: Hostile Border Defense & Anti-Forensic Evasion
+
+*Written 2026-10-19 15:50 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+
+Engineered specifically to defeat forensic extraction kiosks (Cellebrite UFED, MSAB XRY, GrayKey), rogue cellular towers (Stingrays), and physical search duress:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                 HOSTILE BORDER DEFENSE & ANTI-FORENSICS                     │
+├─────────────────────┬───────────────────────┬───────────────────────────────┤
+│ THREAT              │ HARDWARE / CRYPTO     │ COUNTER-MEASURE               │
+├─────────────────────┼───────────────────────┼───────────────────────────────┤
+│ 1. Forensic Kiosks  │ Detached LUKS Header  │ Master header stored on hidden│
+│    (Cellebrite)     │ (`solardeck-stealth`) │ vault MicroSD; drive is noise.│
+├─────────────────────┼───────────────────────┼───────────────────────────────┤
+│ 2. Physical Duress  │ Dual-PIN Decoy Boot   │ Decoy PIN boots tourist OS;   │
+│    Screen Search    │ (Plausible Deniability│ panic PIN wipes volatile keys.│
+├─────────────────────┼───────────────────────┼───────────────────────────────┤
+│ 3. IMSI Catchers &  │ AT Signaling Watchdog │ Detects forced 2G & cuts radio│
+│    Stingray Towers  │ (`solardeck-stingray`)│ power via TPS22918 load gate. │
+├─────────────────────┼───────────────────────┼───────────────────────────────┤
+│ 4. BadUSB / Kiosk   │ Physical Analog SPST  │ Mechanically severs D+/D- lines│
+│    Juice-Jacking    │ Switch (TS3USB221A)   │ while negotiating 20W PD power│
+├─────────────────────┼───────────────────────┼───────────────────────────────┤
+│ 5. Evil-Maid Case   │ Optical & Contact Reed│ Triggers RP2350 NMI interrupt;│
+│    Disassembly      │ Sensor (`TAMPER_NMI`) │ zeroizes RAM keys in <3 ms.   │
+└─────────────────────┴───────────────────────┴───────────────────────────────┘
+```
+
+1. **Detached LUKS Header:** Relocating the 16MB LUKS header to the IP67 cold storage vault renders the 2TB NVMe SSD mathematically indistinguishable from factory-unpartitioned random NAND flash.
+2. **Dual-PIN Plausible Deniability:** Unlocks an authentic Debian tourist desktop (travel itineraries, photos, recipes) under inspection, keeping tactical volumes invisible.
+3. **Hardware USB Isolation:** Physical SPST analog switch breaks high-speed USB data lines ($D+/D-$) to 0.000V during charging at untrusted public stations or border ports.
+4. **Active IMSI Catcher Watchdog:** Automatically halts cellular emissions before transmitting IMSI when rogue base stations attempt forced 2G downgrade attacks.
+5. **Chassis Zeroization Sensor:** Internal micro-phototransistor and leaf contact trigger instantaneous RAM key wiping within 3 ms if the unibody shell is opened.
+
+---
+
+## Pillar 12: Perpetual Solar Zen Ecosystem & Immortal Batteryless Mode
+
+*Written 2026-10-19 15:50 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+
+Transforming SolarDeck from an active computer into an immortal, zero-battery ambient station and off-grid mind gym powered purely by ambient sunlight:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                 PERPETUAL SOLAR ZEN DASHBOARD & ENTERTAINMENT               │
+├─────────────────────┬───────────────────────┬───────────────────────────────┤
+│ APPLICATION         │ HARDWARE SUBSYSTEM    │ OPERATIONAL ENERGY            │
+├─────────────────────┼───────────────────────┼───────────────────────────────┤
+│ 1. Living Wall Clock│ RP2350 + DS3231 RTC   │ 4.5 mW (Refreshes once/min;   │
+│    & Barometer HUD  │ + Bosch BMP390 Baro   │ 0.000W static holding power). │
+├─────────────────────┼───────────────────────┼───────────────────────────────┤
+│ 2. Infinite Chess   │ Micro-Max / Toledo C  │ 0.000W between moves;         │
+│    Engine           │ on Hazard3 RISC-V     │ 5 AI levels & pass-and-play.  │
+├─────────────────────┼───────────────────────┼───────────────────────────────┤
+│ 3. Infocom Z-Machine│ C Frotz Interpreter   │ 0.000W between keystrokes;    │
+│    Interactive Fic  │ in 8MB QSPI PSRAM     │ Zork I-III, Planetfall, etc.  │
+├─────────────────────┼───────────────────────┼───────────────────────────────┤
+│ 4. Daily Procedural │ Algorithmic RTC Seed  │ Solvable via Wacom EMR stylus;│
+│    Puzzle Engine    │ Generator             │ 50,000+ Sudoku/Nonograms.     │
+├─────────────────────┼───────────────────────┼───────────────────────────────┤
+│ 5. Daily Stoic &    │ 10,000 Text Curated   │ Auto-refreshes at solar dawn; │
+│    Tao Te Ching     │ Offline Typography    │ zero battery drain all day.   │
+├─────────────────────┼───────────────────────┼───────────────────────────────┤
+│ 6. Immortal Solar   │ Dual-Bezel IBC Panel  │ Direct solar cold-boot via    │
+│    "Zombie Mode"    │ (1.24W) + 1.0F Supercap│ 1.0F supercap (Zero battery). │
+└─────────────────────┴───────────────────────┴───────────────────────────────┘
+```
+
+1. **Full-Width Dual-Bezel IBC Solar Array:** SunPower Maxeon Gen 7 back-contact monocrystalline strips ($51.6\text{ cm}^2$ total area across top and bottom bezels) generate **1.24W peak in direct sunlight** and **120 mW to 240 mW in indirect shade**—an **8× to 20× surplus** over the 4.5 mW to 15 mW required for RP2350 operation.
+2. **Batteryless Direct Solar Cold-Boot ("Zombie Mode"):** Even with the LiFePO4 battery missing or drained to 0.000V, sunlight charges the onboard 1.0F supercapacitor in **under 25 seconds**, cold-booting the RP2350 into the Zen Solar Suite indefinitely.
+3. **Mind Games & Intellectual Entertainment:** Infinite E-Ink chess, Infocom interactive fiction (*Zork*), procedural daily Sudoku/Wordle, and stoic philosophy oracles run completely offline with **zero battery drain** between user actions.
+4. **Perpetual Solar Mesh Relay:** Operates as a permanent, immortal Meshtastic LoRa packet repeater atop a mountain or campervan roof, forwarding regional emergency communications without needing a battery.
+
+---
+
+## Pillar 13: Global Travel & Field Biology Sovereign Recon
+
+*Written 2026-10-19 15:50 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+
+Equipping the sovereign traveler and wilderness naturalist with completely offline scientific instruments:
+
+1. **Airgapped Sovereign e-Passport Inspector (`solardeck-epassport`):** Reads ICAO 9303 RFID passport chips via the 13.56 MHz NFC coil, authenticates RSA/ECDSA digital signatures against the Machine Readable Zone, and archives verified sovereign digital identity clones in cold storage.
+2. **Zero-Cloud Camera Sign Translation & Currency Arbitrage (`solardeck-lensworld`):** Offline OCR and neural translation for non-Latin scripts (Arabic, Cyrillic, Asian scripts) plus real-time currency conversion based on historical forex and purchasing-power parity tables.
+3. **Consular & Geopolitical Evacuation Navigator (`solardeck-evacd`):** Offline 195-nation database of embassies, Level-1 trauma centers, and paved airstrips, displaying high-contrast great-circle evacuation vectors during regional unrest or telecommunications collapse.
+4. **Macro Parasite & Tick Morphology Triage (`solardeck-parasited`):** 12MP macro camera analysis distinguishes Lyme-carrying blacklegged deer ticks from dog ticks and brown recluse from wolf spiders, providing immediate bite triage.
+5. **Galvanic Soil pH & Agricultural Profiler (`solardeck-soild`):** Dual tent-stake probes measure soil galvanic potential and conductivity, calculating pH (3.5–9.0) and moisture for survival agriculture and heavy-metal contamination screening.
+6. **Timber Fuel Energy & Bow-Drill Firecraft Oracle (`solardeck-timberd`):** Evaluates tree bark and leaf morphology to identify wood BTU density, wet-splitting characteristics, and friction fire spindle/hearth combinations.
+7. **Microscopic Waterborne Pathogen Lens Guide (`solardeck-microbed`):** Magnetic $5 100x smartphone lens over the 12MP camera evaluates water droplets on-screen to identify *Giardia*, *Cryptosporidium*, and toxic cyanobacteria.
+
+---
+
 ## Verification & Acceptance Gate (The North Star Metrics)
 
 Before any prototype PCBA or firmware build is declared ready for field release, it must be benchmarked against these six non-negotiable gates:

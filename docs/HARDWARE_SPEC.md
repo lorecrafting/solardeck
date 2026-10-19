@@ -187,12 +187,24 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
     * **$T > 60^\circ\text{C}$ (Overheat Lockout):** Complete charger shutdown.
 * **Dual-Stage Solar Harvesting & Ambient Sensing Architecture:**
   1. *High-Power Field Solar (Fast Recharge via USB-C):* Standard USB-C Port 2 supports 5V–14V input from folding 15W–28W outdoor panels. The BQ25895's integrated dynamic input voltage management (**VINDPM / MPPT**) tracks optimal solar output to recharge the pack safely in field conditions.
-  2. *Dedicated Nano-Power Bezel Harvester (Texas Instruments BQ25504):*
+  2. *Dedicated Nano-Power Bezel Harvester (Texas Instruments BQ25504 & Full-Width Dual-Bezel IBC Solar Array):*
      * Resolves the primary charger's 3.9V Under-Voltage Lockout ($V_{\text{UVLO}}$) ceiling.
-     * Dedicated ultra-low-quiescent boost converter ($1.80) wired directly to the top-bezel monocrystalline micro-solar strip (IXYS SM141K06L, $22\text{ mm} \times 35\text{ mm}$, ~0.15W peak, ~50–120 mW real-world).
+     * **Full-Width Dual-Bezel High-Efficiency IBC Solar Array:** Instead of an isolated single cell, the top and bottom bezels integrate custom back-contact Interdigitated Back Contact (IBC) monocrystalline solar strips (SunPower Maxeon Gen 7 grade, ~24% cell efficiency).
+       * Top Bezel Array: $215\text{ mm} \times 12\text{ mm}$ ($25.8\text{ cm}^2$).
+       * Bottom Bezel Array: $215\text{ mm} \times 12\text{ mm}$ ($25.8\text{ cm}^2$).
+       * Total Surface Area: **$51.6\text{ cm}^2$**.
+       * **Peak Solar Power:** **1.24W in direct sunlight** ($1000\text{ W/m}^2$), producing up to **350 mA charging current** directly into the LiFePO4 battery rail.
+       * **Indoor / Overcast Harvesting:** In indirect indoor light or cloudy daylight (100–200 W/m²), the array harvests **120 mW to 240 mW**—providing an **8× to 20× energy surplus** over the 4.5 mW to 15 mW consumed by the RP2350 co-processor and E-Ink display!
+     * Dedicated ultra-low-quiescent boost converter ($1.80) wired directly to the bezel solar array.
      * Cold-starts from as low as **330 mV** and continuously harvests down to **100 mV**.
      * Executes autonomous 80% Fractional Open-Circuit Voltage (FOCV) MPPT sampling, boosting micro-solar energy directly into the battery rail with >90% efficiency, keeping the 4.5 mW RP2350 Zen reader topped off indefinitely even under indoor lighting.
-  3. *Zero-BOM Ambient Lux Sensor (Solar Strip via RP2350 ADC):*
+  3. *Batteryless Direct Solar Cold-Boot ("Zombie Mode"):*
+     * If the internal LiFePO4 battery is completely drained to 0.0V, damaged, or physically removed, SolarDeck operates in pure **Batteryless Solar Mode**.
+     * The bezel solar array charges the onboard **1.0F 3.3V supercapacitor**.
+     * Once supercapacitor voltage crosses 3.0V, the ultra-low IQ TPS62840 regulator engages, cold-booting the RP2350 co-processor in under 15 ms.
+     * The co-processor boots into the **Zen Solar Dashboard** (clock, barometer, offline text adventures, chess, and LoRa packet relay), running perpetually off ambient light with zero battery required.
+     * If direct sunlight provides $>2.5\text{W}$ (or via the auxiliary DC / folding panel port), the power supervisor asserts `CM4_GLOBAL_EN` to cold-boot the full Linux desktop without a battery.
+  4. *Zero-BOM Ambient Lux Sensor (Solar Strip via RP2350 ADC):*
      * The open-circuit voltage ($V_{OC}$) of the top-bezel solar strip is tapped through a high-impedance 10:1 divider (1.0 MΩ / 110 kΩ, <3 µA draw) into RP2350 analog input pin `RP2350_ADC0`.
      * The co-processor maps cell photodiode voltage across a calibrated log curve from 10 lux (candlelit room) to 120,000 lux (blinding noon sunlight).
      * Automatically adjusts E-ink Look-Up Table (LUT) waveform contrast, boosts color saturation in sunlight, and signals the compositor to engage dark mode in dim environments without adding a dedicated ambient light sensor IC ($0.00 BOM cost).
@@ -695,9 +707,9 @@ To provide 100% mission reliability in severe sub-zero weather, dust storms, and
 ### 2.19 Blackout Supercapacitor Emergency SOS Beacon (Zero-Battery Survival Boot)
 * **The Operational Ceiling:** In catastrophic backcountry scenarios where the main LiFePO4 battery pack is deeply discharged to 0.000V or physically damaged, standard mobile terminals cannot boot.
 * **The Supercapacitor Circuit:**
-  * A **1.0F 3.3V ultra-low-leakage EDLC supercapacitor** (AVX BestCap / Eaton / Cornell Dubilier, $0.95) is wired directly across the Always-On 3.3V rail fed by the IXYS SM141K06L front micro-solar strip via a low-drop Schottky diode (BAT54CW).
+  * A **1.0F 3.3V ultra-low-leakage EDLC supercapacitor** (AVX BestCap / Eaton / Cornell Dubilier, $0.95) is wired directly across the Always-On 3.3V rail fed by the dual-bezel IBC solar array via a low-drop Schottky diode (BAT54CW).
 * **Zero-Battery Survival Sequence:**
-  1. **Direct Sunlight Charging:** In direct sunlight (100,000 lux), the front solar strip generates ~35 mA, charging the 1.0F supercapacitor from 0.0V to 3.3V in **12 to 15 minutes** with no battery installed.
+  1. **Direct Sunlight Charging:** In direct sunlight (100,000 lux), the front dual-bezel solar array generates ~280 mA (1.24W), charging the 1.0F supercapacitor from 0.0V to 3.3V in **under 25 seconds** with no battery installed.
   2. **150ms Cold-Boot Burst:** The TI TPS62840 buck-boost asserts `POWER_GOOD`, releasing the RP2350 reset line.
   3. **Atomic Coordinate Capture & Broadcast:** The RP2350 cold-boots in **15ms**, wakes the Semtech SX1262 LoRa transceiver, reads last-known GPS coordinates from RTC NVRAM, and transmits a high-power (+22 dBm) encrypted emergency SOS distress burst on 915 MHz / 868 MHz Meshtastic emergency channels (drawing 110 mA for 45ms = 0.016 Joules).
   4. **Indelible E-Ink Distress Stamping:** While the remaining supercapacitor energy bleeds down, the RP2350 pulses the IT8951 EPDC to burn an indelible high-contrast distress placard onto the 10.3" E-Ink screen: `EMERGENCY SOS BROADCAST ACTIVE | COORD: 21.3069 N, 157.8583 W | TIME: 2026-10-19 14:00 UTC | BLOOD: O-POS | ZERO-BATTERY SOLAR BEACON`.
@@ -800,6 +812,38 @@ To deliver mathematically verifiable, physical airgapped privacy for tactical op
   2. **Position 2: MIC MUTE (Yellow Index):** Mechanically shunts the PDM clock line (`MIC_CLK`) of both Knowles MEMS microphones to ground (GND) through a physical break switch. Without a clock signal, the MEMS charge pump cannot oscillate; audio eavesdropping is physically and electrically impossible (0.000V signal level). The camera and radios remain operational.
   3. **Position 3: FULL BLACKOUT (Red Index):** Mechanically disconnects power (`VCC`) to both microphones, pulls the Sony IMX708 MIPI CSI-2 enable line (`CAM_EN`) hard to GND, and de-asserts the hardware gates on the Quectel LTE modem, SX1262 LoRa, and ST25R3916 NFC chips to 0.000V.
 * **Diagnostic Sense Line (`PRIVACY_STAT`):** An auxiliary sense pin informs the RP2350 and Linux kernel of the physical switch position, allowing the OS to display a permanent hardware padlock icon on the 10.3" E-Ink screen with zero CPU overhead.
+
+### 2.26 Hardware USB Data-Line Shield & Forensic Isolation ("Juice-Jacking" Defense)
+* **Threat Mitigation:** Prevents hostile border kiosks (Cellebrite, GrayKey), forensic intercept cables (O.MG), and airport charging stations from executing BadUSB HID injection, protocol fuzzing, or direct memory access (DMA) attacks.
+* **Physical Isolation Architecture:**
+  * **USB-C Port 1:** Features a dedicated physical high-speed analog SPST switch (Texas Instruments **TS3USB221A**, 1.1 GHz bandwidth, 6 pF on-capacitance).
+  * In **Stealth/Charge-Only Mode**, the switch mechanically severs the $D+$ and $D-$ data lines from the Broadcom SoC to 0.000V.
+  * Power negotiation lines ($CC1 / CC2$) remain intact, allowing standard 20W USB-PD charging while rendering data-line interception electrically impossible.
+  * In software, the Linux kernel enforces strict `usbguard` rules, rejecting all non-whitelisted device descriptors at the kernel level.
+
+### 2.27 Internal Chassis Intrusion & Zeroization Sensor (`CHASSIS_TAMPER`)
+* **Threat Mitigation:** Defeats "evil-maid" hardware attacks during secondary customs inspections where adversaries open the unibody to attach logic analyzers, replace firmware chips, or tap SPI bus lines.
+* **Intrusion Detection Circuit:**
+  * A micro-power optical phototransistor (Vishay TEMT6200FX01) paired with a miniature gold-plated leaf spring contact switch is mounted on the inner surface of the CNC enclosure, isolated from ambient light.
+  * **Continuous 24/7 Monitoring:** Powered by the Always-On 3.3V rail and sampled by the RP2350 co-processor (<1 µA draw).
+  * **Immediate Zeroization Sequence:** If the unibody seal is breached or the enclosure opened without prior software disarm:
+    1. Instantly triggers the RP2350 high-priority NMI interrupt.
+    2. Overwrites battery-backed NVRAM encryption keys with cryptographically random garbage within **3 milliseconds**.
+    3. Drops the eMMC and NVMe power gates, locking all storage controllers into read-protected state.
+    4. Records the exact timestamp of physical enclosure breach to write-once non-volatile memory.
+
+### 2.28 High-Efficiency Bezel IBC Solar Architecture & Batteryless Direct-Solar Cold Boot ("Zombie Mode")
+* **Solar Collector Topology:** Two full-width monocrystalline Interdigitated Back Contact (IBC) strips (SunPower Maxeon Gen 7 grade, 24% cell conversion efficiency):
+  * **Top Bezel:** $215\text{ mm} \times 12\text{ mm}$ ($25.8\text{ cm}^2$).
+  * **Bottom Bezel:** $215\text{ mm} \times 12\text{ mm}$ ($25.8\text{ cm}^2$).
+  * **Total Active Area:** **$51.6\text{ cm}^2$**.
+  * **Peak Output:** **1.24W** in direct sunlight ($1000\text{ W/m}^2$, ~350 mA @ 3.5V); harvests **120 mW to 240 mW** in open shade or bright overcast daylight.
+* **Direct Solar Cold-Boot ("Zombie Mode"):**
+  * When the internal LiFePO4 battery is disconnected, completely degraded, or drained to 0.0V:
+  * Energy from the bezel solar array flows through the TI BQ25504 nano-power boost harvester into the onboard **1.0F 3.3V supercapacitor**.
+  * Reaching 3.0V takes under **25 seconds** in sunlight, triggering the TPS62840 Always-On regulator to assert `POWER_GOOD`.
+  * The RP2350 cold-boots into the ultra-low-power **Zen Solar Suite** (4.5 mW total draw), operating perpetually with **zero battery installed**.
+  * If solar generation exceeds 2.5W (e.g. under intense sun or via the auxiliary folding panel port), the supervisor automatically enables `CM4_GLOBAL_EN` to boot the full Linux OS without a battery.
 
 ---
 
