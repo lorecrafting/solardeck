@@ -1,0 +1,20 @@
+Designator,Manufacturer Part Number or Seeed SKU,Qty,Link
+U1,BQ25895RTWR,1,https://www.ti.com/product/BQ25895
+U2,TPS62840DLYR,1,https://www.ti.com/product/TPS62840
+U3,TPS61088RHLR,1,https://www.ti.com/product/TPS61088
+U4,TPS63020DSJR,1,https://www.ti.com/product/TPS63020
+U5,BQ25504RGTR,1,https://www.ti.com/product/BQ25504
+SW1,JS102011SAQN,1,https://www.littelfuse.com
+J1,J2,DF40C-100DS-0.4V,2,https://www.hirose.com
+U8,RP2350B,1,https://www.raspberrypi.com
+U9,APS6404L-3SQR-SN,1,https://www.apmemory.com
+U10,W25Q128JVS,1,https://www.winbond.com
+U11,DS3231MZ+,1,https://www.analog.com
+U14,TMUX1575PWR,1,https://www.ti.com/product/TMUX1575
+J_EPDC,FH12-40S-0.5SH,1,https://www.hirose.com
+U15,SN74LVC1G08DBVR,1,https://www.ti.com/product/SN74LVC1G08
+U16,VL805-Q6,1,https://www.via-labs.com
+J_NVME,M.2-Key-M-2242,1,https://www.amphenol-icc.com
+J_MODEM,M.2-Key-B-3042,1,https://www.jae.com
+U18,ST4SIM-200M,1,https://www.st.com
+J_SIM,Nano-SIM-PushPush,1,https://www.molex.com
