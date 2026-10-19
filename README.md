@@ -198,7 +198,7 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
 | **Dual Cameras** | 12MP Sony IMX708 PDAF Macro Autofocus Rear Camera (Multimodal Claude Code & PCB Loupe) |
 | **Keyboard & Input**   | Universal M2.5 Threaded Mount + MagSafe Magnetic Array + Bluetooth LE 5.0 / USB-C to Any Keyboard (ThinkPad, Keychron, Corne, Apple, or $20 BlackBerry Q20 Thumb Keyboard) |
 | **Cold Storage Vault**| Gasketed M.2 Service Hatch: 3x Uniform Friction-Fit MicroSD Pockets (Supports Nano-SIM via SD shell) + Ejector Clip ($0 BOM) |
-| **Cellular Internet**| M.2 Key-B 3042 (Quectel EG25-G, 30+ LTE bands) with Nano-SIM Tray |
+| **Cellular Internet**| M.2 Key-B 3042 (Quectel EG25-G, 30+ LTE bands) with Dual-SIM: Soldered MFF2 eSIM (ST4SIM-200M) + External Nano-SIM Tray |
 | **Off-Grid Radio** | Semtech SX1262 LoRa 915/868 MHz (Meshtastic) dedicated to RP2350 with Top-Edge **IP67 Bulkhead SMA female jack** |
 | **GNSS Positioning** | Integrated Qualcomm Multi-Constellation GNSS (GPS/GLONASS/BeiDou/Galileo/QZSS in EG25-G) |
 | **RF Front-End** | 0402 Precision Pi-Matching Networks + 3.0mm U.FL Keepout + Molded Coaxial Retention Channels |
@@ -208,7 +208,8 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
 | **Anti-Tamper** | RP2350 TrustZone OTP Derived Key & BIP-39 Recovery (No physical tripwire; enables RAM/SSD upgrades)|
 | **Telemetry & Sensors**| TI INA3221 (3-rail ammeter for LLM tuning) + BQ27441 (fuel gauge) + Dual TMP112 (thermals) + OPT3001 (lux) + BMA400 (accel) + BMP390 (baro) |
 | **External Sensor Bus**| USB-C Port 2 High-Speed Host (Supports USB-to-I2C/Qwiic dongles; zero unsealed chassis JST holes) |
-| **Audio & Acoustics**| Dual-MEMS Noise-Cancelling Acoustic Array + Maxim/ADI MAX98357A 1W Box Speaker Amp + Mute Switch |
+| **Audio & Acoustics**| Dual-MEMS Noise-Cancelling Acoustic Array + Maxim/ADI MAX98357A 1W Box Speaker Amp + Bottom-Edge IP67 3.5mm TRRS Audio Jack (Stereo DAC + Mic In + Auto-Mute) + Mute Switch |
+| **NFC & Smartcard** | 13.56 MHz NFC (NXP PN532 / ST25R) in Top Bezel: YubiKey / FIDO2 Authentication, ePassport / Smartcard Reader, Tangem/Coldcard Crypto Signing + MagSafe Physical Card Wallet Mount |
 | **Status Beacon** | 10.3" Color E-Ink Zero-Watt Ambient Notification Badges (Descoping Win for RGB LED & light pipe) |
 | **Recovery** | Single Recessed IP67 Pinhole Button (`REC_RPI` eMMC recovery; RP2350 flashed over internal SWD) |
 | **Monitor Sink** | Standalone USB-PD Sink Controller (CH224K / STUSB4500) + Dedicated BCM2711 USB Gadget OTG Port 1 |

@@ -209,13 +209,18 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
        * Rear 8-pin hermetic backpack expansion bus
        * RP2350 USB CDC serial console (`/dev/ttyACM0`)
     2. **Dedicated USB Gadget & Recovery Port (Native BCM2711 USB OTG):** The Broadcom BCM2711's native USB 2.0 OTG PHY connects directly to **USB-C Port 1**. This ensures that entering USB Gadget Secondary Display Mode or triggering `rpiboot` recovery never disconnects the internal cellular modem, keyboard, or modular backpack.
-* **Cellular Modem:** **M.2 Key-B (3042)** socket connected to dedicated host USB lines.
+* **Cellular Modem & Dual-SIM Architecture:** **M.2 Key-B (3042)** socket connected to dedicated host USB lines.
   * Module: **Quectel EG25-G** (Worldwide Cat-4 LTE, 30+ bands, global carrier certifications).
+  * **Dual-SIM Capability:**
+    1. **Onboard Soldered MFF2 eSIM:** STMicroelectronics **ST4SIM-200M** (or Infineon **SLM97**) in industrial DFN-8 (5×6mm) package, directly soldered to carrier board. Managed natively under Linux via **`lpac`** and `ModemManager` over standard AT channels (`AT+CCHO`/`AT+CGLA`) for instant QR-code carrier activation.
+    2. **External Physical Nano-SIM Tray:** IP67 weather-sealed push-push Nano-SIM tray on the chassis edge for local prepaid, international traveler, or burner SIM cards.
+    3. **Software Slot Switching:** Instant toggle between physical SIM and eSIM via standard `mmcli -m 0 --set-primary-sim-slot=1/2`.
   * **RF Decoupling:** 470 µF low-ESR polymer capacitor placed adjacent to modem VCC to handle 2.0A transient TX bursts without voltage sag.
-* **Onboard eSIM (eUICC):**
-  * Chip: STMicroelectronics **ST4SIM-200M** or Infineon **SLM97** in industrial **MFF2 (DFN-8, 5×6mm)** package.
-  * Directly soldered to carrier board and routed to M.2 SIM lines; zero external chassis slots, maintaining IP67 sealing.
-  * Management: Controlled natively under Linux via **`lpac`** (open-source C LPA) and `ModemManager` over standard AT channel commands (`AT+CCHO`/`AT+CGLA`) for instant QR-code carrier activation.
+* **Near Field Communication (13.56 MHz NFC / Smartcard / Crypto):**
+  * Controller: **NXP PN532** (or STMicroelectronics **ST25R3916**) connected via I2C (`0x24`) to Linux.
+  * Antenna: Tuned flexible PCB loop antenna laminated in the top bezel (free of metal shielding).
+  * Capabilities: ISO/IEC 14443 Type A/B, FeliCa, MIFARE, ePassport reading (ICAO 9303), hardware FIDO2 / WebAuthn authentication (tap physical YubiKey to top bezel), and airgapped NFC crypto wallet signing (Tangem, Satochip, Coldcard).
+  * Physical Wallet Companion: Rear chassis MagSafe magnetic ring supports snapping standard physical MagSafe card wallets (Apple, Moft, Peak Design) for carrying 2–3 physical credit cards, IDs, and cash.
 * **LoRa Mesh Radio:** **Semtech SX1262** 915/868 MHz transceiver (up to +22 dBm output).
   * Connects via dedicated SPI to the RP2350 co-processor, running autonomous 24/7 **Meshtastic** mesh repeating firmware at 12–15 mW, and exposing a virtual serial interface to Linux over the inter-processor UART/serial bus (`/dev/ttyAMA0`).
 * **Global Satellite Navigation (Integrated Qualcomm GNSS):**
@@ -349,6 +354,12 @@ SolarDeck leverages the Broadcom SoC's dual independent MIPI CSI-2 camera ports 
   * **Acoustic Beamforming & Wind Rejection:** Processed in Linux via PipeWire / WebRTC audio processing DSP (`solardeck-beamformd`). Computes differential phase delay between Left and Right microphones, forming an elliptical 60° directional voice pickup cone targeted at the operator's face while attenuating 18–24 dB of ambient wind gusts, road noise, and office chatter. Yields clean, near-studio 16 kHz voice streams for 99%+ accuracy in local Whisper and Claude Code voice prompts.
 * **Physical Privacy Switch:** Hardware slide switch that physically breaks VDD to both microphones simultaneously (hardware-guaranteed un-hackable mute).
 * **Primary Audio Output (Linux Master):** Maxim Integrated / Analog Devices **MAX98357A** I2S Class-D amplifier driving an internal 1W sealed acoustic chamber micro-box speaker.
+* **High-Fidelity 3.5mm TRRS Audio Jack (Bottom Edge):**
+  * **Connector:** IP67 water/dust sealed 3.5mm TRRS jack (**CUI Devices SJ2-35984A-SMT-TR** / Wurth Elektronik) mounted on the bottom chassis edge.
+  * **Pinout Standard:** CTIA Standard (Tip = Left Audio, Ring 1 = Right Audio, Ring 2 = Ground, Sleeve = Microphone In).
+  * **DAC / Headphone Amp:** High-performance, low-power 32-bit I2S Stereo DAC (**Texas Instruments PCM5102A**) with ground-centered charge-pump outputs (zero DC blocking capacitors required, 112 dB SNR).
+  * **Hardware Auto-Mute Switch:** The 3.5mm jack features an isolated mechanical detection switch pin. When a headphone plug is inserted, it automatically asserts `SD_MODE` LOW on the internal MAX98357A Class-D amplifier, instantly silencing the internal speaker with zero software latency.
+  * **Sovereign Private Listening:** Fully operational in Hardware Airgap Mode (where Bluetooth is powered to 0.000V), allowing developers to listen to audiobooks, podcasts, local AI speech synthesis, or decode radio AFSK audio packets with zero electromagnetic RF radiation.
 * **Standby Alert Piezo (Co-Processor Master):** SMT **5.0mm micro-piezo acoustic buzzer** (75 dB @ 10cm, $0.25) directly connected to RP2350 PWM pin `RP2350_GPIO18`.
   * Sounds immediate chime tones for incoming 24/7 Meshtastic LoRa messages, RTC alarms, and barometric storm alerts without cold-booting Linux (draws < 2 mW during chirp).
 
@@ -734,13 +745,14 @@ To eliminate $25,000 in custom injection tooling risk and 6 months of bespoke ZM
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ Dimensions: 248 mm (W) × 188 mm (H) × 9.8 mm (D) | Device Mass: ~510 grams  │
 │                                                                             │
-│ [FRONT FACE]                                                                │
+│ [FRONT & EDGE TOPOLOGY]                                                     │
 │ • Chemically Etched Matte Glass Overlay (15% Haze, Paper-Texture Friction)  │
 │ • 10.3" E-Ink Kaleido 3 / Carta 1200 Panel + Wacom EMR Digitizer           │
 │ • 0.1mm Mu-Metal / Ferrite Magnetic Shielding Layer (Behind Digitizer)      │
-│ • Top Bezel: IXYS Micro-Solar Strip (Trickle Top-Up & Ambient Calculators)  │
-│ • Bottom Bezel: 5-Pin Hermetic Magnetic Pogo Dock for SnapDeck Keyboard     │
+│ • Top Bezel: IXYS Micro-Solar Strip + 13.56 MHz NFC Antenna Loop (YubiKey)  │
+│ • Bottom Edge: IP67 3.5mm TRRS Audio Jack + Recessed Recovery + USB-C Port 1│
 │ • Right Flank: Magnetic Precision Stylus Clamping (N52 Array + Align Groove)│
+│ • Left Flank: 5-Way Tactical Navigation Rocker (ALPS SKRH) + Airgap Switch  │
 │                                                                             │
 │ [INTERNAL COPLANAR CHASSIS STACKUP (X-Y ARRANGEMENT)]                       │
 │ • Front Glass + E-Ink Panel + Wacom EMR Layer: 2.8 mm uniform               │

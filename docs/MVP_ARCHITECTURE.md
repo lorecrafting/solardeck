@@ -97,12 +97,20 @@ To achieve maximum field battery life without an excessively heavy device:
 
 ## 3. Cellular & RF Antenna Engineering
 
-### 3.1 Cellular Modem & Onboard eSIM
+### 3.1 Cellular Modem, Dual-SIM & NFC Architecture
 * **Modem:** M.2 Key-B 3042 socket with **Quectel EG25-G** (30+ global LTE bands, worldwide carrier certifications).
-* **eSIM Hardware:** STMicroelectronics **ST4SIM-200M** or Infineon **SLM97** soldered down in an industrial **MFF2 DFN-8 (5×6mm)** package.
-  * Eliminates the physical SIM tray cutout, rubber gaskets, and water ingress points.
-  * Direct 4-wire ISO 7816 connection to modem SIM pins.
-* **Linux Management:** Managed natively by **`lpac`** (open-source C Local Profile Assistant) via `ModemManager`. Activation QR codes are downloaded directly from consumer SM-DP+ servers using standard AT channel commands (`AT+CCHO`/`AT+CGLA`).
+* **Dual-SIM Architecture:**
+  1. **Onboard Soldered MFF2 eSIM:** STMicroelectronics **ST4SIM-200M** or Infineon **SLM97** soldered down in an industrial **MFF2 DFN-8 (5×6mm)** package. Managed natively by **`lpac`** (open-source C Local Profile Assistant) via `ModemManager`. Activation QR codes are downloaded directly from consumer SM-DP+ servers using standard AT channel commands (`AT+CCHO`/`AT+CGLA`).
+  2. **External Physical Nano-SIM Tray:** IP67 weather-sealed push-push Nano-SIM slot on chassis edge for local prepaid, international traveler, or burner SIM cards.
+  3. **Seamless Linux Slot Toggle:** Switch between physical SIM and digital eSIM via `mmcli -m 0 --set-primary-sim-slot=1/2`.
+* **13.56 MHz NFC & Smartcard Architecture:**
+  * **NXP PN532 / ST25R3916** controller driving a tuned FPC loop antenna in the top bezel.
+  * Supports hardware FIDO2 / WebAuthn authentication (tap physical YubiKey or OnlyKey), biometric ePassport reading, and airgapped NFC crypto wallet signing (Tangem, Satochip, Coldcard).
+  * Paired with the rear MagSafe magnetic ring array, users can magnetically snap standard physical credit card wallets (Apple, Moft, Peak Design) for 2–3 cards, ID, and cash.
+* **Bottom-Edge 3.5mm TRRS Audio Jack:**
+  * IP67 sealed 3.5mm jack with TI PCM5102A 32-bit I2S stereo DAC + mic input.
+  * Mechanical switch automatically mutes the internal 1W speaker upon headphone insertion.
+  * Allows private, zero-EMF, zero-latency listening to AI speech synthesis, audiobooks, and radio decoding even in 100% Hardware Airgap Mode.
 
 ### 3.2 Antenna Architecture & Reception Optimization
 1. **LoRa Mesh (Meshtastic 915/868 MHz):**

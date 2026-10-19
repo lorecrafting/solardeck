@@ -28,6 +28,7 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **Micro-Solar** | Top-Bezel Monocrystalline Trickle Strip (~0.15W Peak, 50-120mW Real)| IXYS / DigiKey / Mouser | SM141K06L / PowerFilm | $3.50 |
 | **Power Gates** | Ultra-Low Leakage Load Switches (Airgap Cut + Port 2 VBUS) | Texas Instruments / LCSC | TPS22918DBVR (x2) | $0.80 |
 | **Cellular Modem**| Worldwide M.2 Key-B 4G/LTE Cat-4 Modem with Nano-SIM Tray | DigiKey / AliExpress | Quectel EG25-G | $29.00 |
+| **MFF2 eSIM Chip** | Industrial eUICC Micro-eSIM Chip (5×6mm DFN-8) | STMicroelectronics / Mouser | ST4SIM-200M / SLM97 | $1.85 |
 | **LoRa Mesh** | 915/868 MHz LoRa Transceiver Module (+22dBm) | Mouser / LCSC | Semtech SX1262 (Ebyte E22-900M22S) | $5.50 |
 | **Integrated GNSS**| Multi-Constellation Satellite Receiver (GPS/GLO/BDS/GAL)| Quectel (Integrated in EG25-G) | Qualcomm Gen8C Lite Engine | $0.00 |
 | **LoRa Antenna Mount**| IP67 Bulkhead SMA Female Jack with O-Ring Gasket | LCSC / Amphenol | SMA-KFD08-IP67 | $1.80 |
@@ -37,6 +38,8 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **GNSS Antenna** | Passive Internal FPC GPS/GLONASS Antenna (for EG25-G GNSS)| Molex / Taoglas / LCSC | 1461860100 | $0.90 |
 | **Rear Camera** | 12MP Sony IMX708 Flush PDAF Scanner (Multimodal AI Vision & OCR)| Raspberry Pi / DigiKey | Official Cam Module 3 sensor + Sapphire | $14.50 |
 | **Audio** | Dual-MEMS Acoustic Array (2x SPH0645) + I2S Class-D Amp + Speaker| Knowles / Maxim Integrated / PUI Audio | SPH0645LM4H (x2) + MAX98357A + AS03008MR | $5.10 |
+| **Headphone Jack** | IP67 Sealed 3.5mm TRRS Audio Jack (Stereo Out + Mic In + Sw)| CUI Devices / Wurth Elektronik | SJ2-35984A-SMT-TR | $0.85 |
+| **Headphone DAC** | Low-Power 32-bit I2S Stereo Headphone DAC & Ground-Centered Amp| Texas Instruments / Mouser | PCM5102A / MAX97220A | $1.10 |
 | **Mechanical Mount**| Universal M2.5 Brass Heat-Set Inserts (x4) + MagSafe Magnetic Array | McMaster / LCSC / Custom | M2.5 Inserts + N52 Ring | $0.90 |
 | **Passives/Ports**| 2x IP68 USB-C Ports, 1,000µF Poly Caps, SMD Passives | LCSC / JLCPCB SMT Library | Standard SMD 0402/0603 | $9.40 |
 | **USB-C CC Ctrl** | Type-C Configuration Channel Dual-Role DRP Controller | Texas Instruments / Mouser | TUSB320RWBR | $0.65 |
@@ -47,6 +50,7 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **Power Telemetry**| 3-Channel High-Side Current & Power Monitor IC (Rail Logging)| Texas Instruments / Mouser | INA3221AIRGVR | $1.20 |
 | **Coulomb Counter**| Impedance Track™ Battery Fuel Gauge & Health IC | Texas Instruments / Mouser | BQ27441-G1A | $1.10 |
 | **Thermal Triad** | Dual Precision Digital Temperature Sensors (Batt + E-Ink Logs)| Texas Instruments / LCSC | TMP112AIDRLR (x2) | $0.60 |
+| **NFC Controller** | 13.56 MHz NFC / Smartcard Reader & Crypto Signer + FPC Antenna | NXP Semiconductors / LCSC | PN5321A3HN / ST25R3916 | $2.40 |
 | **Ambient Lux** | Precision Ambient Light & Solar Lux Sensor | Texas Instruments / Mouser | OPT3001DNPR | $0.55 |
 | **VBUS OR-ing** | Dual Low-Ron Ideal Diode Power OR-ing Controller (x2) | Texas Instruments / Mouser | LM66100DCKR (x2) | $0.70 |
 | **Host VBUS Sw** | 1.5A Current-Limited USB Host Distribution Power Switch | Texas Instruments / Mouser | TPS2051BDBVR | $0.45 |
@@ -67,9 +71,9 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **Airgap Switch** | Sub-Miniature 2-Position Gold Contact Slide Switch | C&K / E-Switch / LCSC | JS202011CQN | $0.45 |
 | **GORE Vent** | ePTFE Pressure Equalization Vent Plug | W. L. Gore / Amphenol | PMF100396 | $1.50 |
 | **Enclosure (PA12)**| SLS 3D-Printed PA12 Nylon Shell + 85A TPU Corner Bumpers | JLC3D / Craftcloud | Custom CAD Housing (Streamlined)| $25.00 |
-| **Total Core BOM**| **(Mathematically Verified Sum of 57 Core Line Items)** | | | **$383.20 – $408.20** |
+| **Total Core BOM**| **(Mathematically Verified Sum of 61 Core Line Items)** | | | **$389.40 – $414.40** |
 
-*(Note: Specifying the 4GB RAM CM4 base configuration reduces the Total Core BOM to **$363.20 – $388.20**).*
+*(Note: Specifying the 4GB RAM CM4 base configuration reduces the Total Core BOM to **$369.40 – $394.40**).*
 
 ---
 
