@@ -754,7 +754,10 @@ To eliminate $25,000 in custom injection tooling risk and 6 months of bespoke ZM
 │ • CM4 SoC faces outward toward the rear chassis                             │
 │ • 1.5mm Thermal Gap Pad (6.0 W/m·K) bridges SoC to Aluminum Backplate       │
 │ • Zero Heat Migration into temperature-sensitive E-Ink microcapsules        │
-│ • Rear Flank: 8-Pin Hermetic Pogo Bus for Modular RF Backpack               │
+│ • Universal Mechanical Mount: 4x M2.5 Threaded Inserts (50mm/75mm) + MagSafe│
+│ • The "Cold Storage Vault" (Concealed beneath folding kickstand recess):    │
+│   - 2x Friction-Fit MicroSD Card Slots (Offline Wikipedia / Distro Vault)   │
+│   - 1x Spare Nano-SIM Retention Slot + SIM Ejector Tool Retaining Clip      │
 │ • GORE ePTFE Pressure Vent (PMF100396): Equalizes altitude barometric delta │
 │   while maintaining IP67 water/dust seal (tested safe to 1 meter immersion) │
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -794,6 +797,19 @@ To protect sensitive private keys, encrypted credentials, and communications log
 * **Radiant Heat Problem:** In direct desert sunlight ($>900\text{ W/m}^2$), dark monocrystalline silicon solar cells reach surface temperatures of $65^\circ\text{C} \text{ to } 75^\circ\text{C}$. Direct contact with the E-Ink panel backplane causes microcapsule discoloration and localized pigment degradation.
 * **Aerogel Thermal Decoupling Barrier:** A **0.5 mm die-cut Pyrogel aerogel insulation strip** (thermal conductivity $<0.015\text{ W/m}\cdot\text{K}$) is laminated between the top micro-solar bezel and the E-Ink panel frame, blocking 95% of conductive heat migration into the display.
 * **PCBA Milled Thermal Relief Slot:** A 1.0 mm continuous routed slot in the carrier PCB isolates the BQ25504 nano-power boost harvester thermally from the low-noise analog sensor cluster and Wacom digitizer grounding plane.
+
+### 4.6 The "Cold Storage Vault" (Spare MicroSD & Nano-SIM Retention Under Kickstand)
+To make SolarDeck the ultimate sovereign, off-grid archive workstation without adding a single cent in electronics, the rear chassis integrates a **Physical Cold Storage Vault**:
+* **Concealed Kickstand Cavity:** Molded directly into the negative space of the aluminum/PA12 rear housing underneath the flush folding kickstand.
+* **Storage Capacity:**
+  * **2x Friction-Fit MicroSD Card Pockets:** Accommodates two extra MicroSD cards (e.g., Card 1: 1TB offline Kiwix Wikipedia + Library of Genesis; Card 2: bootable Tails / Arch Linux rescue OS).
+  * **1x Spare Nano-SIM Retention Well:** Holds an extra international or prepaid SIM card.
+  * **1x Stainless Steel SIM Ejector Pin Clip:** Snaps a standard metal SIM ejector tool (or safety pin) securely into place.
+* **Mechanical Retention & Weather Protection:**
+  * Each card slot is lined with molded 85A TPU retention micro-ribs and a thumb-notch for quick extraction with a fingernail.
+  * Zero rattle, zero vibration, and 100% immune to drops.
+  * When the kickstand is closed flush against the chassis, the vault is completely invisible, tamper-resistant, and sealed against weather, dirt, and water.
+* **Bill of Materials Cost:** **$0.00** (Zero electrical parts; pure CAD negative-cavity geometry).
 
 ---
 

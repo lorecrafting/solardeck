@@ -257,6 +257,16 @@ Giving developers and autonomous AI agents root access to flash co-processor sil
 * **Autonomous Analog Battery Protection:** TI BQ25895 analog comparator cuts charging if cell thermals exceed limits, bypassing all software.
 * **Immutable Linux Rootfs with OverlayFS:** Base system is cryptographically locked with `dm-verity`; `solardeck-reset --safe` restores pristine factory OS in 3 seconds.
 
+### 6. The "Cold Storage Vault" (Carry Up to 6+ Terabytes Off-Grid for $0 BOM)
+To make SolarDeck the ultimate sovereign archive workstation without adding a single cent in electronics:
+* **Concealed Kickstand Cavity:** Molded directly into the negative space of the rear chassis underneath the flush folding kickstand.
+* **Storage Capacity:**
+  * **2x Friction-Fit MicroSD Card Pockets:** Holds two extra MicroSD cards (e.g. Card 1: 1TB offline Kiwix Wikipedia + MDN + Library of Genesis; Card 2: bootable Tails / Arch rescue OS).
+  * **1x Spare Nano-SIM Retention Well:** Holds an extra international travel or prepaid cellular SIM.
+  * **1x Stainless Steel SIM Ejector Tool Retaining Clip:** Keeps a metal SIM ejector pin snapped into place.
+* **Mechanical Retention & Weather Protection:** Molded 85A TPU micro-ribs prevent rattling or dislodging during severe drops, while folding the kickstand flush completely seals the vault from rain, dust, and visual inspection.
+* **Total Accessible Storage:** With 2TB on the active edge MicroSD slot, 2TB in the cold vault, and 2TB on the internal M.2 NVMe SSD, developers can carry **6+ Terabytes of uncompressed human knowledge and local AI weights** in a 510g tablet!
+
 ---
 
 ## Verification & Acceptance Gate (The North Star Metrics)

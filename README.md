@@ -197,6 +197,7 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
 | **Tactical Controls**| Left-Bezel IP67 Sealed 5-Way Tactical Navigation Rocker (ALPS SKRH; gloved 1-handed terminal/reading) |
 | **Dual Cameras** | 12MP Sony IMX708 PDAF Macro Autofocus Rear Camera (Multimodal Claude Code & PCB Loupe) |
 | **Keyboard & Input**   | Universal M2.5 Threaded Mount + MagSafe Magnetic Array + Bluetooth LE 5.0 / USB-C to Any Keyboard (ThinkPad, Keychron, Corne, Apple, or $20 BlackBerry Q20 Thumb Keyboard) |
+| **Cold Storage Vault**| Molded Under-Kickstand Recess: 2x Friction-Fit MicroSD Pockets + 1x Spare Nano-SIM Slot + Ejector Pin Clip ($0 BOM) |
 | **Cellular Internet**| M.2 Key-B 3042 (Quectel EG25-G, 30+ LTE bands) with Nano-SIM Tray |
 | **Off-Grid Radio** | Semtech SX1262 LoRa 915/868 MHz (Meshtastic) dedicated to RP2350 with Top-Edge **IP67 Bulkhead SMA female jack** |
 | **GNSS Positioning** | Integrated Qualcomm Multi-Constellation GNSS (GPS/GLONASS/BeiDou/Galileo/QZSS in EG25-G) |
