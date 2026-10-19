@@ -98,4 +98,18 @@ For engineering posterity, the following major design iterations and descoping d
 
 ---
 
+## 5. Master Automated Verification Suite & CI Pipeline
+
+To verify every hardware rule, firmware state transition, cadence timing, and 3D mechanical dimension in a single command before submitting fabrication orders:
+
+* **Unified CLI Runner:**
+  ```bash
+  python3 scripts/verify_all.py
+  ```
+  Executes all 7 verification phases in ~1.0 second with colored pass/fail status and timing metrics.
+* **Continuous Integration:** `.github/workflows/verify.yml` automatically triggers on every push and pull request to `main`.
+* **Turnkey Box-Build Package:** `hardware/production/` houses the complete, validated manufacturing bundle for Seeed Studio Fusion (`solardeck_gerbers.zip`, `seeed_fusion_bom.csv`, `solardeck_cpl.csv`, `solardeck_chassis.stl`, and `SEEED_FUSION_BOX_BUILD_INSTRUCTIONS.md`).
+
+---
+
 *End of Index.*
