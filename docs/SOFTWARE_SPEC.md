@@ -926,3 +926,66 @@ The `solardeck-inkd` service bridges the ultra-low-power RP2350 co-processor ink
    * The daemon automatically runs local `tesseract` or sovereign 3B vision LLM against the rendered canvas.
    * Transcribes handwritten text, formulas, or tactical coordinates directly into a companion markdown note (`.md`) indexed by the local Kiwix / SQLite search database.
 
+---
+
+## 23. Secret Knock-Code & Camp Anti-Theft Tripwire Daemon (`solardeck-tripwired`)
+
+*Written 2026-10-19 14:50 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+
+Leveraging the ultra-low-power Bosch BMA400 accelerometer running continuously at **$4\text{ }\mu\text{A}$** in low-noise interrupt mode:
+
+### 23.1 Secret Knock-Code Recognition
+* **Acoustic/Vibration Pattern Matching:** When configured, `solardeck-tripwired` programs the BMA400's internal tap-sensing engine to listen for rhythmic knock sequences (e.g. *tap... tap-tap*) tapped on the aluminum unibody or front glass.
+* **Direct-Action Wakes:** Bypasses the need to find or press the power button in the dark:
+  * Pattern A (*double-tap*): Instant wake to Dim Red Night-Vision terminal.
+  * Pattern B (*triple-tap*): Triggers emergency LoRa SOS distress beacon (§19).
+  * Pattern C (*cadence rhythm*): Toggles Hardware Stealth mode.
+
+### 23.2 Perimeter & Camp Anti-Theft Tripwire Mode
+* **Sub-Millimeter Movement Detection:** When placed in "Camp Guard" mode, the BMA400 establishes a baseline gravity vector reference $\vec{g}_0 = (x_0, y_0, z_0)$.
+* **Autonomous Alert Burst:** If the tablet is tilted by $>1.5^\circ$ or translated by $>1\text{ mm}$ (e.g., someone picking it up or nudging the table):
+  1. RP2350 wakes immediately and transmits an encrypted LoRa burst to the operator's pocket communicator or companion smartwatch:
+     `[TRIPWIRE ALERT] Movement detected at 03:14:22 UTC! Displacement: 3.2G-sec. Last GPS: 21.3069 N, 157.8583 W`.
+  2. If armed with acoustic deterrence, pulses a 105 dB ultrasonic siren or audible alarm through the MAX98357A speaker amp.
+
+---
+
+## 24. Autonomous Solar Tracking HUD & Aiming Reticle (`solardeck-sunaim`)
+
+*Written 2026-10-19 14:50 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+
+Maximizes solar harvesting efficiency from both the top-bezel micro-solar strip and external folding USB-C solar panels:
+
+### 24.1 Sensor Fusion Pipeline
+* Combines astronomical ephemeris calculated from **DS3231 RTC UTC time** and **Qualcomm GNSS coordinates** with the **Bosch BMM350 3-axis magnetometer** (compass azimuth) and **BMI270/BMA400 accelerometer** (chassis pitch/roll angle).
+* Computes instantaneous true solar azimuth $\theta_{\text{sun}}$ and solar elevation angle $\alpha_{\text{sun}}$ with sub-degree accuracy.
+
+### 24.2 Wayland & E-Ink Aiming HUD
+```bash
+# Launch interactive solar aiming reticle:
+solardeck-sunaim --hud
+```
+* **Bistable Crosshair Reticle:** Renders a high-contrast target ring on the 10.3" screen. The operator angles the tablet or points the external folding panel until the target reticle centers:
+  `Target: Azimuth 194° (SSW) | Tilt: 34° | Current Yield: 98.4% Peak`.
+* **Micro-Watt Barometer:** Simultaneously graphs the RP2350 12-bit ADC open-circuit voltage ($V_{\text{oc}}$) and INA3221 charge current ($I_{\text{charge}}$), allowing the user to dial in 100% maximum solar intake in $<5\text{ seconds}$ without guessing.
+
+---
+
+## 25. Bistable "Black Box" Crash QR Code Generator (`solardeck-blackboxd`)
+
+*Written 2026-10-19 14:50 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+
+Eliminates the "black screen of death" failure mode on field devices by exploiting the permanent zero-power retention of electrophoretic paper:
+
+### 25.1 Kernel Panic Interception & Post-Mortem Capture
+* In the event of an unrecoverable Linux kernel panic, out-of-memory freeze, or sudden battery brownout ($V_{\text{bat}} < 2.50\text{V}$):
+  1. The kernel `panic_notifier_list` flushes the last 512 bytes of `dmesg`, faulting CPU register addresses (`pc`, `lr`, `sp`), and `solardeck-diag` rail telemetry over dedicated UART into the RP2350 co-processor.
+  2. RP2350 compresses the post-mortem payload into a compact alphanumeric string with Reed-Solomon Error Correction Level M.
+
+### 25.2 Indelible E-Ink Placard Generation
+* The RP2350 blits a high-density **Version 10 (57×57) QR Code** and high-contrast diagnostic summary directly onto the 10.3" screen:
+  `[KERNEL PANIC: NULL POINTER DEREFERENCE in module it8951_drm.ko at 0xffff8000084a123c]`
+* The RP2350 disconnects all power rails to protect the battery from over-discharge.
+* **Zero-Power Survival:** The complete diagnostic crash report remains frozen on the E-Ink display indefinitely with **0.000W consumption**.
+* **Smartphone Instant Triage:** Any field technician or companion smartphone camera can scan the frozen screen to immediately view the stack trace, faulting register, and battery state without requiring a debug probe, serial dongle, or PCBA teardown.
+

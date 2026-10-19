@@ -192,6 +192,13 @@ The following high-reliability and field-recovery enhancements have been codifie
 7. **Tactile Blackout Indexing Pips & 45° Corner Chamfer:**
    * Braille-style tactile indexing pips on chassis rim (1 pip = Power, 2 pips = Waveform Flush, 3 pips = Privacy Airgap Switch).
    * 45° chamfered top-right corner for 100% blind tactile orientation indexing under Night-Vision Goggles or zero-light blackout conditions.
+8. **Secret Knock-Code & Camp Anti-Theft Tripwire (`solardeck-tripwired`):**
+   * Ultra-low-power $4\text{ }\mu\text{A}$ BMA400 tap detection enables secret rhythmic knock wakes (e.g. double-tap for red night-vision terminal).
+   * Camp guard mode detects $>1\text{ mm}$ displacement and fires an encrypted LoRa alert to the operator's pocket communicator.
+9. **Autonomous Solar Tracking HUD & Aiming Reticle (`solardeck-sunaim`):**
+   * Fuses DS3231 RTC, GNSS, BMM350 compass, and accelerometer to project exact solar elevation and azimuth reticles, maximizing solar harvest yield in $<5\text{ s}$.
+10. **Bistable "Black Box" Crash QR Code Generator (`solardeck-blackboxd`):**
+    * Intercepts kernel panics or brownout shutdowns, draws a permanent Version 10 QR code of the crash stack trace and hardware fault registers on the 10.3" screen at 0.000W, enabling instant smartphone camera triage in the field.
 
 ---
 

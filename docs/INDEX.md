@@ -94,6 +94,9 @@ The SolarDeck repository contains comprehensive, mathematically verified specifi
 | **Multi-Source Emergency Battery** | `docs/HARDWARE_SPEC.md` §2.24 | JST-PH 3.9V–14V DC Terminal | Boots from 18650, AA, or 12V Car Battery|
 | **3-Position Hardware Privacy Switch**| `docs/HARDWARE_SPEC.md` §2.25 | Physical Slide Switch | NORMAL, MIC_MUTE, FULL_BLACKOUT |
 | **Blackout Indexing Pips & Chamfer**| `docs/HARDWARE_SPEC.md` §3.5 | Tactile Pips + 45° Corner | Blind Night-Vision / Blackout Operation|
+| **Secret Knock & Anti-Theft Tripwire**| `docs/SOFTWARE_SPEC.md` §23 | `solardeck-tripwired` | 4µA BMA400 Knock Wake & LoRa Camp Alarm|
+| **Autonomous Solar Tracking HUD**| `docs/SOFTWARE_SPEC.md` §24 | `solardeck-sunaim` | Sun Azimuth Fusion HUD & Peak Watt Reticle|
+| **Bistable "Black Box" Crash QR** | `docs/SOFTWARE_SPEC.md` §25 | `solardeck-blackboxd` | 0.000W Permanent Panic QR & Phone Triage|
 | **Cold Storage Vault & Desiccant Pocket**| `docs/HARDWARE_SPEC.md` §4.6 | 3x MicroSD + 1g/2g Desiccant | IP67 Hatch Cavity / 100+ Regen Cycles |
 
 ---
