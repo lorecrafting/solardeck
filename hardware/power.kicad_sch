@@ -1,0 +1,169 @@
+(kicad_sch
+  (version 20231120)
+  (generator "eeschema")
+  (generator_version "8.0")
+  (uuid "67000001-0000-0000-0000-000000000001")
+  (paper "A3")
+  (title_block
+    (title "SolarDeck Carrier Board - Power & LiFePO4 PMIC")
+    (date "2026-10-19")
+    (rev "V1.0")
+    (company "SolarDeck Open Hardware")
+    (comment 1 "Written 2026-10-19 08:15 UTC in the Pi harness by antigravity/gemini-3.8-flash")
+    (comment 2 "BQ25895 + TPS62840 + TPS61088 + TPS63020 + BQ25504 + BQ2970")
+  )
+
+  (symbol (lib_id "power:GND") (at 50.8 152.4 0) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no)
+    (uuid "67000001-0001-0000-0000-000000000001")
+    (property "Reference" "#PWR01" (at 50.8 158.75 0) (effects (font (size 1.27 1.27)) hide))
+    (property "Value" "GND" (at 50.8 156.21 0) (effects (font (size 1.27 1.27))))
+    (property "Footprint" "" (at 50.8 152.4 0) (effects (font (size 1.27 1.27)) hide))
+    (property "Datasheet" "" (at 50.8 152.4 0) (effects (font (size 1.27 1.27)) hide))
+    (pin "1" (uuid "67000001-0001-0001-0000-000000000001"))
+  )
+
+  ;; U1: TI BQ25895RTWR Buck Charger & Power Path
+  (symbol (lib_id "SolarDeck_Power:BQ25895RTWR") (at 76.2 76.2 0) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no)
+    (uuid "67000001-0002-0000-0000-000000000001")
+    (property "Reference" "U1" (at 76.2 48.26 0) (effects (font (size 1.27 1.27))))
+    (property "Value" "BQ25895RTWR" (at 76.2 50.8 0) (effects (font (size 1.27 1.27))))
+    (property "Footprint" "Package_DFN_QFN:WQFN-24-1EP_4x4mm_P0.5mm_EP2.6x2.6mm" (at 76.2 76.2 0) (effects (font (size 1.27 1.27)) hide))
+    (property "Datasheet" "https://www.ti.com/lit/ds/symlink/bq25895.pdf" (at 76.2 76.2 0) (effects (font (size 1.27 1.27)) hide))
+    (property "Description" "I2C Controlled Single Cell 5A Fast Charger with High Input Voltage and USB OTG" (at 76.2 76.2 0) (effects (font (size 1.27 1.27)) hide))
+    (pin "1" (uuid "67000001-0002-0001-0000-000000000001")) ; VBUS
+    (pin "2" (uuid "67000001-0002-0002-0000-000000000001")) ; PMID
+    (pin "3" (uuid "67000001-0002-0003-0000-000000000001")) ; SW
+    (pin "4" (uuid "67000001-0002-0004-0000-000000000001")) ; BTST
+    (pin "5" (uuid "67000001-0002-0005-0000-000000000001")) ; REGN
+    (pin "6" (uuid "67000001-0002-0006-0000-000000000001")) ; TS
+    (pin "7" (uuid "67000001-0002-0007-0000-000000000001")) ; STAT
+    (pin "8" (uuid "67000001-0002-0008-0000-000000000001")) ; INT
+    (pin "9" (uuid "67000001-0002-0009-0000-000000000001")) ; OTG
+    (pin "10" (uuid "67000001-0002-0010-0000-000000000001")) ; CE
+    (pin "11" (uuid "67000001-0002-0011-0000-000000000001")) ; SDA
+    (pin "12" (uuid "67000001-0002-0012-0000-000000000001")) ; SCL
+    (pin "13" (uuid "67000001-0002-0013-0000-000000000001")) ; D+
+    (pin "14" (uuid "67000001-0002-0014-0000-000000000001")) ; D-
+    (pin "15" (uuid "67000001-0002-0015-0000-000000000001")) ; ILIM
+    (pin "16" (uuid "67000001-0002-0016-0000-000000000001")) ; PSEL
+    (pin "17" (uuid "67000001-0002-0017-0000-000000000001")) ; PG_L
+    (pin "18" (uuid "67000001-0002-0018-0000-000000000001")) ; BAT
+    (pin "19" (uuid "67000001-0002-0019-0000-000000000001")) ; SYS
+    (pin "20" (uuid "67000001-0002-0020-0000-000000000001")) ; GND
+  )
+
+  ;; U2: TI TPS62840DLYR Always-On 3.3V Low-IQ Buck-Boost (60 nA IQ)
+  (symbol (lib_id "SolarDeck_Power:TPS62840DLYR") (at 152.4 63.5 0) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no)
+    (uuid "67000001-0003-0000-0000-000000000001")
+    (property "Reference" "U2" (at 152.4 45.72 0) (effects (font (size 1.27 1.27))))
+    (property "Value" "TPS62840DLYR" (at 152.4 48.26 0) (effects (font (size 1.27 1.27))))
+    (property "Footprint" "Package_SON:WSON-8-1EP_2x2mm_P0.5mm_EP0.9x1.6mm" (at 152.4 63.5 0) (effects (font (size 1.27 1.27)) hide))
+    (property "Datasheet" "https://www.ti.com/lit/ds/symlink/tps62840.pdf" (at 152.4 63.5 0) (effects (font (size 1.27 1.27)) hide))
+    (property "Description" "750-mA, 60-nA IQ High Efficiency Step-Down Converter" (at 152.4 63.5 0) (effects (font (size 1.27 1.27)) hide))
+    (pin "1" (uuid "67000001-0003-0001-0000-000000000001")) ; VIN
+    (pin "2" (uuid "67000001-0003-0002-0000-000000000001")) ; SW
+    (pin "3" (uuid "67000001-0003-0003-0000-000000000001")) ; GND
+    (pin "4" (uuid "67000001-0003-0004-0000-000000000001")) ; EN
+    (pin "5" (uuid "67000001-0003-0005-0000-000000000001")) ; VSET
+    (pin "6" (uuid "67000001-0003-0006-0000-000000000001")) ; MODE
+    (pin "7" (uuid "67000001-0003-0007-0000-000000000001")) ; VOS
+    (pin "8" (uuid "67000001-0003-0008-0000-000000000001")) ; PG
+  )
+
+  ;; U3: TI TPS61088RHLR 5V / 3.5A Synchronous Boost Converter
+  (symbol (lib_id "SolarDeck_Power:TPS61088RHLR") (at 152.4 127.0 0) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no)
+    (uuid "67000001-0004-0000-0000-000000000001")
+    (property "Reference" "U3" (at 152.4 104.14 0) (effects (font (size 1.27 1.27))))
+    (property "Value" "TPS61088RHLR" (at 152.4 106.68 0) (effects (font (size 1.27 1.27))))
+    (property "Footprint" "Package_DFN_QFN:VQFN-20-1EP_3.5x4.5mm_P0.5mm_EP2.1x3.1mm" (at 152.4 127.0 0) (effects (font (size 1.27 1.27)) hide))
+    (property "Datasheet" "https://www.ti.com/lit/ds/symlink/tps61088.pdf" (at 152.4 127.0 0) (effects (font (size 1.27 1.27)) hide))
+    (property "Description" "10-A Fully-Integrated Synchronous Boost Converter" (at 152.4 127.0 0) (effects (font (size 1.27 1.27)) hide))
+    (pin "1" (uuid "67000001-0004-0001-0000-000000000001")) ; VCC
+    (pin "2" (uuid "67000001-0004-0002-0000-000000000001")) ; EN
+    (pin "3" (uuid "67000001-0004-0003-0000-000000000001")) ; FSW
+    (pin "4" (uuid "67000001-0004-0004-0000-000000000001")) ; MODE
+    (pin "5" (uuid "67000001-0004-0005-0000-000000000001")) ; ILIM
+    (pin "6" (uuid "67000001-0004-0006-0000-000000000001")) ; VIN
+    (pin "7" (uuid "67000001-0004-0007-0000-000000000001")) ; SW
+    (pin "8" (uuid "67000001-0004-0008-0000-000000000001")) ; VOUT
+    (pin "9" (uuid "67000001-0004-0009-0000-000000000001")) ; FB
+    (pin "10" (uuid "67000001-0004-0010-0000-000000000001")) ; COMP
+    (pin "11" (uuid "67000001-0004-0011-0000-000000000001")) ; PGND
+    (pin "12" (uuid "67000001-0004-0012-0000-000000000001")) ; AGND
+  )
+
+  ;; U4: TI TPS63020DSJR 3.8V 2.5A Buck-Boost for Quectel LTE Modem
+  (symbol (lib_id "SolarDeck_Power:TPS63020DSJR") (at 215.9 63.5 0) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no)
+    (uuid "67000001-0005-0000-0000-000000000001")
+    (property "Reference" "U4" (at 215.9 45.72 0) (effects (font (size 1.27 1.27))))
+    (property "Value" "TPS63020DSJR" (at 215.9 48.26 0) (effects (font (size 1.27 1.27))))
+    (property "Footprint" "Package_SON:VSON-14-1EP_3x4mm_P0.5mm_EP1.65x2.8mm" (at 215.9 63.5 0) (effects (font (size 1.27 1.27)) hide))
+    (property "Datasheet" "https://www.ti.com/lit/ds/symlink/tps63020.pdf" (at 215.9 63.5 0) (effects (font (size 1.27 1.27)) hide))
+    (property "Description" "High Efficiency Single Inductor Buck-Boost Converter" (at 215.9 63.5 0) (effects (font (size 1.27 1.27)) hide))
+    (pin "1" (uuid "67000001-0005-0001-0000-000000000001")) ; VINA
+    (pin "2" (uuid "67000001-0005-0002-0000-000000000001")) ; VIN
+    (pin "3" (uuid "67000001-0005-0003-0000-000000000001")) ; L1
+    (pin "4" (uuid "67000001-0005-0004-0000-000000000001")) ; L2
+    (pin "5" (uuid "67000001-0005-0005-0000-000000000001")) ; VOUT
+    (pin "6" (uuid "67000001-0005-0006-0000-000000000001")) ; FB
+    (pin "7" (uuid "67000001-0005-0007-0000-000000000001")) ; EN
+    (pin "8" (uuid "67000001-0005-0008-0000-000000000001")) ; PG
+    (pin "9" (uuid "67000001-0005-0009-0000-000000000001")) ; GND
+  )
+
+  ;; U5: TI BQ25504RGTR Nano-Power Solar MPPT Boost Harvester
+  (symbol (lib_id "SolarDeck_Power:BQ25504RGTR") (at 215.9 127.0 0) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no)
+    (uuid "67000001-0006-0000-0000-000000000001")
+    (property "Reference" "U5" (at 215.9 104.14 0) (effects (font (size 1.27 1.27))))
+    (property "Value" "BQ25504RGTR" (at 215.9 106.68 0) (effects (font (size 1.27 1.27))))
+    (property "Footprint" "Package_DFN_QFN:VQFN-16-1EP_3x3mm_P0.5mm_EP1.5x1.5mm" (at 215.9 127.0 0) (effects (font (size 1.27 1.27)) hide))
+    (property "Datasheet" "https://www.ti.com/lit/ds/symlink/bq25504.pdf" (at 215.9 127.0 0) (effects (font (size 1.27 1.27)) hide))
+    (property "Description" "Ultra Low Power Boost Charger with Battery Management for Energy Harvester" (at 215.9 127.0 0) (effects (font (size 1.27 1.27)) hide))
+    (pin "1" (uuid "67000001-0006-0001-0000-000000000001")) ; VSTOR
+    (pin "2" (uuid "67000001-0006-0002-0000-000000000001")) ; LB_ST_L
+    (pin "3" (uuid "67000001-0006-0003-0000-000000000001")) ; LB_REF
+    (pin "4" (uuid "67000001-0006-0004-0000-000000000001")) ; VIN_DC
+    (pin "5" (uuid "67000001-0006-0005-0000-000000000001")) ; VOC_SAMP
+    (pin "6" (uuid "67000001-0006-0006-0000-000000000001")) ; VREF_SAMP
+    (pin "7" (uuid "67000001-0006-0007-0000-000000000001")) ; VBAT_OV
+    (pin "8" (uuid "67000001-0006-0008-0000-000000000001")) ; VBAT_SEC
+    (pin "9" (uuid "67000001-0006-0009-0000-000000000001")) ; OK_HYST
+    (pin "10" (uuid "67000001-0006-0010-0000-000000000001")) ; OK_PROG
+    (pin "11" (uuid "67000001-0006-0011-0000-000000000001")) ; VBAT_UV
+    (pin "12" (uuid "67000001-0006-0012-0000-000000000001")) ; VRDIV
+    (pin "13" (uuid "67000001-0006-0013-0000-000000000001")) ; EN_L
+    (pin "14" (uuid "67000001-0006-0014-0000-000000000001")) ; GND
+  )
+
+  ;; SW1: Chemistry Hardware Lock (LiFePO4 3.65V vs Li-ion 4.20V)
+  (symbol (lib_id "Switch:SW_SPDT") (at 38.1 114.3 0) (unit 1)
+    (in_bom yes) (on_board yes) (dnp no)
+    (uuid "67000001-0007-0000-0000-000000000001")
+    (property "Reference" "SW1" (at 38.1 106.68 0) (effects (font (size 1.27 1.27))))
+    (property "Value" "JS102011SAQN" (at 38.1 109.22 0) (effects (font (size 1.27 1.27))))
+    (property "Footprint" "Button_Switch_SMD:SW_SPDT_CK_JS102011SAQN" (at 38.1 114.3 0) (effects (font (size 1.27 1.27)) hide))
+    (property "Description" "CHEM_SEL: Pos 1 GND (LiFePO4 3.65V), Pos 2 VDD (Li-ion 4.20V)" (at 38.1 114.3 0) (effects (font (size 1.27 1.27)) hide))
+    (pin "1" (uuid "67000001-0007-0001-0000-000000000001"))
+    (pin "2" (uuid "67000001-0007-0002-0000-000000000001"))
+    (pin "3" (uuid "67000001-0007-0003-0000-000000000001"))
+  )
+
+  ;; Hierarchical Labels
+  (hierarchical_label "VBAT" (shape bidirectional) (at 101.6 71.12 0) (uuid "67000001-0008-0001-0000-000000000001"))
+  (hierarchical_label "VDD_3V3_AON" (shape output) (at 177.8 58.42 0) (uuid "67000001-0008-0002-0000-000000000001"))
+  (hierarchical_label "VDD_5V_SYS" (shape output) (at 177.8 121.92 0) (uuid "67000001-0008-0003-0000-000000000001"))
+  (hierarchical_label "VDD_3V8_MODEM" (shape output) (at 241.3 58.42 0) (uuid "67000001-0008-0004-0000-000000000001"))
+  (hierarchical_label "EN_5V_SYS" (shape input) (at 127.0 121.92 0) (uuid "67000001-0008-0005-0000-000000000001"))
+  (hierarchical_label "I2C_SDA_AON" (shape bidirectional) (at 50.8 81.28 0) (uuid "67000001-0008-0006-0000-000000000001"))
+  (hierarchical_label "I2C_SCL_AON" (shape bidirectional) (at 50.8 83.82 0) (uuid "67000001-0008-0007-0000-000000000001"))
+  (hierarchical_label "CHG_STAT" (shape output) (at 101.6 83.82 0) (uuid "67000001-0008-0008-0000-000000000001"))
+  (hierarchical_label "CHG_INT" (shape output) (at 101.6 86.36 0) (uuid "67000001-0008-0009-0000-000000000001"))
+  (hierarchical_label "CHEM_SEL_RP" (shape output) (at 50.8 114.3 0) (uuid "67000001-0008-0010-0000-000000000001"))
+  (hierarchical_label "SOLAR_ADC_IN" (shape output) (at 241.3 121.92 0) (uuid "67000001-0008-0011-0000-000000000001"))
+)
