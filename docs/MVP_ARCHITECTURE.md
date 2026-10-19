@@ -8,21 +8,28 @@ Written 2026-10-18 17:35 UTC in the Pi harness by antigravity/gemini-3.8-flash
 
 SolarDeck is a sovereign, general-purpose open-hardware computing platform designed for AI-assisted development, field reading/writing, and off-grid communication. The architecture cleanly separates the core platform from specialized add-on modules:
 
-1. **The Core MVP Tablet:** The standalone sovereign device containing the essential platform:
+1. **The Core MVP Tablet (Standalone Survival Terminal & Daily Driver):**
    * Bare-metal Linux coding & computing platform (Raspberry Pi CM4)
    * Sunlight-readable 10.3" e-paper reader and Wacom EMR digitizer slate
-   * Built-in Worldwide 4G/LTE (Quectel EG25-G) with soldered onboard MFF2 **eSIM (eUICC)**
-   * Built-in off-grid mesh communicator (Semtech SX1262 LoRa / Meshtastic 915/868 MHz)
+   * Built-in Worldwide 4G/LTE (Quectel EG25-G) with soldered onboard MFF2 **eSIM (eUICC)** and physical Nano-SIM
+   * **Built-in Primary Off-Grid LoRa Mesh:** Semtech SX1262 LoRa (868/915 MHz) wired directly to RP2350 SPI for 80+ day low-power Meshtastic repeating & zero-watt E-Ink pager mode
+   * **Built-in Near Field Communication (13.56 MHz NFC):** Dedicated STMicroelectronics ST25R3916 / NXP PN7160 with top-bezel FPC loop antenna for YubiKey / FIDO2 hardware SSH/login, LUKS disk decryption, and tap-to-pair P2P mesh contact exchange
    * Worldwide Multi-Constellation Satellite Navigation (Integrated Qualcomm GNSS in Quectel EG25-G)
    * Dual-brain ultra-low-power supervisor (RP2350B + 8MB PSRAM) with **TI TMUX1575 8-channel display bus isolation** for 4.5 mW 30ms Zen reading, 24/7 LoRa mesh repeating, and 300+ day desk clock modes
-   * 12MP Sony IMX708 PDAF Macro rear camera for Claude Code multimodal inspection, PCB loupe, and document OCR
+   * 12MP Sony IMX708 PDAF Macro rear camera for Claude Code multimodal inspection, PCB loupe, document OCR, and celestial plate-solving navigation
    * Top-bezel **IP67 Bulkhead SMA female connector** for tactical tuned LoRa whip, plus internal Taoglas FXUB63 2×2 MIMO cellular antennas
+   * **Core Internal Tactical Sensor Cluster:** High-precision DS3231 RTC, Bosch BMI270 + BMM350 9-DOF IMU (compass & Stellarium), Bosch BMP390 Barometer (10cm altimeter & weather storm barograph), VEML7700 / Solar ADC ambient light sensor, and low-noise PDM digital microphone (Whisper voice-to-text tactical PTT memos)
    * High-capacity **8,000–10,000 mAh (26–32 Wh LiFePO4 / 30–37 Wh Li-ion)** battery (airline-compliant <100Wh)
    * Lightweight, rugged SLS 3D-printed PA12 Nylon enclosure or CNC 6061-T6 aluminum with RF window cap
-2. **Modular Expansion Packs:** Specialized RF payloads offloaded to USB-C modules:
-   * **Tactical RF Multi-Tool:** Flipper Zero suite (Sub-GHz CC1101, NFC, RFID, IR blaster) and wideband RTL-SDR connecting via external USB-C Port 2
-   * **Satellite SOS Pod:** Commercial two-way satellite transceivers (RockBLOCK 9603 Iridium / Swarm)
-   * **Industrial Deck Link:** CAN Bus 2.0B / M8 Gigabit Ethernet bridge
+2. **Modular Expansion ("Hotpacks"):** Rather than building a clumsy, monolithic "kitchen-sink" backpack or replicating existing gadgets, specialized payloads are partitioned into **four focused, hot-swappable USB-C Hotpacks** connecting via USB-C Port 2 and rear MagSafe / M2.5 anchors (pure USB-C, no fragile pogo pins!):
+   * **Hotpack 1 (Doomsday Sky-Scan & SIGINT):** RTL-SDR v4 wideband tuner (500 kHz – 1.76 GHz) with dual top SMA ports and switched 137 MHz / 1090 MHz SAW filters for passive NOAA weather satellite cloud imaging (`satdump`) and live aircraft radar (`readsb`). 100% stealth passive reception.
+   * **Hotpack 2 (Tactical Dual-Mesh & HF Shortwave Transceiver):** Secondary SX1262 LoRa transceiver (dedicated to **MeshCore / Reticulum** with its own SMA port, enabling concurrent dual-mesh operation with zero RF loss), QRP 5W HF shortwave digital text transceiver (JS8Call / FT8 on 40m/20m bands bouncing 500–2,000 miles off the ionosphere with BNC jack), and hardware APRS / AX.25 TNC via 3.5mm TRRS port.
+   * **Hotpack 3 (CBRN & SAR Environmental):** PocketGeiger Type 5 / BG51 solid-state ionizing radiation dosimeter ($\mu\text{Sv/h}$ fallout graphing), FLIR Lepton 3.5 / InfiRay P2 radiometric thermal camera (sees through wildfire smoke and pitch darkness), and Sensirion SCD41 photoacoustic CO2 / toxic gas detector.
+   * **Hotpack 4 (Precision RTK Survey):** u-blox ZED-F9P multi-band RTK GNSS engine (1.4 cm horizontal accuracy with RTCM base, or 20 cm worldwide satellite-direct via free Galileo HAS on E6 band with zero internet).
+   * **Descoped Flipper Zero Clone:** Redundant over-engineering. Operators simply attach their physical **Flipper Zero** to the rear M2.5/MagSafe anchor, plug into USB-C Port 2 or pair via Bluetooth, and control it through `qflipper-cli` and `flipperzero-protobuf` on SolarDeck's 10.3" E-Ink screen.
+3. **Descoping Note (Integrated Solar Smart Cover):**
+   * *The Hawaii / Tropical Sun Reality:* In direct tropical sun (+30°C to +40°C ambient), dark tablet surfaces hit +70°C. E-Ink microcapsules degrade above +60°C, and LiFePO4 charging must throttle above +45°C.
+   * *Decision:* The integrated solar smart cover is descoped. Operators use standard off-the-shelf folding USB-C solar panels (15W–28W) positioned on hot rocks in direct sunlight, connected via a 3-meter high-visibility USB-C cable to SolarDeck resting safely in the ambient shade.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -34,28 +41,29 @@ SolarDeck is a sovereign, general-purpose open-hardware computing platform desig
 │ 4. SCREEN:    10.3" E-Ink (Carta 1200 / Kaleido 3 / Kaleido 4, 227 PPI) + EMR│
 │ 5. CAMERAS:   12MP Sony IMX708 PDAF Macro Rear (Multimodal Claude Code / OCR)│
 │ 6. CELLULAR:  M.2 Quectel EG25-G LTE + Onboard Soldered MFF2 eSIM (ST4SIM)  │
-│ 7. MESH/GNSS: Built-In Semtech SX1262 LoRa (868–928MHz) + Qualcomm GNSS     │
-│ 8. ANTENNAS:  Top-Edge IP67 SMA (LoRa) + Internal Taoglas FXUB63 MIMO (LTE) │
-│ 9. SENSORS:   Bosch BMA400 Accel + BMP390 Baro + Dual TMP112 + INA3221 Telemetry│
-│ 10. AIRGAP SW: Physical Hardware RF Kill Switch (Zero EMF / 0.000 dBm Cutoff)│
-│ 11. AUDIO:    Sealed Micro-Box Speaker + MAX98357A Amp + MEMS Mic + Mute SW │
-│ 12. BATTERY:  8,000–10,000 mAh (26–32 Wh LiFePO4 / 30–37 Wh Li-ion) Pack    │
-│ 13. USB ARCH: Dedicated PCIe USB Host / Hub (Peripherals) + Port 1 OTG Sink │
+│ 7. MESH/GNSS: Built-In Semtech SX1262 LoRa (Meshtastic) + Qualcomm GNSS     │
+│ 8. NFC:       Built-In ST25R3916 13.56 MHz (YubiKey FIDO2 / LUKS / P2P Pair)│
+│ 9. ANTENNAS:  Top-Edge IP67 SMA (LoRa) + Internal Taoglas FXUB63 MIMO (LTE) │
+│ 10. SENSORS:  DS3231 RTC + BMI270/BMM350 9-DOF IMU + BMP390 Baro + PDM Mic  │
+│ 11. AIRGAP SW: Physical Hardware RF Kill Switch (Zero EMF / 0.000 dBm Cutoff)│
+│ 12. AUDIO:    Sealed Micro-Box Speaker + MAX98357A Amp + PDM Mic + Mute SW  │
+│ 13. BATTERY:  8,000–10,000 mAh (26–32 Wh LiFePO4 / 30–37 Wh Li-ion) Pack    │
 │ 14. EXPAND:   2x IP68 USB-C (Monitor Sink + Host Expand with USB-to-I2C)     │
 │ 15. CHASSIS:  SLS 3D-Printed PA12 Nylon + 85A TPU Armor Corners (~510g total)│
 └──────────────────────────────────────┬──────────────────────────────────────┘
                                        │
-            ┌──────────────────────────┴──────────────────────────┐
-            ▼                                                     ▼
-┌───────────────────────────────────────┐     ┌───────────────────────────────┐
-│ UNIVERSAL MOUNT & OPEN KEYBOARD       │     │ MODULAR TACTICAL RF MULTI-TOOL│
-│ • M2.5 Threaded Inserts + MagSafe Ring│     │ • Flipper Zero Sub-GHz CC1101 │
-│ • 3D-Printed $20 Q20 Thumb-Grip       │     │ • 13.56MHz NFC & 125kHz RFID  │
-│ • Any Bluetooth / USB-C Keyboard      │     │ • Dual High-Power IR TX/RX    │
-│ • Camera Tripod (1/4"-20) & MagSafe   │     │ • Wideband Sky-Scan SDR       │
-│ • Phase 2 SnapDeck Option ($32 BOM)   │     │ • Mates to USB-C Port 2       │
-└───────────────────────────────────────┘     └───────────────────────────────┘
-```
+            ┌──────────────────────────┼──────────────────────────┐
+            ▼                          ▼                          ▼
+┌───────────────────────┐  ┌───────────────────────┐  ┌───────────────────────┐
+│ HOTPACK 1: DOOMSDAY   │  │ HOTPACK 2: TACTICAL   │  │ HOTPACK 3: CBRN &     │
+│ SKY-SCAN & SIGINT     │  │ DUAL-MESH & HF COMMS  │  │ SAR ENVIRONMENTAL     │
+│ • RTL-SDR v4 Wideband │  │ • Radio 2: SX1262 LoRa│  │ • PocketGeiger Type 5 │
+│   (500kHz–1.76GHz)    │  │   (MeshCore/Reticulum)│  │   Radiation Sensor    │
+│ • Dual Top SMA Ports  │  │ • QRP 5W HF Shortwave │  │ • FLIR Lepton 3.5     │
+│ • 137MHz NOAA Weather │  │   JS8Call / FT8 (BNC) │  │   Thermal Camera      │
+│ • 1090MHz ADS-B Radar │  │ • APRS 3.5mm TRRS TNC │  │ • Sensirion SCD41 CO2 │
+│ • 100% Passive Stealth│  │ • Dual-Mesh Bridge    │  │   & Air Quality       │
+└───────────────────────┘  └───────────────────────┘  └───────────────────────┘
 
 ---
 

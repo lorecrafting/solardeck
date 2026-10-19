@@ -11,6 +11,7 @@ Executes the complete 7-Phase Verification Pipeline covering:
   Phase 5: Track C Mechanical Enclosure Envelope (227x165x9.8mm IP67)
   Phase 6: SMT PCBA & Centroid Package Integrity (BOM / CPL / 6-Layer Layout)
   Phase 7: Seeed Studio Fusion Turnkey Fabrication Package & Box-Build Assets
+  Phase 8: OS Provisioning Script Integrity (setup_solardeck_os.sh --test)
 """
 
 import os
@@ -160,10 +161,17 @@ def main():
         print(f"{Colors.RED}[FAIL]{Colors.END} ({e})")
         failures.append(f"Phase 7: Seeed Studio Turnkey Package ({e})")
 
+    # Phase 8: OS Provisioning Engine
+    ok, _ = run_step(
+        "Phase 8: OS Provisioning Script Integrity (setup_solardeck_os.sh --test)",
+        ["bash", "tools/provision/setup_solardeck_os.sh", "--test"]
+    )
+    if not ok: failures.append("Phase 8: OS Provisioning Engine")
+
     total_time = (time.time() - t_start) * 1000
     print(f"\n{Colors.BOLD}{'='*72}{Colors.END}")
     if not failures:
-        print(f"{Colors.BOLD}{Colors.GREEN}  🎉 ALL 7 VERIFICATION PHASES PASSED IN {total_time:.1f}ms!{Colors.END}")
+        print(f"{Colors.BOLD}{Colors.GREEN}  🎉 ALL 8 VERIFICATION PHASES PASSED IN {total_time:.1f}ms!{Colors.END}")
         print(f"{Colors.BOLD}{Colors.GREEN}  SolarDeck V1 is mathematically & structurally ready for fabrication.{Colors.END}")
         print(f"{Colors.BOLD}{'='*72}{Colors.END}\n")
         return 0

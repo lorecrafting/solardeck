@@ -41,11 +41,21 @@ The SolarDeck repository contains comprehensive, mathematically verified specifi
 │    • 5-Stage Zero-Brick verification ladder: static netlist trap auditor,   │
 │      SPICE power transient simulation, Renode/QEMU co-simulation, and DRC.  │
 │                                                                             │
-│ 8. docs/HANDOFF_TO_FABLE.md                                                 │
+│ 8. docs/OFFGRID_TACTICAL_SENSORS.md                                         │
+│    • Campervan BLE/CAN/RS485 integration, 9-DOF IMU celestial navigation,   │
+│      RTK/Galileo HAS, doomsday radio/dosimeter/wild-power hardening, and    │
+│      offline local RAG knowledgebase traversal.                             │
+│                                                                             │
+│ 9. docs/MECHANICAL_FIT_AND_ENCLOSURE_WORKFLOW.md                     │
+│    • 4-Step mechanical fit pipeline: Good Display 3D STEP import,    │
+│      KiCad 3D board export, tolerance budget (+0.4mm XY, 12.55mm Z), │
+│      and Two-Tier Sanity Check (1:1 paper DXF + $15 3D-printed fit). │
+│                                                                             │
+│ 10. docs/HANDOFF_TO_FABLE.md                                                │
 │    • Comprehensive engineering handover for Fable Wednesday audit: Seeed    │
 │      quotation status, 7-phase verification pipeline, and review checklist. │
 │                                                                             │
-│ 9. AGENTS.md                                                                │
+│ 11. AGENTS.md                                                               │
 │    • Developer & AI agent instructions, coding discipline, and safety rules.│
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -67,6 +77,7 @@ The SolarDeck repository contains comprehensive, mathematically verified specifi
 | **Audio & Speech Input** | `docs/HARDWARE_SPEC.md` §2.7 | Knowles MEMS + MAX98357A | PDM Dual-Mic + I2S Class-D Amp |
 | **Secondary Monitor Sink** | `docs/HARDWARE_SPEC.md` §2.4 | BCM2711 Native OTG PHY | USB-C Port 1 (`g_webcam` / `dummy_hcd`)|
 | **Universal Mechanical Mount** | `docs/HARDWARE_SPEC.md` §3 | M2.5 Threaded + MagSafe | Mechanical Heat-Set & N52 Magnets |
+| **Off-Grid & Tactical Sensors**| `docs/OFFGRID_TACTICAL_SENSORS.md` | Dual Brain (CM4 + RP2350) | BLE, SocketCAN, 9-DOF IMU, RTK, RAG |
 | **Cold Storage Vault** | `docs/HARDWARE_SPEC.md` §4.2 | 3x MicroSD Slots + SIM Tool | Spring-latch Retention Pockets |
 
 ---
@@ -90,6 +101,15 @@ For engineering posterity, the following major design iterations and descoping d
 5. **Descoped Internal Metal Kickstand (-$8.00 BOM, -150g Weight):**
    * *Original Plan:* Internal folding friction-hinge metal kickstand.
    * *Decision:* Friction hinges fatigue and leak water under IP67 submersion. Replaced with the flush M.2 Service Hatch containing the Cold Storage Vault (3x MicroSD card slots + SIM ejector tool). Tablet props up on any MagSafe desk stand, camera tripod, or stylus kickstand wedge.
+6. **Descoped Custom Flipper Zero Clone Module (-$24.00 BOM):**
+   * *Original Plan:* Proprietary RF backpack integrating CC1101 Sub-GHz, 125 kHz RFID coil, and Vishay IR emitters.
+   * *Decision:* Redundant over-engineering. An actual Flipper Zero already has its own battery, screen, and mature open-source firmware. Operators simply mount their physical Flipper Zero via rear M2.5 inserts or MagSafe and plug it into USB-C Port 2 or Bluetooth, controlling it via `qflipper-cli` on SolarDeck's 10.3" screen.
+7. **Descoped Fragile Spring-Loaded Pogo Pin Expansion Bus:**
+   * *Original Plan:* 8-pin hermetic magnetic pogo bus on rear chassis.
+   * *Decision:* Pogo pins corrode, pit, and mechanically jam when exposed to beach sand, volcanic dust, or salt spray. Replaced with a recessed right-angle plug into IP68-sealed USB-C Port 2 (High-Speed Host) secured by the MagSafe ring and 4x M2.5 threaded brass inserts.
+8. **Descoped Integrated Solar Smart Cover (Thermal Safety):**
+   * *Original Plan:* Bi-folding solar cover attached directly to the tablet face.
+   * *Decision:* In direct tropical sun (Hawaii/Arizona), dark unibody surfaces bake to >+70°C. E-Ink microcapsules permanently degrade above +60°C, and LiFePO4 charging must terminate above +45°C. Prescribed a detached 15W–28W folding USB-C panel placed in direct sun, connected via a 3-meter cable to SolarDeck resting safely in ambient shade.
 
 ---
 

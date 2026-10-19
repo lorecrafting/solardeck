@@ -38,6 +38,8 @@ On 2026-10-19, the complete Turnkey PCBA and Box-Build quotation package was off
 │   ├── SOFTWARE_SPEC.md                    # Kernel DRM waveforms & daemon specs
 │   ├── BOM_COST_ESTIMATE.md                # Component pricing & sourcing breakdown
 │   ├── HARDWARE_VERIFICATION_WORKFLOW.md   # 5-stage pre-fab verification guide
+│   ├── MECHANICAL_FIT_AND_ENCLOSURE_WORKFLOW.md # 4-step screen/board/box mechanical fit guide
+│   ├── OFFGRID_TACTICAL_SENSORS.md         # Off-grid power, RF, SIGINT, Hotpacks & GPU catalog
 │   └── HANDOFF_TO_FABLE.md                 # This handover document
 ├── firmware/
 │   └── rp2350/                             # Bare-metal C co-processor state machine
@@ -124,10 +126,25 @@ When auditing the design on Wednesday, focus on the following verification point
   * `J_SIM`: Molex 1051681206
 * Verify the itemized Box-Build addition for the **10.3" Kaleido 4 + Wacom EMR kit** (`ED103TC4-WACOM`). If Seeed indicates Kaleido 4 sample lead times exceed 3 weeks, approve the fallback to **Kaleido 3 / Carta 1200**.
 
-### 2. Verify Component Clearances & Thermal Path
+### 2. Verify Component Clearances, Mechanical Stackup & Thermal Path
+* **Mechanical Fit & Enclosure Verification (See `docs/MECHANICAL_FIT_AND_ENCLOSURE_WORKFLOW.md`):**
+  * **Screen XY Tolerance:** Confirm the $+0.40\,\text{mm}$ perimeter clearance in the chassis pocket ($228.5 \times 166.6\,\text{mm}$ pocket for $227.7 \times 165.8\,\text{mm}$ glass) with a $0.3\,\text{mm}$ Poron foam shock gasket.
+  * **Z-Stackup Thickness Budget:** Confirm the $12.55\,\text{mm}$ nominal total thickness budget (bezel, OCA, display, Poron gasket, aluminum midframe, PCB, Hirose DF40 standoff, CM4, rear wall).
+  * **FPC Ribbon Bend Slot:** Verify the aluminum midframe features a through-slot with CNC-filleted edges ($R \ge 1.5\,\text{mm}$) so the $180^\circ$ flex tail does not pinch or fatigue against sharp metal.
+  * **Pre-Metal Sanity Checks:** Run the Tier-1 1:1 scale paper DXF printout ($0) and Tier-2 $15 3D-printed PLA/PETG skeleton test fit before releasing the design for $150+ CNC 6061-T6 aluminum machining.
 * **CM4 SoC Thermal Dissipation:** Confirm that the CM4 SoC mates via a 1.0 mm thermal silicone pad directly to the 1.5 mm unibody backplate (374 cm² effective heatsink area; no fan required).
 * **LiFePO4 Pouch Cavity:** Verify that the 140 × 95 × 4.2 mm internal cavity allows 10% volumetric expansion for the 8,000–10,000 mAh pouch cell across 3,000+ thermal charge cycles.
 * **M.2 2242 NVMe SSD:** Verify single-sided SSD clearance under the rear service hatch.
+
+### 3. Review Modular Architecture & Hotpack Allocations (See `docs/OFFGRID_TACTICAL_SENSORS.md`)
+* **Descoped Custom Flipper Zero Clone:** Operators connect their physical **Flipper Zero** to USB-C Port 2 or Bluetooth 5.0, running `qflipper-cli` and `flipperzero-protobuf` on SolarDeck's 10.3" screen.
+* **Pure USB-C Port 2 (Host) Expansion:** All modular packs connect via recessed right-angle USB-C and rear MagSafe / M2.5 anchors, eliminating fragile pogo pins that fail in sand/salt spray.
+* **4 Modular USB-C Hotpacks Defined:**
+  * **Hotpack 1: Doomsday Sky-Scan & SIGINT:** RTL-SDR v4 (24MHz–1.76GHz), dual top SMA ports, 137MHz/1090MHz SAW filters for direct weather satellite (`satdump`) and air radar (`readsb`).
+  * **Hotpack 2: Tactical Dual-Mesh & HF Transceiver:** Dedicated 2nd SX1262 LoRa (MeshCore/Reticulum) running concurrently with internal Meshtastic radio; QRP 5W HF transceiver for JS8Call 2,000-mile text over ionosphere; 3.5mm TRRS APRS TNC.
+  * **Hotpack 3: CBRN & SAR Environmental:** PocketGeiger Type 5 radiation dosimeter, FLIR Lepton 3.5 / InfiRay P2 thermal camera (smoke/darkness penetration), Sensirion SCD41 CO2/VOC sensor.
+  * **Hotpack 4: Precision RTK Survey:** u-blox ZED-F9P (1.4cm RTK) + Galileo HAS (20cm satellite-direct positioning with zero internet).
+* **Hawaii Sun Thermal Management:** Integrated solar smart cover descoped due to +70°C surface baking; use separate 15W–28W folding USB-C solar panel in direct sun with a 3m cable to SolarDeck in ambient shade.
 
 ### 3. Review Firmware Sleep Timers & Wake Thresholds
 * In `firmware/rp2350/include/solardeck_state.h`:
