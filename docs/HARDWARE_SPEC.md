@@ -730,6 +730,45 @@ To provide 100% mission reliability in severe sub-zero weather, dust storms, and
   * Placing conductive metal components (drill bits, bolts, washers, brass heat-set inserts) directly onto the hardened glass triggers localized mutual-capacitance sensor node depressions.
   * The Goodix touch controller computes contact centroid ellipses; software extracts the major axis length (bolt length) and minor axis width (bolt diameter) with sub-millimeter precision automatically with zero manual inputs.
 
+### 2.22 Resilient Dual-Footprint & DNP (Do Not Populate) Fallback Architecture
+To eliminate supply-chain bottlenecks, enable budget vs. pro hardware tiers, and prevent obsolescence without redesigning the PCB, SolarDeck integrates eight strategic dual-footprint and DNP (Do Not Populate) options across its 6-layer motherboard:
+
+```
+                          DUAL-FOOTPRINT TOPOLOGY
+     [Primary SMT Footprint]                    [Secondary / Nested Footprint]
+                │                                             │
+                └───► Shared High-Speed Buses & Nets ◄────────┘
+                                     │
+                      (I2C / SPI / PDM / PCIe / Power)
+```
+
+1. **Audio Wake AI: Syntiant NDP120 (3.1×3.1mm QFN-40) ⟷ RP2350 C++ Fallback:**
+   * **Populated ($4.50):** Dedicated neural core runs always-on wake word and acoustic biometrics at **140 µW**, providing 20-year shelf standby.
+   * **DNP ($0.00):** If NDP120 is unpopulated or out of stock, firmware automatically detects the missing I2C address and commands the RP2350 Cortex-M33 to ingest PDM mic data via PIO, running open-source `microWakeWord` in bare-metal C++ at **14 mW** (80+ days continuous standby).
+2. **Real-Time Clock: Maxim DS3231MZ+ (SOIC-8) ⟷ Micro Crystal RV-3028-C7 (DFN-8):**
+   * **Concentric Footprint:** An 8-pad DFN footprint is nested directly in the center of the SOIC-8 pads on the same I2C lines (`SDA`, `SCL`, `INT`, `VBAT`).
+   * **DS3231MZ+ Option:** Internal TCXO with $\pm 2\text{ ppm}$ precision for celestial plate-solving star navigation ($1.2\text{ }\mu\text{A}$ draw).
+   * **RV-3028-C7 Option:** Extreme-low-power RTC drawing only **45 nano-amperes (0.045 µA)**—giving 15+ years of timekeeping on a coin cell while dodging Maxim supply-chain lead times.
+3. **RP2350 NOR Flash & PSRAM: Nested SOIC-8 / WSON-8 Footprints:**
+   * Winbond 16MB SPI Flash (`W25Q128`) and APMemory 8MB PSRAM (`APS6404L`) route to nested footprints: WSON-8 flat leadless pads sit inside extended gull-wing SOIC-8 pads on identical nets.
+   * Allows turnkey assembly houses to solder whichever package is in stock with zero layout changes.
+4. **USB-PD 20W Fast Charge Sink: WCH CH224K (ESSOP-10) ⟷ STUSB4500 (QFN-24) ⟷ 5.1kΩ Pull-Downs:**
+   * Dual pads for cheap Asian turnkey assembly (CH224K, $0.45) or certified Western DigiKey sourcing (STMicroelectronics STUSB4500, $1.80).
+   * Two DNP 0402 pads allow omitting active PD silicon entirely and populating standard 5.1 kΩ pull-down resistors for basic 5V 3A (15W) charging.
+5. **Broadcom PCIe Gen 2 x1 Steering Bridge: VL805 USB 3.0 Hub ⟷ Direct M.2 NVMe SSD:**
+   * Four 0402 0-ohm jumper resistor links (`R_PCIE_TX_P/N`, `R_PCIE_RX_P/N`) steer the CM4's single PCIe lane:
+     * **Position A (Default):** Routes PCIe x1 to VIA VL805, providing 4x external USB 3.0 ports.
+     * **Position B (Storage Workstation):** Routes PCIe x1 directly to the M.2 Key-M 2242 slot, unlocking a **2TB NVMe SSD operating at 400 MB/s** (with external peripherals falling back to native BCM2711 USB 2.0).
+6. **Onboard LoRa SX1262: Populated ⟷ DNP (Zero-Radio SCIF / Aviation Build):**
+   * Semtech SX1262 castellated module footprint can be left unpopulated (DNP) to save $5.50 and guarantee 100% physical absence of RF transmitters on ISM bands.
+   * RP2350 firmware polls SPI status; if absent, LoRa radio stacks are disabled, and the operator can attach external USB-C Hotpack 2 when active RF mesh is needed.
+7. **Cellular Identity: ST4SIM-200M MFF2 SMD eSIM ⟷ DNP (Nano-SIM Only):**
+   * Operators who rely strictly on physical plastic SIM cards can mark the $1.85 MFF2 SMD eSIM chip DNP. The hardware Nano-SIM push-push tray operates independently without bridging components.
+8. **Battery Chemistry Hardware Safety Straps: LiFePO4 (3.65V) ⟷ Li-ion (4.20V):**
+   * A 2-way solder-jumper bridge sets the hardware voltage divider feeding the TI BQ25895 `VREG` pin and RP2350 boot pin:
+     * **Jumper A (Default - Hardwired):** Rigidly locks charge voltage to **3.65V** (LiFePO4 safety limit). Software register tampering cannot override this hardware clamp.
+     * **Jumper B (Alternate Solder Bridge):** Reconfigures the clamp to **4.20V** for emergency builds using recycled 3.7V Li-ion or drone LiPo packs.
+
 ---
 
 ## 3. Universal Mechanical Mount, Handheld Thumb Grips & Open Keyboard Architecture

@@ -85,6 +85,7 @@ The SolarDeck repository contains comprehensive, mathematically verified specifi
 | **Thermal Night-Vision Hotpack** | `docs/OFFGRID_TACTICAL_SENSORS.md` §8.7| InfiRay Tiny1-C (256x192 LWIR) | USB-C Port 2 / GPU 16-shade Dither |
 | **3GPP NTN Satellite Skylo Hotpack** | `docs/OFFGRID_TACTICAL_SENSORS.md` §8.8| Quectel CC660D-LS (IoT-NTN) | USB-C Port 2 / S-Band RHCP Patch |
 | **Off-Grid & Tactical Sensors**| `docs/OFFGRID_TACTICAL_SENSORS.md` | Dual Brain (CM4 + RP2350) | BLE, SocketCAN, 9-DOF IMU, RTK, RAG |
+| **Dual-Footprint & DNP Architecture** | `docs/HARDWARE_SPEC.md` §2.22 | 8 Strategic Fallback Footprints| NDP120, RV-3028, WSON-8, CH224K, PCIe|
 | **Cold Storage Vault** | `docs/HARDWARE_SPEC.md` §4.2 | 3x MicroSD Slots + SIM Tool | Spring-latch Retention Pockets |
 
 ---
