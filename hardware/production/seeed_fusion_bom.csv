@@ -1,0 +1,25 @@
+Item,Designator,Quantity,Manufacturer,Manufacturer Part Number (MPN),Description,Package,Sourcing Type,Vendor / Sourcing Notes
+1,U1,1,Texas Instruments,BQ25895RTWR,"I2C Controlled Single Cell 5A Fast Charger",WQFN-24-1EP_4x4mm,Seeed Sourced (SMT),LCSC C115598 / TI direct
+2,U2,1,Texas Instruments,TPS62840DLYR,"750mA 60nA IQ Ultra-Low-IQ Buck Converter",WSON-8-1EP_2x2mm,Seeed Sourced (SMT),LCSC C2836267 / TI direct
+3,U3,1,Texas Instruments,TPS61088RHLR,"10A Fully Integrated Synchronous Boost 5V",VQFN-20-1EP_3.5x4.5mm,Seeed Sourced (SMT),LCSC C84318 / TI direct
+4,U4,1,Texas Instruments,TPS63020DSJR,"High Efficiency Buck-Boost 3.8V Modem Rail",VSON-14-1EP_3x4mm,Seeed Sourced (SMT),LCSC C124208 / TI direct
+5,U5,1,Texas Instruments,BQ25504RGTR,"Ultra Low Power Boost Charger with MPPT",VQFN-16-1EP_3x3mm,Seeed Sourced (SMT),LCSC C116743 / TI direct
+6,SW1,1,C&K / Littelfuse,JS102011SAQN,"SPDT Slide Switch (LiFePO4 / Li-ion Chem Sel)",SW_SPDT_SMD,Seeed Sourced (SMT),LCSC C231787
+7,"J1,J2",2,Hirose,DF40C-100DS-0.4V,"CM4 High-Density Board-to-Board 100-pin Socket",Hirose_DF40C_100P,Seeed Sourced (SMT),LCSC C2887688 / Hirose
+8,U8,1,Raspberry Pi,RP2350B,"Dual Cortex-M33 / Hazard3 RISC-V Co-Processor",QFN-80-1EP_10x10mm,Seeed Sourced (SMT),Seeed OPL / Raspberry Pi
+9,U9,1,APMemory,APS6404L-3SQR-SN,"8MB QSPI Pseudo-SRAM Framebuffer Buffer",SOIC-8_3.9x4.9mm,Seeed Sourced (SMT),LCSC C3013854
+10,U10,1,Winbond,W25Q128JVS,"16MB QSPI NOR Flash Dual-Bank Bootloader",SOIC-8_5.23mm,Seeed Sourced (SMT),LCSC C97521
+11,U11,1,Analog Devices / Maxim,DS3231MZ+,"High-Precision TCXO RTC with I2C",SOIC-8_3.9x4.9mm,Seeed Sourced (SMT),LCSC C141208
+12,U14,1,Texas Instruments,TMUX1575PWR,"8-Channel 2:1 SPDT Display Bus Mux with I_off",TSSOP-24_4.4x7.8mm,Seeed Sourced (SMT),LCSC C2841662 / TI direct
+13,J_EPDC,1,Hirose / ITE,FH12-40S-0.5SH,"40-Pin 0.5mm Pitch FPC Connector for IT8951",FH12-40S-0.5SH,Seeed Sourced (SMT),LCSC C262657
+14,U15,1,Texas Instruments,SN74LVC1G08DBVR,"Single 2-Input Positive AND Gate (Palm Rejection)",SOT-23-5,Seeed Sourced (SMT),LCSC C79893
+15,U16,1,VIA Technologies,VL805-Q6,"PCIe Gen 2 to 4-Port USB 3.0 / 2.0 Host Controller",QFN-68-1EP_8x8mm,Seeed Sourced (SMT),LCSC C463124
+16,J_NVME,1,Amphenol / LOTES,M.2-Key-M-2242,"M.2 Key-M PCIe NVMe SSD Socket",M.2_2242,Seeed Sourced (SMT),LCSC C2842100
+17,J_MODEM,1,Quectel / JAE,M.2-Key-B-3042,"M.2 Key-B 3042 LTE Modem Socket",M.2_3042,Seeed Sourced (SMT),LCSC C2842105
+18,U18,1,STMicroelectronics,ST4SIM-200M,"Industrial eUICC Micro-eSIM (Slot 2)",DFN-8-1EP_5x6mm,Seeed Sourced (SMT),LCSC C2891244
+19,J_SIM,1,Molex / Amphenol,Nano-SIM-PushPush,"Weather-Sealed Nano-SIM Push-Push Socket (Slot 1)",Nano-SIM,Seeed Sourced (SMT),LCSC C2841990
+20,MOD1,1,Raspberry Pi,CM4104000,"Raspberry Pi Compute Module 4 (4GB RAM, WiFi, Lite)",CM4_Module,Seeed Sourced (Box-Build),"Seeed Official RPi Distributor stock"
+21,DISP1,1,Waveshare / Good Display,10.3inch-e-Paper-HAT,"10.3"" E-Ink Display Kit (1872x1404 + IT8951 Tcon)",10.3_EINK_KIT,Seeed Sourced (Box-Build),"Sourced via Waveshare / Guangdong DKE"
+22,MOD2,1,Quectel,EG25GGB-M52-SGNS,"Quectel EG25-G Worldwide LTE Cat-4 / GNSS M.2 Card",M.2_3042,Seeed Sourced (Box-Build),"Quectel China Authorized Stock"
+23,BATT1,1,Great Power / EVE,LiFePO4-8000mAh-3.2V,"8000mAh 3.2V LiFePO4 Pouch Cell with 10k NTC & JST",Pouch_Cell,Seeed Sourced (Box-Build),"Guangdong local battery manufacturer"
+24,CASE1,1,Seeed 3D Service,SOLARDECK-CHASSIS-PA12,"SLS PA12 Nylon 3D Printed Chassis (227x165x9.8mm)",SLS_PA12_Black,Seeed Sourced (Box-Build),"3D printed by Seeed Fusion 3D print service"

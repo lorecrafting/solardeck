@@ -1,0 +1,156 @@
+solid solardeck_chassis_unibody
+  facet normal 0.0000 0.0000 -1.0000
+    outer loop
+      vertex 0.0000 0.0000 0.0000
+      vertex 227.0000 0.0000 0.0000
+      vertex 227.0000 165.0000 0.0000
+    endloop
+  endfacet
+  facet normal 0.0000 0.0000 -1.0000
+    outer loop
+      vertex 0.0000 0.0000 0.0000
+      vertex 227.0000 165.0000 0.0000
+      vertex 0.0000 165.0000 0.0000
+    endloop
+  endfacet
+  facet normal 0.0000 0.0000 1.0000
+    outer loop
+      vertex 0.0000 0.0000 9.8000
+      vertex 0.0000 165.0000 9.8000
+      vertex 227.0000 165.0000 9.8000
+    endloop
+  endfacet
+  facet normal 0.0000 0.0000 1.0000
+    outer loop
+      vertex 0.0000 0.0000 9.8000
+      vertex 227.0000 165.0000 9.8000
+      vertex 227.0000 0.0000 9.8000
+    endloop
+  endfacet
+  facet normal 0.0000 -1.0000 0.0000
+    outer loop
+      vertex 0.0000 0.0000 0.0000
+      vertex 0.0000 0.0000 9.8000
+      vertex 227.0000 0.0000 9.8000
+    endloop
+  endfacet
+  facet normal 0.0000 -1.0000 0.0000
+    outer loop
+      vertex 0.0000 0.0000 0.0000
+      vertex 227.0000 0.0000 9.8000
+      vertex 227.0000 0.0000 0.0000
+    endloop
+  endfacet
+  facet normal 0.0000 1.0000 0.0000
+    outer loop
+      vertex 227.0000 165.0000 0.0000
+      vertex 227.0000 165.0000 9.8000
+      vertex 0.0000 165.0000 9.8000
+    endloop
+  endfacet
+  facet normal 0.0000 1.0000 0.0000
+    outer loop
+      vertex 227.0000 165.0000 0.0000
+      vertex 0.0000 165.0000 9.8000
+      vertex 0.0000 165.0000 0.0000
+    endloop
+  endfacet
+  facet normal -1.0000 0.0000 0.0000
+    outer loop
+      vertex 0.0000 165.0000 0.0000
+      vertex 0.0000 165.0000 9.8000
+      vertex 0.0000 0.0000 9.8000
+    endloop
+  endfacet
+  facet normal -1.0000 0.0000 0.0000
+    outer loop
+      vertex 0.0000 165.0000 0.0000
+      vertex 0.0000 0.0000 9.8000
+      vertex 0.0000 0.0000 0.0000
+    endloop
+  endfacet
+  facet normal 1.0000 0.0000 0.0000
+    outer loop
+      vertex 227.0000 0.0000 0.0000
+      vertex 227.0000 0.0000 9.8000
+      vertex 227.0000 165.0000 9.8000
+    endloop
+  endfacet
+  facet normal 1.0000 0.0000 0.0000
+    outer loop
+      vertex 227.0000 0.0000 0.0000
+      vertex 227.0000 165.0000 9.8000
+      vertex 227.0000 165.0000 0.0000
+    endloop
+  endfacet
+  facet normal 0.0000 0.0000 1.0000
+    outer loop
+      vertex 2.0000 2.0000 2.0000
+      vertex 2.0000 163.0000 2.0000
+      vertex 225.0000 163.0000 2.0000
+    endloop
+  endfacet
+  facet normal 0.0000 0.0000 1.0000
+    outer loop
+      vertex 2.0000 2.0000 2.0000
+      vertex 225.0000 163.0000 2.0000
+      vertex 225.0000 2.0000 2.0000
+    endloop
+  endfacet
+  facet normal 0.0000 1.0000 0.0000
+    outer loop
+      vertex 2.0000 2.0000 2.0000
+      vertex 225.0000 2.0000 2.0000
+      vertex 225.0000 2.0000 9.8000
+    endloop
+  endfacet
+  facet normal 0.0000 1.0000 0.0000
+    outer loop
+      vertex 2.0000 2.0000 2.0000
+      vertex 225.0000 2.0000 9.8000
+      vertex 2.0000 2.0000 9.8000
+    endloop
+  endfacet
+  facet normal 0.0000 -1.0000 0.0000
+    outer loop
+      vertex 225.0000 163.0000 2.0000
+      vertex 2.0000 163.0000 2.0000
+      vertex 2.0000 163.0000 9.8000
+    endloop
+  endfacet
+  facet normal 0.0000 -1.0000 0.0000
+    outer loop
+      vertex 225.0000 163.0000 2.0000
+      vertex 2.0000 163.0000 9.8000
+      vertex 225.0000 163.0000 9.8000
+    endloop
+  endfacet
+  facet normal 1.0000 0.0000 0.0000
+    outer loop
+      vertex 2.0000 163.0000 2.0000
+      vertex 2.0000 2.0000 2.0000
+      vertex 2.0000 2.0000 9.8000
+    endloop
+  endfacet
+  facet normal 1.0000 0.0000 0.0000
+    outer loop
+      vertex 2.0000 163.0000 2.0000
+      vertex 2.0000 2.0000 9.8000
+      vertex 2.0000 163.0000 9.8000
+    endloop
+  endfacet
+  facet normal -1.0000 0.0000 0.0000
+    outer loop
+      vertex 225.0000 2.0000 2.0000
+      vertex 225.0000 163.0000 2.0000
+      vertex 225.0000 163.0000 9.8000
+    endloop
+  endfacet
+  facet normal -1.0000 0.0000 0.0000
+    outer loop
+      vertex 225.0000 2.0000 2.0000
+      vertex 225.0000 163.0000 9.8000
+      vertex 225.0000 2.0000 9.8000
+    endloop
+  endfacet
+endsolid solardeck_chassis_unibody
