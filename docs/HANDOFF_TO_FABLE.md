@@ -166,6 +166,33 @@ python3 scripts/verify_all.py
 open hardware/production/
 ```
 
+### 5. Review Decadal Durability, Emergency Recovery & Autonomous BIST Telemetry
+The following high-reliability and field-recovery enhancements have been codified and require Fable's architectural sign-off:
+1. **Autonomous LLM Hardware Self-Diagnosis & BIST Engine (`solardeck-diag --json`):**
+   * Real-time 8-domain telemetry sweep (Power, RP2350, EPDC, I2C Sensor Fabric, RF Radios, Cameras/Audio, Storage, and Safety Airgap).
+   * Programmatic self-healing hooks via `solardeck-heal` (cold-cycling TPS22918 radio power gates, EPDC high-voltage de-ghosting flushes, and USB-C Port 2 overcurrent reset).
+2. **Rechargeable Desiccant Sachet Pocket (1g/2g Slot Under M.2 Hatch):**
+   * Molded negative-cavity pocket in the IP67 M.2 service hatch housing orange indicating silica gel, maintaining internal cavity relative humidity strictly $<10\%\text{ RH}$ and completely eliminating dew-point glass condensation.
+   * Field-regenerable 100+ times via 1 hour solar bake or camp oven.
+3. **Decadal Mechanical & Dielectric Durability Architecture:**
+   * **Knurled Brass Ultrasonic Inserts:** All 12 chassis screws, 2 hatch screws, and 4 VESA mounts thread into brass inserts (500+ teardown cycles with zero plastic stripping).
+   * **Poron 4701-30 Battery Expansion Cavity:** 0.8mm dedicated clearance lined with microcellular foam absorbs up to 10% pouch swelling over 20 years ($<2\text{ kPa}$ back-pressure), protecting the E-Ink glass backplane.
+   * **4-Point Through-Hole Stake USB-C Receptacles:** Mid-mount receptacles with 4 ground tabs through all 6 PCB layers resist $>50\text{ N}$ lateral torque.
+   * **Acid-Etched Matte Glass & Hard Gold Contacts:** Mohs 7+ chemically etched glass (zero peeling PET films) and 30 micro-inch electrolytic hard gold plating (MIL-G-45204).
+   * **30-Year Solid-State Chemistry:** LiFePO4 float clamped at 3.45V (10,000+ cycles / 27+ years), zero wet electrolytic capacitors (Tantalum-Polymer & MLCC only), 395nm UV-blocking LOCA, and C&K KSC hermetic gold switches (5M clicks).
+4. **Direct-to-Co-Processor Instant-Ink Notepad (4.5 mW Always-Ready Slate):**
+   * Stylus proximity (`PEN_INT`) wakes the RP2350 co-processor in $<5\text{ ms}$ while CM4 Linux remains in 0.000W sleep.
+   * RP2350 directly blits 1-bit stroke vectors to the IT8951 EPDC with sub-15ms latency at 4.5 mW, buffering vectors in 8MB PSRAM.
+   * On Linux wake, `solardeck-inkd` ingests vectors over SPI, generating SVGs and triggering local OCR.
+5. **Multi-Source Emergency Auxiliary Battery Terminal:**
+   * Keyed 2-pin JST-PH terminal under the M.2 hatch accepts 3.9V–14.0V DC to the TI BQ25895 via an ideal diode controller.
+   * Enables emergency cold-boot from any salvageable source (18650 cell, 3x AA batteries, 12V vehicle lead, or raw solar panel).
+6. **3-Position Hardware Privacy & Stealth Switch:**
+   * Physical slide switch on top chassis flank: `NORMAL`, `MIC_MUTE` (shunting PDM clock to GND), and `FULL_BLACKOUT` (cutting power to mics, camera MIPI CSI-2 enable line, and RF power gates).
+7. **Tactile Blackout Indexing Pips & 45° Corner Chamfer:**
+   * Braille-style tactile indexing pips on chassis rim (1 pip = Power, 2 pips = Waveform Flush, 3 pips = Privacy Airgap Switch).
+   * 45° chamfered top-right corner for 100% blind tactile orientation indexing under Night-Vision Goggles or zero-light blackout conditions.
+
 ---
 
 ## 6. Next Steps Following the Audit

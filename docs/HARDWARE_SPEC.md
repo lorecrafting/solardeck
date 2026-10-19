@@ -769,6 +769,37 @@ To eliminate supply-chain bottlenecks, enable budget vs. pro hardware tiers, and
      * **Jumper A (Default - Hardwired):** Rigidly locks charge voltage to **3.65V** (LiFePO4 safety limit). Software register tampering cannot override this hardware clamp.
      * **Jumper B (Alternate Solder Bridge):** Reconfigures the clamp to **4.20V** for emergency builds using recycled 3.7V Li-ion or drone LiPo packs.
 
+### 2.23 Direct-to-Co-Processor "Instant-Ink" Low-Latency Inking Architecture
+To eliminate the 300ms Linux boot latency and 2.5W processor power penalty when quickly taking notes, sketching field maps, or recording tactical coordinates:
+* **Hardware Interconnect:** The Wacom EMR digitizer's coordinate data stream (UART/I2C) and stylus proximity interrupt (`PEN_INT`) are routed directly to the Raspberry Pi RP2350B co-processor, with dual-buffer SPI lines feeding into the IT8951 EPDC controller.
+* **4.5 mW Always-Ready Legal Pad:**
+  * When the main CM4 Linux brain is asleep in S2idle (consuming 0.000W), bringing the stylus within 5mm of the display triggers `PEN_INT`, waking the RP2350 in **$<5\text{ milliseconds}$**.
+  * The RP2350 ingests raw $(X, Y, \text{Pressure})$ packets at 200 Hz and blits 1-bit black stroke vectors directly into the IT8951 controller using a specialized 15ms zero-ghosting micro-LUT.
+  * Inking latency is sub-15ms, delivering the tactile responsiveness of pen on real paper at a total system draw of just **4.5 mW**.
+* **Vector Stroke PSRAM Cache & Atomic Linux Handoff:**
+  * Stroke vectors are continuously cached into the RP2350's dedicated 8MB QSPI PSRAM buffer.
+  * When the operator presses the Power key to wake Linux, the Linux kernel daemon (`solardeck-inkd`, §22 in Software Spec) ingests the cached vector strokes over SPI/UART in $<50\text{ ms}$, serializes them into standard SVG/PDF files, and triggers local OCR / LLM indexing.
+
+### 2.24 Multi-Source Emergency Auxiliary Battery Terminal (Under M.2 Service Hatch)
+To guarantee decadal survival in remote areas where the custom internal LiFePO4 pouch battery has aged out, failed, or been physically damaged:
+* **Hardware Interface:** Located inside the IP67 gasketed M.2 service hatch cavity (§4.6) is an auxiliary 2-pin JST-PH (2.0mm pitch) keyed terminal block with adjacent gold-plated solder pads.
+* **Wide-Voltage Buck Tolerance (3.9V to 14.0V DC):**
+  * The terminal is wired directly into the input stage of the TI BQ25895 power path manager via an onboard Texas Instruments LM74700-Q1 ideal diode controller (reverse-polarity protected up to -36V).
+  * The system will cold-boot and operate continuously from **any salvageable electrical source**:
+    * A single 18650 or 21700 cylindrical cell (3.6V–4.2V) pulled from a flashlight or power tool.
+    * 3x or 4x standard AA/AAA alkaline or NiMH batteries in series (3.6V–6.0V).
+    * A 12V vehicle cigarette lighter / lead-acid battery via standard wire leads.
+    * A raw 12V / 18V folding camping solar panel without an external charge controller.
+* **Decoupled Operation:** An internal jumper or software command allows the BQ25895 to operate in pure "bus-converter mode," running the CM4 and display directly from the auxiliary input with the internal pouch cell 100% disconnected.
+
+### 2.25 3-Position Hardware Privacy & Stealth Disconnect Switch
+To deliver mathematically verifiable, physical airgapped privacy for tactical operations, secure negotiations, and sovereign computing:
+* **Switch Mechanism:** A heavy-duty, IP67 sealed 3-position miniature slide switch located on the top chassis flank:
+  1. **Position 1: NORMAL (Green Index):** All microphones, cameras, and radio load switches operate normally under Linux kernel software power management.
+  2. **Position 2: MIC MUTE (Yellow Index):** Mechanically shunts the PDM clock line (`MIC_CLK`) of both Knowles MEMS microphones to ground (GND) through a physical break switch. Without a clock signal, the MEMS charge pump cannot oscillate; audio eavesdropping is physically and electrically impossible (0.000V signal level). The camera and radios remain operational.
+  3. **Position 3: FULL BLACKOUT (Red Index):** Mechanically disconnects power (`VCC`) to both microphones, pulls the Sony IMX708 MIPI CSI-2 enable line (`CAM_EN`) hard to GND, and de-asserts the hardware gates on the Quectel LTE modem, SX1262 LoRa, and ST25R3916 NFC chips to 0.000V.
+* **Diagnostic Sense Line (`PRIVACY_STAT`):** An auxiliary sense pin informs the RP2350 and Linux kernel of the physical switch position, allowing the OS to display a permanent hardware padlock icon on the 10.3" E-Ink screen with zero CPU overhead.
+
 ---
 
 ## 3. Universal Mechanical Mount, Handheld Thumb Grips & Open Keyboard Architecture
@@ -830,6 +861,16 @@ To eliminate $25,000 in custom injection tooling risk and 6 months of bespoke ZM
 
 ### 3.4 Phase 2 SnapDeck Footprint Preservation
 * To ensure the carrier motherboard never requires a revision if a custom magnetic pogo keyboard is manufactured in Phase 2, the bottom edge of the PCBA retains the SMD landing pads for the **5-pin hermetic magnetic pogo connector** (`VBUS`, `USB_D-`, `USB_D+`, `GND`, `ID_SENSE`) with dedicated TVS ESD diodes.
+
+### 3.5 Tactile Blackout Indexing Pips & 45° Orientation Chamfer (Zero-Light Operation)
+To ensure reliable, error-free operation in pitch darkness, under strict military light discipline, or when wearing Night-Vision Goggles (NVG):
+* **Tactile Edge Indexing Pips:** The CNC aluminum / PA12 nylon unibody integrates raised tactile Braille-style hemispherical pips (0.6mm height) machined directly into the chassis edge adjacent to primary controls:
+  * **• (1 Pip):** Located directly adjacent to the recessed Power / S2idle Wake button.
+  * **•• (2 Pips):** Located adjacent to the E-Ink Global Inversion / Ghosting Flush button.
+  * **••• (3 Pips):** Located adjacent to the 3-position Hardware Privacy & Stealth Slide Switch (§2.25).
+* **Asymmetric 45° Corner Orientation Chamfer:**
+  * While three corners of the unibody feature standard 8.0mm radius 85A TPU impact bumpers, the **top-right corner features a prominent 45° geometric indexing chamfer (15mm × 15mm)**.
+  * By sliding a hand across the device inside a dark backpack or under a tarp, the operator instantly identifies tablet orientation (portrait vs landscape, top vs bottom) by tactile feel alone, eliminating accidental inverted power presses.
 
 ---
 
@@ -1211,3 +1252,50 @@ To prevent the physical wear, joint fatigue, thread stripping, and material degr
    * The Linux system daemon continuously computes the internal **Dew Point Temperature ($T_d$)** against the backplane temperature.
    * If internal cavity humidity climbs above 65% RH with falling ambient temperature, the autonomous diagnostic engine flags a proactive notification:
      `[HUMIDITY WARNING] Internal RH at 68%. Condensation risk detected on display lens. Please remove and regenerate desiccant sachet in rear M.2 service hatch.`
+
+### 7.5 30-Year Solid-State Longevity & Chemistry Tuning
+To guarantee that the electronics and physical components survive 10 to 30 years without chemical, mechanical, or dielectric degradation:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                 5 PILLARS OF 30-YEAR HARDWARE LONGEVITY                     │
+├─────────────────────┬───────────────────────────────────────────────────────┤
+│ LONGEVITY HAZARD    │ PHYSICAL HARDWARE COUNTERMEASURE                      │
+├─────────────────────┼───────────────────────────────────────────────────────┤
+│ **1. LiFePO4 Aging  │ Float charge at 3.45V instead of 3.65V. Sacrifices    │
+│ & Cycle Life**      │ 5% capacity to extend cycle life from 3,500 to        │
+│                     │ **10,000+ cycles (27+ years of daily cycling)**.      │
+├─────────────────────┼───────────────────────────────────────────────────────┤
+│ **2. Electrolyte    │ **Zero wet electrolytic capacitors** on the PCBA.     │
+│ Drying & Leakage**  │ All bulk storage uses **Tantalum-Polymer & Ceramic**  │
+│                     │ MLCCs with 50+ year shelf-life (zero drying out).     │
+├─────────────────────┼───────────────────────────────────────────────────────┤
+│ **3. Solar UV       │ Specifying **UV-absorbing optical adhesive (<400nm)** │
+│ Yellowing & Fading**│ between the glass and E-Ink panel. Prevents micro-    │
+│                     │ capsule pigment bleaching from harsh direct sun.      │
+├─────────────────────┼───────────────────────────────────────────────────────┤
+│ **4. Tactile Button │ Replace rubber dome membrane buttons with **Hermetic  │
+│ Membrane Fatigue**  │ Gold-Crossbar Tactile Switches (C&K KSC series)**     │
+│                     │ or Hall-effect magnetic reed sensors (5M+ clicks).    │
+├─────────────────────┼───────────────────────────────────────────────────────┤
+│ **5. Stylus Tip     │ Standard plastic nibs wear down in 6 months. Pair     │
+│ Friction Wear**     │ the acid-etched glass with a **Solid Titanium Stylus  │
+│                     │ Nib**, which never wears down or scratches the glass. │
+└─────────────────────┴───────────────────────────────────────────────────────┘
+```
+
+1. **Conservative LiFePO4 Voltage Clamping (The "30-Year Battery" Rule):**
+   * Standard LiFePO4 charging terminates at **3.65V/cell**. However, holding cells above 3.50V accelerates electrolyte oxidation.
+   * By programming the TI BQ25895 charger to clamp bulk float at **3.45V/cell**, we retain 95% of usable energy while dropping internal mechanical cell stress to near zero—tripling cycle life to **over 10,000 charge cycles**.
+2. **Zero Wet Aluminum Electrolytic Capacitors (No Drying Out):**
+   * The primary failure point in vintage computers and power supplies is liquid electrolyte drying out or leaking corrosive acid after 10–15 years.
+   * SolarDeck exclusively mandates **solid Tantalum-Polymer (KEMET T520) and soft-termination Ceramic MLCCs**. Solid-state dielectrics do not contain liquid, eliminating shelf-life degradation.
+3. **UV-Blocking Optical Lamination (Anti-Bleaching):**
+   * 10+ years of direct equatorial sunlight can yellow cheap epoxy adhesives and bleach electrophoretic microcapsules.
+   * The optically clear adhesive (LOCA) bonded to the 1.1mm matte aluminosilicate front glass incorporates a **395nm UV cut-off filter**, shielding the delicate Kaleido 3 color filters from UV degradation.
+4. **Hermetic Gold-Crossbar Pushbuttons (5,000,000 Clicks):**
+   * Consumer power/volume rocker switches use cheap stamped metal domes that corrode and lose spring tension.
+   * SolarDeck specifies **IP67 sealed C&K KSC-series gold-plated tactile switches** rated for 5 million actuations, completely sealed against grit, mud, and sand.
+5. **Titanium Stylus Nib on Acid-Etched Glass:**
+   * Traditional E-Ink styluses use soft POM plastic nibs that grind down against paper-like textures within months.
+   * Because SolarDeck's matte texture is chemically etched directly into Mohs 7+ aluminosilicate glass (harder than structural titanium), operators can use **machined titanium or ceramic-ball stylus nibs** that last for life without replacing tips or scratching the display.

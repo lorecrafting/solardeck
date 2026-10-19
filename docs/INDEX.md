@@ -89,6 +89,11 @@ The SolarDeck repository contains comprehensive, mathematically verified specifi
 | **Autonomous LLM Hardware BIST Engine**| `docs/SOFTWARE_SPEC.md` §21 | `solardeck-diag --json` | 8-Subsystem BIST & Power-Gated Heal|
 | **30-Year Zero-Failure & Hi-Rel HW** | `docs/HARDWARE_SPEC.md` §7 | 5 Hi-Rel Rules + Escape Hatches | 50% Derate, Soft-Term MLCC, GDT, E-Fuse|
 | **Decadal Mechanical Durability** | `docs/HARDWARE_SPEC.md` §7.4 | Knurled Inserts + Poron Relief | 500+ Cycles, 4-Point USB-C, Hard Gold |
+| **30-Year Chemistry & Solid-State** | `docs/HARDWARE_SPEC.md` §7.5 | 3.45V Float, Tantalum, UV LOCA | 10,000+ Cycles, Gold Switches, Ti Nib |
+| **Instant-Ink 4.5mW Legal Pad** | `docs/HARDWARE_SPEC.md` §2.23 | RP2350 + Wacom Direct Blit | Sub-15ms S2idle Legal Pad & solardeck-inkd|
+| **Multi-Source Emergency Battery** | `docs/HARDWARE_SPEC.md` §2.24 | JST-PH 3.9V–14V DC Terminal | Boots from 18650, AA, or 12V Car Battery|
+| **3-Position Hardware Privacy Switch**| `docs/HARDWARE_SPEC.md` §2.25 | Physical Slide Switch | NORMAL, MIC_MUTE, FULL_BLACKOUT |
+| **Blackout Indexing Pips & Chamfer**| `docs/HARDWARE_SPEC.md` §3.5 | Tactile Pips + 45° Corner | Blind Night-Vision / Blackout Operation|
 | **Cold Storage Vault & Desiccant Pocket**| `docs/HARDWARE_SPEC.md` §4.6 | 3x MicroSD + 1g/2g Desiccant | IP67 Hatch Cavity / 100+ Regen Cycles |
 
 ---

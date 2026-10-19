@@ -823,6 +823,7 @@ When invoked via CLI or local agent tool call (`solardeck-diag --json`), the eng
    * Checks Micro-HDMI Hot-Plug Detect (`HPD`) GPIO pin state.
    * Checks USB-C Port 1 and Port 2 CC controller registers (TUSB320) for VBUS voltage, orientation, and short-circuit faults.
    * Reads physical Hardware Airgap Switch state pin (`AIRGAP_STAT`): 0V (Stealth Airgap Active) vs 3.3V (Normal Radio Operation).
+   * Reads 3-Position Hardware Privacy & Stealth Switch (`PRIVACY_STAT`): `0x01` (NORMAL), `0x02` (MIC_MUTE - PDM clock shunted to GND), `0x03` (FULL_BLACKOUT - mics, camera CSI-2, and RF rails isolated to 0.000V).
 
 ### 21.2 Structured Diagnostic JSON Output Schema
 ```json
@@ -884,8 +885,11 @@ When invoked via CLI or local agent tool call (`solardeck-diag --json`), the eng
       "nvme_temp_c": 38.0
     },
     "safety_airgap": {
-      "switch_position": "NORMAL_3.3V",
-      "rf_enabled": true
+      "airgap_switch": "NORMAL_3.3V",
+      "privacy_switch": "NORMAL_ALL_ACTIVE",
+      "rf_enabled": true,
+      "mics_hardware_clock_active": true,
+      "camera_csi2_powered": true
     }
   }
 }
@@ -904,4 +908,21 @@ Beyond passive diagnosis, the LLM is authorized to invoke targeted mitigation co
 * **`solardeck-heal --clear-epdc`:** Commands `eink-refreshd` to execute an atomic 3-phase high-voltage global inversion to rebalance DC pigment bias and eliminate persistent electrophoretic ghosting.
 * **`solardeck-heal --coproc-ping`:** Flushes the RP2350 UART buffer and strobes the hardware `COPROC_RESET` pin if co-processor heartbeat packets are dropped.
 * **`solardeck-heal --port2-trip-reset`:** Re-enables the TI TPS2051B USB-C Port 2 power switch after an overcurrent or short-circuit event has cleared.
+
+---
+
+## 22. Direct-to-Co-Processor Instant-Ink Ingestion Daemon (`solardeck-inkd`)
+
+*Written 2026-10-19 14:40 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+
+The `solardeck-inkd` service bridges the ultra-low-power RP2350 co-processor inking engine (§2.23 in Hardware Spec) with the Linux desktop environment:
+
+### 22.1 S2idle Inking Ingestion Workflow
+1. **Sleep-State Drawing:** While CM4 Linux is suspended in S2idle, the RP2350 captures all Wacom stylus strokes directly at 200 Hz, renders them on the IT8951 EPDC with sub-15ms latency at 4.5 mW, and appends stroke packet tuples `(t_ms, x, y, pressure)` into its 8MB PSRAM circular buffer.
+2. **Wake Notification:** When the user presses the Power key, the RP2350 pulls the `HOST_WAKE` GPIO pin high, resuming the CM4 Linux kernel in $<300\text{ ms}$.
+3. **Bulk Vector Ingestion:** `solardeck-inkd` initiates a high-speed SPI DMA transaction with the RP2350, draining up to 100,000 cached vector points in $<40\text{ ms}$.
+4. **SVG Serialization:** The daemon generates a standard W3C Scalable Vector Graphics (`.svg`) file and places it into `~/Notes/InstantInk/YYYY-MM-DD_HH-MM-SS.svg`.
+5. **Background OCR & Markdown Transcoding:**
+   * The daemon automatically runs local `tesseract` or sovereign 3B vision LLM against the rendered canvas.
+   * Transcribes handwritten text, formulas, or tactical coordinates directly into a companion markdown note (`.md`) indexed by the local Kiwix / SQLite search database.
 
