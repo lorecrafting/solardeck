@@ -408,6 +408,32 @@ Carrying a giant 6.7" glass smartphone alongside a 10.3" sovereign e-ink termina
 
 ---
 
+## Pillar 10: Sovereign Voice Agent, Campervan E-Ink Dual-Screen Dock & Blackout Beacon
+
+*Written 2026-10-19 14:20 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+
+### 1. Hands-Free Voice Sovereignty & Acoustic Barge-In
+* **Zero Standby Battery Penalty:** Instead of keeping the 1.8W CM4 awake, listening runs on a **cascaded 3-tier filter**:
+  1. Knowles MEMS hardware acoustic front-end ($<0.05\text{ mW}$).
+  2. RP2350 co-processor running INT8 `microWakeWord` (~14 mW, delivering **80+ days continuous standby**).
+  3. CM4 wakes in 250ms only when "Hey Deck" is spoken, evaluating **Resemblyzer speaker biometrics** (cosine similarity $\ge 0.78$) to reject bystanders before running `whisper.cpp`.
+* **Seamless Acoustic Barge-In (Interruption):** PipeWire loops back the MAX98357A speaker audio into SpeexDSP / WebRTC AEC3 Acoustic Echo Cancellation, subtracting SolarDeck's own voice from the microphones. The operator can speak over SolarDeck while it talks at full volume, instantly halting playback and executing the new command.
+
+### 2. Giant E-Ink Secondary Monitor & Campervan Docking
+* **Native Micro-HDMI 4K Silicon Path:** CM4 routes `HDMI0` to a sealed Micro-HDMI port with TPD4E05U06 ESD protection.
+* **The 25.3" / 13.3" E-Ink Advantage:** Unlike LCD/OLED monitors that burn 15W–25W continuous backlight power, external E-Ink monitors (Dasung Paperlike 253, Boox Mira Pro 25.3" 3200×1800) consume **0.000W holding power on static text**.
+* **Wayland Multi-Head Orchestration:** `solardeck-dockd` automatically binds high-density workspaces 1–8 to the big monitor, pins van telemetry (Victron battery, water tanks, LoRa chat) to the 10.3" internal screen, and locks Wacom stylus input strictly to the internal display.
+
+### 3. Blackout Supercapacitor Emergency SOS Beacon
+* **The Zero-Battery Bootstrap:** When the main LiFePO4 battery is completely dead (0.000V) or missing, an onboard **1.0F 3.3V supercapacitor** fed by the front micro-solar strip charges in 12–15 minutes under direct sunlight.
+* **150ms Cold Burst:** RP2350 cold-boots, grabs last-known GPS coordinates from RTC NVRAM, transmits a +22 dBm emergency LoRa SOS burst on 915 MHz, and burns an indelible distress placard onto the 10.3" screen. The distress message remains legible forever with **0.000W battery consumption**.
+
+### 4. Zero-Hardware Wacom Field Caliper & CAD Digitizer
+* **10mm Hover Tracking:** The Wacom EMR digitizer senses the stylus tip up to 10 mm above the glass with **0.1 mm precision**, allowing contact-free measurement of delicate physical specimens without touching the screen.
+* **Mutual-Capacitance Part Profiling:** Placing conductive metal bolts, drill bits, or washers directly on the capacitive glass detects contact centroid ellipses, extracting length and thread diameter automatically and exporting 1:1 DXF/SVG CAD files for 3D printing.
+
+---
+
 ## Verification & Acceptance Gate (The North Star Metrics)
 
 Before any prototype PCBA or firmware build is declared ready for field release, it must be benchmarked against these six non-negotiable gates:

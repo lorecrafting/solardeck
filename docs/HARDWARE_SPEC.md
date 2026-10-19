@@ -676,6 +676,60 @@ To provide 100% mission reliability in severe sub-zero weather, dust storms, and
   * **Mechanism:** Shuts off power to the Goodix capacitive touch controller completely via its dedicated TPS22918 load switch.
   * **Why It Works:** The battery-free **Wacom EMR digitizer operates on electromagnetic resonance (~560 kHz)** and is completely unaffected by surface water or liquid sheets. With capacitive touch deactivated, the user can write, sketch, annotate maps, and navigate terminal apps with the stylus while water streams down the display.
 
+### 2.18 Native Micro-HDMI 4K External Video Output & Campervan E-Ink Dual-Screen Dock
+* **Native Silicon Path:** The Broadcom BCM2711 / CM4 exposes two hardware HDMI 2.0 transmitters. `HDMI0` is routed to a recessed, sealed **Micro-HDMI port** (Type-D) on the chassis flank, protected by a Texas Instruments **TPD4E05U06** 4-channel ultra-low capacitance ($C_{\text{IO}} = 0.5\text{ pF}$) ESD protection array complying with IEC 61000-4-2 Level 4 (±15 kV air discharge).
+* **Max Workable Display:**
+  * **Resolution:** Single display up to **4K UHD (3840 × 2160 @ 60 Hz)** or 1440p/1080p @ 60 Hz with Broadcom VideoCore VI hardware acceleration.
+  * **Physical Size:** Infinite (13.3" to 85").
+* **Giant External E-Ink Secondary Monitor (The Daylight Campervan Dock):**
+  * Fully supports commercial large-format E-Ink monitors: **13.3-inch** (2200 × 1650, 4:3 — Dasung Paperlike HD / Boox Tab X) and **25.3-inch** (3200 × 1800, 16:9 — Boox Mira Pro / Dasung Paperlike 253).
+  * **Why E-Ink Second Monitors Dominate Off-Grid Vans:**
+    * **0.000W Static Power Sipping:** Unlike LED/OLED monitors that burn 8W–25W continuous backlight power on static text/code, E-Ink monitors consume power ONLY when flipping pixels. Static reading, schematics, and code inspection consume **0.000W** holding power.
+    * **Typing Power:** A 13.3" E-Ink monitor averages ~1.5W during active typing vs. 12W–15W for a backlit LCD in ambient daylight.
+    * **Zero Glare:** Under direct van sunlight through open slider doors or skylights, LCDs wash out; E-Ink gets crisper and higher contrast without increasing backlight wattage.
+* **Campervan Dual-Head Wayland Integration:**
+  * Driven natively by Sway/Wayland multi-head output.
+  * Internal 10.3" E-Ink serves as dedicated live van telemetry palette (Victron battery SoC, water levels, LoRa chat, terminal scratchpad).
+  * External 25.3" E-Ink / 4K monitor serves as primary high-density code and Kiwix browser workspace.
+
+### 2.19 Blackout Supercapacitor Emergency SOS Beacon (Zero-Battery Survival Boot)
+* **The Operational Ceiling:** In catastrophic backcountry scenarios where the main LiFePO4 battery pack is deeply discharged to 0.000V or physically damaged, standard mobile terminals cannot boot.
+* **The Supercapacitor Circuit:**
+  * A **1.0F 3.3V ultra-low-leakage EDLC supercapacitor** (AVX BestCap / Eaton / Cornell Dubilier, $0.95) is wired directly across the Always-On 3.3V rail fed by the IXYS SM141K06L front micro-solar strip via a low-drop Schottky diode (BAT54CW).
+* **Zero-Battery Survival Sequence:**
+  1. **Direct Sunlight Charging:** In direct sunlight (100,000 lux), the front solar strip generates ~35 mA, charging the 1.0F supercapacitor from 0.0V to 3.3V in **12 to 15 minutes** with no battery installed.
+  2. **150ms Cold-Boot Burst:** The TI TPS62840 buck-boost asserts `POWER_GOOD`, releasing the RP2350 reset line.
+  3. **Atomic Coordinate Capture & Broadcast:** The RP2350 cold-boots in **15ms**, wakes the Semtech SX1262 LoRa transceiver, reads last-known GPS coordinates from RTC NVRAM, and transmits a high-power (+22 dBm) encrypted emergency SOS distress burst on 915 MHz / 868 MHz Meshtastic emergency channels (drawing 110 mA for 45ms = 0.016 Joules).
+  4. **Indelible E-Ink Distress Stamping:** While the remaining supercapacitor energy bleeds down, the RP2350 pulses the IT8951 EPDC to burn an indelible high-contrast distress placard onto the 10.3" E-Ink screen: `EMERGENCY SOS BROADCAST ACTIVE | COORD: 21.3069 N, 157.8583 W | TIME: 2026-10-19 14:00 UTC | BLOOD: O-POS | ZERO-BATTERY SOLAR BEACON`.
+  5. **Bistable Permanence:** The distress text remains frozen on the screen with **0.000W power draw** indefinitely, visible to SAR teams even if the device is submerged or abandoned.
+
+### 2.20 Cascaded Edge Audio ML Hardware & Acoustic Barge-In Pipeline
+* **The Standby Power Problem:** Running full continuous speech recognition on the quad-core Cortex-A72 CM4 consumes 1.8W to 2.4W, killing a 32Wh battery in under 16 hours.
+* **The Cascaded Wake Hierarchy:**
+  1. **Tier 1 (Acoustic Activity Detect - VAD):** Knowles SPH0645 MEMS acoustic front-end comparator detects ambient sound energy $> 45\text{ dB SPL}$ (<0.05 mW power).
+  2. **Tier 2 (microWakeWord on RP2350 Co-Processor):**
+     * RP2350 Cortex-M33 ingests 16 kHz audio via PIO DMA.
+     * Evaluates an INT8-quantized depthwise separable convolutional neural network (DS-CNN) wake model (`microWakeWord`).
+     * Power: **14 mW active** (yielding **80+ days continuous hands-free listening** on battery).
+     * Optional drop-in: Dedicated **Syntiant NDP120** Neural Decision Processor footprint (<140 µW active listening, 20+ year standby).
+  3. **Tier 3 (CM4 Voice Biometrics & Whisper Engine):**
+     * If "Hey Deck" matches, RP2350 fires `WAKE_CM4` GPIO interrupt.
+     * CM4 resumes from S2idle in 250ms, ingests buffered audio, and computes 256-d voice embedding via **Resemblyzer** ($<35\text{ms}$).
+     * If cosine similarity $\ge 0.78$ with owner's enrolled biometric voice print, command is processed via `whisper.cpp` (base.en); bystanders and background radio chatter are rejected.
+* **Acoustic Echo Cancellation (AEC) & Hardware Loopback for Seamless Barge-In:**
+  * To allow the operator to interrupt ("barge in") while SolarDeck is speaking or playing audio:
+  * The digital audio stream driving the **MAX98357A I2S Class-D speaker amplifier** is looped back in hardware/software into the PipeWire/ALSA DSP mixer.
+  * SpeexDSP / WebRTC AEC3 Acoustic Echo Cancellation subtracts the speaker's own output from the Knowles microphone inputs in real time ($<5\text{ms}$ latency), enabling the system to hear the user's voice interruption even at 100% speaker volume.
+
+### 2.21 Zero-Hardware Wacom Precision Caliper & Hover CAD Mode
+* **Wacom EMR Hover Tracking (Zero-Touch Stylus):**
+  * The Wacom EMR digitizer senses the battery-free stylus tip up to **10.0 mm above the protective glass**.
+  * Software tracks $(X, Y)$ coordinates with **0.1 mm precision** and 200 Hz update rates without the stylus physically touching the display.
+  * Allows measuring fragile specimens (botanical leaves, wet paint, live insects) suspended above the glass.
+* **Capacitive Multi-Touch Contact Centroid Ellipses (Conductive Parts):**
+  * Placing conductive metal components (drill bits, bolts, washers, brass heat-set inserts) directly onto the hardened glass triggers localized mutual-capacitance sensor node depressions.
+  * The Goodix touch controller computes contact centroid ellipses; software extracts the major axis length (bolt length) and minor axis width (bolt diameter) with sub-millimeter precision automatically with zero manual inputs.
+
 ---
 
 ## 3. Universal Mechanical Mount, Handheld Thumb Grips & Open Keyboard Architecture

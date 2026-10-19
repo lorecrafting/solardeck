@@ -643,3 +643,135 @@ Enables typing on the Clicks Communicator's physical tactile QWERTY keyboard to 
 * **1-Button Hardware Focus Flip:** Tapping the Clicks Communicator's programmable side key flips typing focus between SolarDeck's terminal and local phone SMS/Google Maps in **0 milliseconds**.
 * **Capacitive Touch Scrolling:** Swiping thumbs vertically across the physical keycaps sends Page Up / Page Down or scroll-wheel events to Wayland, enabling smooth document reading without lifting hands.
 
+---
+
+## 17. Sovereign Voice Assistant & Local Agent Daemon (`solardeck-voiced`)
+
+*Written 2026-10-19 14:15 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+
+The `solardeck-voiced` daemon orchestrates hands-free and push-to-talk voice intelligence using a 3-tier cascade that preserves battery life while providing speaker verification and interruption (barge-in):
+
+```
+                                      VOICE PIPELINE
+┌──────────────────────────┐      ┌──────────────────────────┐      ┌──────────────────────────┐
+│   Knowles MEMS Array     │ PDM  │    RP2350 Co-Processor   │ GPIO │   Raspberry Pi CM4       │
+│  (Hardware VAD <0.05mW)  ├─────►│  (microWakeWord ~14mW)   ├─────►│  (S2idle Wake: 250ms)    │
+└──────────────────────────┘      └──────────────────────────┘      └────────────┬─────────────┘
+                                                                                 │
+             ┌───────────────────────────────────────────────────────────────────┘
+             ▼
+┌──────────────────────────┐      ┌──────────────────────────┐      ┌──────────────────────────┐
+│ Resemblyzer Biometrics   │ OK   │ whisper.cpp (base.en)    │ Text │ Local 3B LLM / Claude CLI│
+│ (Speaker ID Cosine >=.78)├─────►│ Speech-to-Text (<450ms)  ├─────►│ Tool & Script Execution  │
+└──────────────────────────┘      └──────────────────────────┘      └────────────┬─────────────┘
+                                                                                 │
+             ┌───────────────────────────────────────────────────────────────────┘
+             ▼
+┌──────────────────────────┐      ┌──────────────────────────┐
+│   Piper Fast TTS         │ PCM  │ MAX98357A Speaker Amp    │
+│  (<120ms Synthesis)      ├─────►│ + Loopback AEC (Barge-In)│
+└──────────────────────────┘      └──────────────────────────┘
+```
+
+### 17.1 Acoustic Echo Cancellation (AEC) & Seamless Interruption
+* **The Barge-In Mechanism:** When SolarDeck speaks or generates audio, the audio frame buffer feeding the MAX98357A I2S amplifier is mirrored into a PipeWire loopback sink (`module-loopback`).
+* **SpeexDSP / WebRTC AEC3:** The acoustic canceller subtracts the known output waveform from the live Knowles MEMS microphone input.
+* **The Result:** Even when the speaker is playing at full volume, the operator can speak *"Stop"* or *"Never mind, check battery instead"*, instantly halting speech output and executing the new directive.
+
+### 17.2 Voice Biometrics Enrollment & Rejection
+* **Enrollment:** The operator runs `solardeck-voice-enroll`, speaking 3 sample sentences. A 256-d d-vector embedding is extracted via Resemblyzer and saved to `/etc/solardeck/owner_voice.npy`.
+* **Cosine Verification:**
+  ```python
+  # /usr/local/bin/verify_speaker.py
+  import numpy as np
+
+  def is_owner(sample_emb, owner_emb, threshold=0.78):
+      cos_sim = np.dot(sample_emb, owner_emb) / (np.linalg.norm(sample_emb) * np.linalg.norm(owner_emb))
+      return cos_sim >= threshold
+  ```
+* **Bystander Immunity:** Radio chatter, bystanders, or synthetic speech with similarity $<0.78$ are discarded; CM4 returns to S2idle without executing commands.
+
+### 17.3 Self-Improvement & System Modification by Voice
+* Voice commands can invoke the local LLM or Claude Code CLI with tool permissions:
+  * *"Increase screen refresh cadence to 500 milliseconds."* $\to$ Modifies `/etc/eink-refreshd.conf` and reloads daemon.
+  * *"Search offline Kiwix for treatment of venomous scorpion stings."* $\to$ Queries ZIM database and renders formatted Markdown.
+  * *"Recompile RP2350 firmware with 150ms wake timer."* $\to$ Compiles `.uf2` and flashes co-processor Bank B with watchdog verification.
+
+---
+
+## 18. Campervan Dual-Head Wayland Orchestrator (`solardeck-dockd`)
+
+Automates dynamic multi-head display configuration when docking SolarDeck to external monitors:
+
+```bash
+#!/usr/bin/env bash
+# /usr/local/bin/solardeck-dockd: Listens for HDMI udev hotplug events
+set -euo pipefail
+
+EVENT="${1:-}"
+HDMI_PORT="HDMI-A-1"
+INTERNAL_PANEL="DSI-1"
+
+if [[ "$EVENT" == "plug" ]]; then
+    # Detect external resolution and refresh rate
+    EXT_RES=$(wlr-randr | awk "/^$HDMI_PORT/,/^[A-Z]/" | grep -E "^\s+[0-9]+x[0-9]+" | head -1 | awk '{print $1}')
+    
+    # Enable external output above or right of 10.3" E-Ink
+    swaymsg output "$HDMI_PORT" enable mode "$EXT_RES" pos 0 0
+    swaymsg output "$INTERNAL_PANEL" pos 0 1800
+    
+    # Bind Workspaces 1-8 to external screen (Intense coding/browser/Kiwix)
+    for ws in {1..8}; do
+        swaymsg workspace "$ws" output "$HDMI_PORT"
+    done
+    
+    # Bind Workspaces 9-10 to internal 10.3" screen (Van telemetry, notes, LoRa chat)
+    swaymsg workspace 9 output "$INTERNAL_PANEL"
+    swaymsg workspace 10 output "$INTERNAL_PANEL"
+    
+    # Restrict Wacom EMR Stylus input strictly to internal 10.3" display
+    swaymsg input "type:tablet_tool" map_to_output "$INTERNAL_PANEL"
+    
+    notify-send -t 2000 "SolarDeck Dock" "External Display Connected: $EXT_RES (Workspaces 1-8 mapped)"
+elif [[ "$EVENT" == "unplug" ]]; then
+    swaymsg output "$HDMI_PORT" disable
+    swaymsg output "$INTERNAL_PANEL" pos 0 0
+    for ws in {1..10}; do
+        swaymsg workspace "$ws" output "$INTERNAL_PANEL"
+    done
+    notify-send -t 2000 "SolarDeck Dock" "Mobile Mode Restored: Full 10.3\" Canvas"
+fi
+```
+
+### 18.1 Giant External E-Ink Secondary Monitor Power Economics
+* **Dasung Paperlike 253 / Boox Mira Pro 25.3" (3200 × 1800):** Connects via standard HDMI.
+* **0.000W Static Power Sipping:** When reading code, schematics, or documentation, the external E-Ink monitor draws **0.000W** holding power.
+* **Sunlight Immunity:** Operates inside sun-drenched campervans with doors wide open; contrast improves under direct sunlight while drawing $10\times$ less power than a 27" 4K LED backlight.
+
+---
+
+## 19. Blackout Emergency SOS Beacon Engine (`solardeck-sosd`)
+
+Governs the zero-battery supercapacitor cold-boot survival sequence:
+1. When supercapacitor reaches 3.3V, RP2350 executes emergency bootstrap from ROM.
+2. Ingests last-valid Qualcomm GNSS fix and DS3231 timestamp from battery-backed NVRAM.
+3. Transmits 915 MHz / 868 MHz LoRa distress burst: `!SOS <LAT> <LON> <ALT> <TIME> <BLOOD_TYPE>`.
+4. Renders indelible high-contrast distress placard onto the 10.3" bi-stable screen before voltage drops below 2.0V.
+5. Once drawn, the distress message remains visible on the E-Ink display indefinitely with **0.000W battery consumption**.
+
+---
+
+## 20. Wacom Precision Field Caliper & CAD Digitizer (`solardeck-caliper`)
+
+A hardware-assisted software measurement tool leveraging the Wacom EMR 10.0mm hover sensing and Goodix mutual capacitance:
+
+```bash
+# Launch precision field caliper overlay in Wayland:
+solardeck-caliper --hover
+```
+
+* **Hover Mode (0.1 mm Resolution):** Tracks the stylus tip suspended up to 10 mm above delicate physical objects (leaves, biological specimens, wet electronics). Tapping twice calculates $(X_2 - X_1, Y_2 - Y_1)$ distance, angle, and radius.
+* **Conductive Component Auto-Centroid:** Detects metallic bolts, washers, or drill bits placed on the glass. Reads the mutual capacitance contact matrix and computes the major and minor axes, displaying:
+  `Bolt Length: 25.4 mm | Thread Diameter: 3.0 mm (M3) | Pitch: 0.5 mm`.
+* **1-Click CAD Export:** Exports traced dimensions directly to standard 1:1 DXF or SVG files for immediate 3D printing on field fabricators.
+

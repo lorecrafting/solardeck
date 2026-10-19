@@ -369,7 +369,31 @@ To achieve true physical reliability, zero-leakage battery efficiency, and foolp
   * Place the solar panel out in the scorching sun on a hot volcanic rock or vehicle roof.
   * Run a **3-meter high-visibility USB-C cable** into the shade of a tree, awning, or tent where SolarDeck and its LiFePO4 battery operate safely at ambient temperature.
 
-*Appended 2026-10-19 12:20 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+---
+
+### 8.7 Hotpack 5: 15g Thermal Night-Vision & Electrical Inspection Pack
+* **Operational Doctrine:** Van electrical fire prevention (auditing fuse blocks, wire crimps, cracked solar panel bypass diodes), camp perimeter security in pitch darkness (150m human/wildlife heat detection), and building insulation heat leak mapping.
+* **Silicon Architecture:**
+  1. **Long-Wave Infrared (LWIR) Thermal Core:** Miniature **InfiRay Tiny1-C / P2 Pro** uncooled vanadium oxide (VOx) microbolometer (256 × 192 resolution, 12 µm pixel pitch, 25 Hz frame rate, spectral band 8–14 µm, NETD $<40\text{ mK}$).
+  2. **Mounting & Interface:** Snaps to upper chassis MagSafe magnetic ring; connects via 5cm right-angle jumper to USB-C Port 2. Total weight: **15 grams**.
+  3. **Display & GPU Acceleration:** Broadcom VideoCore VI hardware-accelerates 25 FPS thermal matrix interpolation and applies custom 16-shade e-ink blue-noise dithering (`dither.glsl`) or false-color palettes in $<2\text{ms}$.
+  4. **Tactical Covertness:** Emits **0.000 lux** of visible light; allows passive thermal reconnaissance in complete darkness with the e-ink frontlight turned off.
+
+---
+
+### 8.8 Hotpack 6: 3GPP NTN Satellite Skylo Transceiver & Global SAR Protocol
+* **Operational Doctrine:** Worldwide emergency SOS messaging, telemetry transmission, and life-saving rescue dispatch from anywhere on Earth (high oceans, polar caps, remote slot canyons) with zero cellular infrastructure or local mesh nodes.
+* **Why Satellite Belongs in a Hotpack (Not Carrier Board):**
+  1. **Antenna Geometry:** Satellite uplinks to 36,000 km geostationary orbit require an unobstructed upward-facing **Right-Hand Circularly Polarized (RHCP) ceramic patch antenna** tuned to S-band (~2.0 GHz) or L-band (~1.6 GHz). Internal chassis placement causes severe chassis absorption and detuning.
+  2. **Certification Risk:** Direct-to-satellite modems require rigorous carrier lab certifications ($40,000+ FCC/CE/Skylo testing). Isolating this into a hotpack keeps the main carrier board agile and turnkey.
+* **Silicon Architecture:**
+  1. **Satellite Modem Engine:** **Quectel CC660D-LS** (or Sony Altair ALT1350 / MediaTek MT6825) supporting 3GPP Release 17 Non-Terrestrial Networks (IoT-NTN).
+  2. **Top-Mounted RHCP Ceramic Patch:** 25×25×4mm high-gain circularly polarized antenna aimed directly at the sky.
+  3. **Global SAR Routing:** Two-way encrypted 60-byte packets route directly through the **International Emergency Response Coordination Center (IERCC / Garmin Response)**, which immediately verifies the distress coordinates and dispatches local 911, Coast Guard, or regional air rescue.
+* **Complementary 406 MHz Cospas-Sarsat Companion Protocol:**
+  * For military-grade search-and-rescue, SolarDeck integrates with certified commercial PLBs (e.g. Ocean Signal rescueME PLB1, 116g, 7-year battery). SolarDeck reads the PLB diagnostic status over NFC and triggers automated digital coordinates via USB-C Hotpack 6 while the certified 5W transmitter pulses the international 406.037 MHz satellite payload.
+
+*Appended 2026-10-19 14:10 UTC in the Pi harness by antigravity/gemini-3.8-flash*
 
 The following custom software utilities and daemons leverage SolarDeck's bi-stable E-Ink display, dual-brain architecture, tactical radios, and sensor array:
 
