@@ -484,6 +484,13 @@ Secures device data against physical chassis compromise, laboratory probing, or 
   * If the device powers down completely or the battery is removed for servicing, volatile session tokens are cleared, but the device is **not bricked**. Upon re-powering, entering the correct passphrase or BIP-39 mnemonic restores the session tokens.
 * **Emergency Zeroization Button:** Depressing the recessed `REC_MCU` pinhole switch continuously for 10 seconds triggers the same session zeroization cascade with audible confirmation (3 micro-piezo clicks before wipe).
 * **Cryptographic Invalidation:** Because the transactional F2FS root and home partitions are encrypted via `fscrypt` with hardware-derived keys, wiping the session tokens permanently locks the eMMC partitions against forensic recovery.
+* **Airgapped Transaction Signing & Document Notary Pipeline:**
+  * When the physical Hardware Airgap Switch is in STEALTH mode, `solardeck-vault --sign-tx` or `solardeck-vault --notarize <file>` executes in absolute radio isolation:
+    1. **Visual Ingestion:** Rear flush 12MP camera captures unsigned transaction QR codes (Bitcoin PSBT, Ethereum EIP-712, Solana) or document fingerprints via `zbarcam` / OpenCV.
+    2. **High-Contrast Verification:** Full transaction details (recipient address, smart contract parameters, transfer amounts, and network gas fees) are displayed in razor-sharp typography on the 10.3" E-Ink screen.
+    3. **Hardware Authorization:** The operator signs using an encrypted local GPG/Ed25519 key, or taps a physical **YubiKey, Tangem, or Coldcard** against the top-bezel 13.56 MHz NFC coil (`pcscd` / `nfc-tools`).
+    4. **Optical Broadcast:** The signed transaction is converted into an animated QR fountain code (`txqr`) displayed full-screen on the E-Ink display for the operator's smartphone or companion device to scan and broadcast to the blockchain.
+    5. **Zero-Leakage Assurance:** Private keys never touch an internet-connected bus or memory space, backed by physical hardware power gates.
 
 ---
 
@@ -542,3 +549,15 @@ To prevent broken package installs, rogue scripts, or corrupted libraries from b
   ```
   This command flushes the writable upperdir overlay, leaving the underlying base operating system completely intact. The system boots in **3 seconds** into a fresh, pristine factory state with all default window configurations, audio drivers, and telemetry daemons restored.
 * **Dual-Kernel Boot Fallback:** The U-Boot bootloader maintains primary (`kernel_A`) and fallback (`kernel_B`) images on eMMC. If a kernel update causes a kernel panic, the hardware watchdog trips the system into the fallback kernel automatically on the next reboot.
+
+---
+
+## 15. USB-C Secondary Display Sink Daemon (`solardeck-sinkd`)
+
+Enables SolarDeck to act as an instantaneous, driverless 10.3" sunlight-readable secondary display for MacBooks, ThinkPads, and iPads over USB-C Port 1:
+
+* **USB Composite Gadget Pipeline:** Leverages Linux kernel `libcomposite` configfs to expose a high-speed USB Video Class (UVC) capture endpoint or CDC-NCM Ethernet gadget.
+* **Low-Latency Rendering:**
+  * When plugged into a laptop, `solardeck-sinkd` accepts video frames via Weylus, Deskreen, or Moonlight.
+  * Extracted bounding boxes are converted to 1-bit or 2-bit blue-noise dithered bitmaps on the VideoCore VI GPU and pushed directly to the IT8951 EPDC via 24 FPS MIPI-DSI.
+* **Host Power Ingestion:** Simultaneously draws charging power from the host laptop via the CH224K USB-PD sink controller, keeping SolarDeck charged indefinitely during long outdoor work sessions.

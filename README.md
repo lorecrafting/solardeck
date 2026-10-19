@@ -148,7 +148,7 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
   * **3-Rail Current Ammeter (TI INA3221):** Breaks down exact milliwatts between Compute, Display, and Wireless subsystems.
   * **Coulomb Counter (TI BQ27441-G1):** Measures internal battery impedance and State-of-Health to double pack life to 10+ years.
   * **Thermal Triad (Dual TMP112 + SoC):** Dynamically compensates E-ink waveform Look-Up Tables (LUTs) across winter cold and summer heat.
-  * **Ambient Lux Sensor (TI OPT3001):** Optimizes sunlight contrast and calculates optimal folding solar panel angles.
+  * **Zero-BOM Ambient Lux Sensor (Solar Strip via RP2350 ADC):** Samples top-bezel solar cell open-circuit voltage ($V_{OC}$) to calculate precise ambient lux (10 to 120,000 lux) and automatically adjust display contrast without adding a dedicated photodiode IC.
 * **The AI Evolution Loop:** A rolling circular SQLite database (`/var/log/solardeck/telemetry.db`) feeds structured physics logs to Claude Code CLI. Because SolarDeck is documented in plain text and open-source formats, engineers and AI assistants can query real-world inrush currents, thermal maps, and battery impedance over time to guide precise component sizing and layout optimizations for Rev 2.
 
 ### VIII. V1 24 FPS Cinema Video Engine & Thermal Viscosity Assist
@@ -160,6 +160,25 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
 * **Battery Lifespan (Video vs. Non-Video Workloads):**
   * *During 24 FPS Video Playback:* Continuous GPU dithering and 24Hz charge-pump cycling consume ~2.8W–3.4W, delivering **10 to 12 hours** of continuous movie/video runtime.
   * *When NOT Playing Video (Writing, Coding, Reading, Ambient Clock):* E-Ink consumes **0.000 Watts** to display a static image. Active terminal coding provides **24 to 32 hours** of typing, Zen reading provides **300+ days**, and ambient desk-clock mode with micro-solar has **infinite battery life**. LiFePO4 cells yield 3,000–5,000 cycles, lasting **10 to 15+ years** before degrading.
+
+### IX. Genius Convenience Combinations ($0.00 Added BOM)
+1. **The 35 Wh Survival Powerbank (15W Reverse Boost):**
+   * Utilizing the bidirectional synchronous boost engine in the **TI BQ25895** buck charger, SolarDeck outputs **5.1V @ 3.1A (15.8W)** backwards through USB-C Port 1 or 2 to fast-charge external smartphones, flashlights, or radios.
+   * **Linux Stays 100% Asleep (0.000W):** The RP2350 co-processor manages power delivery and displays a live, crisp battery percentage and output wattage on the E-Ink screen. Never carry a separate powerbank again.
+2. **The Solar Micro-Strip as an Ambient Light Meter ($0.00 Cost):**
+   * Rather than adding a dedicated photodiode IC, the RP2350's internal 12-bit ADC directly samples the open-circuit voltage ($V_{OC}$) of the top-bezel IXYS solar strip.
+   * Stepping into direct sunlight instantly increases color saturation and engages high-contrast monochrome waveforms; stepping into a dim room or bedroom automatically dims the screen.
+3. **Driverless USB-C Secondary Monitor Sink (Instant Outdoor Laptop Screen):**
+   * Connect a single USB-C cable from any MacBook, ThinkPad, or iPad into SolarDeck's Port 1.
+   * The dedicated BCM2711 USB OTG controller enumerates as a high-speed composite USB Gadget display sink (UVC / Weylus), giving you an instantaneous, 10.3" matte, zero-glare, eye-strain-free secondary monitor for terminal logs, documentation, or reading in bright sunlight while the laptop powers the tablet!
+4. **The Airgapped Hardware Crypto Vault & Document Notary (Zero-EMF Signing):**
+   * Combining the physical **Hardware Airgap Kill Switch** (cutting all RF radios to 0.000V), the **rear flush 12MP Sony IMX708 autofocus camera**, the **10.3" Color E-Ink display**, and **top-bezel 13.56 MHz NFC**.
+   * When flipped to Stealth (0.000 dBm), SolarDeck becomes an impenetrable, mathematically verifiable cold-storage signing station:
+     1. Scan an unsigned Bitcoin/Ethereum transaction QR or document hash with the rear 12MP camera.
+     2. Inspect the complete decoded transaction details, contract calls, and gas fees in razor-sharp high contrast on the 10.3" screen.
+     3. Authorize and sign using an onboard airgapped GPG/SSH key, or tap a physical **YubiKey, Tangem, or Coldcard** against the top-bezel NFC coil.
+     4. Display the signed transaction QR on the E-Ink screen for an online smartphone to broadcast.
+   * Completely immune to remote exploits or RF sniffing because the wireless power rails are physically cut by hardware switches!
 
 ---
 
@@ -206,13 +225,14 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
 | **Airgap Switch** | Physical 2-position slide switch; breaks power enable nets to all radios, mic, & cameras to 0.000V |
 | **Tactical Stealth** | NVG Covert Mode (Monochromatic 630nm Red <0.5% PWM + Amber-only floor + Hardware Audio Squelch) |
 | **Anti-Tamper** | RP2350 TrustZone OTP Derived Key & BIP-39 Recovery (No physical tripwire; enables RAM/SSD upgrades)|
-| **Telemetry & Sensors**| TI INA3221 (3-rail ammeter for LLM tuning) + BQ27441 (fuel gauge) + Dual TMP112 (thermals) + OPT3001 (lux) + BMA400 (accel) + BMP390 (baro) |
+| **Telemetry & Sensors**| TI INA3221 (3-rail ammeter for LLM tuning) + BQ27441 (fuel gauge) + Dual TMP112 (thermals) + Zero-BOM Solar Lux Sensor (RP2350 ADC) + BMA400 (accel) + BMP390 (baro) |
+| **Survival Powerbank** | 15W Bidirectional USB-PD Boost (TI BQ25895: 5.1V @ 3.1A charges phones while Linux is 100% asleep at 0.000W; live E-Ink status) |
 | **External Sensor Bus**| USB-C Port 2 High-Speed Host (Supports USB-to-I2C/Qwiic dongles; zero unsealed chassis JST holes) |
 | **Audio & Acoustics**| Dual-MEMS Noise-Cancelling Acoustic Array + Maxim/ADI MAX98357A 1W Box Speaker Amp + Bottom-Edge IP67 3.5mm TRRS Audio Jack (Stereo DAC + Mic In + Auto-Mute) + Mute Switch |
 | **NFC & Smartcard** | 13.56 MHz NFC (NXP PN532 / ST25R) in Top Bezel: YubiKey / FIDO2 Authentication, ePassport / Smartcard Reader, Tangem/Coldcard Crypto Signing + MagSafe Physical Card Wallet Mount |
 | **Status Beacon** | 10.3" Color E-Ink Zero-Watt Ambient Notification Badges (Descoping Win for RGB LED & light pipe) |
 | **Recovery** | Single Recessed IP67 Pinhole Button (`REC_RPI` eMMC recovery; RP2350 flashed over internal SWD) |
-| **Monitor Sink** | Standalone USB-PD Sink Controller (CH224K / STUSB4500) + Dedicated BCM2711 USB Gadget OTG Port 1 |
+| **Monitor Sink** | Standalone USB-PD Sink Controller (CH224K / STUSB4500) + Dedicated BCM2711 USB Gadget OTG Port 1 (Instant 10.3" Zero-Glare Outdoor Second Screen for Mac/PC/iPad) |
 | **USB Host / Hub** | Dedicated PCIe USB Host Controller (VIA VL805 / ASM1042A) or Industrial Hub (USB2514B) for Modem & Docks |
 | **Expansion Bus**| USB-C Port 2 High-Speed Host (Tactical Multi-Tool Dongle, Sky-Scan SDR, Webcam, & Sensor Expand) |
 | **Battery & Safety**| Hardware `CHEM_SEL` Strap (LiFePO4 3.65V vs Li-ion 4.20V) + Pure Silicon JEITA + TI BQ2970 PCM |

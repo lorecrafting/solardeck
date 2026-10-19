@@ -269,6 +269,33 @@ To make SolarDeck the ultimate sovereign archive workstation without adding a si
 
 ---
 
+## Pillar 7: Genius-Level Convenience Combinations ($0.00 Added BOM)
+
+By orchestrating and cross-wiring the existing hardware components in innovative ways, SolarDeck delivers four extraordinary convenience features without adding a single cent to the Bill of Materials:
+
+### 1. The 35 Wh Survival Powerbank (15W Reverse Boost)
+* Utilizing the bidirectional synchronous boost engine in the **TI BQ25895** buck charger, SolarDeck outputs **5.1V @ 3.1A (15.8W)** backwards through USB-C Port 1 or 2 to fast-charge external smartphones, flashlights, or radios.
+* **Linux Stays 100% Asleep (0.000W):** The RP2350 co-processor manages power delivery and displays a live, crisp battery percentage and output wattage on the E-Ink screen. Never carry a separate powerbank again.
+
+### 2. The Solar Micro-Strip as a Free Ambient Light Sensor ($0.00 Cost)
+* Rather than adding a dedicated photodiode IC, the RP2350's internal 12-bit ADC directly samples the open-circuit voltage ($V_{OC}$) of the top-bezel IXYS solar strip.
+* Stepping into direct sunlight instantly increases color saturation and engages high-contrast monochrome waveforms; stepping into a dim room or bedroom automatically dims the screen.
+
+### 3. Driverless USB-C Secondary Monitor Sink (Instant Outdoor Laptop Screen)
+* Connect a single USB-C cable from any MacBook, ThinkPad, or iPad into SolarDeck's Port 1.
+* The dedicated BCM2711 USB OTG controller enumerates as a high-speed composite USB Gadget display sink (UVC / Weylus), giving you an instantaneous, 10.3" matte, zero-glare, eye-strain-free secondary monitor for terminal logs, documentation, or reading in bright sunlight while the laptop powers the tablet!
+
+### 4. The Airgapped Hardware Crypto Vault & Document Notary (Zero-EMF Signing)
+* Combining the physical **Hardware Airgap Kill Switch** (cutting all RF radios to 0.000V), the **rear flush 12MP Sony IMX708 autofocus camera**, the **10.3" Color E-Ink display**, and **top-bezel 13.56 MHz NFC**.
+* When flipped to Stealth (0.000 dBm), SolarDeck becomes an impenetrable, mathematically verifiable cold-storage signing station:
+  1. Scan an unsigned Bitcoin/Ethereum transaction QR or document hash with the rear 12MP camera.
+  2. Inspect the complete decoded transaction details, contract calls, and gas fees in razor-sharp high contrast on the 10.3" screen.
+  3. Authorize and sign using an onboard airgapped GPG/SSH key, or tap a physical **YubiKey, Tangem, or Coldcard** against the top-bezel NFC coil.
+  4. Display the signed transaction QR on the E-Ink screen for an online smartphone to broadcast.
+* Completely immune to remote exploits or RF sniffing because the wireless power rails are physically cut by hardware switches!
+
+---
+
 ## Verification & Acceptance Gate (The North Star Metrics)
 
 Before any prototype PCBA or firmware build is declared ready for field release, it must be benchmarked against these six non-negotiable gates:

@@ -185,13 +185,25 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
     * **$10^\circ\text{C} \le T \le 45^\circ\text{C}$ (Normal Band):** Full 20W fast charging ($3.0\text{A}$).
     * **$45^\circ\text{C} < T \le 60^\circ\text{C}$ (Heat Taper):** Charge voltage throttled from 3.65V down to 3.40V.
     * **$T > 60^\circ\text{C}$ (Overheat Lockout):** Complete charger shutdown.
-* **Dual-Stage Solar Harvesting Architecture:**
+* **Dual-Stage Solar Harvesting & Ambient Sensing Architecture:**
   1. *High-Power Field Solar (Fast Recharge via USB-C):* Standard USB-C Port 2 supports 5V–14V input from folding 15W–28W outdoor panels. The BQ25895's integrated dynamic input voltage management (**VINDPM / MPPT**) tracks optimal solar output to recharge the pack safely in field conditions.
   2. *Dedicated Nano-Power Bezel Harvester (Texas Instruments BQ25504):*
      * Resolves the primary charger's 3.9V Under-Voltage Lockout ($V_{\text{UVLO}}$) ceiling.
      * Dedicated ultra-low-quiescent boost converter ($1.80) wired directly to the top-bezel monocrystalline micro-solar strip (IXYS SM141K06L, $22\text{ mm} \times 35\text{ mm}$, ~0.15W peak, ~50–120 mW real-world).
      * Cold-starts from as low as **330 mV** and continuously harvests down to **100 mV**.
      * Executes autonomous 80% Fractional Open-Circuit Voltage (FOCV) MPPT sampling, boosting micro-solar energy directly into the battery rail with >90% efficiency, keeping the 4.5 mW RP2350 Zen reader topped off indefinitely even under indoor lighting.
+  3. *Zero-BOM Ambient Lux Sensor (Solar Strip via RP2350 ADC):*
+     * The open-circuit voltage ($V_{OC}$) of the top-bezel solar strip is tapped through a high-impedance 10:1 divider (1.0 MΩ / 110 kΩ, <3 µA draw) into RP2350 analog input pin `RP2350_ADC0`.
+     * The co-processor maps cell photodiode voltage across a calibrated log curve from 10 lux (candlelit room) to 120,000 lux (blinding noon sunlight).
+     * Automatically adjusts E-ink Look-Up Table (LUT) waveform contrast, boosts color saturation in sunlight, and signals the compositor to engage dark mode in dim environments without adding a dedicated ambient light sensor IC ($0.00 BOM cost).
+* **Survival Powerbank Mode (15W Reverse Boost):**
+  * The Texas Instruments **BQ25895** features a built-in bidirectional synchronous boost converter mode.
+  * When an external phone or USB device is connected to USB-C Port 1 or Port 2, the RP2350 writes to the BQ25895 I2C register to enable **OTG Mode** (`OTG_CONFIG = 1`).
+  * The charger steps up battery voltage to output **5.1V @ 3.1A (15.8W max)** with internal current limiting and short-circuit protection.
+  * **Zero-Compute Autonomous Operation:** The entire reverse powerbank session runs under RP2350 supervision while the power-hungry CM4 Linux brain remains **100% powered off (0.000W)**.
+  * The E-Ink screen displays a live, high-contrast charging gauge updated every 10 seconds:
+    `"Powering External Device: 5.10V @ 2.40A (12.2W) | Battery: 74% (25.9 Wh) | Est: 2h 15m remaining"`.
+  * Turns the 35 Wh LiFePO4 tablet into an ultra-durable, flame-safe emergency power bank for smartphones, GPS handhelds, and flashlights in off-grid emergencies.
 * **Rigid Voltage Regulators (Anti-Brownout Engineering):**
   1. *Always-On 3.3V System Rail (`VDD_3V3_AON`):* Dedicated Texas Instruments **TPS62840** ultra-low quiescent current (**60 nA $I_Q$**) synchronous buck-boost converter. Powered directly from VBAT (2.5V–4.35V), it supplies a stable, ultra-clean 3.3V rail at up to 750 mA to the RP2350, 8MB PSRAM, DS3231 RTC, `I2C_ALWAYS_ON` sensors, and Semtech SX1262 LoRa module continuously, ensuring perpetual operation when the main CM4 5V boost converter is completely unpowered.
   2. *Main 5.0V System Boost:* Texas Instruments **TPS61088** synchronous boost converter steps up 3.0V–4.2V battery voltage to a rigid 5.0V @ 3.5A rail, delivering up to 17.5W peak power for CM4 turbo compilation, USB peripheral bus power, and display supply.
@@ -529,6 +541,14 @@ For true sovereign privacy, commercial flight compliance, sensitive compartmente
    * CPU governor immediately throttles to `powersave` (600 MHz single-core), and all radio daemons are frozen.
    * Active system power drops from 2.5W to **under 0.75W**!
    * **Battery Life:** Reading PDFs in Zathura, annotating with the battery-free Wacom stylus, and browsing offline Wikipedia in Kiwix lasts **35 to 42 continuous hours** on a single charge.
+4. **Airgapped Cold-Storage Cryptographic Signer & Document Notary:**
+   * When flipped to STEALTH, SolarDeck becomes an impenetrable, mathematically verifiable cold-storage signing station:
+     * **Zero RF Transmission:** Hardware power switches disconnect the cellular modem, LoRa transceiver, and Wi-Fi/Bluetooth to 0.000V.
+     * **Visual Optical Ingestion:** The operator scans an unsigned Bitcoin/Ethereum transaction QR code or document hash using the rear flush 12MP Sony IMX708 camera.
+     * **High-Contrast On-Screen Verification:** The decoded recipient address, smart contract bytecode, and fee breakdown are rendered in high contrast on the 10.3" E-Ink paper screen.
+     * **Hardware Authentication:** The operator authorizes the signature by tapping a physical YubiKey, Tangem, or Coldcard NFC hardware wallet against the top-bezel 13.56 MHz NFC antenna, or enters an airgapped passphrase.
+     * **Optical Broadcast:** The signed transaction QR code is displayed on the 10.3" screen for an online smartphone or companion device to scan and broadcast to the public blockchain.
+     * **Zero-Leakage Assurance:** Private keys never touch an internet-connected bus or memory space, backed by physical hardware power gates.
 
 ### 2.13 Anti-Phantom-Leakage Circuitry ($I_{\text{off}}$ & Cross-Domain I/O Isolation)
 In low-power tiered architectures, cutting $V_{CC}$ to a subsystem is only half the battle. If digital I/O lines (UART, SPI, I2C, USB, GPIO) remain high (3.3V), current will leak backward through the unpowered chip's internal **ESD clamping diodes** into its unpowered $V_{CC}$ rail. This creates **parasitic back-powering (phantom leakage)**, which can silently bleed 20–80 mW of power, corrupt buses, and destroy the battery life.
