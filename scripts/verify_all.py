@@ -68,7 +68,7 @@ def verify_seeed_turnkey():
     assert os.path.isfile(gerber_zip), f"Missing {gerber_zip}"
     with zipfile.ZipFile(gerber_zip, 'r') as zf:
         names = zf.namelist()
-        required = ["solardeck-carrier-Edge_Cuts.gbr", "solardeck-carrier-F_Cu.gbr", "solardeck-carrier-B_Cu.gbr", "solardeck-carrier-PTH.drl"]
+        required = ["solardeck-carrier-Edge.Cuts.gbr", "solardeck-carrier-F.Cu.gbr", "solardeck-carrier-B.Cu.gbr", "solardeck-carrier.drl"]
         for r in required:
             assert r in names, f"Gerber zip missing {r}"
             
