@@ -159,7 +159,7 @@ SolarDeck solves this through the **SnapDeck Parallel Form-Morphology**:
 │      technical schematics, and Wacom EMR handwritten annotations.           │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 3. DESK EASEL / CODING DASHBOARD (The Ergonomic Terminal)                   │
-│    • Prop tablet vertically or horizontally on its integrated kickstand.    │
+│    • Prop tablet on any MagSafe stand, origami folio, or OEM tablet easel. │
 │    • View 80+ continuous lines of code in portrait orientation.             │
 │    • SnapDeck keyboard sits freely on desk; communicates over low-latency   │
 │      Nordic nRF52840 BLE 5.0 (<5ms) or wired pogo jumper.                   │
@@ -258,14 +258,14 @@ Giving developers and autonomous AI agents root access to flash co-processor sil
 * **Immutable Linux Rootfs with OverlayFS:** Base system is cryptographically locked with `dm-verity`; `solardeck-reset --safe` restores pristine factory OS in 3 seconds.
 
 ### 6. The "Cold Storage Vault" (Carry Up to 6+ Terabytes Off-Grid for $0 BOM)
-To make SolarDeck the ultimate sovereign archive workstation without adding a single cent in electronics:
-* **Concealed Kickstand Cavity:** Molded directly into the negative space of the rear chassis underneath the flush folding kickstand.
+To make SolarDeck the ultimate sovereign archive workstation without adding a single cent in electronics or compromising exterior unibody waterproofing:
+* **Gasketed M.2 Service Hatch Cavity:** Molded directly into the inner face of the flush, IP67 silicone-gasketed M.2 SSD service hatch on the rear chassis unibody (secured by 2x stainless M2 captive screws).
 * **Storage Capacity:**
-  * **2x Friction-Fit MicroSD Card Pockets:** Holds two extra MicroSD cards (e.g. Card 1: 1TB offline Kiwix Wikipedia + MDN + Library of Genesis; Card 2: bootable Tails / Arch rescue OS).
-  * **1x Spare Nano-SIM Retention Well:** Holds an extra international travel or prepaid cellular SIM.
+  * **3x Uniform Friction-Fit MicroSD Card Pockets:** Holds three extra MicroSD cards (e.g. Card 1: 1TB offline Kiwix Wikipedia + MDN + Library of Genesis; Card 2: bootable Tails / Arch rescue OS; Card 3: encrypted personal git vault).
+  * **Nano-SIM Compatibility via Adapter:** Standardizes on uniform MicroSD pocket dimensions (15.0mm × 11.0mm × 1.0mm). To store a spare Nano-SIM, users slide the SIM into a standard $0.05 plastic MicroSD carrier shell.
   * **1x Stainless Steel SIM Ejector Tool Retaining Clip:** Keeps a metal SIM ejector pin snapped into place.
-* **Mechanical Retention & Weather Protection:** Molded 85A TPU micro-ribs prevent rattling or dislodging during severe drops, while folding the kickstand flush completely seals the vault from rain, dust, and visual inspection.
-* **Total Accessible Storage:** With 2TB on the active edge MicroSD slot, 2TB in the cold vault, and 2TB on the internal M.2 NVMe SSD, developers can carry **6+ Terabytes of uncompressed human knowledge and local AI weights** in a 510g tablet!
+* **Mechanical Retention & Weather Protection:** Molded 85A TPU micro-ribs prevent rattling or dislodging during severe drops, while the gasketed hatch keeps the cards 100% sealed inside the IP67 envelope, completely hidden and protected from rain, dust, and visual inspection.
+* **Total Accessible Storage:** With 2TB on the active edge MicroSD slot, 3TB in the cold vault, and 2TB on the internal M.2 NVMe SSD, developers can carry **up to 7 Terabytes of uncompressed human knowledge and local AI weights** in a 510g tablet!
 
 ---
 

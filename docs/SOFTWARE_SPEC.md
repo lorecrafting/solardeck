@@ -323,7 +323,7 @@ SolarDeck's programmable RGB Notification Beacon ("Signal Halo") and Standby Pie
 * When the CM4 enters S2idle or full power-down (0.000W), the RP2350 firmware autonomously manages the beacon:
   * **Incoming LoRa Mesh Packets:** RP2350 detects packet on SX1262 SPI $\to$ plays a subtle 2-tone chime on the SMT micro-piezo buzzer $\to$ pulses the emerald green LED at 0.5 Hz for 15 seconds.
   * **Rapid Barometric Drops (Storm Alert):** BMP390 detects pressure drop $> 3\text{ hPa / 3 hr}$ $\to$ strobes ruby red warning and sounds a weather alert tone.
-  * **Ambient Nightstand Beacon:** When OPT3001 reads $< 0.5\text{ lux}$ (pitch black) and device is on kickstand, pulses an ultra-faint warm white locator glow (2% duty cycle, $< 15\text{ µA}$) so you can effortlessly find the tablet in the dark.
+  * **Ambient Nightstand Beacon:** When OPT3001 reads $< 0.5\text{ lux}$ (pitch black) and device is resting on a nightstand or desk, pulses an ultra-faint warm white locator glow (2% duty cycle, $< 15\text{ µA}$) so you can effortlessly find the tablet in the dark.
 
 ---
 

@@ -51,7 +51,7 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
 4. **The Sovereign Form-Morphology (Tactical 510g Slate, Desk Easel, & Modular Thumb Grips):**
    * *Total Input Freedom:* Descoping a proprietary keyboard for V1 leaves the core tablet ultra-light (~510g) and razor-thin (9.8mm), allowing developers to connect their favorite keyboard (ThinkPad, Corne, NuPhy, Keychron, Apple Magic Keyboard) via low-latency Bluetooth 5.0 or USB-C.
    * *Universal Mechanical Mounting:* Standard **M2.5 threaded brass heat-set inserts + MagSafe magnetic anchor array** on the rear chassis enable instant clipping of 3D-printed handheld thumb keyboards (e.g. $25 BlackBerry Q20 clicky keyboard), camera tripods, or desk arms.
-   * *The Ultimate Desk Easel:* Integrated kickstand props the tablet vertically in portrait, displaying 80+ lines of uninterrupted code while typing on a desktop keyboard.
+   * *The Ultimate Desk Easel:* MagSafe magnetic array + M2.5 mounts snap effortlessly onto any standard magnetic desk stand, origami folio, or OEM tablet stand, propping the tablet in portrait to display 80+ lines of uninterrupted code while typing on a desktop keyboard.
 5. **Sovereign Field Hardening (Airgap, LoRa, & IP67 All-Weather):**
    * *Physical Hardware Airgap Switch:* Mechanically breaks power enable nets to LTE, LoRa, Wi-Fi/BT, GPS, and microphone to **0.000V** (zero EMF / 0.000 dBm).
    * *Autonomous Meshtastic Node:* Integrated Semtech SX1262 LoRa (868/915 MHz) permanently owned by RP2350 acts as an off-grid emergency mesh repeater for **80+ days**.
@@ -170,7 +170,7 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
 │       THE WORKHORSE          │     THE ZEN SCRIBE           │    THE PERPETUAL CLOCK       │
 │  (Mobile Coding Station)     │  (Field Slate & Reader)      │   (LifeOps Desk Dashboard)   │
 ├──────────────────────────────┼──────────────────────────────┼──────────────────────────────┤
-│ • SnapDeck keyboard docked   │ • Detached keyboard (510g)   │ • Propped on desk kickstand  │
+│ • SnapDeck keyboard docked   │ • Detached keyboard (510g)   │ • Propped on OEM desk stand  │
 │ • Sway tiles terminal to 2/3 │ • Wacom EMR pen (4096 lvl)   │ • Linux CM4 dead (0.000W)    │
 │ • Claude Code AI CLI active  │ • 100GB Offline Kiwix docs   │ • RP2350 direct-drives EPDC  │
 │ • Worldwide 4G LTE connected │ • Airgap Switch ON (Zero EMF)│ • 1-sec TCXO live clock tick │
@@ -197,7 +197,7 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
 | **Tactical Controls**| Left-Bezel IP67 Sealed 5-Way Tactical Navigation Rocker (ALPS SKRH; gloved 1-handed terminal/reading) |
 | **Dual Cameras** | 12MP Sony IMX708 PDAF Macro Autofocus Rear Camera (Multimodal Claude Code & PCB Loupe) |
 | **Keyboard & Input**   | Universal M2.5 Threaded Mount + MagSafe Magnetic Array + Bluetooth LE 5.0 / USB-C to Any Keyboard (ThinkPad, Keychron, Corne, Apple, or $20 BlackBerry Q20 Thumb Keyboard) |
-| **Cold Storage Vault**| Molded Under-Kickstand Recess: 2x Friction-Fit MicroSD Pockets + 1x Spare Nano-SIM Slot + Ejector Pin Clip ($0 BOM) |
+| **Cold Storage Vault**| Gasketed M.2 Service Hatch: 3x Uniform Friction-Fit MicroSD Pockets (Supports Nano-SIM via SD shell) + Ejector Clip ($0 BOM) |
 | **Cellular Internet**| M.2 Key-B 3042 (Quectel EG25-G, 30+ LTE bands) with Nano-SIM Tray |
 | **Off-Grid Radio** | Semtech SX1262 LoRa 915/868 MHz (Meshtastic) dedicated to RP2350 with Top-Edge **IP67 Bulkhead SMA female jack** |
 | **GNSS Positioning** | Integrated Qualcomm Multi-Constellation GNSS (GPS/GLONASS/BeiDou/Galileo/QZSS in EG25-G) |

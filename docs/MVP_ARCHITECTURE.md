@@ -217,14 +217,14 @@ To enable clean voice interaction with Claude Code and dictation:
 │   (1872 × 950 px). Bottom 1/3 screen goes dormant (0W).                     │
 │ • Use Case: Typing on lap, in bed, on a bus, or airplane tray table.        │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ POSTURE 2: PROPPED-UP LAPTOP (LANDSCAPE)                                    │
-│ • Rear friction kickstand props tablet upright at 65°–75° on desk.          │
+│ POSTURE 2: PROPPED-UP WORKSTATION (LANDSCAPE)                               │
+│ • MagSafe / OEM stand props tablet upright at 65°–75° on desk.              │
 │ • Keyboard sits detached on the desk in front of the screen.                │
 │ • Sway expands display to full 1872 × 1404 pixels over BLE 5.0.             │
 │ • Use Case: Traditional laptop workstation at a coffee shop or desk.        │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ POSTURE 3: VERTICAL CODER WORKSTATION (PORTRAIT)                            │
-│ • Kickstand props tablet upright in tall Portrait orientation.              │
+│ • MagSafe / OEM stand props tablet upright in tall Portrait orientation.    │
 │ • 80+ lines of code visible vertically (like a programmer's vertical screen).│
 │ • Full-width keyboard sits detached on the desk.                            │
 │ • Use Case: Reading long source files, logs, and technical documentation.   │

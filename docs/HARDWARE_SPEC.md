@@ -668,9 +668,9 @@ To eliminate $25,000 in custom injection tooling risk and 6 months of bespoke ZM
 │ 3. HANDHELD BED/COUCH MODE (3D-Printed BlackBerry Q20 Thumb Grip):          │
 │    • Open-source 3D-printed snap-on bracket mounts an off-the-shelf $20      │
 │      Solder Party BlackBerry Q20 tactile clicky keyboard beneath display.   │
-│ 4. INTEGRATED ROTATING KICKSTAND:                                           │
-│    • Props tablet at 15° to 85° angles in both Portrait and Landscape.      │
-│    • Portrait mode displays 80+ lines of uninterrupted terminal code.       │
+│ 4. SOLID UNIBODY BACKPLATE & OEM STAND COMPATIBILITY:                       │
+│    • Descoped failure-prone friction hinges for 100% rigid unibody shell.   │
+│    • Snaps effortlessly to any MagSafe desk stand or standard OEM easel.    │
 │ 5. PHASE 2 SNAPDECK RESERVED FOOTPRINT:                                     │
 │    • 5-pin hermetic magnetic pogo bus pads retained on PCBA bottom edge     │
 │      for future turnkey SnapDeck clamshell accessory production.            │
@@ -755,9 +755,9 @@ To eliminate $25,000 in custom injection tooling risk and 6 months of bespoke ZM
 │ • 1.5mm Thermal Gap Pad (6.0 W/m·K) bridges SoC to Aluminum Backplate       │
 │ • Zero Heat Migration into temperature-sensitive E-Ink microcapsules        │
 │ • Universal Mechanical Mount: 4x M2.5 Threaded Inserts (50mm/75mm) + MagSafe│
-│ • The "Cold Storage Vault" (Concealed beneath folding kickstand recess):    │
-│   - 2x Friction-Fit MicroSD Card Slots (Offline Wikipedia / Distro Vault)   │
-│   - 1x Spare Nano-SIM Retention Slot + SIM Ejector Tool Retaining Clip      │
+│ • The "Cold Storage Vault" (Concealed inside gasketed M.2 service hatch):   │
+│   - 3x Uniform Friction-Fit MicroSD Card Slots (Supports Nano-SIM via shell)│
+│   - 1x Stainless Steel SIM Ejector Tool Retaining Clip                      │
 │ • GORE ePTFE Pressure Vent (PMF100396): Equalizes altitude barometric delta │
 │   while maintaining IP67 water/dust seal (tested safe to 1 meter immersion) │
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -798,17 +798,17 @@ To protect sensitive private keys, encrypted credentials, and communications log
 * **Aerogel Thermal Decoupling Barrier:** A **0.5 mm die-cut Pyrogel aerogel insulation strip** (thermal conductivity $<0.015\text{ W/m}\cdot\text{K}$) is laminated between the top micro-solar bezel and the E-Ink panel frame, blocking 95% of conductive heat migration into the display.
 * **PCBA Milled Thermal Relief Slot:** A 1.0 mm continuous routed slot in the carrier PCB isolates the BQ25504 nano-power boost harvester thermally from the low-noise analog sensor cluster and Wacom digitizer grounding plane.
 
-### 4.6 The "Cold Storage Vault" (Spare MicroSD & Nano-SIM Retention Under Kickstand)
-To make SolarDeck the ultimate sovereign, off-grid archive workstation without adding a single cent in electronics, the rear chassis integrates a **Physical Cold Storage Vault**:
-* **Concealed Kickstand Cavity:** Molded directly into the negative space of the aluminum/PA12 rear housing underneath the flush folding kickstand.
+### 4.6 The "Cold Storage Vault" (Concealed Inside Gasketed M.2 Service Hatch)
+To make SolarDeck the ultimate sovereign, off-grid archive workstation without adding a single cent in electronics or compromising exterior unibody waterproofing:
+* **Gasketed M.2 Service Hatch Cavity:** Molded directly into the inner face of the flush, IP67 silicone-gasketed M.2 SSD service hatch on the rear chassis unibody (secured by 2x stainless M2 captive screws).
 * **Storage Capacity:**
-  * **2x Friction-Fit MicroSD Card Pockets:** Accommodates two extra MicroSD cards (e.g., Card 1: 1TB offline Kiwix Wikipedia + Library of Genesis; Card 2: bootable Tails / Arch Linux rescue OS).
-  * **1x Spare Nano-SIM Retention Well:** Holds an extra international or prepaid SIM card.
+  * **3x Uniform Friction-Fit MicroSD Card Pockets:** Accommodates three extra MicroSD cards (e.g., Card 1: 1TB offline Kiwix Wikipedia + Library of Genesis; Card 2: bootable Tails / Arch Linux rescue OS; Card 3: encrypted personal git vault).
+  * **Nano-SIM Compatibility:** Standardizes on uniform MicroSD pocket dimensions (15.0mm × 11.0mm × 1.0mm). To carry a spare Nano-SIM, users insert the SIM into a standard $0.05 plastic MicroSD-shaped carrier shell. This eliminates asymmetric mold tooling and gives users complete freedom to carry 3x MicroSDs or any combination of SDs and SIMs.
   * **1x Stainless Steel SIM Ejector Pin Clip:** Snaps a standard metal SIM ejector tool (or safety pin) securely into place.
 * **Mechanical Retention & Weather Protection:**
-  * Each card slot is lined with molded 85A TPU retention micro-ribs and a thumb-notch for quick extraction with a fingernail.
+  * Each card pocket is lined with molded 85A TPU retention micro-ribs and a thumb-notch for quick extraction with a fingernail.
   * Zero rattle, zero vibration, and 100% immune to drops.
-  * When the kickstand is closed flush against the chassis, the vault is completely invisible, tamper-resistant, and sealed against weather, dirt, and water.
+  * Completely protected inside the IP67 sealed internal envelope—invisible from the outside, tamper-resistant, and impervious to weather, dirt, and water.
 * **Bill of Materials Cost:** **$0.00** (Zero electrical parts; pure CAD negative-cavity geometry).
 
 ---
