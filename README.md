@@ -48,9 +48,10 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
 3. **Sunlight Sovereignty & Perpetual Indoor Life:**
    * *The brighter the sun, the better it gets:* 10.3" Color E-Ink (Carta 1200 / Kaleido 4, 300 PPI B&W / 150 PPI Color) with 0% glare and zero power to hold a static page. 24–32 hours of active terminal coding under direct noon sun with 0W backlight.
    * *Perpetual Indoor Harvesting:* High-efficiency indoor a-Si micro-strip + TI BQ25504 nano-boost yields a **net positive power balance under 500 lux indoor room light**, allowing SolarDeck to live on a desk or shelf forever without ever plugging into a wall.
-4. **The SnapDeck Form-Morphology (Lapdeck ⟷ Slate ⟷ Easel):**
-   * *Solves the 2-in-1 dilemma:* Snaps magnetically over the lower 1/3 of the screen with a rigid hinge for rock-solid lap typing (Wayland auto-tiles terminal to upper 2/3).
-   * Detaches in 0.5s into a 510g, 9.8mm slim IP67 waterproof reading/inking slate, or stands vertically as an 80-line coding easel over wireless BLE 5.0.
+4. **The Sovereign Form-Morphology (Tactical 510g Slate, Desk Easel, & Modular Thumb Grips):**
+   * *Total Input Freedom:* Descoping a proprietary keyboard for V1 leaves the core tablet ultra-light (~510g) and razor-thin (9.8mm), allowing developers to connect their favorite keyboard (ThinkPad, Corne, NuPhy, Keychron, Apple Magic Keyboard) via low-latency Bluetooth 5.0 or USB-C.
+   * *Universal Mechanical Mounting:* Standard **M2.5 threaded brass heat-set inserts + MagSafe magnetic anchor array** on the rear chassis enable instant clipping of 3D-printed handheld thumb keyboards (e.g. $25 BlackBerry Q20 clicky keyboard), camera tripods, or desk arms.
+   * *The Ultimate Desk Easel:* Integrated kickstand props the tablet vertically in portrait, displaying 80+ lines of uninterrupted code while typing on a desktop keyboard.
 5. **Sovereign Field Hardening (Airgap, LoRa, & IP67 All-Weather):**
    * *Physical Hardware Airgap Switch:* Mechanically breaks power enable nets to LTE, LoRa, Wi-Fi/BT, GPS, and microphone to **0.000V** (zero EMF / 0.000 dBm).
    * *Autonomous Meshtastic Node:* Integrated Semtech SX1262 LoRa (868/915 MHz) permanently owned by RP2350 acts as an off-grid emergency mesh repeater for **80+ days**.
@@ -72,28 +73,29 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
 │ 2. CO-PROC:   RP2350B (Cortex-M33 / RISC-V) + 8MB PSRAM (300-Day Zen Reader) │
 │ 3. DISPLAY BUS: Dual-Path MIPI-DSI (24 FPS Video) + TMUX1575 SPI (RP2350 Mux)│
 │ 4. SCREEN:    10.3" E-Ink (Carta 1200 / Kaleido 3 / Kaleido 4, 227 PPI) + EMR│
-│ 5. CAMERAS:   Dual MIPI: 12MP Sony IMX708 PDAF Rear + 5MP 1080p Front       │
-│ 6. CELLULAR:  M.2 Quectel EG25-G LTE + Onboard Soldered MFF2 eSIM (ST4SIM)  │
-│ 7. MESH/GNSS: Built-In Semtech SX1262 LoRa (868–928MHz) + u-blox MAX-M10S   │
+│ 5. CAMERAS:   12MP Sony IMX708 PDAF Macro Rear (Multimodal Claude Code / OCR)│
+│ 6. CELLULAR:  M.2 Quectel EG25-G LTE + Standard Push-Push Nano-SIM Tray      │
+│ 7. MESH/GNSS: Built-In Semtech SX1262 LoRa (868–928MHz) + Qualcomm GNSS     │
 │ 8. ANTENNAS:  Top-Edge IP67 SMA (LoRa) + Internal Taoglas FXUB63 MIMO (LTE) │
 │ 9. AIRGAP SW: Physical Hardware RF Kill Switch (Zero EMF / 0.000 dBm Cutoff)│
-│ 10. SENSORS:  Bosch BMA400 Accel + MMC5603NJ Compass + BMP390 Barometer/Alt │
+│ 10. SENSORS:  Bosch BMA400 Accel + BMP390 Baro + Dual TMP112 + INA3221 Telemetry│
 │ 11. AUDIO:    Sealed Micro-Box Speaker + MAX98357A Amp + MEMS Mic + Mute SW │
 │ 12. POWER:    8,000–10,000 mAh (26–32 Wh LiFePO4 / 30–37 Wh Li-ion) Pack    │
 │ 13. USB ARCH: Dedicated PCIe USB Host / Hub (Peripherals) + Port 1 OTG Sink │
-│ 14. EXPAND:   Driverless USB-C Secondary Monitor + Rear 8-Pin Tactical Pogo │
+│ 14. EXPAND:   Driverless USB-C Secondary Monitor + USB-C Port 2 (USB-to-I2C) │
 │ 15. CHASSIS:  SLS 3D-Printed PA12 Nylon + 85A TPU Armor Corners (~510g total)│
 └──────────────────────────────────────┬──────────────────────────────────────┘
                                        │
             ┌──────────────────────────┴──────────────────────────┐
             ▼                                                     ▼
 ┌───────────────────────────────────────┐     ┌───────────────────────────────┐
-│ SNAPDECK KEYBOARD (PARALLEL CO-DESIGN)│     │ MODULAR TACTICAL RF BACKPACK  │
-│ • Kailh X-Switches (Ultra-slim 3.5mm) │     │ • Flipper Zero Sub-GHz CC1101 │
-│ • Blackberry RIM 9900 Optical Trackpad│     │ • 13.56MHz NFC & 125kHz RFID  │
-│ • Nordic nRF52840 (ZMK + BLE 5.0)     │     │ • Dual High-Power IR TX/RX    │
-│ • 5-Pin Hermetic Magnetic Pogo Bus    │     │ • Wideband Sky-Scan SDR       │
-│ • Wayland Auto-Resize to Top 2/3      │     │ • Snaps to Rear 8-Pin Pogo    │
+│ UNIVERSAL MECHANICAL MOUNT & KEYBOARDS│     │ MODULAR TACTICAL RF MULTI-TOOL│
+│ • Universal M2.5 Brass Inserts (50mm) │     │ • Flipper Zero Sub-GHz CC1101 │
+│ • MagSafe-Compatible Magnetic Array   │     │ • 13.56MHz NFC & 125kHz RFID  │
+│ • Snap-on 3D-Printed BlackBerry Q20   │     │ • Dual High-Power IR TX/RX    │
+│   Handheld Thumb-Keyboard Mount       │     │ • Wideband Sky-Scan SDR       │
+│ • Bluetooth 5.0 / USB-C to Any Keyboard│    │ • Mates to USB-C Port 2       │
+│   (ThinkPad, Keychron, Apple, Corne)  │     │                               │
 └───────────────────────────────────────┘     └───────────────────────────────┘
 ```
 
@@ -111,13 +113,15 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
 * **The Problem:** Developers want Kindle-like battery life for reading, but instant, uncompromised speed when they start coding.
 * **The Genius Fix:** SolarDeck implements bi-stable **Page-Turn Suspend-to-RAM (S2idle)**:
   * While reading documentation or eBooks, the CPU wakes for **80ms** to render a page turn, then drops into 15 mW deep sleep while you read. **Battery life: 80 to 90 DAYS (nearly 3 months).**
-  * The millisecond you touch a key or snap on the keyboard, a hardware GPIO interrupt wakes the system in **under 300 milliseconds**.
+  * The millisecond you touch a key or stylus, a hardware GPIO interrupt wakes the system in **under 300 milliseconds**.
   * The Linux CPU governor instantly turbocharges all four Cortex-A72 cores to **1.8 GHz**, unfreezing your Neovim buffers, Claude Code terminal, and tmux panes with zero perceptible lag.
 
-### III. The SnapDeck Hybrid Detachable Keyboard
-* **On-Screen Lapdeck Mode:** Snaps magnetically directly over the lower 1/3 of the landscape E-Ink screen. Hall effect sensors trip a Sway/Wayland udev hook that instantly tiles your active terminal workspace into the upper 2/3 (1872×950 px) at 30+ FPS typing speeds.
-* **Desktop & Portrait Mode:** Pull the keyboard off and prop the tablet vertically on its kickstand to view 80+ continuous lines of code. The **Nordic nRF52840** controller seamlessly switches from wired USB pogo to **Bluetooth LE 5.0 in < 5 ms**.
-* **Blackberry Optical Trackpad:** Integrated RIM 9900 optical sensor centered beneath the spacebar eliminates the need to reach up to touch the screen while typing.
+### III. Universal Mechanical Mount & Open Keyboard Architecture
+* **The Philosophy:** Developers are fiercely particular about keyboards—forcing a proprietary scissor-switch keyboard alienates split mechanical, low-profile, and ThinkPad purists while adding $25,000 in tooling risk.
+* **Universal Mechanical Anchor:** The rear chassis integrates standard **M2.5 threaded brass heat-set inserts (50mm/75mm spacing)** and an embedded **MagSafe-compatible neodymium magnetic ring**.
+* **Handheld Bed/Couch Mode:** Using an open-source 3D-printed clip, users can snap on a **$25 Solder Party BlackBerry Q20 USB/BLE keyboard** directly beneath the screen, transforming SolarDeck into a handheld thumb-typing terminal for lounging in bed or a hammock.
+* **Desktop Workstation Mode:** Pair any Bluetooth LE 5.0 or USB-C keyboard (Keychron, ThinkPad TrackPoint, NuPhy, Apple Magic Keyboard, Corne) and prop the tablet upright in portrait (80 lines of code) or landscape.
+* **Pogo Footprint Reserved:** The 5-pin hermetic magnetic pogo bus footprint remains routed on the PCBA for an optional SnapDeck clamshell accessory in Phase 2.
 
 ### IV. Hardware Airgap Switch: Zero EMF & Sovereign Privacy
 * **The Problem:** Software "airplane mode" on phones is a soft setting easily bypassed by baseband firmware, malware, or carrier updates.
@@ -191,23 +195,24 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
 | **Digitizer & Touch**| Laminated Wacom EMR (<18ms ink) + Hardware `PEN_PROX_INT` Palm Blanking Gate + 0.1mm Mu-Metal |
 | **All-Weather Rain** | Torrential Rain "Water-Lock" Mode (TPS22918 capacitive touch cutoff; 100% water-immune Wacom stylus) |
 | **Tactical Controls**| Left-Bezel IP67 Sealed 5-Way Tactical Navigation Rocker (ALPS SKRH; gloved 1-handed terminal/reading) |
-| **Dual Cameras** | 12MP Sony IMX708 PDAF Macro Autofocus Rear + 5MP 1080p Front with mechanical ThinkShutter |
-| **Detachable Keyboard**| SnapDeck: Kailh X-Switches (3.5mm) + RIM 9900 Trackpad + 7° Ergonomic Cant Flap + MCP73831T LiPo Charger |
-| **Cellular Internet**| M.2 Key-B 3042 (Quectel EG25-G, 30+ LTE bands) + Soldered Onboard MFF2 eSIM (`ST4SIM-200M`) |
+| **Dual Cameras** | 12MP Sony IMX708 PDAF Macro Autofocus Rear Camera (Multimodal Claude Code & PCB Loupe) |
+| **Keyboard & Input**   | Universal M2.5 Threaded Mount + MagSafe Magnetic Array + Bluetooth LE 5.0 / USB-C to Any Keyboard (ThinkPad, Keychron, Corne, Apple, or $20 BlackBerry Q20 Thumb Keyboard) |
+| **Cellular Internet**| M.2 Key-B 3042 (Quectel EG25-G, 30+ LTE bands) with Nano-SIM Tray |
 | **Off-Grid Radio** | Semtech SX1262 LoRa 915/868 MHz (Meshtastic) dedicated to RP2350 with Top-Edge **IP67 Bulkhead SMA female jack** |
+| **GNSS Positioning** | Integrated Qualcomm Multi-Constellation GNSS (GPS/GLONASS/BeiDou/Galileo/QZSS in EG25-G) |
 | **RF Front-End** | 0402 Precision Pi-Matching Networks + 3.0mm U.FL Keepout + Molded Coaxial Retention Channels |
 | **Antennas** | Linx ANT-916-CW-HWR Tactical LoRa Whip + Dual Internal Taoglas FXUB63 2×2 MIMO LTE FPCs |
 | **Airgap Switch** | Physical 2-position slide switch; breaks power enable nets to all radios, mic, & cameras to 0.000V |
 | **Tactical Stealth** | NVG Covert Mode (Monochromatic 630nm Red <0.5% PWM + Amber-only floor + Hardware Audio Squelch) |
-| **Anti-Tamper** | Chassis Intrusion Micro-Switch + RP2350 TrustZone Session Token Zeroization & BIP-39 Recovery Fallback |
-| **Telemetry & Sensors**| TI INA3221 (3-rail ammeter) + BQ27441 (Coulomb counter) + Dual TMP112 (thermals) + OPT3001 (lux) + BMA400 (accel) + MMC5603NJ (compass) + BMP390 (baro) |
-| **External Sensor Bus**| External IP67 Silicone-Sealed 4-Pin Qwiic / Stemma QT 3.3V I2C Port (Hot-pluggable sensor hacking) |
-| **Audio & Acoustics**| Dual-MEMS Noise-Cancelling Acoustic Array + Maxim/ADI MAX98357A 1W Speaker Amp + Standby Piezo |
-| **Status Beacon** | Programmable Multi-Color RGB Notification LED ("Signal Halo") with frosted glass light pipe |
-| **Recovery** | Dual Recessed IP67 Pinhole Buttons (`REC_RPI` eMMC recovery + `REC_MCU` UF2 bootloader) |
+| **Anti-Tamper** | RP2350 TrustZone OTP Derived Key & BIP-39 Recovery (No physical tripwire; enables RAM/SSD upgrades)|
+| **Telemetry & Sensors**| TI INA3221 (3-rail ammeter for LLM tuning) + BQ27441 (fuel gauge) + Dual TMP112 (thermals) + OPT3001 (lux) + BMA400 (accel) + BMP390 (baro) |
+| **External Sensor Bus**| USB-C Port 2 High-Speed Host (Supports USB-to-I2C/Qwiic dongles; zero unsealed chassis JST holes) |
+| **Audio & Acoustics**| Dual-MEMS Noise-Cancelling Acoustic Array + Maxim/ADI MAX98357A 1W Box Speaker Amp + Mute Switch |
+| **Status Beacon** | 10.3" Color E-Ink Zero-Watt Ambient Notification Badges (Descoping Win for RGB LED & light pipe) |
+| **Recovery** | Single Recessed IP67 Pinhole Button (`REC_RPI` eMMC recovery; RP2350 flashed over internal SWD) |
 | **Monitor Sink** | Standalone USB-PD Sink Controller (CH224K / STUSB4500) + Dedicated BCM2711 USB Gadget OTG Port 1 |
 | **USB Host / Hub** | Dedicated PCIe USB Host Controller (VIA VL805 / ASM1042A) or Industrial Hub (USB2514B) for Modem & Docks |
-| **Expansion Bus**| Rear 8-Pin Hermetic Magnetic Pogo Bus with Make-First-Break-Last (MFBL) Hot-Plug Protection |
+| **Expansion Bus**| USB-C Port 2 High-Speed Host (Tactical Multi-Tool Dongle, Sky-Scan SDR, Webcam, & Sensor Expand) |
 | **Battery & Safety**| Hardware `CHEM_SEL` Strap (LiFePO4 3.65V vs Li-ion 4.20V) + Pure Silicon JEITA + TI BQ2970 PCM |
 | **Firmware Failsafe**| RP2350 Dual-Bank A/B Flash Partitioning with 5-Second Autonomous Hardware Watchdog Rollback |
 | **Flash Reliability**| Read-Only SquashFS + Transactional F2FS + 150ms Emergency Hardware Sync Hook (`GPIO_PWR_FAIL`) |

@@ -14,10 +14,9 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **Co-Processor** | Dual Cortex-M33 / RISC-V Microcontroller (Power Master) | DigiKey / Mouser / LCSC | Raspberry Pi RP2350B | $1.25 |
 | **Co-Proc PSRAM** | 8MB Ultra-Low-Power QSPI PSRAM (Page Double-Buffer) | Mouser / LCSC | APMemory APS6404L-3SQR-SN | $0.75 |
 | **Bus Multiplexer**| High-Speed 8-Channel SPDT Display Bus Isolator / Switch | Texas Instruments / Mouser | TMUX1575PWR | $0.55 |
-| **RTC** | High-Precision TCXO Real-Time Clock | Mouser / LCSC | DS3231SN# | $2.50 |
 | **Display Panel** | 10.3" E-Ink Kaleido 3 / Kaleido 4 (Color) + Capacitive Touch + Wacom EMR | Waveshare / Good-Display / Linshu | ED103TC2 / Kaleido 4 (227 PPI) | $95.00 – $120.00 |
 | **EMR Shielding** | 0.1mm High-Permeability Mu-Metal / Ferrite Flux Absorber Sheet | 3M / Wurth / AliExpress | Custom Die-Cut Shield Foil | $1.80 |
-| **Controller** | High-Speed EPDC with MIPI-DSI Video Bridge (24 FPS Engine) | Waveshare / ITE / TI / Lattice | IT8951 / IT8961 + SN65DSI83 Bridge | $18.00 |
+| **Controller** | High-Speed EPDC Display Controller (32MHz Fast SPI Engine) | ITE Tech / Waveshare | IT8951 / IT8961 | $14.50 |
 | **Stylus** | Wacom EMR Passive Stylus with Eraser | Amazon / B&H | Staedtler Noris Digital or Lamy AL-star | $28.00 |
 | **Battery** | 8,000–10,000 mAh 3.7V Li-ion or 3.2V LiFePO4 Prismatic Pack | Batteryhookup / AliExpress | Custom 1S / 1S2P Slim Pack (26-32Wh / 30-37Wh) | $16.00 |
 | **Power IC** | Synchronous Buck Battery Charger IC | Texas Instruments / Mouser | BQ25895RTWR | $3.50 |
@@ -27,63 +26,56 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **Modem Supply** | 3.8V 2.5A Synchronous Buck-Boost (Anti-Brownout Buffer) | Texas Instruments / Mouser | TPS63020DSJR | $1.10 |
 | **PCIe USB Host/Hub**| Dedicated PCIe USB Host Controller or Industrial USB 2.0 Hub IC| VIA / ASMedia / Microchip / Mouser | VL805 / ASM1042A / USB2514B | $1.80 |
 | **Micro-Solar** | Top-Bezel Monocrystalline Trickle Strip (~0.15W Peak, 50-120mW Real)| IXYS / DigiKey / Mouser | SM141K06L / PowerFilm | $3.50 |
-| **Power Gates** | Ultra-Low Leakage Load Switches (x7) | Texas Instruments / LCSC | TPS22918DBVR (x7) | $1.90 |
-| **Cellular Modem**| Worldwide M.2 Key-B 4G/LTE Cat-4 Modem (30+ Bands) | DigiKey / AliExpress | Quectel EG25-G | $29.00 |
-| **Onboard eSIM** | Industrial MFF2 (DFN-8, 5x6mm) eUICC Chip | STMicroelectronics / Infineon | ST4SIM-200M / SLM97 | $1.50 |
+| **Power Gates** | Ultra-Low Leakage Load Switches (Airgap Cut + Port 2 VBUS) | Texas Instruments / LCSC | TPS22918DBVR (x2) | $0.80 |
+| **Cellular Modem**| Worldwide M.2 Key-B 4G/LTE Cat-4 Modem with Nano-SIM Tray | DigiKey / AliExpress | Quectel EG25-G | $29.00 |
 | **LoRa Mesh** | 915/868 MHz LoRa Transceiver Module (+22dBm) | Mouser / LCSC | Semtech SX1262 (Ebyte E22-900M22S) | $5.50 |
-| **GNSS Engine** | Worldwide Multi-Constellation Satellite Receiver | Mouser / DigiKey | u-blox MAX-M10S | $9.00 |
+| **Integrated GNSS**| Multi-Constellation Satellite Receiver (GPS/GLO/BDS/GAL)| Quectel (Integrated in EG25-G) | Qualcomm Gen8C Lite Engine | $0.00 |
 | **LoRa Antenna Mount**| IP67 Bulkhead SMA Female Jack with O-Ring Gasket | LCSC / Amphenol | SMA-KFD08-IP67 | $1.80 |
 | **LoRa Antenna** | Tactical 1/2-Wave 915MHz Dipole Whip (Center-Fed, 3.2dBi) | Linx Technologies / Mouser | ANT-916-CW-HWR-SMA | $8.50 |
 | **LTE MIMO Antennas**| Ultra-Wideband (698–3000 MHz) Flexible PCB Antennas (x2) | Taoglas / DigiKey | FXUB63.07.0150C (Main + Div) | $8.40 |
 | **Wi-Fi/BT Antenna**| Dual-Band (2.4/5GHz) Balanced Dipole FPC with U.FL | Molex / Mouser | 1461530100 | $1.20 |
-| **GNSS Antenna** | 15×15mm Ceramic Active GPS/BeiDou Patch Antenna | Taoglas / LCSC | AP.15E | $2.50 |
-| **Rear Camera** | 12MP Sony IMX708 with Motorized PDAF Macro Autofocus | Raspberry Pi / DigiKey | Official Cam Module 3 sensor | $12.50 |
-| **Front Camera**| 5MP Sony IMX219 / OV5647 1080p Fixed-Focus Camera | Raspberry Pi / LCSC | Official Cam Module 2 sensor | $4.80 |
-| **Privacy Shutter**| Mechanical "ThinkShutter" Bezel Sliding Door | Custom / JLC3D | Molded Delrin Slider | $0.80 |
+| **GNSS Antenna** | Passive Internal FPC GPS/GLONASS Antenna (for EG25-G GNSS)| Molex / Taoglas / LCSC | 1461860100 | $0.90 |
+| **Rear Camera** | 12MP Sony IMX708 Flush PDAF Scanner (Multimodal AI Vision & OCR)| Raspberry Pi / DigiKey | Official Cam Module 3 sensor + Sapphire | $14.50 |
 | **Audio** | Dual-MEMS Acoustic Array (2x SPH0645) + I2S Class-D Amp + Speaker| Knowles / Maxim Integrated / PUI Audio | SPH0645LM4H (x2) + MAX98357A + AS03008MR | $5.10 |
-| **Docking Bus** | 5-Pin Hermetic Magnetic Gold Pogo Connector (Front Bezel) | LCSC / AliExpress | Magsafe-style Pogo 2.54mm | $2.50 |
-| **Expansion Bus**| 8-Pin Hermetic Magnetic Pogo Connector (Rear Backpack) | LCSC / AliExpress | 8-Pin Spring Pogo Bus | $3.00 |
-| **Passives/Ports**| 2x IP68 USB-C Ports, Qwiic Jack, 1,000µF Poly Caps, SMD Passives | LCSC / JLCPCB SMT Library | Standard SMD 0402/0603 | $9.80 |
+| **Mechanical Mount**| Universal M2.5 Brass Heat-Set Inserts (x4) + MagSafe Magnetic Array | McMaster / LCSC / Custom | M2.5 Inserts + N52 Ring | $0.90 |
+| **Passives/Ports**| 2x IP68 USB-C Ports, 1,000µF Poly Caps, SMD Passives | LCSC / JLCPCB SMT Library | Standard SMD 0402/0603 | $9.40 |
 | **USB-C CC Ctrl** | Type-C Configuration Channel Dual-Role DRP Controller | Texas Instruments / Mouser | TUSB320RWBR | $0.65 |
 | **I/O Isolators** | Fail-Safe Cross-Domain Buffers with I_off Partial-Power-Down | Texas Instruments / Mouser | TXU0104PWR (x2) | $0.50 |
 | **Motion Sensor** | Ultra-Low-Power 3-Axis Accelerometer (3.5µA Pick-up Wake) | Bosch Sensortec / Mouser | BMA400 | $1.10 |
-| **Compass** | High-Precision 3-Axis Digital Magnetometer | Memsic / LCSC | MMC5603NJ | $0.80 |
 | **Barometer** | Precision Atmospheric Pressure & Altimeter Sensor | Bosch Sensortec / Mouser | BMP390 | $1.20 |
 | **5-Way Rocker** | IP67 Sealed Micro Navigation Joystick (Up/Down/Left/Right/Press)| ALPS / Panasonic / Mouser | SKRHABE010 | $0.85 |
-| **Power Telemetry**| 3-Channel High-Side Current & Power Monitor IC | Texas Instruments / Mouser | INA3221AIRGVR | $1.20 |
+| **Power Telemetry**| 3-Channel High-Side Current & Power Monitor IC (Rail Logging)| Texas Instruments / Mouser | INA3221AIRGVR | $1.20 |
 | **Coulomb Counter**| Impedance Track™ Battery Fuel Gauge & Health IC | Texas Instruments / Mouser | BQ27441-G1A | $1.10 |
-| **Thermal Triad** | Dual Precision Digital Temperature Sensors (Batt + E-Ink) | Texas Instruments / LCSC | TMP112AIDRLR (x2) | $0.60 |
+| **Thermal Triad** | Dual Precision Digital Temperature Sensors (Batt + E-Ink Logs)| Texas Instruments / LCSC | TMP112AIDRLR (x2) | $0.60 |
 | **Ambient Lux** | Precision Ambient Light & Solar Lux Sensor | Texas Instruments / Mouser | OPT3001DNPR | $0.55 |
-| **Piezo Buzzer** | SMT 5.0mm Micro-Acoustic Buzzer (Standby Mesh Chime) | Murata / PUI Audio / LCSC | PKLCS0909E4000-R1 | $0.25 |
-| **RGB Beacon** | Common-Anode RGB SMD LED + Frosted Glass Light Pipe | Kingbright / Cree / LCSC | KPF-3224SEBMAPGAC | $0.45 |
 | **VBUS OR-ing** | Dual Low-Ron Ideal Diode Power OR-ing Controller (x2) | Texas Instruments / Mouser | LM66100DCKR (x2) | $0.70 |
 | **Host VBUS Sw** | 1.5A Current-Limited USB Host Distribution Power Switch | Texas Instruments / Mouser | TPS2051BDBVR | $0.45 |
-| **Recovery Sw** | Sub-Miniature IP67 Pinhole Micro-Tactile Switches (x2) | C&K / Panasonic / LCSC | KMR2 / EVQ-P8 | $0.40 |
+| **Recovery Sw** | Single Sub-Miniature IP67 Pinhole Micro-Tactile Switch | C&K / Panasonic / LCSC | KMR2 / EVQ-P8 | $0.20 |
 | **Bezel Solar MPPT**| Nano-Power Solar Boost Harvester IC (Cold-Start 330mV, 80% FOCV)| Texas Instruments / Mouser | BQ25504RGTR | $1.80 |
 | **Frontlight Driver**| Dual-Channel Constant-Current Step-Up LED Driver (2048-step CCT)| Texas Instruments / Mouser | TPS61163YFFR | $0.65 |
 | **Battery PCM** | Hardware Battery Safety IC + Dual N-Channel Power MOSFETs | Texas Instruments / Mouser | BQ2970 + CSD87330Q3D | $0.55 |
 | **Chem Strap Sw** | Sub-Miniature Slide Switch (LiFePO4 3.65V vs Li-ion 4.20V Lock) | C&K / E-Switch / LCSC | JS102011SAQN | $0.35 |
 | **ESD Suppression** | Low-Capacitance TVS Diode Arrays for USB & Pogo Pins (x4) | Texas Instruments / Mouser | TPD4E05U06 (x4) + SMAJ5.0A | $0.80 |
+| **RTC 32kHz Crystal**| Precision 32.768 kHz Tuning Fork Crystal for RP2350 RTC | Citizen / Epson / Mouser | CM200S 32.768kHz | $0.25 |
 | **RTC Backup Battery**| 3.3V Rechargeable Lithium Micro-Battery (5.5 mAh, >100 days hold)| Seiko Instruments / Mouser | MS621FE-FL11E | $0.65 |
 | **Spatial Haptic Drivers**| Dual Ultra-Low-Power CapDrive Piezo Drivers (Energy Recovery) | Boréas Technologies / Mouser | BOS1901CD-TR (x2) | $2.90 |
 | **Quad Piezo Actuators**| 4x Miniature High-Acceleration Piezo Actuators (Corner Array)| TDK / Mouser / Digi-Key | PowerHap 0904H014V060 (x4)| $5.00 |
-| **Qwiic Port** | Sealed 4-Pin JST-SH 1.0mm I2C Connector + TVS + Power Gate | JST / LCSC | BM04B-SRSS-TB | $0.40 |
 | **JEITA Resistors** | 0.1% Precision Resistors (5.23k / 30.1k) for BQ25895 TS | Yageo / Panasonic 0603 | Precision Thin-Film (x2)| $0.15 |
 | **CM4 Retention** | CNC Aluminum CM4 Retention Bracket & Thermal Interface Pad | Custom CNC / Laird | Custom Bracket + Tflex | $1.80 |
 | **RF Pi-Matching** | Precision 0402 RF Inductors & C0G/NP0 Capacitors (5 nets) | Murata / TDK / LCSC | 0402 Precision RF Kit | $0.40 |
-| **Backpack MFBL** | 8-Pin Magnetic Pogo Bus with 0.5mm MFBL Recessed Pin | Custom Pogo / Top-Link | 8-Pin Hermetic Strip | $0.50 |
-| **Chassis Tamper Sw**| Sealed Sub-Miniature Chassis Intrusion Micro-Switch | C&K / Panasonic / LCSC | PTS645 / EVQ-P8 | $0.30 |
 | **Solar Aerogel** | 0.5mm Die-Cut Pyrogel Aerogel / Kapton Thermal Barrier | Aspen Aerogels / 3M | Pyrogel Insulation Strip | $0.60 |
 | **Airgap Switch** | Sub-Miniature 2-Position Gold Contact Slide Switch | C&K / E-Switch / LCSC | JS202011CQN | $0.45 |
 | **GORE Vent** | ePTFE Pressure Equalization Vent Plug | W. L. Gore / Amphenol | PMF100396 | $1.50 |
-| **Enclosure (PA12)**| SLS 3D-Printed PA12 Nylon Shell + 85A TPU Corner Bumpers | JLC3D / Craftcloud | Custom CAD Housing | $28.00 |
-| **Total Core BOM**| **(Mathematically Verified Sum of 66 Core Line Items)** | | | **$416.65 – $441.65** |
+| **Enclosure (PA12)**| SLS 3D-Printed PA12 Nylon Shell + 85A TPU Corner Bumpers | JLC3D / Craftcloud | Custom CAD Housing (Streamlined)| $25.00 |
+| **Total Core BOM**| **(Mathematically Verified Sum of 57 Core Line Items)** | | | **$383.20 – $408.20** |
 
-*(Note: Specifying the 4GB RAM CM4 base configuration reduces the Total Core BOM to **$396.65 – $421.65**).*
+*(Note: Specifying the 4GB RAM CM4 base configuration reduces the Total Core BOM to **$363.20 – $388.20**).*
 
 ---
 
-## 2. SnapDeck Detachable Keyboard BOM (Parallel Build)
+## 2. Optional Phase 2 Accessory: SnapDeck Detachable Keyboard (Future Add-On)
+
+*(Note: Descoped from the V1 core tablet. Developers connect any Bluetooth or USB-C keyboard, or a 3D-printed $20 BlackBerry Q20 handheld thumb keyboard).*
 
 | Category | Component Description | Primary Supplier / Manufacturer | Part Number / Model | Est. Unit Cost |
 | :--- | :--- | :--- | :--- | :--- |
@@ -103,7 +95,7 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 
 ---
 
-## 3. Modular Tactical RF & SIGINT Backpack BOM (Optional Add-on)
+## 3. Modular Tactical RF & SIGINT USB-C Multi-Tool Dongle / Backpack (External Add-on)
 
 | Category | Component Description | Primary Supplier / Manufacturer | Part Number / Model | Est. Unit Cost |
 | :--- | :--- | :--- | :--- | :--- |
@@ -116,9 +108,9 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **Sky-Scan SDR** | RTL2832U + R860 Wideband VHF/UHF SDR Tuner ICs (24–1766 MHz) | Realtek / Rafael Micro / LCSC | RTL2832U + R860 | $9.50 |
 | **SDR SMA Mount**| Dedicated IP67 Bulkhead SMA for VHF/UHF Telescopic Antenna | LCSC / Amphenol | SMA-KFD08-IP67 | $1.80 |
 | **VHF/UHF Antenna**| Telescopic 20–1300 MHz Retractable Field Antenna | AliExpress / Amazon | Nagoya NA-771 / Telescopic | $4.50 |
-| **Connector** | 8-Pin Magnetic Spring-Loaded Pogo Interface + Magnets | LCSC / AliExpress | 8-Pin Mating Header | $3.00 |
+| **Interface Port**| Low-Profile Sealed USB-C Male Plug (Mates to USB-C Port 2) | LCSC / AliExpress | Type-C Male Right-Angle | $1.20 |
 | **Enclosure** | Slim SLS PA12 Snap-on Rear Module Shell | JLC3D | Custom CAD Pod | $4.50 |
-| **Total Modular Pod**| Complete Multi-Tool + Sky-Scanning SIGINT Backpack | | | **$34.75** |
+| **Total Modular Pod**| Complete Multi-Tool + Sky-Scanning SIGINT Add-on | | | **$32.95** |
 
 ---
 
@@ -140,12 +132,12 @@ Because standard surface-mount components from JLCPCB's / PCBWay's Basic and Ext
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  SOLARDECK CORE TABLET (8GB + DUAL CAM)    │ $417 – $442    │
-│  (Or 4GB CM4 Base Config)                  │ $397 – $422    │
+│  SOLARDECK CORE TABLET (8GB RAM Baseline)  │ $383 – $408    │
+│  (Or 4GB CM4 Base Config)                  │ $363 – $388    │
 ├─────────────────────────────────────────────────────────────┤
-│  SNAPDECK PARALLEL KEYBOARD ADD-ON         │ $47.55         │
+│  OPTIONAL SNAPDECK KEYBOARD (PHASE 2)      │ $47.55         │
 ├─────────────────────────────────────────────────────────────┤
-│  MODULAR TACTICAL RF & SIGINT BACKPACK     │ $34.75         │
+│  MODULAR TACTICAL RF & SIGINT POD          │ $32.95         │
 ├─────────────────────────────────────────────────────────────┤
 │  reMarkable 2 (Monochrome, No Backlight)   │ $399 – $449    │
 │  Kindle Scribe 10.2" (Closed DRM Amazon)   │ $369 – $419    │

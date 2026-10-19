@@ -52,17 +52,17 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
                                       ┌─────────────────────────────┴─────────────┐
                                       │  PERIPHERALS & NETWORKING                 │
                                       │  • Quectel EG25-G 4G LTE Modem (M.2)      │
+                                      │    (Includes Integrated Qualcomm GNSS)    │
                                       │  • Onboard MFF2 eSIM (ST4SIM-200M)        │
                                       │  • Semtech SX1262 LoRa 915MHz (RP2350 SPI)│
-                                      │  • u-blox MAX-M10S GNSS                   │
                                       │  • Knowles I2S MEMS Mic Array             │
                                       │  • Maxim/ADI MAX98357A 1W Speaker Amp     │
                                       │  • USB-C Port 2 (Host / TPS2051B Switch)  │
                                       └──────┬─────────────────────────────┬──────┘
                                              │                             │
-                    (5-Pin Pogo Bus)         ▼                             ▼         (Rear 8-Pin Pogo / USB-C)
+                    (5-Pin Pogo Bus)         ▼                             ▼         (External USB-C Port 2)
         ┌────────────────────────────────────┐             ┌────────────────────────────────┐
-        │ SNAPDECK KEYBOARD DOCK (PARALLEL)  │             │ MODULAR TACTICAL RF BACKPACK   │
+        │ SNAPDECK KEYBOARD DOCK (PARALLEL)  │             │ MODULAR TACTICAL RF MULTI-TOOL │
         │ • Kailh X-Switches (3.5mm low prof)│             │ • Internal RP2040 MCU + USB Hub│
         │ • Blackberry RIM 9900 Trackpad     │             │ • RTL2832U Wideband SDR        │
         │ • Nordic nRF52840 (ZMK + BLE 5.0)  │             │ • TI CC1101 Sub-GHz (300-928M) │
@@ -218,9 +218,11 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
   * Management: Controlled natively under Linux via **`lpac`** (open-source C LPA) and `ModemManager` over standard AT channel commands (`AT+CCHO`/`AT+CGLA`) for instant QR-code carrier activation.
 * **LoRa Mesh Radio:** **Semtech SX1262** 915/868 MHz transceiver (up to +22 dBm output).
   * Connects via dedicated SPI to the RP2350 co-processor, running autonomous 24/7 **Meshtastic** mesh repeating firmware at 12–15 mW, and exposing a virtual serial interface to Linux over the inter-processor UART/serial bus (`/dev/ttyAMA0`).
-* **Global Satellite Navigation:** **u-blox MAX-M10S** GNSS receiver.
-  * Concurrent reception of GPS, BeiDou-3, Galileo, GLONASS, and QZSS.
-  * Ultra-low power (15 mW) feeding `gpsd` for offline OsmAnd / FoxtrotGPS mapping.
+* **Global Satellite Navigation (Integrated Qualcomm GNSS):**
+  * Integrated multi-constellation GNSS engine inside the Quectel EG25-G modem (Qualcomm Gen8C Lite).
+  * Concurrent reception of GPS, BeiDou, Galileo, GLONASS, and QZSS.
+  * Connects via an internal dedicated high-efficiency FPC antenna (Molex 1461860100).
+  * Feeds standard NMEA sentences directly into Linux `gpsd` (`/dev/ttyUSB1`) for offline OsmAnd, QGIS, and FoxtrotGPS mapping without requiring a redundant standalone GPS chip, saving $17.00 in BOM and precious PCB space.
 
 ### 2.5 Antenna Engineering & RF Architecture
 To prevent the device from becoming an unwieldy "hedgehog" with 5 external antennas, SolarDeck adopts a hybrid external/embedded antenna topology:
@@ -310,26 +312,25 @@ SolarDeck leverages the Broadcom SoC's dual independent MIPI CSI-2 camera ports 
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                    SOLARDECK DUAL-CAMERA ARCHITECTURE                       │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 1. REAR WORLD-FACING CAMERA (Back Chassis):                                 │
-│    • Sensor: Sony IMX708 (12.0 Megapixels, 4608 × 2592, HDR)                │
+│ 1. REAR FLUSH CAMERA FOR AI VISUAL REASONING (Back Chassis):                 │
+│    • Sensor: Sony IMX708 (12.0 Megapixels, 4608 × 2592, HDR, PDAF)          │
+│    • 100% Flush Zero-Bump Integration: Sits recessed beneath an anti-reflec-│
+│      tive sapphire crystal optical window flush with the rear aluminum plate │
+│      (0.0mm camera bump / zero wobble when typing flat on a desk).          │
 │    • Focus: Motorized Phase Detection Autofocus (PDAF) from 5cm to infinity │
 │    • Bus: 2-Lane MIPI CSI-2 on `CAM1` (Direct Hardware ISP Pipeline)        │
-│    • Optics: Recessed sapphire crystal glass window with silicone O-ring    │
-│    • Shutter: Anodized aluminum mechanical sliding privacy hatch            │
-│    • Role: Claude Code multimodal vision, 5cm macro PCB inspection loupe,   │
-│            document OCR, animated QR airgap ingestion, celestial navigation │
+│    • Shutter: Internal hardware load switch cut + firmware electronic gate  │
+│    • Role: Claude Vision multimodal analysis, document & receipt digitizing,│
+│            whiteboard capture, 5cm macro PCB inspection, TXQR ingestion     │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 2. FRONT USER-FACING CAMERA (Top Front Bezel):                              │
-│    • Sensor: Sony IMX219 / Omnivision OV5647 (5.0 Megapixels, 1080p30)      │
-│    • Lens: 80° Field-of-View fixed focus (optimized for head-and-shoulders) │
-│    • Bus: 2-Lane MIPI CSI-2 on `CAM0`                                       │
-│    • Optics: Sealed flush under front glass overlay with laser-etched port  │
-│    • Shutter: Integrated mechanical "ThinkShutter" sliding lens cover       │
-│    • Hardware Indicator: Ultra-dim green LED physically in series with VDD  │
-│    • Role: Zoom, Google Meet, Discord, tactical video logs                  │
+│ 2. V1 FRONT BEZEL STREAMLINING (Ponytail Descoping Win):                   │
+│    • Front camera and mechanical sliding ThinkShutter are descoped from V1. │
+│    • Eliminates high-speed MIPI-CSI trace routing noise and IP67 water leak │
+│      vulnerabilities, while freeing bezel space for solar energy harvesting.│
+│    • Standard UVC USB-C webcams are 100% plug-and-play via USB-C Port 2.    │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 3. POWER & AIRGAP INTEGRATION:                                              │
-│    • Both cameras power-gated via TI TPS22918 load switch (0.000W standby). │
+│    • Rear camera power-gated via TI TPS22918 load switch (0.000W standby).  │
 │    • Hardware Airgap Switch physically shunts camera VDD to GND in STEALTH. │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -339,9 +340,6 @@ SolarDeck leverages the Broadcom SoC's dual independent MIPI CSI-2 camera ports 
   * **5cm Macro PCB Inspection Loupe:** Uses the 10.3" 227 PPI E-Ink display as a real-time digital microscope to inspect 0402 SMD solder bridges, trace micro-fractures, and laser-etched IC part numbers.
   * **High-Speed Optical Airgap Data Ingestion (`txqr`):** Ingests multi-megabyte files, encrypted GPG archives, and tactical maps at 250+ kbps by reading 30 FPS animated QR fountain streams with zero RF emission.
   * **Night-Sky Celestial Navigation:** Captures night sky star patterns; local offline plate-solving (`astrometry.net`) computes astronomical heading and coordinates when GPS is jammed.
-* **Front Camera & Video Conferencing (Sony IMX219 5MP):**
-  * **Clean Outgoing Stream:** Hardware-accelerated H.264 video encode transmits crisp 1080p30 color video to meeting participants over LTE or Wi-Fi.
-  * **E-Ink Meeting UX:** Inbound screen-shared code/slides render with paper-sharp 16-bit grayscale (GC16), while participant video thumbnails render in 2-bit A2 motion mode (60–75ms) or update on active speaker change, eliminating screen flicker while maintaining real-time audio.
 
 ### 2.7 Audio & Standby Alert Subsystem
 * **Dual-MEMS Noise-Cancelling Acoustic Array (Broadside Beamforming):**
@@ -435,26 +433,25 @@ To completely eliminate bus arbitration lockups and the hardware address collisi
 * **Inter-Processor Telemetry Bridge:** Because `I2C_ALWAYS_ON` is physically isolated from the CM4 host to maintain low sleep power, the RP2350 acts as an intelligent hardware bridge:
   1. It samples battery thermals, ambient lux, and power rails in hardware.
   2. It exposes these metrics as an I2C Target device (`0x42`) on `I2C_HOST` and streams structured telemetry over the dedicated high-speed UART/USB CDC serial pipe (`/dev/ttyACM0`). Linux daemons (`solardeck-telemetryd`, `eink-refreshd`) read thermal and battery metrics directly from this bridge without requiring physical access to `I2C_ALWAYS_ON`.
-* **External Rugged Qwiic / Stemma QT 3.3V Sensor Port:**
-  * Flush 4-pin JST-SH (1.0 mm pitch) connector on side chassis sealed by a captive IP67 silicone plug.
-  * Connected to `I2C_HOST` through a TI TPS22918 load switch (software power-gated, 0.000W when empty) and protected by TI TPD4E05U06 TVS diodes.
-  * Instant plug-and-play CLI access (`i2cdetect -y 1`) for external environmental, thermal, gas, or radiation sensors without opening the sealed chassis.
+* **External I2C Sensor Expansion via USB-C Port 2:**
+  * To preserve the IP67 enclosure seal and avoid fragile external JST connectors, external sensor expansion (BME280, thermal imagers, Geiger counters) is routed through **USB-C Port 2** using standard USB-to-I2C/Qwiic bridge dongles (e.g. MCP2221A or RP2040 PIO).
+  * Eliminates a dedicated chassis penetration and provides instant plug-and-play CLI access (`i2cdetect -y 1`) without exposing delicate 1.0mm pins to mud or rain.
 
 ### 2.10 Multi-Rail Power & Environmental Telemetry Sensors
-* **Multi-Rail Digital Power Monitor (Texas Instruments INA3221):**
+* **Multi-Rail Digital Power Monitor (Texas Instruments INA3221 - KEPT FOR TELEMETRY):**
   * Replaces generic single ammeters with a 3-channel high-side current and bus voltage monitor over I2C.
   * Measures voltage and shunt current across three isolated domains simultaneously:
     * **Rail 1 (Compute):** CM4 core, LPDDR4, eMMC. Pinpoints CPU governor efficiency and memory leaks.
     * **Rail 2 (Display):** IT8951 EPDC and high-voltage rails. Pinpoints display power draw per waveform mode.
     * **Rail 3 (RF Radios):** Quectel modem, LoRa transceiver, Wi-Fi/BT. Catches hung cellular RRC sockets and rogue radio beacons.
-  * Programmable conversion times down to 140 µs with an active-low `CRITICAL` alert pin that trips on inrush current spikes, latching peak transient events for analysis.
+  * Direct telemetry to Claude Code CLI and `solardeck-telemetryd` SQLite database for empirical algorithmic power profiling.
 * **Coulomb Counter & Battery Fuel Gauge (Texas Instruments BQ27441-G1):**
   * Integrated Impedance Track™ fuel-gauge technology tracks exact milliamp-hours entering and leaving the pack (true Coulomb counting).
   * Measures battery cell internal impedance ($R_{\text{cell}}$ in mΩ) and computes true State-of-Health (SOH %) across 3,000+ charge cycles.
   * Enables charging optimization: signals the BQ25895 charger to reduce charge current when cell resistance rises or temperatures elevate, doubling battery operational lifespan to 10+ years.
-* **Multi-Zone Thermal Triad (Texas Instruments TMP112 + SoC Diode):**
+* **Multi-Zone Precision Thermal Triad (Texas Instruments TMP112 + SoC Diode - KEPT FOR THERMAL LOGS):**
   * High-precision ($\pm 0.5^\circ\text{C}$), ultra-thin SOT-563 digital temperature sensors placed at strategic thermal points:
-    * **Battery Zone:** Directly adhered to the pouch cell under the thermal protection sleeve.
+    * **Battery Zone:** Directly adhered to the pouch cell under the thermal protection sleeve for millidegree charging logs.
     * **Display Zone:** Adhered to the aluminum backplate behind the E-Ink panel. Directly feeds the IT8951 EPDC Look-Up Table (`TEMP_REG`) via the RP2350 bridge to dynamically adjust waveform voltage pulses as liquid microcapsule viscosity changes with temperature (eliminating ghosting in winter cold and bleeding in summer heat).
     * **Compute Zone:** Monitored via CM4 internal thermal diode and modem AT commands (`AT+QTEMP`).
 * **Ambient Light & Solar Lux Sensor (Texas Instruments OPT3001):**
@@ -463,9 +460,8 @@ To completely eliminate bus arbitration lockups and the hardware address collisi
 * **Motion & Kinematics Accelerometer (Bosch BMA400):**
   * Ultra-low-power 12-bit 3-axis accelerometer drawing **3.5 µA**.
   * Continuous autonomous motion detection: picks up physical desk wake interrupts, detects orientation (portrait vs. landscape), double-tap frame gestures, and free-fall conditions (firing an emergency interrupt to flush eMMC dirty buffers before ground impact).
-* **3-Axis Digital Magnetometer / Compass (Memsic MMC5603NJ):**
-  * 20 µA digital compass for offline tactical mapping (Meshtastic, ATAK, OsmAnd) without network connectivity.
-  * Monitors localized chassis magnetic interference to detect nearby ferrous metal or docking magnets.
+* **GNSS Course-Over-Ground (Descoping Win for Compass):**
+  * Compass heading is provided natively by the Quectel modem's integrated Qualcomm GNSS receiver calculating course-over-ground. Eliminates the separate MMC5603NJ magnetometer, avoiding complex magnetic hard/soft-iron distortion from chassis magnets.
 * **Precision Barometer & Altimeter (Bosch BMP390):**
   * 0.1m relative altitude precision; samples ambient air pressure to plot barometric barographs on the ambient desk clock and alert the user to incoming weather fronts.
 * **Benchtop Diagnostic Test Points & Hardware Probing Straps:**
@@ -563,21 +559,21 @@ To guarantee true 0.000V electrical isolation and zero phantom leakage across al
 
 | Operating Tier | Active Brain | Display Driver | Powered Subsystems | Total Power Draw | Battery Runtime (35 Wh Pack) |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Tier 0: Dormant Standby** | RP2350 (10 µA sleep) | Display OFF (Static) | DS3231 RTC, BQ27441 (CM4 0V, Radios 0V, Hi-Z) | **< 0.1 mW** | **10+ Years shelf life** |
+| **Tier 0: Dormant Standby** | RP2350 (10 µA sleep) | Display OFF (Static) | Internal 32kHz RTC, BQ27441 (CM4 0V, Radios 0V, Hi-Z)| **< 0.1 mW** | **10+ Years shelf life** |
 | **Tier 1: Ambient Clock & Zen Reader**| RP2350 (12MHz Cortex-M33)| IT8951 (PSRAM Double-Buf)| 8MB PSRAM, BMA400, BMP390 (30ms Page Turns) | **~4.5 mW** | **300+ Days (10 Months)** |
 | **Tier 2: Perpetual LoRa Mesh Node** | RP2350 (48MHz M33 / RISC-V)| IT8951 (Status Banner) | Semtech SX1262 LoRa Transceiver (Autonomous routing)| **12 to 15 mW** | **80+ Days (2.6 Months)** |
 | **Tier 3: Paper-Feel Scribe Slate** | CM4 (1 core @ 600 MHz) | IT8951 (DU 1-bit Buffer) | Wacom EMR (240 Hz, Hover-gated), eMMC | **~0.60 W** | **58 Hours** active (460h study) |
 | **Tier 4: Adaptive Mixed Workstation**| CM4 (Dynamic DVFS 0.6–1.5G)| IT8951 (Dynamic Waveforms)| Wi-Fi/LTE, Web, Twitter, Discord, Claude Code CLI | **~1.40 W** | **25 Hours** screen-on (3–6 days) |
-| **Tier 5: Video Teleconference Mode**| CM4 (Hardware H.264 ISP) | IT8951 (A2 Motion / GC16)| Front 5MP Cam, Knowles Mic, Speaker, Wi-Fi/LTE | **~2.10 W** | **16.5 Hours** continuous calls |
+| **Tier 5: Multimedia & Audio Station**| CM4 (Hardware Audio Pipeline)| IT8951 (A2 Motion / GC16)| Knowles Mic, MAX98357A Box Speaker, Wi-Fi/LTE | **~1.70 W** | **20 Hours** continuous audio/calls |
 | **Tier 6: AI Compile Turbo** | CM4 (1.8GHz Quad A72) | IT8951 (Sway Wayland) | All Radios, SnapDeck Keyboard, Parallel Compiles | **2.8 W to 3.8 W** | **9 to 12 Hours** continuous |
 
 ---
 
 ### 2.14 Tool-Free Field Recovery & Factory Diagnostic Test Points
 To ensure the sealed IP67 tablet is 100% field-recoverable without screwdrivers or factory teardowns:
-* **Recessed IP67 Pinhole Recovery Buttons (Bottom Edge):**
-  1. **`REC_RPI` (eMMC System Recovery):** Actuates a micro-tactile switch pulling CM4 `nRPIBOOT` to GND. When plugged into a PC via USB-C Port 1, the CM4 enumerates as a mass storage device via `rpiboot`, flashing a new Linux OS image in seconds.
-  2. **`REC_MCU` (RP2350 Bootloader):** Pulls RP2350 `BOOTSEL` to GND. Mounts the co-processor as a drag-and-drop UF2 USB drive for instant firmware updates.
+* **Single Recessed IP67 Pinhole Recovery Button (Bottom Edge):**
+  * Actuates a micro-tactile switch pulling CM4 `nRPIBOOT` to GND. When connected to a host computer via USB-C Port 1, the CM4 enumerates as a mass storage device via `rpiboot`, allowing instant reflashing of the Linux rootfs.
+  * Co-processor (RP2350) firmware recovery and updates are handled directly by Linux over dedicated internal SWD lines (`solardeck-coproc-flash`) with automatic hardware watchdog rollback, eliminating the need for a second physical chassis button.
 * **Bed-of-Nails Automated Factory Test Matrix (PCBA Bottom):**
   * Standardized 1.27mm gold pogo pads: `TP_5V0`, `TP_3V8`, `TP_3V3`, `TP_1V8`, `TP_VBAT`, `TP_SWD_CLK`, `TP_SWD_DIO`, `TP_UART_TX`, `TP_UART_RX` for automated SMT testing and initial silicon flashing.
 
@@ -655,65 +651,55 @@ To provide 100% mission reliability in severe sub-zero weather, dust storms, and
 
 ---
 
-## 3. The SnapDeck Hybrid Detachable Keyboard (Parallel Co-Design)
+## 3. Universal Mechanical Mount, Handheld Thumb Grips & Open Keyboard Architecture
 
-The SnapDeck keyboard is co-engineered alongside the core tablet to guarantee mechanical tolerances, magnetic alignment, and seamless Wayland display resizing.
+To eliminate $25,000 in custom injection tooling risk and 6 months of bespoke ZMK keyboard firmware development, SolarDeck V1 descopes the proprietary keyboard in favor of an **Open Keyboard Ecosystem & Universal Mechanical Mount**:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                       SNAPDECK CO-DESIGN SPECIFICATION                      │
+│                 UNIVERSAL MECHANICAL MOUNT & OPEN KEYBOARDS                 │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 1. BRAIN:        Nordic nRF52840 (Native USB 2.0 + Bluetooth LE 5.0)        │
-│ 2. FIRMWARE:     ZMK (Open-source, ultra-low power, instant BLE switching)  │
-│ 3. SWITCHES:     Kailh X-Switch (ultra-low 3.5mm profile, tactile scissor)  │
-│ 4. NAVIGATION:   Blackberry RIM 9900 Optical Trackpad centered below space  │
-│ 5. ERGONOMICS:   Folding Magnetic Hinge Flap (7° Natural Typing Cant Angle) │
-│ 6. ALIGNMENT:    Dual Chamfered 1.5mm Stainless Steel Dowel Guide Pins      │
-│ 7. BATTERY:      Thin 300 mAh LiPo pouch cell + MCP73831T charger & PCM     │
-│ 8. DOCK BUS:     5-Pin Magnetic Pogo (5V Charge, GND, USB D+, USB D-, ID)   │
-│ 9. CHASSIS MATE: Matching PA12 / 6061-T6 shell with N52 neodymium magnets   │
+│ 1. TOTAL INPUT FREEDOM:                                                     │
+│    • Pair any existing Bluetooth LE 5.0 or USB-C keyboard                   │
+│      (ThinkPad TrackPoint, Keychron, NuPhy Air60, Corne split, Apple Magic).│
+│ 2. REAR UNIVERSAL MECHANICAL MOUNT:                                         │
+│    • 4x M2.5 Brass Threaded Heat-Set Inserts (50mm & 75mm VESA spacing).    │
+│    • Embedded MagSafe-Compatible Neodymium N52 Magnetic Anchor Array.       │
+│ 3. HANDHELD BED/COUCH MODE (3D-Printed BlackBerry Q20 Thumb Grip):          │
+│    • Open-source 3D-printed snap-on bracket mounts an off-the-shelf $20      │
+│      Solder Party BlackBerry Q20 tactile clicky keyboard beneath display.   │
+│ 4. INTEGRATED ROTATING KICKSTAND:                                           │
+│    • Props tablet at 15° to 85° angles in both Portrait and Landscape.      │
+│    • Portrait mode displays 80+ lines of uninterrupted terminal code.       │
+│ 5. PHASE 2 SNAPDECK RESERVED FOOTPRINT:                                     │
+│    • 5-pin hermetic magnetic pogo bus pads retained on PCBA bottom edge     │
+│      for future turnkey SnapDeck clamshell accessory production.            │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 3.1 Pogo-Pin Docking, Charging Circuit & Mechanical Interface
-* **Connector:** 5-pin hermetic magnetic spring-loaded gold Pogo connector (2.54 mm pitch).
-* **Pinout:**
-  1. `VBUS` (+5.0V Power from tablet to keyboard charging circuit)
-  2. `USB_D-` (USB 2.0 Differential Data Negative)
-  3. `USB_D+` (USB 2.0 Differential Data Positive)
-  4. `GND` (Ground)
-  5. `ID_SENSE` (Grounded inside keyboard for hardware insertion detection)
-* **Keyboard Internal Battery Management & Pure Silicon Safety:**
-  * To safely charge the 300 mAh internal LiPo cell from the 5.0V pogo rail, the SnapDeck integrates a dedicated Microchip **MCP73831T-2ACI/OT** miniature linear charge management IC ($0.25).
-  * Programmed via a precision pull-down resistor for a safe 0.5C charge current (150 mA) and a rigid 4.20V termination threshold.
-  * Paired with a Texas Instruments **BQ2970** battery protection PCM and miniature dual-MOSFET to protect the 300 mAh pouch against over-discharge (<2.8V), over-charge (>4.25V), and short circuits.
-* **Dual Stainless Steel Alignment Guide Pins:**
-  * Two chamfered 1.5mm 304-stainless steel guide dowels flank the 5-pin pogo array on the keyboard deck, mating with CNC receiver wells on the tablet lower bezel.
-  * Ensures blind, instantaneous magnetic capture with **zero lateral shearing force** on the spring-loaded gold pogo pins.
-* **Ergonomic 7° Magnetic Folding Cant Flap:**
-  * A secondary folding magnetic strip along the keyboard top edge allows the keyboard to rest either completely flat (0° Lapdeck mode) or propped up at a comfortable **7° ergonomic typing cant** on desks or tables, relieving wrist strain during multi-hour programming sprints.
+### 3.1 Total Input Freedom & Ergonomic Portability
+* **The Philosophy:** Developers are fiercely loyal to their preferred keyboard switches, layouts, and keycaps. Forcing a proprietary scissor keyboard alienates mechanical keyboard purists and increases device failure rates.
+* **Low-Latency Wireless & Wired Connectivity:**
+  * **Bluetooth LE 5.0:** Linux `bluez` pairs instantly with any standard wireless keyboard. Latency is $<8\text{ ms}$.
+  * **USB-C Port 2 (Host):** Plug in any high-end custom mechanical keyboard, split keyboard (Corne, Ergodox), or macro pad with full QMK/VIA programmability.
 
-### 3.2 Operating Modes, Wayland Integration & Touch Exclusion
-1. **On-Screen Lapdeck Mode (Docked):**
-   * Snaps magnetically onto the lower 1/3 of the landscape display.
-   * `ID_SENSE` grounds and front-bezel Hall sensor trips on the tablet.
-   * **Native Sway Workspace Docking:** The Sway Wayland compositor dynamically reserves the lower 454 vertical pixels without invalid DRM mode-switching:
-     ```bash
-     # Reserve lower 454 pixels; active terminal dock confined to upper 1872x950
-     swaymsg output SPI-1 scale 1
-     swaymsg output SPI-1 transform normal
-     # swaymsg commands dynamically re-dock workspaces into the visible top view
-     ```
-   * **Capacitive Touch Isolation:** To prevent the keyboard's conductive PCB, aluminum scissor switches, and typing fingers from causing phantom touch interrupts on the Goodix GT911 touch glass underneath:
-     * A udev rule commands `libinput` to ignore capacitive touch coordinates on `SPI-1` below $Y = 950$, OR
-     * The system temporarily disables the GT911 via its dedicated TPS22918 power load switch, defaulting cursor navigation entirely to the RIM 9900 optical trackpad.
-   * Runs as a wired USB keyboard; charges the internal 300 mAh LiPo via the MCP73831T charger.
-2. **Propped-Up Desktop Mode (Detached BLE):**
-   * Undocking breaks `ID_SENSE`. The nRF52840 automatically switches to **Bluetooth LE 5.0 in <5 ms**.
-   * Tablet Hall sensor releases; Sway expands workspace to full 1872×1404 pixels, and full-screen capacitive touch re-enables.
-3. **Rear Stowed Slate Mode:**
-   * Snaps magnetically to the rear chassis for reading or stylus sketching.
-   * Rear Hall sensor trips, placing keyboard keys into sleep to ignore accidental hand presses.
+### 3.2 Rear Universal Mechanical Anchor & MagSafe Array
+* **M2.5 Threaded Brass Inserts:** Four M2.5 heat-set brass inserts embedded into the rigid rear PA12/aluminum chassis on standard 50mm and 75mm square grid spacing. Provides a rock-solid, vibration-proof anchor for:
+  * Camera tripod 1/4"-20 adapter plates.
+  * RAM Mount ball joints for vehicle dash, sailboat bulkhead, or aircraft cockpit mounting.
+  * Heavy-duty desk-arm articulation clamps.
+* **MagSafe Magnetic Ring:** An embedded 36-magnet neodymium N52 array (standard 54mm outer diameter) allows instantaneous magnetic snap-on attachment to standard magnetic phone/tablet stands, car mounts, and magnetic charging easels.
+
+### 3.3 Handheld Bed/Couch Mode: 3D-Printed BlackBerry Q20 Grip
+* **The Use Case:** Typing on a 10.3" tablet while lounging in a hammock, lying in bed, or walking in the field is impossible with a full-size desk keyboard.
+* **The Solution:** The open-hardware community provides an ultra-compact 3D-printed clip that mates to SolarDeck's rear M2.5 inserts or MagSafe ring, positioning an off-the-shelf **Solder Party BlackBerry Q20 USB/BLE keyboard** directly beneath the lower bezel:
+  * Weighs only 45 grams; costs ~$20.
+  * Features 35 clicky tactile dome keys + BlackBerry optical trackpad.
+  * Connects over internal Bluetooth LE or low-profile USB-C jumper.
+  * Enables effortless two-thumb terminal coding, chat, and prompt generation while holding the tablet like a Game Boy.
+
+### 3.4 Phase 2 SnapDeck Footprint Preservation
+* To ensure the carrier motherboard never requires a revision if a custom magnetic pogo keyboard is manufactured in Phase 2, the bottom edge of the PCBA retains the SMD landing pads for the **5-pin hermetic magnetic pogo connector** (`VBUS`, `USB_D-`, `USB_D+`, `GND`, `ID_SENSE`) with dedicated TVS ESD diodes.
 
 ---
 
@@ -752,9 +738,9 @@ The SnapDeck keyboard is co-engineered alongside the core tablet to guarantee me
 │ • Chemically Etched Matte Glass Overlay (15% Haze, Paper-Texture Friction)  │
 │ • 10.3" E-Ink Kaleido 3 / Carta 1200 Panel + Wacom EMR Digitizer           │
 │ • 0.1mm Mu-Metal / Ferrite Magnetic Shielding Layer (Behind Digitizer)      │
-│ • Top Bezel: IXYS Micro-Solar Strip + 5MP Front Cam with "ThinkShutter"     │
+│ • Top Bezel: IXYS Micro-Solar Strip (Trickle Top-Up & Ambient Calculators)  │
 │ • Bottom Bezel: 5-Pin Hermetic Magnetic Pogo Dock for SnapDeck Keyboard     │
-│ • Right Flank: Recessed Stylus Garage Groove with Mechanical Spring Clip    │
+│ • Right Flank: Magnetic Precision Stylus Clamping (N52 Array + Align Groove)│
 │                                                                             │
 │ [INTERNAL COPLANAR CHASSIS STACKUP (X-Y ARRANGEMENT)]                       │
 │ • Front Glass + E-Ink Panel + Wacom EMR Layer: 2.8 mm uniform               │
@@ -783,9 +769,11 @@ The SnapDeck keyboard is co-engineered alongside the core tablet to guarantee me
 * **Acoustic Sealing:** Knowles MEMS microphone and 1W speaker sound chambers ported through waterproof acoustic ePTFE hydrophobic membranes.
 * **Barometric Equalization:** GORE PMF100396 vent plug prevents internal vacuum or pressure buildup during air travel or mountain ascents.
 
-### 4.2 Stylus Garage & Field Transport
-* The right chassis flank features a recessed magnetic channel paired with a low-profile mechanical spring retaining clasp.
-* Holds standard 8.0mm diameter EMR styluses (Staedtler Noris Digital, Lamy AL-star, or reMarkable Marker) securely during transit without accidental snagging.
+### 4.2 Magnetic Precision Stylus Clamping & Field Transport
+* Rather than boring a 140 mm hollow internal tube through the chassis (which steals 10 cm³ of internal battery volume and introduces complex internal seals), SolarDeck adopts **Magnetic Precision Side-Clamping (reMarkable 2 / iPad Pro style)**:
+  * An array of high-grade **Neodymium N52 rare-earth magnets** is embedded directly into the right aluminum chassis flank, paired with a shallow tactile alignment channel.
+  * Delivers a solid **1.2 kgf retention force**, securely locking standard 8.0mm–9.5mm EMR styluses (Staedtler Noris Digital, Lamy AL-star, or reMarkable Marker) to the side of the tablet.
+  * For transit in rugged backpacks, the SnapDeck keyboard folio incorporates a secondary elastic retention loop for double drop-proof security.
 
 ### 4.3 Shock-Proof Compute Module Retention & Thermal Heat-Pipe Clamp
 To prevent the CM4’s dual 100-pin Hirose DF40 micro-connectors from unseating during 4-foot drops or high-vibration off-road vehicle transport:
@@ -809,11 +797,13 @@ To protect sensitive private keys, encrypted credentials, and communications log
 
 ---
 
-## 5. Modular Tactical RF & SIGINT Backpack (Optional Add-on)
+## 5. Modular Tactical RF & SIGINT USB-C Multi-Tool (External Add-on)
 
-The modular backpack attaches to the rear 8-pin hermetic pogo bus. To interface wideband SDR (USB), Sub-GHz (SPI), 125 kHz RFID (analog/pulse), NFC (I2C/SPI), and IR blaster (PWM) across a single high-speed USB differential pair and I2C bus:
-* **Backpack Core Bridge MCU & USB Hub Architecture:**
-  * **USB 2.0 Hub Controller:** Genesys Logic **GL850G** (or FE1.1s, $0.35) 2-port USB 2.0 hub IC splits the pogo bus USB pair between the RTL2832U SDR and the backpack bridge MCU.
+In SolarDeck V1, the Tactical RF Multi-Tool is packaged as a rugged, low-profile snap-on pod that mates directly to external high-speed **USB-C Port 2**. This eliminates the complex rear 8-pin hermetic pogo bus from the V1 core chassis, saving $12.00 in BOM and tooling, eliminating PCB routing congestion, and preserving a completely solid, watertight unibody rear chassis.
+
+To interface wideband SDR (USB), Sub-GHz (SPI), 125 kHz RFID (analog/pulse), NFC (I2C/SPI), and IR blaster (PWM) across a single high-speed USB-C port:
+* **Core Bridge MCU & USB Hub Architecture:**
+  * **USB 2.0 Hub Controller:** Genesys Logic **GL850G** (or FE1.1s, $0.35) 2-port USB 2.0 hub IC splits the USB pair between the RTL2832U SDR and the bridge MCU.
   * **Bridge Microcontroller:** Raspberry Pi **RP2040** (Dual Cortex-M0+, $0.70) interfaces to the host via USB CDC / HID, natively driving:
     * Texas Instruments **CC1101** over dedicated SPI.
     * **EM4095** 125 kHz RFID demodulator over analog/pulse-timing lines.

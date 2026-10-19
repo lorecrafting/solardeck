@@ -13,14 +13,14 @@ SolarDeck is a sovereign, general-purpose open-hardware computing platform desig
    * Sunlight-readable 10.3" e-paper reader and Wacom EMR digitizer slate
    * Built-in Worldwide 4G/LTE (Quectel EG25-G) with soldered onboard MFF2 **eSIM (eUICC)**
    * Built-in off-grid mesh communicator (Semtech SX1262 LoRa / Meshtastic 915/868 MHz)
-   * Worldwide Multi-Constellation Satellite Navigation (u-blox MAX-M10S: GPS + BeiDou-3 + Galileo + QZSS + GLONASS)
+   * Worldwide Multi-Constellation Satellite Navigation (Integrated Qualcomm GNSS in Quectel EG25-G)
    * Dual-brain ultra-low-power supervisor (RP2350B + 8MB PSRAM) with **TI TMUX1575 8-channel display bus isolation** for 4.5 mW 30ms Zen reading, 24/7 LoRa mesh repeating, and 300+ day desk clock modes
-   * Dual MIPI CSI-2 camera subsystem (12MP Sony IMX708 PDAF Macro rear camera + 5MP 1080p front camera with mechanical ThinkShutter)
+   * 12MP Sony IMX708 PDAF Macro rear camera for Claude Code multimodal inspection, PCB loupe, and document OCR
    * Top-bezel **IP67 Bulkhead SMA female connector** for tactical tuned LoRa whip, plus internal Taoglas FXUB63 2×2 MIMO cellular antennas
    * High-capacity **8,000–10,000 mAh (26–32 Wh LiFePO4 / 30–37 Wh Li-ion)** battery (airline-compliant <100Wh)
    * Lightweight, rugged SLS 3D-printed PA12 Nylon enclosure or CNC 6061-T6 aluminum with RF window cap
-2. **Modular Expansion Packs:** Specialized RF payloads offloaded to snap-on or USB-C modules:
-   * **Tactical RF Backpack:** Flipper Zero suite (Sub-GHz CC1101, NFC, RFID, IR blaster) connecting via the rear 8-pin magnetic pogo bus
+2. **Modular Expansion Packs:** Specialized RF payloads offloaded to USB-C modules:
+   * **Tactical RF Multi-Tool:** Flipper Zero suite (Sub-GHz CC1101, NFC, RFID, IR blaster) and wideband RTL-SDR connecting via external USB-C Port 2
    * **Satellite SOS Pod:** Commercial two-way satellite transceivers (RockBLOCK 9603 Iridium / Swarm)
    * **Industrial Deck Link:** CAN Bus 2.0B / M8 Gigabit Ethernet bridge
 
@@ -32,28 +32,28 @@ SolarDeck is a sovereign, general-purpose open-hardware computing platform desig
 │ 2. CO-PROC:   RP2350B (Cortex-M33/RISC-V) + 8MB PSRAM (300-Day Zen Reader)  │
 │ 3. DISPLAY BUS: Dual-Path MIPI-DSI (CM4 24 FPS Video) + TMUX1575 SPI (RP2350)│
 │ 4. SCREEN:    10.3" E-Ink (Carta 1200 / Kaleido 3 / Kaleido 4, 227 PPI) + EMR│
-│ 5. CAMERAS:   Dual MIPI: 12MP Sony IMX708 PDAF Rear + 5MP 1080p Front       │
+│ 5. CAMERAS:   12MP Sony IMX708 PDAF Macro Rear (Multimodal Claude Code / OCR)│
 │ 6. CELLULAR:  M.2 Quectel EG25-G LTE + Onboard Soldered MFF2 eSIM (ST4SIM)  │
-│ 7. MESH/GNSS: Built-In Semtech SX1262 LoRa (868–928MHz) + u-blox MAX-M10S   │
+│ 7. MESH/GNSS: Built-In Semtech SX1262 LoRa (868–928MHz) + Qualcomm GNSS     │
 │ 8. ANTENNAS:  Top-Edge IP67 SMA (LoRa) + Internal Taoglas FXUB63 MIMO (LTE) │
-│ 9. SENSORS:   Bosch BMA400 Accel + MMC5603NJ Compass + BMP390 Barometer/Alt │
+│ 9. SENSORS:   Bosch BMA400 Accel + BMP390 Baro + Dual TMP112 + INA3221 Telemetry│
 │ 10. AIRGAP SW: Physical Hardware RF Kill Switch (Zero EMF / 0.000 dBm Cutoff)│
 │ 11. AUDIO:    Sealed Micro-Box Speaker + MAX98357A Amp + MEMS Mic + Mute SW │
 │ 12. BATTERY:  8,000–10,000 mAh (26–32 Wh LiFePO4 / 30–37 Wh Li-ion) Pack    │
 │ 13. USB ARCH: Dedicated PCIe USB Host / Hub (Peripherals) + Port 1 OTG Sink │
-│ 14. EXPAND:   1x Qwiic (I2C) + 2x IP68 USB-C (Monitor Sink) + 8-Pin Pogo    │
+│ 14. EXPAND:   2x IP68 USB-C (Monitor Sink + Host Expand with USB-to-I2C)     │
 │ 15. CHASSIS:  SLS 3D-Printed PA12 Nylon + 85A TPU Armor Corners (~510g total)│
 └──────────────────────────────────────┬──────────────────────────────────────┘
                                        │
             ┌──────────────────────────┴──────────────────────────┐
             ▼                                                     ▼
 ┌───────────────────────────────────────┐     ┌───────────────────────────────┐
-│ SNAPDECK KEYBOARD (PARALLEL BUILD)    │     │ MODULAR TACTICAL RF BACKPACK  │
+│ SNAPDECK KEYBOARD (PARALLEL BUILD)    │     │ MODULAR TACTICAL RF MULTI-TOOL│
 │ • Kailh X-Switches (Ultra-slim 3.5mm) │     │ • Flipper Zero Sub-GHz CC1101 │
 │ • Blackberry RIM 9900 Optical Trackpad│     │ • 13.56MHz NFC & 125kHz RFID  │
 │ • Nordic nRF52840 (ZMK + BLE 5.0)     │     │ • Dual High-Power IR TX/RX    │
-│ • 5-Pin Magnetic Gold Pogo Bus        │     │ • Snaps to Rear 8-Pin Pogo    │
-│ • Wayland Auto-Resize to Top 2/3      │     │ • Independent Shielded Cavity │
+│ • 5-Pin Magnetic Gold Pogo Bus        │     │ • Wideband Sky-Scan SDR       │
+│ • Wayland Auto-Resize to Top 2/3      │     │ • Mates to USB-C Port 2       │
 └───────────────────────────────────────┘     └───────────────────────────────┘
 ```
 
