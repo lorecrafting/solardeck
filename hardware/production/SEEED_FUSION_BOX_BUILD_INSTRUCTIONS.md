@@ -48,7 +48,7 @@ Refer to `hardware/production/seeed_fusion_bom.csv` for exact manufacturer part 
 
 ### Box-Build Sourced Modules (Items 20–24)
 1. **Compute Module (Item 20):** Raspberry Pi CM4 (Model `CM4104000`: 4GB RAM, WiFi, Lite).
-2. **Display Assembly (Item 21):** Waveshare / Good Display 10.3" E-Ink Kit (1872×1404 panel + IT8951 controller board + 40-pin FPC cable).
+2. **Display Assembly (Item 21):** 10.3" Color E-Ink **Kaleido 4** Panel with Laminated **Wacom EMR Digitizer** (Model `ED103TC4-WACOM` or DKE / Good Display / Waveshare equivalent, 1872×1404, 40,000+ colors + IT8951 controller board + 40-pin FPC cable; Kaleido 3 fallback if Kaleido 4 lead time > 3 weeks).
 3. **Cellular Modem (Item 22):** Quectel EG25-G (M.2 Key-B form factor, LTE Cat-4 Worldwide + GNSS).
 4. **Battery Pack (Item 23):** 3.2V Nominal 8,000–10,000 mAh LiFePO4 pouch cell with 10k NTC thermistor and JST-PH 2.0 connector.
 5. **Chassis Shell (Item 24):** 3D printed in **SLS PA12 Nylon (Black)** via Seeed Fusion 3D printing service using `solardeck_chassis.stl`.

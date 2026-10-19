@@ -19,7 +19,7 @@ Item,Designator,Quantity,Manufacturer,Manufacturer Part Number (MPN),Description
 18,U18,1,STMicroelectronics,ST4SIM-200M,"Industrial eUICC Micro-eSIM (Slot 2)",DFN-8-1EP_5x6mm,Seeed Sourced (SMT),LCSC C2891244
 19,J_SIM,1,Molex / Amphenol,Nano-SIM-PushPush,"Weather-Sealed Nano-SIM Push-Push Socket (Slot 1)",Nano-SIM,Seeed Sourced (SMT),LCSC C2841990
 20,MOD1,1,Raspberry Pi,CM4104000,"Raspberry Pi Compute Module 4 (4GB RAM, WiFi, Lite)",CM4_Module,Seeed Sourced (Box-Build),"Seeed Official RPi Distributor stock"
-21,DISP1,1,Waveshare / Good Display,10.3inch-e-Paper-HAT,"10.3"" E-Ink Display Kit (1872x1404 + IT8951 Tcon)",10.3_EINK_KIT,Seeed Sourced (Box-Build),"Sourced via Waveshare / Guangdong DKE"
+21,DISP1,1,E Ink / DKE / Good Display,ED103TC4-WACOM,"10.3"" Color E-Ink Kaleido 4 Panel with Laminated Wacom EMR Digitizer & IT8951 EPDC",10.3_KALEIDO4_KIT,Seeed Sourced (Box-Build),"Sourced via Guangdong DKE / Good Display (or Kaleido 3 fallback)"
 22,MOD2,1,Quectel,EG25GGB-M52-SGNS,"Quectel EG25-G Worldwide LTE Cat-4 / GNSS M.2 Card",M.2_3042,Seeed Sourced (Box-Build),"Quectel China Authorized Stock"
 23,BATT1,1,Great Power / EVE,LiFePO4-8000mAh-3.2V,"8000mAh 3.2V LiFePO4 Pouch Cell with 10k NTC & JST",Pouch_Cell,Seeed Sourced (Box-Build),"Guangdong local battery manufacturer"
 24,CASE1,1,Seeed 3D Service,SOLARDECK-CHASSIS-PA12,"SLS PA12 Nylon 3D Printed Chassis (227x165x9.8mm)",SLS_PA12_Black,Seeed Sourced (Box-Build),"3D printed by Seeed Fusion 3D print service"
