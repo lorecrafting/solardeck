@@ -1,0 +1,63 @@
+/* SolarDeck Waybar High-Contrast E-Ink CSS
+ * Written 2026-10-19 UTC in the Pi harness by antigravity/gemini-3.8-flash
+ */
+
+* {
+    border: none;
+    border-radius: 0;
+    font-family: "DejaVu Sans Mono", monospace;
+    font-size: 13px;
+    min-height: 0;
+    color: #000000;
+}
+
+window#waybar {
+    background-color: #ffffff;
+    border-bottom: 2px solid #000000;
+}
+
+#workspaces button {
+    padding: 0 8px;
+    background-color: #ffffff;
+    color: #000000;
+    border-right: 1px solid #777777;
+}
+
+#workspaces button.focused {
+    background-color: #000000;
+    color: #ffffff;
+}
+
+#workspaces button.urgent {
+    background-color: #000000;
+    color: #ffffff;
+    text-decoration: underline;
+}
+
+#clock,
+#battery,
+#temperature,
+#custom-solar,
+#custom-airgap {
+    padding: 0 10px;
+    border-left: 1px solid #777777;
+    background-color: #ffffff;
+    color: #000000;
+}
+
+#battery.warning {
+    background-color: #777777;
+    color: #ffffff;
+}
+
+#battery.critical {
+    background-color: #000000;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+#custom-airgap {
+    font-weight: bold;
+    background-color: #000000;
+    color: #ffffff;
+}

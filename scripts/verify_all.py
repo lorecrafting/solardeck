@@ -115,17 +115,28 @@ def main():
     )
     if not ok: failures.append("Phase 3: RP2350 Firmware")
 
-    # Phase 4: Track B Cadence Daemon Assert Tests
+    # Phase 4: Track B Daemons (eink-refreshd & solardeck-telemetryd)
     cmd_test_daemon = (
         "gcc -Wall -Wextra -I src/daemons/eink-refreshd "
         "src/daemons/eink-refreshd/refreshd.c src/daemons/eink-refreshd/test_refreshd.c "
         "-o /tmp/solardeck_test_rf && /tmp/solardeck_test_rf"
     )
     ok, _ = run_step(
-        "Phase 4: eink-refreshd Cadence Daemon Assert Test (<800ms Lockout)",
+        "Phase 4a: eink-refreshd Cadence Daemon Assert Test (<800ms Lockout)",
         cmd_test_daemon
     )
-    if not ok: failures.append("Phase 4: eink-refreshd Daemon")
+    if not ok: failures.append("Phase 4a: eink-refreshd Daemon")
+
+    cmd_test_telemetryd = (
+        "gcc -Wall -Wextra -I src/daemons/solardeck-telemetryd "
+        "src/daemons/solardeck-telemetryd/telemetryd.c src/daemons/solardeck-telemetryd/test_telemetryd.c "
+        "-o /tmp/solardeck_test_telemetryd && /tmp/solardeck_test_telemetryd"
+    )
+    ok, _ = run_step(
+        "Phase 4b: solardeck-telemetryd Co-Processor Bridge Assert Test (CRC-8 & JSON)",
+        cmd_test_telemetryd
+    )
+    if not ok: failures.append("Phase 4b: solardeck-telemetryd Daemon")
 
     # Phase 5: Track C Mechanical Enclosure
     ok, _ = run_step(

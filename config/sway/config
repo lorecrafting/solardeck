@@ -1,0 +1,67 @@
+# SolarDeck High-Contrast E-Ink Sway Configuration
+# Written 2026-10-19 UTC in the Pi harness by antigravity/gemini-3.8-flash
+
+# Default Mod key: Super (Windows/Command key)
+set $mod Mod4
+
+# High-legibility monospace font for 227 PPI E-Ink
+font pango:DejaVu Sans Mono 11
+
+# Pure High-Contrast Monochrome Color Palette (No alpha/blur)
+# class                 border  bground text    indicator child_border
+client.focused          #000000 #000000 #ffffff #000000   #000000
+client.focused_inactive #777777 #ffffff #000000 #777777   #777777
+client.unfocused        #777777 #ffffff #000000 #777777   #777777
+client.urgent           #000000 #000000 #ffffff #000000   #000000
+
+# 2-pixel crisp solid borders
+default_border pixel 2
+default_floating_border pixel 2
+gaps inner 4
+gaps outer 0
+
+# Terminal & Launcher
+set $term foot
+bindsym $mod+Return exec $term
+bindsym $mod+d exec bemenu-run -b -p "run:" --fn "DejaVu Sans Mono 12" --nb "#ffffff" --nf "#000000" --sb "#000000" --sf "#ffffff"
+
+# Window Control
+bindsym $mod+q kill
+bindsym $mod+f fullscreen toggle
+bindsym $mod+space floating toggle
+
+# Navigation (Vim style: h, j, k, l)
+bindsym $mod+h focus left
+bindsym $mod+j focus down
+bindsym $mod+k focus up
+bindsym $mod+l focus right
+
+# Move windows
+bindsym $mod+Shift+h move left
+bindsym $mod+Shift+j move down
+bindsym $mod+Shift+k move up
+bindsym $mod+Shift+l move right
+
+# Workspaces 1-6
+bindsym $mod+1 workspace number 1
+bindsym $mod+2 workspace number 2
+bindsym $mod+3 workspace number 3
+bindsym $mod+4 workspace number 4
+bindsym $mod+5 workspace number 5
+bindsym $mod+6 workspace number 6
+
+bindsym $mod+Shift+1 move container to workspace number 1
+bindsym $mod+Shift+2 move container to workspace number 2
+bindsym $mod+Shift+3 move container to workspace number 3
+bindsym $mod+Shift+4 move container to workspace number 4
+bindsym $mod+Shift+5 move container to workspace number 5
+bindsym $mod+Shift+6 move container to workspace number 6
+
+# SolarDeck Dedicated E-Ink Fast-Scrub Key
+# Forces an immediate asynchronous high-contrast anti-ghosting clear
+bindsym $mod+r exec pkill -USR1 eink-refreshd
+
+# Status Bar: High-contrast Waybar
+bar {
+    swaybar_command waybar
+}
