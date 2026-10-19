@@ -86,6 +86,8 @@ The SolarDeck repository contains comprehensive, mathematically verified specifi
 | **3GPP NTN Satellite Skylo Hotpack** | `docs/OFFGRID_TACTICAL_SENSORS.md` §8.8| Quectel CC660D-LS (IoT-NTN) | USB-C Port 2 / S-Band RHCP Patch |
 | **Off-Grid & Tactical Sensors**| `docs/OFFGRID_TACTICAL_SENSORS.md` | Dual Brain (CM4 + RP2350) | BLE, SocketCAN, 9-DOF IMU, RTK, RAG |
 | **Dual-Footprint & DNP Architecture** | `docs/HARDWARE_SPEC.md` §2.22 | 8 Strategic Fallback Footprints| NDP120, RV-3028, WSON-8, CH224K, PCIe|
+| **Autonomous LLM Hardware BIST Engine**| `docs/SOFTWARE_SPEC.md` §21 | `solardeck-diag --json` | 8-Subsystem BIST & Power-Gated Heal|
+| **30-Year Zero-Failure & Hi-Rel HW** | `docs/HARDWARE_SPEC.md` §7 | 5 Hi-Rel Rules + Escape Hatches | 50% Derate, Soft-Term MLCC, GDT, E-Fuse|
 | **Cold Storage Vault** | `docs/HARDWARE_SPEC.md` §4.2 | 3x MicroSD Slots + SIM Tool | Spring-latch Retention Pockets |
 
 ---
@@ -118,6 +120,9 @@ For engineering posterity, the following major design iterations and descoping d
 8. **Descoped Integrated Solar Smart Cover (Thermal Safety):**
    * *Original Plan:* Bi-folding solar cover attached directly to the tablet face.
    * *Decision:* In direct tropical sun (Hawaii/Arizona), dark unibody surfaces bake to >+70°C. E-Ink microcapsules permanently degrade above +60°C, and LiFePO4 charging must terminate above +45°C. Prescribed a detached 15W–28W folding USB-C panel placed in direct sun, connected via a 3-meter cable to SolarDeck resting safely in ambient shade.
+9. **Solid-State Electronic E-Fuses & 3-Stage Surge Suppression Over Consumable Fuses:**
+   * *Original Plan:* Sacrificial melting fuses and standalone single-stage TVS diodes.
+   * *Decision:* Consumable fuses melt once and require factory desoldering. Lone TVS diodes burn up under sustained lightning or high-energy static discharges. Upgraded to **TI TPS259xx electronic e-fuses** (500ns trip & auto-retry) and a **3-stage cascaded transient filter (GDT + choke + TVS)**, eliminating diode burnout while providing zero-cost 0.2mm sacrificial trace notches and `SJ1`–`SJ8` solder-bridge bypasses as field escape hatches.
 
 ---
 

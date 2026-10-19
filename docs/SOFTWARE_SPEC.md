@@ -775,3 +775,123 @@ solardeck-caliper --hover
   `Bolt Length: 25.4 mm | Thread Diameter: 3.0 mm (M3) | Pitch: 0.5 mm`.
 * **1-Click CAD Export:** Exports traced dimensions directly to standard 1:1 DXF or SVG files for immediate 3D printing on field fabricators.
 
+---
+
+## 21. Autonomous LLM Hardware Self-Diagnosis & Built-In Self-Test (BIST) Engine (`solardeck-diag`)
+
+*Written 2026-10-19 14:35 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+
+The `solardeck-diag` diagnostic specification defines an integrated Built-In Self-Test (BIST) architecture that allows local sovereign LLMs (Qwen 2.5 3B, Llama 3.2 3B) and Claude Code CLI to programmatically inspect every power rail, communication bus, peripheral IC, and radio module in under 400 milliseconds, diagnosing hardware anomalies and executing active self-healing.
+
+### 21.1 8-Subsystem BIST Telemetry & Register Map
+When invoked via CLI or local agent tool call (`solardeck-diag --json`), the engine performs an atomic sweep across eight hardware inspection domains:
+
+1. **Power Domain & Rail Current Telemetry (TI INA3221 & BQ25895):**
+   * Reads high-side voltage and current across Rail 1 (CM4 Core), Rail 2 (EPDC Display), and Rail 3 (Modem/Radios).
+   * Flags current anomalies: Rail 3 idle draw $>1\text{ mA}$ in sleep (phantom leakage), or Rail 1 current $>2.8\text{ A}$ (thermal/power saturation).
+   * Reads BQ27441 battery health: pack voltage (3.2V nominal LiFePO4), state of charge (SoC %), internal cell impedance ($R_{\text{cell}} \le 45\text{ m}\Omega$), and cycle count.
+   * Reads BQ25895 charge registers: fault flags (thermal shutdown, watchdog timer expiration, input overvoltage).
+2. **Co-Processor & Low-Power Bus Domain (RP2350B):**
+   * Pings the RP2350 over SPI/UART with a 64-byte random challenge; verifies CRC-8 return checksum in $<10\text{ms}$.
+   * Queries 8MB PSRAM memory test pattern registers and checks DS3231/RV-3028 RTC synchronization drift ($|\Delta t| < 500\text{ms}$).
+   * Reads 12-bit ADC raw voltages from the top-bezel IXYS micro-solar strip and supercapacitor rail.
+3. **Display & Waveform Controller Domain (ITE IT8951 EPDC):**
+   * Reads Device Info Register: validates panel geometry ($1872 \times 1404$), engine firmware version, and Look-Up Table (LUT) integrity.
+   * Polls `HRDY` (Host Ready) pin state; checks for stuck busy flags indicating unseated FPC ribbon cables or frozen pigment microcapsules.
+   * Reads panel temperature from backplane TMP112 sensor ($0^\circ\text{C}$ to $+50^\circ\text{C}$ safe operating window).
+4. **I2C Sensor Fabric Domain (Bus 1 & Bus 2):**
+   * Sweeps I2C addresses `0x00` through `0x7F` at 400 kHz:
+     * `0x60`: Bosch BMP390 Barometer (verifies chip ID `0x60`, pressure sanity $300\text{–}1100\text{ hPa}$).
+     * `0x12`: Bosch BMA400 Accelerometer (executes internal electrostatic self-test deflection).
+     * `0x68`: Maxim DS3231 RTC (reads oscillator stop flag `OSF`; checks battery backup coin-cell voltage).
+     * `0x5D` / `0x14`: Goodix Touch Controller (reads mutual-capacitance baseline calibration frame).
+     * `0x34`: Syntiant NDP120 Neural Decision Processor (probes `WHO_AM_I` register; if NACK, triggers RP2350 software fallback).
+5. **RF & Wireless Mesh Domain (Quectel EG25-G & Semtech SX1262):**
+   * **Cellular Modem:** Sends AT command handshake via `/dev/ttyUSB2`: `AT+CPIN?` (SIM card presence), `AT+CSQ` (signal quality), `AT+QENG="servingcell"` (tower info).
+   * **LoRa Transceiver:** Sends SPI opcode `0xC0` (`GetStatus`): verifies PLL lock, PA over-current protection flag, and antenna impedance match.
+   * **Qualcomm GNSS:** Verifies NMEA sentence stream on `/dev/ttyUSB1`; counts tracked SVs (Satellites in View) and checks Fix status (2D/3D).
+6. **Optical & Multimodal Sensor Domain (Sony IMX708 Camera):**
+   * Probes V4L2 device `/dev/video0` via MIPI CSI-2.
+   * Reads sensor ID (`0x0708`) over camera I2C control bus; runs a 5-step voice coil motor (VCM) autofocus calibration sweep.
+7. **Acoustic & Voice Front-End Domain (Knowles MEMS & MAX98357A):**
+   * Samples 20ms ambient audio frame from ALSA capture device; verifies noise floor SNR $> 35\text{ dB}$ (detects blocked acoustic vents or cracked solder joints).
+   * Verifies MAX98357A I2S Class-D speaker loopback AEC channel integrity.
+8. **Storage, External Ports & Hardware Safety Domain:**
+   * Reads eMMC life-time wear estimation registers via `mmc extcsd read` (Type A & Type B device health).
+   * Reads M.2 NVMe SSD SMART health telemetry (`smartctl --json`) for bad sectors and temperature.
+   * Checks Micro-HDMI Hot-Plug Detect (`HPD`) GPIO pin state.
+   * Checks USB-C Port 1 and Port 2 CC controller registers (TUSB320) for VBUS voltage, orientation, and short-circuit faults.
+   * Reads physical Hardware Airgap Switch state pin (`AIRGAP_STAT`): 0V (Stealth Airgap Active) vs 3.3V (Normal Radio Operation).
+
+### 21.2 Structured Diagnostic JSON Output Schema
+```json
+{
+  "timestamp": "2026-10-19T14:35:00Z",
+  "bist_duration_ms": 342,
+  "overall_status": "WARNING",
+  "domains": {
+    "power": {
+      "status": "PASS",
+      "vbat_mv": 3280,
+      "soc_pct": 88,
+      "cell_impedance_mohm": 34,
+      "rail_1_core_ma": 420,
+      "rail_2_display_ma": 12,
+      "rail_3_radios_ma": 385,
+      "solar_voltage_mv": 1820
+    },
+    "coprocessor": {
+      "status": "PASS",
+      "firmware_version": "v1.4.2-rp2350",
+      "psram_test": "OK",
+      "rtc_drift_ms": 12
+    },
+    "display": {
+      "status": "PASS",
+      "epdc_model": "IT8951",
+      "temp_c": 32.4,
+      "panel_ready": true
+    },
+    "i2c_bus": {
+      "status": "PASS",
+      "devices_detected": ["0x60", "0x12", "0x68", "0x5D", "0x40", "0x6B"],
+      "syntiant_ndp120_present": false,
+      "wake_engine_active": "rp2350_microwakeword"
+    },
+    "wireless": {
+      "status": "WARNING",
+      "lora_sx1262": {"status": "PASS", "pll_locked": true, "vswr_fault": false},
+      "lte_modem": {"status": "FAIL", "at_handshake": false, "current_draw": "STALL_420mA"},
+      "gnss": {"status": "PASS", "satellites_tracked": 9, "fix": "3D"}
+    },
+    "cameras_audio": {
+      "status": "PASS",
+      "imx708_autofocus": "OK",
+      "knowles_mics_snr_db": 42.1
+    },
+    "storage": {
+      "status": "PASS",
+      "emmc_wear_est": "0x01_NORMAL",
+      "nvme_temp_c": 38.0
+    },
+    "safety_airgap": {
+      "switch_position": "NORMAL_3.3V",
+      "rf_enabled": true
+    }
+  }
+}
+```
+
+### 21.3 LLM Reasoning & Plain-English Interpretation Rules
+When the user queries system health ("Is anything broken?"), the LLM follows four strict diagnostic rules:
+1. **Symptom-to-Hardware Correlation:** Never state raw register values alone; explain the physical meaning (e.g. *"LTE Modem AT handshake failed and Rail 3 is drawing 420mA, which means the modem firmware is hung in a network registration loop"*).
+2. **False-Positive Filtering:** Cross-check the Hardware Airgap Switch (`AIRGAP_STAT`). If the airgap switch is in STEALTH mode, radio NACKs are expected and reported as *"Radios safely unpowered by physical airgap switch (0.000W)"* rather than hardware failures.
+3. **Safety Clamping:** If battery cell impedance exceeds $85\text{ m}\Omega$ or display temperature exceeds $+55^\circ\text{C}$, the LLM flags an immediate safety alert and instructs the operator to disconnect solar charging.
+
+### 21.4 Active Hardware Self-Healing & Power-Gated Mitigation
+Beyond passive diagnosis, the LLM is authorized to invoke targeted mitigation commands using the TPS22918 load switches and system daemons:
+* **`solardeck-heal --powercycle modem`:** Asserts the modem's dedicated load switch gate to 0.000V for 500ms, performing a cold electrical power-cycle of the Quectel EG25-G to recover from cellular network lockups.
+* **`solardeck-heal --clear-epdc`:** Commands `eink-refreshd` to execute an atomic 3-phase high-voltage global inversion to rebalance DC pigment bias and eliminate persistent electrophoretic ghosting.
+* **`solardeck-heal --coproc-ping`:** Flushes the RP2350 UART buffer and strobes the hardware `COPROC_RESET` pin if co-processor heartbeat packets are dropped.
+* **`solardeck-heal --port2-trip-reset`:** Re-enables the TI TPS2051B USB-C Port 2 power switch after an overcurrent or short-circuit event has cleared.
+

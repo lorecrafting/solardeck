@@ -833,7 +833,7 @@ To eliminate $25,000 in custom injection tooling risk and 6 months of bespoke ZM
 
 ---
 
-## 4. Mechanical Enclosure & Ingress Protection (IP67)
+## 4. Enclosure, Ingress Protection & Thermal Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -853,10 +853,6 @@ To eliminate $25,000 in custom injection tooling risk and 6 months of bespoke ZM
 2. **Glass Bonding:** Front glass is recessed 1 mm below an aluminum lip and bonded from behind with 3M 5952 VHB tape.
 3. **Pressure Equalization:** A **Gore-Tex ePTFE vent plug** on the bottom plate allows internal air pressure to equalize during temperature swings (preventing vacuum moisture suction) while blocking 100% of liquid water and humidity.
 4. **Drop Armor:** 85A durometer TPU rubber bumpers permanently molded around all four corners to absorb 4-foot drops onto concrete or rock.
-
----
-
-## 4. Enclosure, Ingress Protection & Thermal Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -1057,3 +1053,95 @@ The 16MB Winbond W25Q128JVS QSPI NOR flash memory is partitioned into two distin
     * Physically grounds the RP2350 `BOOTSEL` pin, forcing it into USB Mass Storage Mode (appears on any connected Mac, PC, or Linux machine as a USB flash drive for instant drag-and-drop `.uf2` image recovery).
     * Connects CM4 `nRPIBOOT` pin to GND, placing the BCM2711 into USB slave bootloader mode (`rpiboot`).
   * Allows a completely blank, wiped, or corrupted device to be completely re-provisioned and re-flashed in under 60 seconds from an external host using standard open-source tools.
+
+---
+
+## 7. 30-Year Zero-Failure & Hi-Rel Hardware Architecture with Physical Escape Hatch
+
+*Written 2026-10-19 14:45 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+
+To achieve true decades-long operational longevity in off-grid expeditionary environments, SolarDeck integrates the high-reliability (Hi-Rel) engineering principles used in aerospace avionics and subsea telecommunications repeaters: **designing the electrical and mechanical systems so they do not break in the first place**, while embedding zero-cost physical escape hatches for field and robotic repair.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                 THE 30-YEAR ZERO-FAILURE & REPAIR ARCHITECTURE              │
+├─────────────────────┬───────────────────────────────────────────────────────┤
+│ FIVE HI-REL RULES   │ PHYSICAL IMPLEMENTATION ACROSS MOTHERBOARD & CHASSIS  │
+├─────────────────────┼───────────────────────────────────────────────────────┤
+│ **1. 50% Component  │ • 3.3V Rails: 10V–16V MLCCs (300% dielectric margin)  │
+│ Derating**          │ • 5V / Solar Rails: 25V–50V MLCCs & 50V TVS diodes    │
+│                     │ • Power Inductors & FETs: 6.0A rating on 2.0A load    │
+│                     │ • Resistors: 1/4W 0603/0805 run at $\le 0.05\text{W}$ │
+├─────────────────────┼───────────────────────────────────────────────────────┤
+│ **2. Mechanical     │ • Automotive AEC-Q200 / FlexiCap soft-termination     │
+│ Shock & Flex**      │ • Open-mode capacitor electrodes (fractures fail OPEN)│
+│                     │ • 100% Solid Tantalum-Polymer & X7R (0 wet caps)      │
+├─────────────────────┼───────────────────────────────────────────────────────┤
+│ **3. 3-Stage Surge  │ • Stage 1: Gas-Discharge Tube (GDT) / PCB Spark Gap   │
+│ Suppression**       │ • Stage 2: Series Ferrite Bead / Choke ($\text{d}V/\text{d}t$ limiter)│
+│                     │ • Stage 3: Low-Capacitance TVS Diode (residual clamp) │
+├─────────────────────┼───────────────────────────────────────────────────────┤
+│ **4. Solid-State    │ • TI TPS259xx Electronic E-Fuses (500ns trip & retry) │
+│ Protection**        │ • TI LM74700 Ideal Diode Controller (-36V reverse /   │
+│                     │   50ns overvoltage cutoff with $3\text{ m}\Omega$ N-FET)│
+├─────────────────────┼───────────────────────────────────────────────────────┤
+│ **5. Environmental  │ • Mil-Spec Parylene / Polyurethane Conformal Coating  │
+│ Barrier**           │ • Hermetic dielectric seal against salt fog, tropical │
+│                     │   humidity, condensation, and tin-whisker growth      │
+├─────────────────────┼───────────────────────────────────────────────────────┤
+│ ZERO-COST ESCAPES   │ PHYSICAL REPAIR & ROBOTIC REPAIRABILITY BACKUPS       │
+├─────────────────────┼───────────────────────────────────────────────────────┤
+│ • Solder Jumpers    │ Bare copper pads (`SJ1`–`SJ8`) bridge every active IC │
+│ • Sacrificial Trace │ 0.2mm necked traces feeding parallel diodes/sensors;  │
+│   Notches           │ 1-second scratch isolates shorts without desoldering  │
+│ • Grid Test Headers │ 2.54mm (0.1") through-hole pads for external supplies │
+│ • Machine Vision    │ High-contrast optical fiducials (`FID1`, `FID2`) for  │
+│   Fiducials         │ OpenPnP gantry automated cold-epoxy micro-dispensing  │
+│ • Fastened Unibody  │ 12x stainless M2.5 Torx screws into brass inserts     │
+└─────────────────────┴───────────────────────────────────────────────────────┘
+```
+
+### 7.1 The Five Hi-Rel Zero-Failure Engineering Rules
+1. **Rule 1: Extreme Component Derating (The 50% Rule):**
+   * **Dielectric Voltage Margin:** Ceramic capacitors on 3.3V power rails are rated for **10V or 16V** (300% to 480% margin); 5V and solar input rails utilize **25V to 50V** capacitors. Dielectric breakdown limits are never approached, eliminating thermal aging and dielectric fatigue.
+   * **Thermal & Current Margin:** Switching inductors and MOSFETs driving 2.0A maximum rail currents are specified with **6.0A saturation ratings**. Junction temperatures remain below $42^\circ\text{C}$ in ambient air; by the Arrhenius Law, every $10^\circ\text{C}$ drop in junction temperature doubles operating lifespan.
+   * **Power Dissipation:** All discrete surface-mount resistors are 0603 or 0805 packages rated for 0.25W, operated at $<0.05\text{W}$ (80% power derating). Thermal drift is negligible and solder-pad thermal expansion stresses are eliminated.
+2. **Rule 2: Mechanical Flex & Shock Immunity (Zero MLCC Cracking):**
+   * Multi-Layer Ceramic Capacitors (MLCCs) on power rails utilize **Automotive-Grade AEC-Q200 qualified soft-termination (FlexiCap)** construction. A flexible conductive polymer resin buffer between the ceramic chip and outer solder terminations absorbs up to 5.0mm of board deflection without fracturing.
+   * Capacitors utilize **Open-Mode internal electrode geometry**: if severe ballistic impact cracks the chip, the fracture plane isolates internal electrodes, causing the component to fail as an benign **open-circuit** rather than a destructive power-to-ground dead short.
+   * **Zero Liquid Electrolytics:** The motherboard eliminates wet aluminum electrolytic capacitors entirely. Energy storage is handled exclusively by **Solid Tantalum-Polymer capacitors (KEMET KO-CAP)** and high-temperature X7R ceramics rated for $>200,000\text{ hours}$ (23+ years continuous operation at rated temperatures).
+3. **Rule 3: 3-Stage Cascaded Surge & Transient Shunting:**
+   * External ports (USB-C Port 1 & 2, SMA Antenna, Micro-HDMI) route transient surges through a 3-tier energy absorption topology:
+     * **Stage 1 (Primary High-Energy Diverter):** Miniature Gas-Discharge Tube (GDT) or PCB spark-gap geometry shunts the initial high-voltage (>1 kV) electrostatic surge to chassis ground, dissipating $>90\%$ of total transient energy.
+     * **Stage 2 (Time-Delay Decoupling):** High-current ferrite bead or series common-mode choke slows voltage rate-of-rise ($\text{d}V/\text{d}t$).
+     * **Stage 3 (Precision Clamping):** Low-capacitance TVS array (**TI TPD4E05U06**) clamps the remaining residual trickle to $<8.5\text{V}$, dissipating minimal thermal energy and preventing diode burnout.
+4. **Rule 4: Solid-State Electronic E-Fuses & Ideal Diodes:**
+   * **TI TPS259xx Electronic E-Fuses:** Replace consumable physical fuses on peripheral power branches. The silicon detects overcurrent in 500 nanoseconds, clamps fault current, and resets automatically upon fault removal or software command with zero physical wear over millions of cycles.
+   * **TI LM74700 Ideal Diode Controllers:** Drive ultra-low-resistance ($3\text{ m}\Omega$) N-channel MOSFETs on raw DC and battery charge inputs. Blocks reverse voltages down to -36V and disconnects overvoltages in **50 nanoseconds**, eliminating the 0.7V drop and continuous heat dissipation of traditional Schottky diodes.
+5. **Rule 5: Conformal Dielectric & Moisture Barrier (Mil-Spec Parylene):**
+   * Following SMT reflow and automated optical inspection, the populated PCBA receives an automated **thin-film conformal coating (Parylene or silicone-modified polyurethane)**.
+   * Creates an impenetrable, hermetic dielectric barrier ($>1500\text{ V/mil}$) over all IC leads and copper traces, protecting against condensation, tropical humidity, salt-fog corrosion, and the spontaneous growth of metallic tin whiskers.
+
+### 7.2 The "Just-In-Case" Physical Repair Escape Hatches
+Even with 30-year zero-failure design margins, SolarDeck preserves immediate, low-cost field and automated repair capabilities:
+1. **Parallel Solder-Bridge Bypasses (`SJ1`–`SJ8`):**
+   * Every active load switch (TPS22918) and electronic e-fuse (TPS259xx) features adjacent, unmasked solder-bridge pads (`SJ1`–`SJ8`) linking `VIN` and `VOUT`.
+   * If silicon control logic fails in the field, bridging the pads with a drop of solder, wire strand, or conductive ink permanently forces that rail active.
+2. **Sacrificial Trace Isolation Notches:**
+   * Traces connecting parallel protection components (TVS diodes, ESD arrays, filtering capacitors) feature narrowed **0.20 mm copper necks** positioned directly over marked silkscreen targets.
+   * If a transient protection diode suffers a permanent short-to-ground failure, an operator with a hobby knife or an automated micro-punch can sever the neck in **one second**, instantly restoring rail operation without requiring desoldering irons or heat.
+3. **Standard 2.54mm (0.1") Auxiliary Grid Headers:**
+   * Unpopulated through-hole test pads on standard 2.54mm grid spacing provide direct taps to `VBAT`, `3V3_ALWAYS_ON`, `5V0_BOOST`, `SYS_GND`, and `I2C_HOST`.
+   * Enables emergency field power injection from external battery packs or bench supplies if internal PMIC circuits are damaged.
+4. **Fastened Rigid Unibody (Zero Adhesive):**
+   * The enclosure relies entirely on **12x stainless steel M2.5 Torx machine screws** threading into brass heat-set inserts embedded in the CNC aluminum or PA12 nylon frame.
+   * The chassis can be opened and resealed over 500 times with zero degradation of the continuous hollow-core silicone IP67 perimeter gasket.
+
+### 7.3 Automated Micro-Robotic Servicing Compatibility
+To support autonomous robotic servicing via desktop Cartesian gantries (Ender-3 / OpenPnP) or robotic arms:
+* **High-Contrast Optical Fiducials:** The motherboard incorporates three gold-plated circular fiducials (`FID1`, `FID2`, `FID3`) with 1.0mm solder-mask relief circles at opposing corners, allowing OpenPnP machine vision to compute board tilt, rotation, and sub-pixel coordinate alignment to within **$\pm 25\ \mu\text{m}$**.
+* **Machine-Readable Coordinate Maps:** KiCad fabrication outputs (`solardeck_xy_pos.csv` and IPC-D-356 netlists) are archived directly in the system image, enabling the onboard LLM to translate diagnostic fault codes (e.g. `D7_SHORT`) into precise $(X, Y, Z)$ physical millimeter coordinates for automated toolheads.
+* **Room-Temperature Solderless Cold Repair:**
+  * To avoid the thermal degradation, tip oxidation, and corrosive flux residues of traditional robotic soldering irons, automated physical repairs use **pneumatic micro-dispensing of Room-Temperature Silver Conductive Epoxy** (MG Chemicals 8331S / CircuitWorks CW2400).
+  * Dispensed via a 30-gauge blunt needle onto solder jumpers (`SJ1`–`SJ8`), the epoxy cures into a solid metallic electrical bridge with $<0.001\ \Omega\cdot\text{cm}$ resistivity, requiring zero heat and lasting for decades.
+* **Power Supply for Repair Tools:** The tablet's **USB-C Port 2 supplies 15W continuous (5V @ 3A)** via reverse power delivery, providing sufficient electrical power to run a desktop gantry controller, camera ring light, and micro-dispenser without an external wall adapter.
