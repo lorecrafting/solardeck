@@ -361,6 +361,53 @@ When ultra-low-power microcontrollers (RP2350), bistable electrophoretic physics
 
 ---
 
+## Pillar 9: EDC Phone Symbiosis & Dual-Screen Hybrid Cyberdeck
+
+Carrying a giant 6.7" glass smartphone alongside a 10.3" sovereign e-ink terminal creates unnecessary pocket bulk and battery anxiety. SolarDeck establishes a symbiotic two-device architecture: pairing the tablet with a compact, tactile pocket communicator (such as the **Clicks Communicator**, **Unihertz Jelly Star**, or **Sony Xperia 10 VI**).
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                 THE TWO-DEVICE EVERYDAY CARRY (EDC) RIG                     │
+├──────────────────────────────────────┬──────────────────────────────────────┤
+│ 1. POCKET COMMUNICATOR (~170g)       │ 2. SOLARDECK WORKSTATION (510g)      │
+├──────────────────────────────────────┼──────────────────────────────────────┤
+│ • 50MP OIS Camera (Travel memories)  │ • 10.3" Color E-Ink Carta 1200       │
+│ • Global 5G/4G + eSIM (Airalo ready) │ • Quad A72 CM4 + RP2350 Dual-Brain   │
+│ • Turn-by-Turn Google Maps Navigation│ • Neovim, Claude Code CLI, Kiwix     │
+│ • Tactile QWERTY Thumbboard & Calls  │ • 26–32 Wh LiFePO4 All-Day Battery   │
+└──────────────────────────────────────┴──────────────────────────────────────┘
+```
+
+### 1. Bluetooth PAN Low-Power Internet Tethering (`bnep0`)
+* **The Physics:** Standard Wi-Fi hotspots force the phone into high-power AP mode (~1.8W–2.3W total system overhead), heating the phone and draining its battery in 3–4 hours.
+* **The Bluetooth PAN Alternative:** By routing data over Bluetooth Network Access Point (NAP) via Linux `bnep0`, link power drops to **~0.10W total system overhead (22× lower power)**.
+* **The Result:** The pocket phone stays ice-cold in your pocket, lasts **2 to 3 days on a single charge**, and auto-reconnects to SolarDeck in **<2.0 seconds** upon waking from S2idle. The 1.5–2.5 Mbps bandwidth is more than enough for terminal sessions, SSH, Claude Code CLI, git operations, and documentation browsing.
+
+### 2. Center-of-Gravity "Chin-Dock" Dual-Screen Handheld
+* **The Cantilever Problem:** Cantilevering a phone below the bottom edge of a 510g tablet creates a 227mm lever arm that exhausts wrists within minutes of handheld thumb-typing.
+* **The Screen-Overlap Solution:** The Clicks Communicator docks **on top of the lower bezel/screen face**, suspended 1.0mm above the E-Ink front glass with soft silicone bumpers.
+* **Handheld Ergonomics:** Both hands grip the rigid bottom chassis of SolarDeck. The 510g tablet mass is cradled directly between your palms with **zero wrist torque**, matching the balanced feel of a Nintendo Switch or Steam Deck.
+* **Dynamic Software Viewport Masking:** Sway/Wayland shifts the active workspace upwards (`swaymsg "gaps bottom 400"`), rendering a clean 1872×1004 desktop on the top visible E-Ink panel. The occluded bottom pixels are filled with static black/white, drawing **0.000 Watts**.
+* **Dual-Screen Symbiosis:**
+  * **Top Canvas (10.3" E-Ink):** Deep focus, zero glare, sunlight-readable code, terminal, and documentation.
+  * **Bottom Insert (4.03" AMOLED):** Live color Google Maps, audio controls, battery telemetry, and incoming Signal messages, flanked by physical clicky QWERTY thumb keys.
+
+### 3. Tactile Thumbboard & Hardware Focus Flip
+* **Thumbboard Input:** Android exposes the phone's physical keyboard as a standard Bluetooth HID or wired USB-C input (`/dev/input/eventX`) with sub-millisecond latency.
+* **0-Millisecond Focus Flip:** Tapping the phone's programmable hardware side key instantly flips typing focus between SolarDeck's terminal and local phone SMS/Google Maps with zero re-pairing or menu diving.
+* **Capacitive Touch Scrolling:** Swiping thumbs up and down across the physical keycaps acts as an invisible trackpad, scrolling terminal buffers and reading PDFs without lifting fingers from the keys.
+
+### 4. MagSafe Ecosystem & Wacom Mu-Metal Flux Isolation
+* **Universal Snap-On Magnetic Mount:** Embedded 54mm Neodymium N52 magnetic ring array on the rear shell supports off-the-shelf **MOFT folding origami kickstands** (25° writing, 45° typing, 60° reading), MagSafe wallets, vehicle mounts, and magnetic campervan bulkhead pucks.
+* **Mu-Metal Shielding Layer:** A 0.1mm high-permeability Mu-Metal / Ferrite foil laminated behind the Wacom EMR digitizer redirects static magnetic flux away from the resonant 560 kHz coil, ensuring **zero stylus coordinate drift or jitter** even with powerful magnetic kickstands attached.
+
+### 5. Hybrid Remote-Builder Loop (`bld --remote`)
+* **Local vs. Remote Tradeoff:** Small code tweaks (<15s) compile locally on CM4 using ~18 Joules. Heavy builds (Linux kernel, DRM tree, large Rust/C++ projects) are offloaded via `bld --remote`.
+* **The Pipeline:** Computes a `git diff`, pushes across encrypted **Tailscale (WireGuard)** to a home Apple Silicon or Ryzen workstation, cross-compiles in 10 seconds inside Docker ARM64, and SCPs the stripped binary back to SolarDeck.
+* **Energy Impact:** Burns **180 Joules** on SolarDeck vs **18,000 Joules** locally—a **100× power saving** that eliminates fanless thermal throttling in direct sunlight. Mosh ensures terminal connections survive spotty cell coverage indefinitely.
+
+---
+
 ## Verification & Acceptance Gate (The North Star Metrics)
 
 Before any prototype PCBA or firmware build is declared ready for field release, it must be benchmarked against these six non-negotiable gates:

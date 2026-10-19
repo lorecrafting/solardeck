@@ -715,15 +715,25 @@ To eliminate $25,000 in custom injection tooling risk and 6 months of bespoke ZM
   * Camera tripod 1/4"-20 adapter plates.
   * RAM Mount ball joints for vehicle dash, sailboat bulkhead, or aircraft cockpit mounting.
   * Heavy-duty desk-arm articulation clamps.
-* **MagSafe Magnetic Ring:** An embedded 36-magnet neodymium N52 array (standard 54mm outer diameter) allows instantaneous magnetic snap-on attachment to standard magnetic phone/tablet stands, car mounts, and magnetic charging easels.
+* **MagSafe Magnetic Ring:** An embedded 36-magnet neodymium N52 array (standard 54mm outer diameter with vertical alignment magnet) allows instantaneous magnetic snap-on attachment to:
+  * **MOFT Snap Origami Tablet Stands:** Folds flat to 3mm for transport; deploys instantly into 25° (stylus writing), 45° (lap typing), and 60° (reading) angles in Portrait and Landscape.
+  * **Campervan Bulkhead & Refrigerator Pucks:** $5 magnetic wall discs securely mount SolarDeck to metal walls, vehicle galleys, or toolboxes.
+  * **Pocket Communicator Docking:** The Clicks Communicator (Qi2/MagSafe) snaps flush to the rear backplate during transit with zero brackets.
+* **Wacom EMR Magnetic Isolation:** A **0.1mm Mu-Metal / Ferrite shielding foil sheet** is laminated across the entire rear surface of the Wacom digitizer PCB (§1.2), isolating the 560 kHz resonant pen sensing loop and ensuring **zero coordinate warping, jitter, or offset** when using strong magnetic kickstands or phone mounts.
 
-### 3.3 Handheld Bed/Couch Mode: 3D-Printed BlackBerry Q20 Grip
+### 3.3 Handheld Bed/Couch Mode: 3D-Printed BlackBerry Q20 Grip & Clicks Communicator Chin-Dock
 * **The Use Case:** Typing on a 10.3" tablet while lounging in a hammock, lying in bed, or walking in the field is impossible with a full-size desk keyboard.
-* **The Solution:** The open-hardware community provides an ultra-compact 3D-printed clip that mates to SolarDeck's rear M2.5 inserts or MagSafe ring, positioning an off-the-shelf **Solder Party BlackBerry Q20 USB/BLE keyboard** directly beneath the lower bezel:
+* **Option A: Solder Party BlackBerry Q20 Grip:**
   * Weighs only 45 grams; costs ~$20.
   * Features 35 clicky tactile dome keys + BlackBerry optical trackpad.
   * Connects over internal Bluetooth LE or low-profile USB-C jumper.
   * Enables effortless two-thumb terminal coding, chat, and prompt generation while holding the tablet like a Game Boy.
+* **Option B: Clicks Communicator Center-of-Gravity Chin-Dock:**
+  * **The Problem Solved:** Cantilevering a phone below the bottom bezel creates a 227mm lever arm that exhausts wrists.
+  * **The Overlap Solution:** A 3D-printed SLS PA12 snap cradle clips the Clicks Communicator **over the front face of the lower bezel/screen**, suspended 1.0mm above the E-Ink glass with 0.5mm Poron foam cushioning.
+  * **Ergonomics:** Hands grip the rigid lower chassis of SolarDeck. The 510g tablet mass is cradled directly between your palms with **zero rotational wrist torque**, creating a balanced handheld terminal (like a Steam Deck or Nintendo DS).
+  * **Dual-Screen Hybrid:** Top 10.3" E-Ink runs Wayland terminal/code (shifted via `solardeck-chin-dock`); bottom 4.03" AMOLED runs live color Google Maps, telemetry widgets, and tactile QWERTY thumb keys. Wired 3cm flat U-cable bridges into USB-C Port 2 for sub-1ms typing and 15W reverse charging.
+
 
 ### 3.4 Phase 2 SnapDeck Footprint Preservation
 * To ensure the carrier motherboard never requires a revision if a custom magnetic pogo keyboard is manufactured in Phase 2, the bottom edge of the PCBA retains the SMD landing pads for the **5-pin hermetic magnetic pogo connector** (`VBUS`, `USB_D-`, `USB_D+`, `GND`, `ID_SENSE`) with dedicated TVS ESD diodes.

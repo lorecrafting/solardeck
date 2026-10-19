@@ -77,6 +77,7 @@ The SolarDeck repository contains comprehensive, mathematically verified specifi
 | **Audio & Speech Input** | `docs/HARDWARE_SPEC.md` §2.7 | Knowles MEMS + MAX98357A | PDM Dual-Mic + I2S Class-D Amp |
 | **Secondary Monitor Sink** | `docs/HARDWARE_SPEC.md` §2.4 | BCM2711 Native OTG PHY | USB-C Port 1 (`g_webcam` / `dummy_hcd`)|
 | **Universal Mechanical Mount** | `docs/HARDWARE_SPEC.md` §3 | M2.5 Threaded + MagSafe | Mechanical Heat-Set & N52 Magnets |
+| **EDC Phone & Cyberdeck Dock** | `docs/STANDOUT_FEATURES.md` §9 | Clicks Communicator / Jelly| Bluetooth PAN (`bnep0`) & Chin-Dock |
 | **Off-Grid & Tactical Sensors**| `docs/OFFGRID_TACTICAL_SENSORS.md` | Dual Brain (CM4 + RP2350) | BLE, SocketCAN, 9-DOF IMU, RTK, RAG |
 | **Cold Storage Vault** | `docs/HARDWARE_SPEC.md` §4.2 | 3x MicroSD Slots + SIM Tool | Spring-latch Retention Pockets |
 
