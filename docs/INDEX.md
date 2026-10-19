@@ -100,6 +100,8 @@ The SolarDeck repository contains comprehensive, mathematically verified specifi
 | **Offline Ghost-Nav Geolocation**| `docs/SOFTWARE_SPEC.md` §26 | `solardeck-ghostnavd` | Zero-Satellite Indoor BSSID & Cell Fix |
 | **Passive RF Sweeper & Drone Alert**| `docs/SOFTWARE_SPEC.md` §27 | `solardeck-sweeperd` | Multi-Band Near-Field Radar & AirTag Sniff|
 | **Airgapped Ultrasonic Sound-Bridge**| `docs/SOFTWARE_SPEC.md` §28 | `solardeck-soundbridged` | 19kHz Acoustic FSK Modem for RF-Silent Airgap|
+| **Barometric Storm & Flood Radar**| `docs/SOFTWARE_SPEC.md` §29 | `solardeck-stormd` | 10cm BMP390 Pressure Drop Warning & Elevation |
+| **GPU Display Steganography** | `docs/SOFTWARE_SPEC.md` §30 | `solardeck-stegod` | Blue-Noise LSB Photographic Leak Attribution |
 | **Cold Storage Vault & Desiccant Pocket**| `docs/HARDWARE_SPEC.md` §4.6 | 3x MicroSD + 1g/2g Desiccant | IP67 Hatch Cavity / 100+ Regen Cycles |
 
 ---

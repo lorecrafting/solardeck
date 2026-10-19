@@ -1050,3 +1050,41 @@ solardeck-soundbridged --rx --out received_key.pub
 ```
 * Bypasses all radio frequency detection gear, spectrum analyzers, and Faraday enclosures with **0.000W electromagnetic radiation**.
 
+---
+
+## 29. Autonomous Barometric Altimeter & Flash Flood Storm Radar (`solardeck-stormd`)
+
+*Written 2026-10-19 15:10 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+
+Leverages the high-precision Bosch BMP390 barometer (10 cm vertical resolution, $<4\text{ }\mu\text{A}$ draw) to provide autonomous meteorological and terrain hazard forecasting:
+
+### 29.1 Sleep-State Barometric Trend Logging
+* The RP2350 co-processor samples ambient atmospheric pressure every 30 seconds while the CM4 Linux kernel is in S2idle sleep.
+* Maintains a 1,440-sample circular buffer in low-power SRAM covering a rolling 12-hour window.
+
+### 29.2 Flash Flood & Severe Squall Alert Engine
+* Computes real-time barometric tendency $\frac{\Delta P}{\Delta t}$ over 3-hour moving windows.
+* **Severe Storm / Cyclone Trigger:** If pressure drops at a rate $\ge 1.0\text{ hPa/hour}$ or plunges by $>3.0\text{ hPa}$ within 3 hours, the RP2350 immediately asserts `HOST_WAKE` and paints a persistent warning banner across the 10.3" screen:
+  `[BAROMETRIC STORM WARNING] Pressure dropping at -1.4 hPa/hr. Severe squall or flash flood risk in 45-90 mins. Seek higher ground.`
+* **Elevation Profile:** On the lockscreen or Waybar, renders an analog mountain contour showing cumulative vertical gain/loss and current barometric altitude.
+
+---
+
+## 30. GPU Display Steganography & Photographic Watermarking (`solardeck-stegod`)
+
+*Written 2026-10-19 15:10 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+
+Provides sovereign document protection and leak tracing against shoulder-surfing cameras and unauthorized photographs:
+
+### 30.1 Blue-Noise LSB Modulation
+* The Broadcom VideoCore VI GPU dithering shader (`dither.glsl`) modulates the least significant bit (1 LSB) of the blue-noise spatial threshold matrix.
+* To the human eye, rendered text, PDFs, and code look completely indistinguishable from standard high-contrast 1-bit or 4-bit E-Ink pixels.
+* **Cryptographic Payload:** Invisibly embeds a 256-bit payload encoding `SHA256(Device_UUID || Timestamp || User_GPG_Fingerprint)` redundantly tiled across the $1872 \times 1404$ framebuffer.
+
+### 30.2 Photographic Provenance Extraction
+```bash
+# Verify leak provenance from a smartphone photo of the screen:
+solardeck-stegod --extract leaked_screen_photo.jpg
+```
+* Even if photographed at an oblique angle or re-compressed by messaging apps (Signal, Telegram, Twitter), a 2D spatial Fourier transform extracts the embedded carrier watermark, mathematically proving origin and timestamp without altering document readability.
+

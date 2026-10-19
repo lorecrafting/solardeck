@@ -205,6 +205,10 @@ The following high-reliability and field-recovery enhancements have been codifie
     * Rx-only near-field energy detection across 433/868/915 MHz and 2.4 GHz; maps proximity of hidden AirTags, surveillance transmitters, or drone telemetry with an E-Ink signal radar HUD.
 13. **Airgapped Ultrasonic Sound-Bridge (`solardeck-soundbridged`):**
     * Near-ultrasonic 18.5–20.0 kHz FSK acoustic modem transmitting PGP keys, SSH credentials, and code diffs across airgapped desks via Knowles MEMS mics and speaker with zero RF emissions.
+14. **Autonomous Barometric Storm & Flash Flood Radar (`solardeck-stormd`):**
+    * RP2350 logs BMP390 atmospheric pressure every 30s during S2idle sleep; triggers autonomous high-contrast alert if pressure drops $>3.0\text{ hPa}$ in 3 hours, warning of sudden flash floods or alpine squalls.
+15. **GPU Display Steganography & Photographic Watermarking (`solardeck-stegod`):**
+    * Broadcom GPU shader modulates 1 LSB blue-noise dither to redundantly embed a cryptographic device UUID and timestamp watermark across the screen, enabling 2D Fourier recovery of leak sources from smartphone photos.
 
 ---
 
