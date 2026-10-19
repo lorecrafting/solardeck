@@ -41,7 +41,11 @@ The SolarDeck repository contains comprehensive, mathematically verified specifi
 │    • 5-Stage Zero-Brick verification ladder: static netlist trap auditor,   │
 │      SPICE power transient simulation, Renode/QEMU co-simulation, and DRC.  │
 │                                                                             │
-│ 8. AGENTS.md                                                                │
+│ 8. docs/HANDOFF_TO_FABLE.md                                                 │
+│    • Comprehensive engineering handover for Fable Wednesday audit: Seeed    │
+│      quotation status, 7-phase verification pipeline, and review checklist. │
+│                                                                             │
+│ 9. AGENTS.md                                                                │
 │    • Developer & AI agent instructions, coding discipline, and safety rules.│
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
