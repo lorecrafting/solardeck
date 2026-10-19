@@ -60,14 +60,14 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
                                       │  • USB-C Port 2 (Host / TPS2051B Switch)  │
                                       └──────┬─────────────────────────────┬──────┘
                                              │                             │
-                    (5-Pin Pogo Bus)         ▼                             ▼         (External USB-C Port 2)
+              (M2.5 Mounts / MagSafe Array)  ▼                             ▼         (External USB-C Port 2)
         ┌────────────────────────────────────┐             ┌────────────────────────────────┐
-        │ SNAPDECK KEYBOARD DOCK (PARALLEL)  │             │ MODULAR TACTICAL RF MULTI-TOOL │
-        │ • Kailh X-Switches (3.5mm low prof)│             │ • Internal RP2040 MCU + USB Hub│
-        │ • Blackberry RIM 9900 Trackpad     │             │ • RTL2832U Wideband SDR        │
-        │ • Nordic nRF52840 (ZMK + BLE 5.0)  │             │ • TI CC1101 Sub-GHz (300-928M) │
-        │ • MCP73831T LiPo Charger + PCM     │             │ • NXP PN532 NFC (13.56 MHz)    │
-        │ • Wayland Reserved Margin Resize   │             │ • EM4095 125 kHz RFID Demod    │
+        │ UNIVERSAL MOUNT & OPEN KEYBOARD    │             │ MODULAR TACTICAL RF MULTI-TOOL │
+        │ • M2.5 Threaded Inserts + MagSafe  │             │ • Internal RP2040 MCU + USB Hub│
+        │ • 3D-Printed $20 Q20 Thumb Grip    │             │ • RTL2832U Wideband SDR        │
+        │ • Any Bluetooth / USB-C Keyboard   │             │ • TI CC1101 Sub-GHz (300-928M) │
+        │ • Camera Tripod (1/4"-20) & Stands │             │ • NXP PN532 NFC (13.56 MHz)    │
+        │ • Phase 2 SnapDeck Option ($32 BOM)│             │ • EM4095 125 kHz RFID Demod    │
         └────────────────────────────────────┘             │ • Dual High-Power IR TX/RX     │
                                                            └────────────────────────────────┘
 ```
@@ -159,7 +159,7 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
 * **Dual CCT Frontlight Subsystem (Pitch-Black Reading & Circadian Amber):**
   * **Driver IC:** Texas Instruments **TPS61163** dual-channel constant-current step-up LED driver ($0.65).
   * **Dual Interleaved Bezel LED Strings:** 12 cold-white LEDs (5000K) and 12 warm-amber LEDs (2700K) embedded along the bottom-edge lightguide.
-  * **Autonomous Circadian Dimming:** Controlled by the RP2350 via 2048-step logarithmic PWM dimming; automatically transitions from crisp white in dim daylight to soft amber (zero blue light emission) after sunset based on RTC time and OPT3001 lux readings.
+  * **Autonomous Circadian Dimming:** Controlled by the RP2350 via 2048-step logarithmic PWM dimming; automatically transitions from crisp white in dim daylight to soft amber (zero blue light emission) after sunset based on RTC time and solar strip ambient lux readings.
   * **Zero Idle Drain:** Draws **0.000 µA** when turned off during sunlight reading.
 
 ### 2.3 Power Subsystem & Multi-Tier Voltage Regulation
@@ -432,23 +432,20 @@ To completely eliminate bus arbitration lockups and the hardware address collisi
 │                    SOLARDECK DUAL-BUS I2C ARCHITECTURE                      │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 1. `I2C_ALWAYS_ON` BUS (RP2350 Master, 100 kHz, 3.3V Low-Power):           │
-│    • 0x68: Maxim DS3231 TCXO Real-Time Clock                                │
+│    • 0x68: Maxim DS3231 TCXO Real-Time Clock (DNP Fallback Footprint)        │
 │    • 0x55: TI BQ27441-G1 Impedance Track Battery Fuel Gauge                 │
 │    • 0x40: TI INA3221 3-Channel System Power Ammeter                        │
-│    • 0x44: TI OPT3001 Ambient Sunlight Lux Sensor                           │
 │    • 0x48: TI TMP112 #1 (Battery Pouch Thermal Sensor)                      │
 │    • 0x49: TI TMP112 #2 (E-Ink Backplane Thermal Sensor)                    │
 │    • 0x15: Bosch BMA400 3-Axis Accelerometer (Hardwired SDO = VDDIO)        │
 │    • 0x76: Bosch BMP390 Precision Barometer & Altimeter                     │
-│    • 0x30: Memsic MMC5603NJ 3-Axis Digital Magnetometer / Compass           │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 2. `I2C_HOST` BUS (CM4 Master, 400 kHz Fast-Mode):                          │
 │    • 0x09: Wacom EMR Stylus Digitizer Controller (`wacom_w9013`)            │
 │    • 0x5D: Goodix GT911 Capacitive Multi-Touch Controller (Hardwired)       │
 │    • 0x6A: TI BQ25895 Synchronous Buck Battery Charger                      │
-│    • 0x5A: TI DRV2605L Linear Resonant Actuator Haptic Driver               │
 │    • 0x42: RP2350 Virtual Telemetry Target (Exposes I2C_ALWAYS_ON to Linux) │
-│    • External: Rugged Qwiic / Stemma QT 3.3V Expansion Port (Hot-pluggable) │
+│    • External: USB-C Port 2 Host (Plug-and-play USB-to-I2C bridge dongles)   │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 * **Collision Resolved:** Hardwiring BMA400 `SDO = VDDIO` locks the accelerometer to `0x15`, completely clear of Goodix touch `0x14/0x5D`.
@@ -477,8 +474,8 @@ To completely eliminate bus arbitration lockups and the hardware address collisi
     * **Battery Zone:** Directly adhered to the pouch cell under the thermal protection sleeve for millidegree charging logs.
     * **Display Zone:** Adhered to the aluminum backplate behind the E-Ink panel. Directly feeds the IT8951 EPDC Look-Up Table (`TEMP_REG`) via the RP2350 bridge to dynamically adjust waveform voltage pulses as liquid microcapsule viscosity changes with temperature (eliminating ghosting in winter cold and bleeding in summer heat).
     * **Compute Zone:** Monitored via CM4 internal thermal diode and modem AT commands (`AT+QTEMP`).
-* **Ambient Light & Solar Lux Sensor (Texas Instruments OPT3001):**
-  * Precision spectral matching to the human eye response; dynamic range from 0.01 lux up to 120,000 lux.
+* **Ambient Light & Solar Lux Sensing (Via Bezel Solar Strip & RP2350 ADC - Zero BOM):**
+  * Rather than adding a dedicated photodiode IC, the RP2350's internal 12-bit ADC directly samples the open-circuit voltage ($V_{OC}$) of the top-bezel IXYS solar strip. Dynamic range spans from 0.01 lux up to 120,000 lux.
   * Enables dynamic E-Ink contrast optimization: disables front-lights completely in full sunlight ($>10,000\text{ lux}$), decreases anti-ghosting frequency, and calculates optimal solar panel angles when external folding panels are connected.
 * **Motion & Kinematics Accelerometer (Bosch BMA400):**
   * Ultra-low-power 12-bit 3-axis accelerometer drawing **3.5 µA**.
@@ -519,12 +516,11 @@ For true sovereign privacy, commercial flight compliance, sensitive compartmente
              │                                                       │
              ▼                                                       ▼
    All Peripherals Under OS Control                        All Radio Load Switches Dead:
-                                                           • Quectel EG25-G Modem (0.000V)
+                                                           • Quectel EG25-G Modem & GNSS (0.000V)
                                                            • Semtech SX1262 LoRa (0.000V)
                                                            • BCM43455 Wi-Fi/BT (0.000V)
-                                                           • u-blox MAX-M10S GNSS (0.000V)
                                                            • Knowles MEMS Mic (0.000V)
-                                                           • Dual MIPI Cameras (0.000V)
+                                                           • Rear Flush 12MP Camera (0.000V)
                                                            • Rear Backpack Pogo (0.000V)
 ```
 
@@ -865,7 +861,7 @@ To interface wideband SDR (USB), Sub-GHz (SPI), 125 kHz RFID (analog/pulse), NFC
 * **Infrared Transceiver:** Vishay **TSOP4838** 38 kHz demodulator receiver + dual high-power **TSAL6200** 940 nm LEDs driven by 2N7002 MOSFET for 15-meter IR blasting.
 
 ### 5.2 Tactical Sky-Scan & SIGINT Suite (Air & Satellite Radio Analysis)
-While the core tablet natively receives positioning and orbital timing from 4 GNSS satellite constellations (GPS, Galileo, GLONASS, BeiDou via the u-blox MAX-M10S), wideband RF scanning of airplanes and atmospheric satellites is offloaded to the backpack:
+While the core tablet natively receives positioning and orbital timing from 4 GNSS satellite constellations (GPS, Galileo, GLONASS, BeiDou via the Quectel EG25-G modem's integrated Qualcomm GNSS receiver), wideband RF scanning of airplanes and atmospheric satellites is offloaded to the backpack:
 * **Wideband Software Defined Radio (SDR):** Integrated **RTL2832U + R860/R820T2** tuner (24 MHz to 1766 MHz).
 * **Dedicated Top-Right SMA Port:** Tuned for wideband VHF/UHF tactical reception.
 * **Capabilities Enabled:**

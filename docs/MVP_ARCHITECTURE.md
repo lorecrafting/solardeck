@@ -48,12 +48,12 @@ SolarDeck is a sovereign, general-purpose open-hardware computing platform desig
             ┌──────────────────────────┴──────────────────────────┐
             ▼                                                     ▼
 ┌───────────────────────────────────────┐     ┌───────────────────────────────┐
-│ SNAPDECK KEYBOARD (PARALLEL BUILD)    │     │ MODULAR TACTICAL RF MULTI-TOOL│
-│ • Kailh X-Switches (Ultra-slim 3.5mm) │     │ • Flipper Zero Sub-GHz CC1101 │
-│ • Blackberry RIM 9900 Optical Trackpad│     │ • 13.56MHz NFC & 125kHz RFID  │
-│ • Nordic nRF52840 (ZMK + BLE 5.0)     │     │ • Dual High-Power IR TX/RX    │
-│ • 5-Pin Magnetic Gold Pogo Bus        │     │ • Wideband Sky-Scan SDR       │
-│ • Wayland Auto-Resize to Top 2/3      │     │ • Mates to USB-C Port 2       │
+│ UNIVERSAL MOUNT & OPEN KEYBOARD       │     │ MODULAR TACTICAL RF MULTI-TOOL│
+│ • M2.5 Threaded Inserts + MagSafe Ring│     │ • Flipper Zero Sub-GHz CC1101 │
+│ • 3D-Printed $20 Q20 Thumb-Grip       │     │ • 13.56MHz NFC & 125kHz RFID  │
+│ • Any Bluetooth / USB-C Keyboard      │     │ • Dual High-Power IR TX/RX    │
+│ • Camera Tripod (1/4"-20) & MagSafe   │     │ • Wideband Sky-Scan SDR       │
+│ • Phase 2 SnapDeck Option ($32 BOM)   │     │ • Mates to USB-C Port 2       │
 └───────────────────────────────────────┘     └───────────────────────────────┘
 ```
 
@@ -213,17 +213,20 @@ To enable clean voice interaction with Claude Code and dictation:
 
 ---
 
-## 7. The SnapDeck Hybrid Detachable Keyboard System
+## 7. Input Architecture: Universal Mechanical Mount & Open Keyboards (V1)
+
+For V1, descoping the proprietary SnapDeck keyboard eliminates $25,000+ in custom injection tooling and 6 months of firmware bring-up. The core tablet features **Universal M2.5 Threaded Brass Inserts and a MagSafe-Compatible Magnetic Array** on the rear shell, allowing users to pair any Bluetooth or USB-C keyboard (ThinkPad TrackPoint, Keychron, Corne, Apple Magic Keyboard) or snap on an open-source 3D-printed $20 BlackBerry Q20 handheld thumb keyboard.
+
+*(Note: The custom SnapDeck scissor keyboard specification below is preserved as an optional Phase 2 accessory design).*
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                          THE 4 OPERATING POSTURES                           │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ POSTURE 1: ON-SCREEN LAPDECK (LANDSCAPE)                                    │
-│ • Keyboard rests magnetically on bottom 1/3 of the landscape screen.        │
-│ • Hall sensor triggers Sway Wayland to resize workspace to top 2/3          │
-│   (1872 × 950 px). Bottom 1/3 screen goes dormant (0W).                     │
-│ • Use Case: Typing on lap, in bed, on a bus, or airplane tray table.        │
+│ POSTURE 1: HANDHELD THUMB-TYPING CYBERDECK                                  │
+│ • Snaps into an open-source 3D-printed handheld ergonomic grip.             │
+│ • Integrates an inexpensive $20 USB-C/BLE BlackBerry Q20 thumb keyboard     │
+│   beneath the 10.3" screen for two-thumb terminal typing while walking.     │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ POSTURE 2: PROPPED-UP WORKSTATION (LANDSCAPE)                               │
 │ • MagSafe / OEM stand props tablet upright at 65°–75° on desk.              │
@@ -238,13 +241,12 @@ To enable clean voice interaction with Claude Code and dictation:
 │ • Use Case: Reading long source files, logs, and technical documentation.   │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ POSTURE 4: PURE SLATE / SCRIBE MODE                                         │
-│ • Keyboard snaps magnetically onto the REAR of the tablet chassis.          │
-│ • Rear Hall sensor disables key presses to prevent accidental clicks.       │
+│ • Detached from all stands, held in one hand as a pure 510g tablet.         │
 │ • Use Case: Lightweight handheld e-reader, PDF annotation, Wacom sketching. │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Co-Design Technical Specifications:
+### Optional Phase 2 Accessory: SnapDeck Scissor Keyboard Specifications
 1. **Key Switches:** Ultra-slim (3.5mm total thickness) Kailh X-Switch tactile scissor keys with 1.2mm travel.
 2. **Trackpad:** Blackberry RIM 9900 optical trackpad centered directly below the spacebar for thumb cursor control without lifting hands.
 3. **Controller & Firmware:** Nordic **nRF52840** running open-source **ZMK Firmware**, supporting wired USB and sub-millisecond BLE 5.0 wireless.

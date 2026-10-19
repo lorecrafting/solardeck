@@ -51,7 +51,7 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **Coulomb Counter**| Impedance Track™ Battery Fuel Gauge & Health IC | Texas Instruments / Mouser | BQ27441-G1A | $1.10 |
 | **Thermal Triad** | Dual Precision Digital Temperature Sensors (Batt + E-Ink Logs)| Texas Instruments / LCSC | TMP112AIDRLR (x2) | $0.60 |
 | **NFC Controller** | 13.56 MHz NFC / Smartcard Reader & Crypto Signer + FPC Antenna | NXP Semiconductors / LCSC | PN5321A3HN / ST25R3916 | $2.40 |
-| **Ambient Lux** | Precision Ambient Light & Solar Lux Sensor | Texas Instruments / Mouser | OPT3001DNPR | $0.55 |
+| **Ambient Lux Sensing**| Integrated via Solar Strip & RP2350 12-Bit ADC (Zero-BOM Innovation)| IXYS / RP2350 Subsystem | ADC Channel 3 ($0 Added Silicon) | $0.00 |
 | **VBUS OR-ing** | Dual Low-Ron Ideal Diode Power OR-ing Controller (x2) | Texas Instruments / Mouser | LM66100DCKR (x2) | $0.70 |
 | **Host VBUS Sw** | 1.5A Current-Limited USB Host Distribution Power Switch | Texas Instruments / Mouser | TPS2051BDBVR | $0.45 |
 | **Recovery Sw** | Single Sub-Miniature IP67 Pinhole Micro-Tactile Switch | C&K / Panasonic / LCSC | KMR2 / EVQ-P8 | $0.20 |
@@ -71,9 +71,9 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **Airgap Switch** | Sub-Miniature 2-Position Gold Contact Slide Switch | C&K / E-Switch / LCSC | JS202011CQN | $0.45 |
 | **GORE Vent** | ePTFE Pressure Equalization Vent Plug | W. L. Gore / Amphenol | PMF100396 | $1.50 |
 | **Enclosure (PA12)**| SLS 3D-Printed PA12 Nylon Shell + 85A TPU Corner Bumpers | JLC3D / Craftcloud | Custom CAD Housing (Streamlined)| $25.00 |
-| **Total Core BOM**| **(Mathematically Verified Sum of 61 Core Line Items)** | | | **$389.40 – $414.40** |
+| **Total Core BOM**| **(Mathematically Verified Sum of 61 Core Line Items)** | | | **$388.85 – $413.85** |
 
-*(Note: Specifying the 4GB RAM CM4 base configuration reduces the Total Core BOM to **$369.40 – $394.40**).*
+*(Note: Specifying the 4GB RAM CM4 base configuration reduces the Total Core BOM to **$368.85 – $393.85**).*
 
 ---
 

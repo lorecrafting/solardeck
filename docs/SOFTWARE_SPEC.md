@@ -166,7 +166,7 @@ Rather than relying on static, hardcoded power profiles, SolarDeck continuously 
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 1. REAL-TIME SENSING (Hardware Layer):                                      │
 │    • TI INA3221 (3-Rail mW) • BQ27441 (Coulombs/ESR) • TMP112 (Thermal)     │
-│    • OPT3001 (Lux) • BMA400 (Motion) • Quectel/SX1262 (RF Link Metrics)     │
+│    • Solar Lux (RP2350 ADC) • BMA400 (Motion) • Quectel/SX1262 (RF Metrics) │
 │                                  │                                          │
 │                                  ▼ (10Hz / 1Hz / 0.1Hz Sampling)            │
 │ 2. TELEMETRY DAEMON (`solardeck-telemetryd`):                               │
@@ -201,7 +201,7 @@ The background daemon `solardeck-telemetryd` logs all physical metrics into a co
 #### 3.3.2 The Three AI Feedback Tiers
 1. **Tier 1: Immediate Autonomous Hardware Adaptation (< 100ms response):**
    * **Waveform Temperature Tuning:** Reads the display backplane TMP112 sensor and writes directly to the IT8951 `TEMP_REG`. The EPDC switches waveform LUTs in real time, preventing slow ghosting in cold weather and bleeding in hot sunlight.
-   * **Ambient Lux Scaling:** When the OPT3001 reads $>10,000\text{ lux}$ (direct sunlight), the front-light is locked to 0% and E-ink contrast curves are maximized.
+   * **Ambient Lux Scaling:** When the solar strip ambient lux reads $>10,000\text{ lux}$ (direct sunlight), the front-light is locked to 0% and E-ink contrast curves are maximized.
    * **Dead-Socket Power Cycle:** If the RF rail ammeter registers continuous active transmission power ($>1.2\text{W}$) for >45 seconds without network throughput, the daemon automatically pulses the modem's TPS22918 load switch to reset the baseband.
 2. **Tier 2: Runtime System Profile Self-Tuning (`solardeck-optimize`):**
    * Running `solardeck-optimize` aggregates the past 24 hours of telemetry into a dense JSON payload and passes it to Claude Code:
@@ -323,7 +323,7 @@ SolarDeck's programmable RGB Notification Beacon ("Signal Halo") and Standby Pie
 * When the CM4 enters S2idle or full power-down (0.000W), the RP2350 firmware autonomously manages the beacon:
   * **Incoming LoRa Mesh Packets:** RP2350 detects packet on SX1262 SPI $\to$ plays a subtle 2-tone chime on the SMT micro-piezo buzzer $\to$ pulses the emerald green LED at 0.5 Hz for 15 seconds.
   * **Rapid Barometric Drops (Storm Alert):** BMP390 detects pressure drop $> 3\text{ hPa / 3 hr}$ $\to$ strobes ruby red warning and sounds a weather alert tone.
-  * **Ambient Nightstand Beacon:** When OPT3001 reads $< 0.5\text{ lux}$ (pitch black) and device is resting on a nightstand or desk, pulses an ultra-faint warm white locator glow (2% duty cycle, $< 15\text{ µA}$) so you can effortlessly find the tablet in the dark.
+  * **Ambient Nightstand Beacon:** When ambient solar lux reads $< 0.5\text{ lux}$ (pitch black) and device is resting on a nightstand or desk, pulses an ultra-faint warm white locator glow (2% duty cycle, $< 15\text{ µA}$) so you can effortlessly find the tablet in the dark.
 
 ---
 

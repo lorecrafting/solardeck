@@ -54,7 +54,7 @@ SolarDeck destroys this friction. When resting on a desk or shelf, it operates a
 
 ### Engineering Rules to Enforce:
 1. **Zero Bus Contention:** The **Texas Instruments TMUX1575** 8-channel bus switch guarantees that when the RP2350 owns the display bus during Zen reading, all CM4 display pins are galvanically isolated with zero parasitic back-powering ($I_{\text{off}}$).
-2. **Deterministic Wake Pins:** The SnapDeck pogo pin sense line (`ID_SENSE`), keyboard keystroke IRQ, Wacom `PEN_PROX_INT`, and 5-way navigation rocker are hardwired directly to RP2350 edge-triggered interrupt pins (GPIO 10–13), guaranteeing sub-microsecond interrupt capture.
+2. **Deterministic Wake Pins:** Keyboard keystroke IRQ (via USB-C or BLE), Wacom `PEN_PROX_INT`, BMA400 tap detection, and the 5-way navigation rocker are hardwired directly to RP2350 edge-triggered interrupt pins (GPIO 10–13), guaranteeing sub-microsecond interrupt capture.
 3. **No Bootloader Delays:** In S2idle suspend, RAM remains refreshed at 15 mW. In cold hibernate, an immutable Linux kernel image with `initramfs` resides on high-speed eMMC with all non-essential systemd services disabled.
 
 ---
@@ -70,7 +70,7 @@ SolarDeck treats text entry like an **electric IBM Selectric typewriter striking
 
 ```
 ┌──────────────┐    2.5ms USB/BLE    ┌──────────────┐    1.5ms Wayland   ┌──────────────┐
-│ Kailh X-Key  │ ──────────────────> │ Linux Kernel │ ─────────────────> │ Sway / Foot  │
+│ Keyboard Key │ ──────────────────> │ Linux Kernel │ ─────────────────> │ Sway / Foot  │
 │ Strike       │                     │ Input Subsys │                    │ Terminal     │
 └──────────────┘                     └──────────────┘                    └──────────────┘
                                                                                 │
@@ -133,36 +133,36 @@ SolarDeck inverts this entirely: **The brighter the sun, the crisper, higher-con
 
 ---
 
-## Pillar 4: The SnapDeck Form-Morphology (Lapdeck ⟷ Slate ⟷ Easel)
+## Pillar 4: Universal Form-Morphology (Handheld Grip ⟷ Pure Slate ⟷ Desk Easel)
 
 ### The Vision
 The computing industry has struggled with 2-in-1 form factors:
 * Fabric keyboard covers (iPad Pro, Surface Pro) flop around on your lap; their "lapability" is dreadful on a park bench, train, or airplane.
 * Fixed cyberdecks (ClockworkPi DevTerm, uConsole) are thick, heavy bricks that you cannot hold in bed as an e-reader or write on with a stylus.
 
-SolarDeck solves this through the **SnapDeck Parallel Form-Morphology**:
+SolarDeck solves this by decoupling the core tablet from proprietary keyboards and providing a **Universal Mechanical Mounting Architecture**:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         SNAPDECK FORM MORPHOLOGY                            │
+│                       UNIVERSAL FORM MORPHOLOGY                             │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 1. ON-SCREEN LAPDECK MODE (The Focused Workstation)                         │
-│    • Snaps magnetically directly over the lower 1/3 of the landscape screen.│
-│    • Rigid magnetic hinge creates a stiff, stable clamshell for your lap.   │
-│    • Sway automatically tiles terminal into upper 2/3 (1872×950 px).        │
-│    • Kailh X-Switches (3.5mm travel) + RIM 9900 optical trackpad.           │
+│ 1. HANDHELD THUMB-TYPING CYBERDECK (The Mobile Terminal)                    │
+│    • Snaps onto an open-source 3D-printed handheld ergonomic grip.          │
+│    • Accommodates an inexpensive $20 USB-C/BLE BlackBerry Q20 tactile       │
+│      thumb keyboard beneath the 10.3" display.                              │
+│    • Type bash commands and prompts with two thumbs while walking outdoors. │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 2. TACTICAL READING & INKING SLATE (The Pure 510g Tablet)                   │
-│    • Detach keyboard in 0.5 seconds.                                        │
+│    • Detach from grip or stand in 0.5 seconds.                              │
 │    • 510g lightweight, 9.8mm slim IP67 waterproof reading slate.            │
 │    • Full 10.3" portrait or landscape canvas for 100GB offline Kiwix docs,  │
 │      technical schematics, and Wacom EMR handwritten annotations.           │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 3. DESK EASEL / CODING DASHBOARD (The Ergonomic Terminal)                   │
-│    • Prop tablet on any MagSafe stand, origami folio, or OEM tablet easel. │
+│    • Mounts instantly to any MagSafe desk stand or camera tripod (1/4"-20). │
 │    • View 80+ continuous lines of code in portrait orientation.             │
-│    • SnapDeck keyboard sits freely on desk; communicates over low-latency   │
-│      Nordic nRF52840 BLE 5.0 (<5ms) or wired pogo jumper.                   │
+│    • Pairs with your favorite mechanical keyboard (Keychron, ThinkPad,      │
+│      Apple Magic Keyboard, Corne, or glove80) over low-latency BLE or USB-C.│
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
