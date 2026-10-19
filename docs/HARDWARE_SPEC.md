@@ -925,13 +925,17 @@ To protect sensitive private keys, encrypted credentials, and communications log
 * **Aerogel Thermal Decoupling Barrier:** A **0.5 mm die-cut Pyrogel aerogel insulation strip** (thermal conductivity $<0.015\text{ W/m}\cdot\text{K}$) is laminated between the top micro-solar bezel and the E-Ink panel frame, blocking 95% of conductive heat migration into the display.
 * **PCBA Milled Thermal Relief Slot:** A 1.0 mm continuous routed slot in the carrier PCB isolates the BQ25504 nano-power boost harvester thermally from the low-noise analog sensor cluster and Wacom digitizer grounding plane.
 
-### 4.6 The "Cold Storage Vault" (Concealed Inside Gasketed M.2 Service Hatch)
+### 4.6 The "Cold Storage Vault" & Rechargeable Desiccant Pocket (Concealed Inside M.2 Service Hatch)
 To make SolarDeck the ultimate sovereign, off-grid archive workstation without adding a single cent in electronics or compromising exterior unibody waterproofing:
 * **Gasketed M.2 Service Hatch Cavity:** Molded directly into the inner face of the flush, IP67 silicone-gasketed M.2 SSD service hatch on the rear chassis unibody (secured by 2x stainless M2 captive screws).
-* **Storage Capacity:**
+* **Storage & Environmental Maintenance Capacity:**
   * **3x Uniform Friction-Fit MicroSD Card Pockets:** Accommodates three extra MicroSD cards (e.g., Card 1: 1TB offline Kiwix Wikipedia + Library of Genesis; Card 2: bootable Tails / Arch Linux rescue OS; Card 3: encrypted personal git vault).
   * **Nano-SIM Compatibility:** Standardizes on uniform MicroSD pocket dimensions (15.0mm × 11.0mm × 1.0mm). To carry a spare Nano-SIM, users insert the SIM into a standard $0.05 plastic MicroSD-shaped carrier shell. This eliminates asymmetric mold tooling and gives users complete freedom to carry 3x MicroSDs or any combination of SDs and SIMs.
   * **1x Stainless Steel SIM Ejector Pin Clip:** Snaps a standard metal SIM ejector tool (or safety pin) securely into place.
+  * **Rechargeable Desiccant Sachet Pocket (1g/2g Slot):** A dedicated 28mm × 20mm × 3.5mm molded retention pocket housing a miniature **1-gram or 2-gram Tyvek sachet of orange indicating silica gel** (Multisorb MiniPax or Dry-Packs) or a sintered porous ceramic desiccant tablet.
+    * **Function:** Continuously absorbs internal residual moisture and water vapor molecules permeating elastomer seals, keeping cavity relative humidity strictly below **10% RH** and completely eliminating internal glass condensation and dew-point fogging down to $-25^\circ\text{C}$.
+    * **Visual Color Indication:** Non-toxic, cobalt-free silica gel beads are bright orange when dry/active, shifting to dark green/blue when saturated.
+    * **Zero-Waste Thermal Field Regeneration:** 100% reusable indefinitely. When saturated, the operator pops the packet out and bakes it for 1 hour on a sun-drenched vehicle dashboard / solar panel, or 15 minutes in a $110^\circ\text{C}$ camp oven, returning it to bright orange.
 * **Mechanical Retention & Weather Protection:**
   * Each card pocket is lined with molded 85A TPU retention micro-ribs and a thumb-notch for quick extraction with a fingernail.
   * Zero rattle, zero vibration, and 100% immune to drops.
@@ -1145,3 +1149,65 @@ To support autonomous robotic servicing via desktop Cartesian gantries (Ender-3 
   * To avoid the thermal degradation, tip oxidation, and corrosive flux residues of traditional robotic soldering irons, automated physical repairs use **pneumatic micro-dispensing of Room-Temperature Silver Conductive Epoxy** (MG Chemicals 8331S / CircuitWorks CW2400).
   * Dispensed via a 30-gauge blunt needle onto solder jumpers (`SJ1`–`SJ8`), the epoxy cures into a solid metallic electrical bridge with $<0.001\ \Omega\cdot\text{cm}$ resistivity, requiring zero heat and lasting for decades.
 * **Power Supply for Repair Tools:** The tablet's **USB-C Port 2 supplies 15W continuous (5V @ 3A)** via reverse power delivery, providing sufficient electrical power to run a desktop gantry controller, camera ring light, and micro-dispenser without an external wall adapter.
+
+### 7.4 Decadal Mechanical Durability & Anti-Degradation Architecture
+To prevent the physical wear, joint fatigue, thread stripping, and material degradation that degrade consumer electronics over 10 to 30 years:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│               DECADAL MECHANICAL DURABILITY & ANTI-DEGRADATION              │
+├─────────────────────┬───────────────────────────────────────────────────────┤
+│ FAILURE MECHANISM   │ SOLARDECK PHYSICAL COUNTERMEASURE                     │
+├─────────────────────┼───────────────────────────────────────────────────────┤
+│ **1. Thread         │ • All 12 chassis screws, 2 hatch screws, and 4 VESA   │
+│ Stripping**         │   anchors thread into knurled brass ultrasonic inserts│
+│                     │ • 500+ teardown cycles with zero plastic fatigue      │
+├─────────────────────┼───────────────────────────────────────────────────────┤
+│ **2. Battery Cell   │ • 0.8mm mechanical expansion clearance lined with     │
+│ Swelling**          │   closed-cell Poron 4701-30 microcellular foam        │
+│                     │ • Absorbs up to 10% pouch swelling with <2 kPa back-  │
+│                     │   pressure, preventing crushing of E-Ink glass        │
+├─────────────────────┼───────────────────────────────────────────────────────┤
+│ **3. USB-C Port     │ • Mid-mount USB-C receptacles with 4x through-hole    │
+│ Torque / Shearing** │   metal ground stake tabs soldered through 6 layers   │
+│                     │ • Withstands >50 N (5 kgf) lateral pull torque        │
+├─────────────────────┼───────────────────────────────────────────────────────┤
+│ **4. Front Glass    │ • Acid-etched matte micro-texture directly in the     │
+│ Peeling / Abrasion**│   aluminosilicate glass (Mohs 7+ hardness)            │
+│                     │ • 0 glued plastic films; permanent for 100+ years     │
+├─────────────────────┼───────────────────────────────────────────────────────┤
+│ **5. Salt Corrosion │ • 30 micro-inch Electrolytic Hard Gold over Nickel    │
+│ & Contact Pitting** │   barrier (MIL-G-45204) on test points & pogo pads    │
+│                     │ • Immune to salt fog and 10,000+ mating cycles        │
+├─────────────────────┼───────────────────────────────────────────────────────┤
+│ **6. Dew-Point      │ • Onboard Sensirion SHT40 ($0.4\text{ }\mu\text{A}$,  │
+│ Condensation Alarm**│   $\pm 1.5\%$ RH) calculates internal dew point       │
+│                     │ • Autonomous LLM alert to bake desiccant packet       │
+└─────────────────────┴───────────────────────────────────────────────────────┘
+```
+
+1. **Knurled Ultrasonic Brass Threaded Inserts (Anti-Stripping Fasteners):**
+   * Consumer devices drive self-tapping screws directly into brittle injection-molded plastics, stripping threads after 2 or 3 disassemblies.
+   * SolarDeck anchors all 12 perimeter chassis screws, 2 rear service hatch screws, and 4 rear VESA/MagSafe mounts into **heavy-duty knurled brass heat-set inserts (M2.5 and M2)** sonically welded or molded into the chassis bosses.
+   * Tolerates over **500 complete teardown and reassembly cycles** at rated torque ($0.45\text{ N}\cdot\text{m}$) without thread wear, stripping, or plastic boss cracking.
+2. **Zero-Stress Battery Swelling Relief Cavity (Poron 4701-30):**
+   * Over a 10-to-20-year lifespan, all pouch-cell lithium batteries (including LiFePO4) experience gradual microscopic outgassing and volumetric expansion (up to 8% to 10% thickness increase). In rigid, unyielding enclosures, swelling batteries exert crushing perpendicular forces against the fragile 0.7mm glass backplane of E-Ink panels, causing irreversible display fractures.
+   * SolarDeck reserves a **0.80 mm dedicated expansion clearance** behind the battery pouch, lined with **Rogers Poron 4701-30 very soft microcellular polyurethane foam**.
+   * The foam maintains gentle contact when new, but compresses progressively under cell expansion, exerting **$<2.0\text{ kPa}$ back-pressure** over decades. The E-Ink glass backplane remains under zero mechanical strain.
+3. **4-Point Through-Hole Stake-Tab USB-C Receptacles (Torque-Proof Ports):**
+   * The #1 hardware failure in modern mobile devices is the USB-C receptacle tearing off the motherboard when a cable is snagged or levered.
+   * USB-C Port 1 and Port 2 specify **mid-mount receptacles featuring four heavy through-hole metal anchoring tabs** that penetrate completely through all 6 layers of the 1.6mm FR4 motherboard, soldered with solid 360° copper barrel fillets.
+   * Withstands over **50 Newtons (5.1 kgf) of perpendicular wrenching torque** and 10,000 insertion cycles, completely isolating delicate SMT signal pins from mechanical leverage.
+4. **Permanent Acid-Etched Matte Aluminosilicate Glass (Zero Peeling Films):**
+   * Consumer tablets apply cheap glued polyethylene terephthalate (PET) "paper-like" film overlays that scratch easily, bubble under tropical humidity, and peel off after 1–2 years.
+   * SolarDeck utilizes **chemically etched 1.1mm aluminosilicate glass (Mohs 7+ hardness)** where the anti-glare micro-texture and tactile friction are acid-etched directly into the glass crystalline structure at the foundry.
+   * Scratch-proof, unaffected by UV solar rays or high temperatures, and guaranteed permanent for 100+ years.
+5. **30 Micro-Inch Electrolytic Hard Gold Contact Plating:**
+   * Standard consumer electronics use Flash Gold (1–3 micro-inches) or basic ENIG, which rapidly wears through to raw copper, causing green oxidation (copper carbonate) and contact pitting in marine or humid environments.
+   * All external contact surfaces (bed-of-nails factory pads, SIM/MicroSD spring terminals, and bottom pogo reserve pads) mandate **30 micro-inch Electrolytic Hard Gold over 100 micro-inch Nickel barrier plating (MIL-G-45204 Type II)**.
+   * Rated for over **10,000 mechanical contact wiping cycles** in salt-fog environments without gold depletion or galvanic pitting.
+6. **Internal Humidity & Dew-Point Telemetry (Sensirion SHT40):**
+   * An ultra-low-power **Sensirion SHT40 precision relative humidity and temperature sensor** ($0.4\text{ }\mu\text{A}$ average draw, $\pm 1.5\%\text{ RH}$ accuracy) is positioned on the carrier board adjacent to the M.2 cavity on I2C address `0x44`.
+   * The Linux system daemon continuously computes the internal **Dew Point Temperature ($T_d$)** against the backplane temperature.
+   * If internal cavity humidity climbs above 65% RH with falling ambient temperature, the autonomous diagnostic engine flags a proactive notification:
+     `[HUMIDITY WARNING] Internal RH at 68%. Condensation risk detected on display lens. Please remove and regenerate desiccant sachet in rear M.2 service hatch.`

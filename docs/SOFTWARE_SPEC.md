@@ -802,6 +802,7 @@ When invoked via CLI or local agent tool call (`solardeck-diag --json`), the eng
 4. **I2C Sensor Fabric Domain (Bus 1 & Bus 2):**
    * Sweeps I2C addresses `0x00` through `0x7F` at 400 kHz:
      * `0x60`: Bosch BMP390 Barometer (verifies chip ID `0x60`, pressure sanity $300\text{–}1100\text{ hPa}$).
+     * `0x44`: Sensirion SHT40 Precision Humidity & Temperature (verifies RH sanity $0\text{–}100\%$, computes Dew Point $T_d$).
      * `0x12`: Bosch BMA400 Accelerometer (executes internal electrostatic self-test deflection).
      * `0x68`: Maxim DS3231 RTC (reads oscillator stop flag `OSF`; checks battery backup coin-cell voltage).
      * `0x5D` / `0x14`: Goodix Touch Controller (reads mutual-capacitance baseline calibration frame).
@@ -854,9 +855,17 @@ When invoked via CLI or local agent tool call (`solardeck-diag --json`), the eng
     },
     "i2c_bus": {
       "status": "PASS",
-      "devices_detected": ["0x60", "0x12", "0x68", "0x5D", "0x40", "0x6B"],
+      "devices_detected": ["0x60", "0x44", "0x12", "0x68", "0x5D", "0x40", "0x6B"],
       "syntiant_ndp120_present": false,
       "wake_engine_active": "rp2350_microwakeword"
+    },
+    "environmental": {
+      "status": "PASS",
+      "internal_rh_pct": 18.4,
+      "internal_temp_c": 26.1,
+      "dew_point_c": -1.2,
+      "condensation_risk": false,
+      "desiccant_status": "ACTIVE_ORANGE"
     },
     "wireless": {
       "status": "WARNING",
@@ -887,6 +896,7 @@ When the user queries system health ("Is anything broken?"), the LLM follows fou
 1. **Symptom-to-Hardware Correlation:** Never state raw register values alone; explain the physical meaning (e.g. *"LTE Modem AT handshake failed and Rail 3 is drawing 420mA, which means the modem firmware is hung in a network registration loop"*).
 2. **False-Positive Filtering:** Cross-check the Hardware Airgap Switch (`AIRGAP_STAT`). If the airgap switch is in STEALTH mode, radio NACKs are expected and reported as *"Radios safely unpowered by physical airgap switch (0.000W)"* rather than hardware failures.
 3. **Safety Clamping:** If battery cell impedance exceeds $85\text{ m}\Omega$ or display temperature exceeds $+55^\circ\text{C}$, the LLM flags an immediate safety alert and instructs the operator to disconnect solar charging.
+4. **Dew-Point & Humidity Mitigation:** If internal cavity humidity from the Sensirion SHT40 sensor exceeds 65% RH with falling ambient temperature, the LLM alerts the operator: *"Internal humidity alert: 68% RH. Condensation risk detected on front lens. Please remove and regenerate the orange desiccant sachet located inside the rear M.2 service hatch."*
 
 ### 21.4 Active Hardware Self-Healing & Power-Gated Mitigation
 Beyond passive diagnosis, the LLM is authorized to invoke targeted mitigation commands using the TPS22918 load switches and system daemons:

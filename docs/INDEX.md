@@ -88,7 +88,8 @@ The SolarDeck repository contains comprehensive, mathematically verified specifi
 | **Dual-Footprint & DNP Architecture** | `docs/HARDWARE_SPEC.md` §2.22 | 8 Strategic Fallback Footprints| NDP120, RV-3028, WSON-8, CH224K, PCIe|
 | **Autonomous LLM Hardware BIST Engine**| `docs/SOFTWARE_SPEC.md` §21 | `solardeck-diag --json` | 8-Subsystem BIST & Power-Gated Heal|
 | **30-Year Zero-Failure & Hi-Rel HW** | `docs/HARDWARE_SPEC.md` §7 | 5 Hi-Rel Rules + Escape Hatches | 50% Derate, Soft-Term MLCC, GDT, E-Fuse|
-| **Cold Storage Vault** | `docs/HARDWARE_SPEC.md` §4.2 | 3x MicroSD Slots + SIM Tool | Spring-latch Retention Pockets |
+| **Decadal Mechanical Durability** | `docs/HARDWARE_SPEC.md` §7.4 | Knurled Inserts + Poron Relief | 500+ Cycles, 4-Point USB-C, Hard Gold |
+| **Cold Storage Vault & Desiccant Pocket**| `docs/HARDWARE_SPEC.md` §4.6 | 3x MicroSD + 1g/2g Desiccant | IP67 Hatch Cavity / 100+ Regen Cycles |
 
 ---
 
