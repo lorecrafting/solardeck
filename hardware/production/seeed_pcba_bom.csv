@@ -5,7 +5,8 @@ U3,TPS61088RHLR,1,https://www.ti.com/product/TPS61088
 U4,TPS63020DSJR,1,https://www.ti.com/product/TPS63020
 U5,BQ25504RGTR,1,https://www.ti.com/product/BQ25504
 SW1,JS102011SAQN,1,https://www.littelfuse.com
-J1,J2,DF40C-100DS-0.4V,2,https://www.hirose.com
+J1,DF40C-100DS-0.4V,1,https://www.hirose.com
+J2,DF40C-100DS-0.4V,1,https://www.hirose.com
 U8,RP2350B,1,https://www.raspberrypi.com
 U9,APS6404L-3SQR-SN,1,https://www.apmemory.com
 U10,W25Q128JVS,1,https://www.winbond.com
