@@ -37,7 +37,11 @@ The SolarDeck repository contains comprehensive, mathematically verified specifi
 │    • Complete, turnkey Bill of Materials: 60 core line items ($389–$414),   │
 │      supplier part numbers, distributor links, and turnkey assembly costs.  │
 │                                                                             │
-│ 7. AGENTS.md                                                                │
+│ 7. docs/HARDWARE_VERIFICATION_WORKFLOW.md                                   │
+│    • 5-Stage Zero-Brick verification ladder: static netlist trap auditor,   │
+│      SPICE power transient simulation, Renode/QEMU co-simulation, and DRC.  │
+│                                                                             │
+│ 8. AGENTS.md                                                                │
 │    • Developer & AI agent instructions, coding discipline, and safety rules.│
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
