@@ -24,10 +24,10 @@ Read `docs/AUDIT_2026-10-20.md` before treating any row here as a purchase decis
 | :--- | ---: |
 | `measured` | 0 |
 | `modelled` | 2 |
-| `specified` | 64 |
+| `specified` | 65 |
 | `aspirational` | 17 |
 | `TBD` | 0 |
-| **total** | **83** |
+| **total** | **84** |
 
 ## Product pillars
 
@@ -153,6 +153,7 @@ The numbers that decide whether a build is field-ready (`STANDOUT_FEATURES.md`).
 | G9 | UV & weather durability (ASTM G154 1000 h, dE<3) | `aspirational` |
 | G10 | Unpowered storage survival (12 months, data intact) | `aspirational` |
 | G11 | USB-C interoperability (10-row matrix, incl. dead-battery Rd) | `specified` |
+| G12 | Sleep-ladder energy & resume integrity (R2 S2idle 15mW/0.3s, R3 hibernate 0W, R4 keep-alive <0.2mW) | `specified` |
 
 ## How this page stays true
 

@@ -561,7 +561,7 @@ Equipping the sovereign traveler and wilderness naturalist with completely offli
 
 ## Verification & Acceptance Gate (The North Star Metrics)
 
-Before any prototype PCBA or firmware build is declared ready for field release, it must be benchmarked against these eleven non-negotiable gates:
+Before any prototype PCBA or firmware build is declared ready for field release, it must be benchmarked against these twelve non-negotiable gates:
 
 | # | Metric | Target Threshold | Method of Verification |
 | :--- | :--- | :--- | :--- |
@@ -576,6 +576,7 @@ Before any prototype PCBA or firmware build is declared ready for field release,
 | **G9** | UV & Weather Durability | **ASTM G154 1000 h, ΔE < 3, no crazing** | Quartz-xenon chamber on PA12 + anodised samples; colour SKU degrades faster by design. |
 | **G10** | Unpowered Storage Survival | **12 months, boots, OS volumes intact** | Powered off at 50% SOC, 30 °C; validates the NAND scrub policy against real retention loss. |
 | **G11** | USB-C interoperability: 10-row matrix incl. dead-battery Rd and charge-only-cable diagnostic | Every row passes on the dev kit | `USB_ROBUSTNESS.md` §3 |
+| **G12** | Sleep-ladder energy & resume integrity: R2 S2idle ≈15 mW floor / ≤0.3 s resume; R3 disk-hibernate 0.000 W idle; R4 deep-off keep-alive <0.2 mW via Li-primary; resumed sessions pass a post-wake integrity check | All rungs measured on the dev kit; hibernation image survives 30-day cold storage (§54 scrub) | `SOFTWARE_SPEC.md` §3.3.3, `HARDWARE_SPEC.md` §2.30 |
 
 ---
 

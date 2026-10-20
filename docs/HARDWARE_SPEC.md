@@ -974,6 +974,15 @@ Mounting a computing terminal to a bicycle or motorcycle handlebar in direct mid
 4. **Mechanical Cockpit Mounting:**
    * Interfaces with standard **RAM Mount 1" Ball (RAM-B-238U)** or Peak Design motorcycle mounts via the 4x M2.5 threaded brass inserts and rear MagSafe N52 magnetic anchor.
 
+### 2.30 **[DNP — Do Not Populate]** Betavoltaic Keep-Alive Bay & Li-Primary Keep-Alive (P1 Ships With the Coin Cell, Not the Tritium)
+
+The **R4 Deep-Off + Scrub** rung of the sleep ladder (§3.3.3 of SOFTWARE_SPEC.md) keeps the device at 0.000 W for *months*, which needs a low-power wake authority outside Linux: an always-on RTC tick and one scheduled LoRa beacon. That authority's energy budget is microwatts-to-a-tenth-of-a-milliwatt, which is exactly the class only *primary* cells or betavoltaics can serve — no rechargeable chemistry has the calendar life (your own LiFePO4 holds ~10–15 y).
+
+* **P1 ships with a Li-primary keep-alive cell** (e.g. a 3V CR2-style primary in a bay, ~0.5–1%/y self-discharge → 20–40 y shelf life, a few dollars) feeding the RP2350's RTC rail and the RTC-triggered LoRa beacon. This is the *cheap, available, unlicensed* answer to a 20-year keep-alive.
+* **A betavoltaic bay is reserved (DNP):** a mechanically and electrically empty socket sized for a future tritium (H-3) betavoltaic cell (BV100-class: 3V, ~100 µW, ~50 y rated; practical useful output ≈20–40 y given the 12.3 y half-life). The bay is populated by enthusiasts or a later Rev after licensing/supply matures — **not** in the base BOM.
+* **Why not tritium in P1 (honest answer):** (1) power-budget mismatch — the keep-alive load (DS3231 RTC alone ≈165 µW) exceeds a single 100 µW cell's *continuous* output, so even with tritium you need the same trickle→buffer→burst topology a coin cell provides; (2) tritium is a controlled nuclear material (US NRC / UK ONR) — owning a sealed microsource is tolerated, but *shipping and selling it as a product* is licensing paperwork hostile to an open-hardware supply chain; (3) cost — NanoTritium-class cells run hundreds to thousands of dollars per unit against a ≈$400 whole-BOM budget; (4) it is never the actual bottleneck — the embedded NAND already holds the hibernation image and the RTC real-time clock keeps the schedule; a 40-year-lifetime problem is served by a 40-year-primary that costs $2. The betavoltaic bay exists so the *century* claim (ADT-019, HARDWARE_SPEC §5) is physically reachable later without a board respin.
+* **Budget:** keep-alive envelope below ≈0.2 mW average (RTC tick + scheduled LoRa RX slot); the bay's voltage rail and buffer-cap pad are spec'd on the carrier. See `docs/spec_values.json` → `keepalive.*` for the numbers the checker enforces.
+
 ---
 
 ## 3. Universal Mechanical Mount, Handheld Thumb Grips & Open Keyboard Architecture

@@ -525,6 +525,11 @@
         "id": "G11",
         "name": "USB-C interoperability (10-row matrix, incl. dead-battery Rd)",
         "status": "specified"
+      },
+      {
+        "id": "G12",
+        "name": "Sleep-ladder energy & resume integrity (R2 S2idle 15mW/0.3s, R3 hibernate 0W, R4 keep-alive <0.2mW)",
+        "status": "specified"
       }
     ]
   },
@@ -643,5 +648,27 @@
     "swap_energy_wh": 0.005,
     "swap_render_s": 30,
     "text_reflow_status": "aspirational"
+  },
+  "sleep_ladder": {
+    "_comment": "Thresholded sleep ladder, SOFTWARE_SPEC.md 3.3.3. E=modelled on measurables; re-derive on dev kit.",
+    "r2_s2idle_mw": 15,
+    "r2_resume_s": 0.3,
+    "r2_idle_wh_per_day": 0.36,
+    "r3_hibernate_image_write_wh_nvme": 0.005,
+    "r3_hibernate_image_write_wh_emmc": 0.02,
+    "r3_breakeven_min_nvme": 30,
+    "r3_breakeven_min_emmc": 90,
+    "r3_resume_s": 6,
+    "r4_keepalive_mw": 0.2,
+    "solar_strip_wh_per_day": 0.45
+  },
+  "keepalive": {
+    "_comment": "R4 deep-off keep-alive authority, HARDWARE_SPEC.md 2.30. E=modelled.",
+    "li_primary_self_discharge_pct_per_year": 1,
+    "li_primary_shelf_life_y": 25,
+    "rtc_load_uw": 165,
+    "betavoltaic_uw": 100,
+    "betavoltaic_useful_y": 30,
+    "bay_reserved": "DNP"
   }
 }

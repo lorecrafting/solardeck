@@ -161,6 +161,19 @@ The background daemon `solardeck-telemetryd` logs all physical metrics into a co
      * **Thermal Gradient Analysis:** If thermal logs record sustained gradients between the CM4 CPU and battery pouch during long Claude Code compile sessions, the toolchain generates specific mechanical and layout guidance (e.g., thermal pad thickness adjustments, copper pour relief) for the hardware team.
      * **Hardware YAGNI Pruning:** If telemetry reveals an auxiliary expansion rail or sensor was active $<0.01\%$ of the time over hundreds of field hours, it is flagged for deletion in Rev 2, shedding weight, cost, and complexity.
 
+#### 3.3.3 The Thresholded Sleep Ladder (E-Ink-Corrected Hibernation Policy)
+
+The [[SolarDeck|device]] does not have one sleep mode: it has a ladder, and the right rung depends on how far away the next interaction is forecast to be. The single governing insight is **E-Ink bistability decouples *resume latency* from *perceived latency*** — the panel holds its last rendered frame at 0.000 W, so a cold boot or disk-resume can take seconds in the background while the user already sees a finished, correct page. No LCD-class device can do this (a black screen the moment power is cut forces instant-but-expensive standby); the ladder below is therefore a SolarDeck structural advantage, not a compromise. The ladder is implemented by `solardeck-telemetryd`'s power-tier scheduler (§3.3) using idle timers, the shadow-proximity gesture, and the always-on RP2350 presence signal.
+
+| Rung | When the device sits here | Power | Resume | User sees | Trigger |
+| :--- | :--- | :--- |:--- |:--- |:--- |
+| **R1 — Alive** | User actively reading / inking / typing | `power_profiles.active_w` (≈0.60–2.6 W) | instant | zero latency, full responsiveness | any input event |
+| **R2 — S2idle** (Suspend-to-RAM, existing) | Next interaction within ~1 h; sessions must stay hot in RAM | ≈15 mW floor (≈0.36 Wh/day idle — ≈80% of one day's 0.45 Wh strip harvest) | ≤0.3 s glass-to-glass | a small pause; page already on-panel, still perfectly sharp | idle timer of ~30 s to a few min (policy-tuned), or shadow gesture |
+| **R3 — Disk Hibernate** (NEW) | Next interaction hours away; on NVMe the break-even vs S2idle is ≈20–30 min, on eMMC ≈1.5 h (a 2 GB image write costs ≈0.02 Wh on eMMC ≈ its 15 mW floor over 1.3 h) | **0.000 W** after a one-time image write (≈0.005 Wh on NVMe, ≈0.02 Wh on eMMC) | ≈2–6 s to interactive userspace | *no flicker, no delay, no glitch* — the last page is already the correct picture; background resume simply re-warms the CPU | S2idle timer clears ~1 h forecast gap (recommended: 15 min on NVMe, 90 min on eMMC) |
+| **R4 — Deep-Off + Scrub** (NEW) | Field / storage for months | 0.000 W continuous; the kept-alive wake path (RTC + one LoRa beacon) is below ≈0.2 mW | minutes, first broth | same as R3 — cold booting into the last *picture* is smooth even from months of offline; the user taps and the panel lights to the pre-rendered page | R3 timer clears ~1 week, then periodic scrub (RTC-triggered) re-writes the hibernation image so NAND retention decay (§54) can never corrupt a months-old resume image |
+
+**Budget proof (why R3 wins):** 15 mW × 24 h = 0.36 Wh/day (S2idle, R2) vs 0.000 W idle + a one-time ≈0.005 Wh per transition (R3). Even twenty full R2→R3→R2 transitions a day cost ≈0.1 Wh — still ≈4× cheaper than sitting on R2. The R3 transition burst is real and immutable (it is the price of unloading DRAM); the ladder merely chooses *when* the burst is worth paying. `spec_values.sleep_ladder.*` holds the policy thresholds. (E: the thresholds are modelled on the 15 mW S2idle floor, the ≈0.6 W active floor, the eMMC/NVMe image sizes, and the 0.45 Wh/day strip budget — see `docs/AUDIT_2026-10-20.md` for what is measured vs modelled.)
+
 ---
 
 ## 4. Claude Code & AI Integration
