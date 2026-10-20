@@ -255,10 +255,29 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
 .
 ├── README.md                  # Master manifesto, problem statement, and executive architecture
 ├── AGENTS.md                  # Developer, AI agent, and hardware safety rules
-└── docs/
-    ├── STANDOUT_FEATURES.md   # The 5 Core Standout Pillars & Engineering North Stars (Latency/Power)
-    ├── MVP_ARCHITECTURE.md    # Core MVP vs Modular Packs, anti-bricking, audio, power profiles
-    ├── HARDWARE_SPEC.md       # Complete schematic, pinout, antenna engineering, and bus topology
-    ├── SOFTWARE_SPEC.md       # Linux kernel, E-ink waveform drivers, power profiles & apps
-    └── BOM_COST_ESTIMATE.md   # Bill of Materials, supplier links, and turnkey manufacturing breakdown
+├── docs/
+│   ├── INDEX.md               # Master 50-item specification index & architecture cross-reference
+│   ├── STANDOUT_FEATURES.md   # Core standout pillars, latency budgets, & emergent superpowers
+│   ├── MVP_ARCHITECTURE.md    # Dual-brain architecture, power state transitions, block diagrams
+│   ├── HARDWARE_SPEC.md       # Complete carrier board schematic, pinouts, RF & power design
+│   ├── SOFTWARE_SPEC.md       # Linux kernel, DRM waveform drivers, 50 daemons & applications
+│   ├── BOM_COST_ESTIMATE.md   # Bill of materials, supplier sourcing, turnkey cost breakdown
+│   ├── FIRST_BOOT_CHECKLIST.md# Unboxing to first prompt bring-up checklist & power rail checks
+│   ├── HANDOFF_TO_FABLE.md    # Turnkey Seeed Studio Fusion & manufacturing handoff package
+│   ├── OFFGRID_TACTICAL_SENSORS.md # Navigation, plate-solving, CBRN, & Hotpacks 1–7
+│   ├── MECHANICAL_FIT_AND_ENCLOSURE_WORKFLOW.md # Tolerance, CAD envelope, & 2-tier checks
+│   └── HARDWARE_VERIFICATION_WORKFLOW.md # 7-rule netlist electrical trap audit guide
+├── hardware/
+│   ├── solardeck-carrier.*    # KiCad 8 schematics, PCB layout, and netlists
+│   ├── enclosure/             # OpenSCAD 3D chassis models and dimensional verification
+│   └── production/            # Seeed Studio Fusion Gerber zip, BOM, CPL, & box-build guides
+├── firmware/
+│   └── rp2350/                # Bare-metal C co-processor state machine, RTC, & PSRAM tests
+├── src/
+│   ├── daemons/               # eink-refreshd, solardeck-telemetryd, & C bridge daemons
+│   └── dts/                   # solardeck-cm4.dts Device Tree Overlay
+├── tools/
+│   └── provision/             # setup_solardeck_os.sh automated OS provisioning engine
+└── scripts/
+    └── verify_all.py          # 9-phase automated master system verification test runner
 ```

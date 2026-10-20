@@ -55,7 +55,11 @@ The SolarDeck repository contains comprehensive, mathematically verified specifi
 │    • Comprehensive engineering handover for Fable Wednesday audit: Seeed    │
 │      quotation status, 7-phase verification pipeline, and review checklist. │
 │                                                                             │
-│ 11. AGENTS.md                                                               │
+│ 11. docs/FIRST_BOOT_CHECKLIST.md                                            │
+│    • Complete unboxing-to-first-prompt bring-up manual: cold DMM resistance  │
+│      checks, RP2350 .uf2 flashing, OS provisioning, and BIST pass gate.     │
+│                                                                             │
+│ 12. AGENTS.md                                                               │
 │    • Developer & AI agent instructions, coding discipline, and safety rules.│
 └─────────────────────────────────────────────────────────────────────────────┘
 ```

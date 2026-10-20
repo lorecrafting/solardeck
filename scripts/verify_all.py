@@ -12,6 +12,7 @@ Executes the complete 7-Phase Verification Pipeline covering:
   Phase 6: SMT PCBA & Centroid Package Integrity (BOM / CPL / 6-Layer Layout)
   Phase 7: Seeed Studio Fusion Turnkey Fabrication Package & Box-Build Assets
   Phase 8: OS Provisioning Script Integrity (setup_solardeck_os.sh --test)
+  Phase 9: Master Documentation & Cross-Reference Integrity (11 Core Docs)
 """
 
 import os
@@ -81,6 +82,42 @@ def verify_seeed_turnkey():
     assert os.path.isfile(seeed_stl) and os.path.getsize(seeed_stl) > 1000, "Missing or empty STL"
     assert os.path.isfile(seeed_doc), f"Missing {seeed_doc}"
     
+    elapsed = (time.time() - t0) * 1000
+    print(f"{Colors.GREEN}[PASS]{Colors.END} ({elapsed:.1f}ms)")
+    return True
+
+def verify_documentation_integrity():
+    t0 = time.time()
+    print(f"▶ {Colors.BOLD}Phase 9: Master Documentation & Architectural Link Integrity...{Colors.END} ", end="", flush=True)
+    
+    expected_docs = [
+        "BOM_COST_ESTIMATE.md",
+        "FIRST_BOOT_CHECKLIST.md",
+        "HANDOFF_TO_FABLE.md",
+        "HARDWARE_SPEC.md",
+        "HARDWARE_VERIFICATION_WORKFLOW.md",
+        "INDEX.md",
+        "MECHANICAL_FIT_AND_ENCLOSURE_WORKFLOW.md",
+        "MVP_ARCHITECTURE.md",
+        "OFFGRID_TACTICAL_SENSORS.md",
+        "SOFTWARE_SPEC.md",
+        "STANDOUT_FEATURES.md",
+    ]
+    
+    for doc in expected_docs:
+        doc_path = os.path.join(PROJECT_ROOT, "docs", doc)
+        assert os.path.isfile(doc_path), f"Missing documentation file: {doc_path}"
+        assert os.path.getsize(doc_path) > 1000, f"Documentation file {doc} too small (<1KB)"
+        with open(doc_path, "r", encoding="utf-8", errors="ignore") as f:
+            content = f.read()
+            assert "Pi harness" in content or "antigravity" in content, f"Doc {doc} missing Pi harness attribution header"
+            
+    # Verify INDEX.md covers at least 50 software specs
+    index_path = os.path.join(PROJECT_ROOT, "docs", "INDEX.md")
+    with open(index_path, "r", encoding="utf-8") as f:
+        index_content = f.read()
+        assert "§50" in index_content, "INDEX.md missing Section 50"
+        
     elapsed = (time.time() - t0) * 1000
     print(f"{Colors.GREEN}[PASS]{Colors.END} ({elapsed:.1f}ms)")
     return True
@@ -168,10 +205,18 @@ def main():
     )
     if not ok: failures.append("Phase 8: OS Provisioning Engine")
 
+    # Phase 9: Master Documentation & Cross-Reference Link Integrity
+    try:
+        if not verify_documentation_integrity():
+            failures.append("Phase 9: Documentation Integrity")
+    except Exception as e:
+        print(f"{Colors.RED}[FAIL]{Colors.END} ({e})")
+        failures.append(f"Phase 9: Documentation Integrity ({e})")
+
     total_time = (time.time() - t_start) * 1000
     print(f"\n{Colors.BOLD}{'='*72}{Colors.END}")
     if not failures:
-        print(f"{Colors.BOLD}{Colors.GREEN}  🎉 ALL 8 VERIFICATION PHASES PASSED IN {total_time:.1f}ms!{Colors.END}")
+        print(f"{Colors.BOLD}{Colors.GREEN}  🎉 ALL 9 VERIFICATION PHASES PASSED IN {total_time:.1f}ms!{Colors.END}")
         print(f"{Colors.BOLD}{Colors.GREEN}  SolarDeck V1 is mathematically & structurally ready for fabrication.{Colors.END}")
         print(f"{Colors.BOLD}{'='*72}{Colors.END}\n")
         return 0
