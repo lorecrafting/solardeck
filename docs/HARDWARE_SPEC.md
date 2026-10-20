@@ -500,6 +500,14 @@ To completely eliminate bus arbitration lockups and the hardware address collisi
     * **Battery:** coulomb-counted charge/discharge curve + ESR
     * **Audio:** loopback self-test (padded output, measured mic RMS)
   * These registers are what a welded board cannot see: the LLM's diagnosis interface is per-module, not per-sensor.
+* **Sensor Self-Diagnosis (the sensors monitor the sensors — no extra parts):**
+  * Every sensor IC already exposes a manufacturer self-test / fault bit; the RP2350 reads and stores it into the `module_health.state` row instead of trusting the sample blindly:
+    * **INA3221:** malfunction-indication flag (0x40 bus, `~LLM_READS_FAULT_REG`)
+    * **TMP112x3:** status-register error bit (0x48/0x49)
+    * **BMA400 / BMP390:** error-status registers
+    * **BQ27441:** fault/error flags (0x55)
+  * **Physical cross-validation (free, physics-provided):** battery voltage = INA3221 Rail 1 = INA3221 Rail 3 (three views of one bus, low bus-ripple at steady state); temperature = TMP112 battery zone = BQ27441 internal = charger rail (three thermometers on one pouch); ambient light = solar-strip ADC = front-light lux *only when the panel is off* (self-illumination confounds it — *when* a cross-check is valid is part of the check). The zones are deliberately on different thermal planes so all three cannot drift in lockstep.
+  * **Trend-vs-self:** the telemetry DB is a 7-day baseline; a sensor that drifts from its own history while its cross-check twins hold flat is `waning` — the LLM detects degradation with zero extra hardware.
 * **Motion & Kinematics Accelerometer (Bosch BMA400):**
   * Ultra-low-power 12-bit 3-axis accelerometer drawing **3.5 µA**.
   * Continuous autonomous motion detection: picks up physical desk wake interrupts, detects orientation (portrait vs. landscape), double-tap frame gestures, and free-fall conditions (firing an emergency interrupt to flush eMMC dirty buffers before ground impact).
