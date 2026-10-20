@@ -19,11 +19,10 @@ Every doc that mentions a phase count is checked against docs/spec_values.json b
   Phase 10: Single source of truth (docs/spec_values.json) consistency
   Phase 11: BOM <-> netlist <-> CPL coverage
   Phase 12: Status catalogue (docs/STATUS.md generated and current)
-  Phase 13: Longevity constraints (docs/spec_values.json -> longevity)
+  Phase 13: Longevity constraints (docs/LONGEVITY_30Y.md)
   Phase 14: Derived numbers (BOM total, energy budget) recomputed from artifacts
   Phase 15: Firmware interface contract (header <-> doc <-> wire test)
   Phase 16: Reliability model, obsolescence policy, design-for-test
-  Phase 13: 30-year longevity constraints (docs/spec_values.json -> longevity)
 
 NOTE: a green run means "the artifacts are internally consistent". It does NOT mean the design is
 fabricable -- the schematic is still a partial capture and the production bundles are placeholders.
@@ -31,6 +30,7 @@ See docs/AUDIT_2026-10-20.md.
 """
 
 import os
+import re
 import subprocess
 import sys
 import time
@@ -176,9 +176,31 @@ PHASES = [
 ]
 
 
+def verify_pipeline_metadata():
+    """AUDIT 5 fixes A/B: the docstring phase list and the CI workflow job name must not drift
+    from the real PHASES list (that is how the old 7-vs-9 / 11-vs-16 drift happened twice)."""
+    t0 = time.time()
+    print(f"▶ {Colors.BOLD}Phase metadata consistency (docstring + CI name)...{Colors.END} ", end="", flush=True)
+    try:
+        expected = list(range(1, len(PHASES) + 1))
+        nums = [int(x) for x in re.findall(r"Phase\s+(\d+):", __doc__ or "")]
+        assert nums == expected, f"docstring phase list {nums} != {expected}"
+        yml = open(os.path.join(PROJECT_ROOT, ".github/workflows/verify.yml"), encoding="utf-8").read()
+        m = re.search(r"(\d+)-Phase System Verification", yml)
+        assert m and int(m.group(1)) == len(PHASES), \
+            f"workflow job name phase count != {len(PHASES)}"
+    except AssertionError as e:
+        print(f"{Colors.RED}[FAIL]{Colors.END} ({e})")
+        return False
+    print(f"{Colors.GREEN}[PASS]{Colors.END} ({(time.time() - t0) * 1000:.1f}ms)")
+    return True
+
+
 def main():
     log_header("SOLARDECK MASTER VERIFICATION PIPELINE")
     t_start = time.time()
+    if not verify_pipeline_metadata():
+        return 1
     failures = []
     for i, (label, fn) in enumerate(PHASES, 1):
         try:
