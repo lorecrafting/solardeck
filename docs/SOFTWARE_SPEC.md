@@ -164,6 +164,10 @@ The full schema is the LLM's read surface: Tier 1/2 AI feedback (below) and the 
      * **Capacitor & Regulator Right-Sizing:** If 6 months of peak inrush logs demonstrate the Quectel LTE modem never pulls more than 1.6A in the field, the oversized 470µF tantalum capacitor is flagged for replacement with compact ceramic capacitors in Rev 2, saving board area and BOM cost.
      * **Thermal Gradient Analysis:** If thermal logs record sustained gradients between the CM4 CPU and battery pouch during long Claude Code compile sessions, the toolchain generates specific mechanical and layout guidance (e.g., thermal pad thickness adjustments, copper pour relief) for the hardware team.
      * **Hardware YAGNI Pruning:** If telemetry reveals an auxiliary expansion rail or sensor was active $<0.01\%$ of the time over hundreds of field hours, it is flagged for deletion in Rev 2, shedding weight, cost, and complexity.
+4. **Second-Opinion Parity Check (the concert-drift guard, no extra silicon):**
+   * Internal cross-validation catches *divergent* sensors — but a loop of sensors aging together (same flex-ribbon, same thermal zone) stays *internally consistent* while drifting as a group. That concert drift is invisible to any on-board comparison because every witness agrees.
+   * The fix is an out-of-band plausibility witness: the Tier-2 export payload (`solardeck-cli telemetry export --last 24h --json`) is periodically queued to an independent model over the agent mesh (`agent_send`), which checks *external plausibility* — e.g. three thermometers reading 45°C in 20°C ambient, or a 0.000 W idle rail while current flows. Internal agreement + external implausibility = concert drift, flagged `waning` with a resampling recommendation.
+   * Cost discipline: pull-only, aggregated digest (a few KB / 24 h), never raw samples, never continuous — the mesh round-trip is a diagnostic step, not a stream. No trust boundary is moved because the verdict is advisory; the device never actuates on a second opinion alone.
 
 #### 3.3.3 The Thresholded Sleep Ladder (E-Ink-Corrected Hibernation Policy)
 
