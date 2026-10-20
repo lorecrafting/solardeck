@@ -174,6 +174,19 @@ The [[SolarDeck|device]] does not have one sleep mode: it has a ladder, and the 
 
 **Budget proof (why R3 wins):** 15 mW × 24 h = 0.36 Wh/day (S2idle, R2) vs 0.000 W idle + a one-time ≈0.005 Wh per transition (R3). Even twenty full R2→R3→R2 transitions a day cost ≈0.1 Wh — still ≈4× cheaper than sitting on R2. The R3 transition burst is real and immutable (it is the price of unloading DRAM); the ladder merely chooses *when* the burst is worth paying. `spec_values.sleep_ladder.*` holds the policy thresholds. (E: the thresholds are modelled on the 15 mW S2idle floor, the ≈0.6 W active floor, the eMMC/NVMe image sizes, and the 0.45 Wh/day strip budget — see `docs/AUDIT_2026-10-20.md` for what is measured vs modelled.)
 
+#### 3.3.4 The Resume-to-App Contract (any task, not just mail)
+
+The sub-one-second promise is app-agnostic: the target is *the thing the user taps*, not a specific app. This is expressed as a small, opt-in contract that both the RP2350 (instant frame) and the CM4 resume path (priority ordering) consume, so none of the ladder claims depend on a mail app existing.
+
+* **Before sleep**, `solardeck-telemetryd` asks each registered app for a *cacheable snapshot*: a small manifest `{app_id, frame_uri, snapshot_uri, restore_priority}` where `frame_uri` is a pre-rendered static frame (list view, unread counts, feed excerpt, last chat snippet) and `snapshot_uri` points at the data needed to restore live interactivity. Apps that cannot snapshot (GPU-heavy/terminal-only) simply omit `frame_uri` — they get the fast-restore path but no preview. Stored under `/var/lib/solardeck/resume/` (`spec_values.resume_to_app.manifest_dir`).
+* **On tap**, the RP2350 (which owns the panel) renders the manifest's `frame_uri` locally — a hardware frame swap, no Linux involved — and passes the tap to the CM4 as a *resume-to-app* message. The resume path orders its restore by `restore_priority`, so the tapped app's runtime and its ambient daemons return first; the rest of the desktop gets restored lazily behind it. The panel swap and the resume run concurrently, so perceived context is ~instant while the machine warms.
+* **Cacheable tasks win fully; non-cacheable tasks win the fast path:** inbox/messages/feed/chat/notes/Claude-session excerpts land in under ~1 s (frame swap, then live refresh); a full terminal or video session is resume-time (≈1–1.5 s on NVMe with a trimmed image) with no static preview, because a meaningless frozen frame is worse than none.
+* `spec_values.resume_to_app.*` holds the contract's numbers; the Phase-4 hook asserts every manifest is valid JSON with the three required fields and that `frame_uri` when present points at an existing preview of the tapped app (no dead icons).
+
+---
+
+## 4. Claude Code & AI Integration
+
 ---
 
 ## 4. Claude Code & AI Integration

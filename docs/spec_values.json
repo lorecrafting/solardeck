@@ -670,5 +670,13 @@
     "betavoltaic_uw": 100,
     "betavoltaic_useful_y": 30,
     "bay_reserved": "DNP"
+  },
+  "resume_to_app": {
+    "_comment": "Resume-to-app contract, SOFTWARE_SPEC.md 3.3.4. E=modelled.",
+    "manifest_dir": "/var/lib/solardeck/resume",
+    "frame_swap_ms": 100,
+    "cacheable_land_s": 1.0,
+    "fast_path_s": 1.5,
+    "noncacheable": "no preview (fast-restore only)"
   }
 }
