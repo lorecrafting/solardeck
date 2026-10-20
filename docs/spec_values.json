@@ -53,5 +53,431 @@
   "pcb_thickness_mm": 1.0,
   "rear_wall_mm": 1.5,
   "mass_g": 620,
-  "feature_pillars": 13
+  "feature_pillars": 13,
+  "features": {
+    "_comment": "Catalogue of everything the project claims to deliver, with an honest status. docs/STATUS.md is GENERATED from this block by scripts/gen_status.py; never edit STATUS.md by hand. Statuses: measured | modelled | specified | aspirational | TBD. 'specified' means designed and documented but with no artifact that proves it.",
+    "product_pillars": [
+      {
+        "id": "P1",
+        "name": "Dual-brain instant handoff (<400 ms glass-to-glass)",
+        "status": "aspirational"
+      },
+      {
+        "id": "P2",
+        "name": "Typewriter-on-paper latency (1-bit DU keystroke, EMR ink, piezo haptics)",
+        "status": "aspirational"
+      },
+      {
+        "id": "P3",
+        "name": "Sunlight sovereignty and perpetual indoor harvest",
+        "status": "aspirational"
+      },
+      {
+        "id": "P4",
+        "name": "Form-morphology: 620 g slate, desk easel, modular grips",
+        "status": "modelled"
+      },
+      {
+        "id": "P5",
+        "name": "Sovereign field hardening: airgap, LoRa mesh, IP67, rain-lock",
+        "status": "aspirational"
+      },
+      {
+        "id": "P6",
+        "name": "Modular upgrade bridge: ARM/RISC-V SOM, RAM, NVMe",
+        "status": "specified"
+      }
+    ],
+    "engineering_pillars": [
+      {
+        "id": "E1",
+        "name": "Dual-brain display mux (TMUX1575 pair, RP2350 frame cache)",
+        "status": "specified"
+      },
+      {
+        "id": "E2",
+        "name": "Page-turn S2idle ramping and instant turbo",
+        "status": "aspirational"
+      },
+      {
+        "id": "E3",
+        "name": "Universal mechanical anchor (M2.5 inserts + MagSafe array)",
+        "status": "modelled"
+      },
+      {
+        "id": "E4",
+        "name": "Hardware airgap switch with I_off isolation",
+        "status": "specified"
+      },
+      {
+        "id": "E5",
+        "name": "Driverless USB-C external monitor sink",
+        "status": "specified"
+      },
+      {
+        "id": "E6",
+        "name": "Backpack isolation over one recessed USB-C",
+        "status": "specified"
+      },
+      {
+        "id": "E7",
+        "name": "Self-observant hardware: LLM consumes BIST telemetry",
+        "status": "specified"
+      },
+      {
+        "id": "E8",
+        "name": "Thermal viscosity assist (explicitly not a video engine)",
+        "status": "aspirational"
+      },
+      {
+        "id": "E9",
+        "name": "Zero-cost convenience combinations",
+        "status": "specified"
+      }
+    ],
+    "daemons": [
+      {
+        "id": "D01",
+        "name": "solardeck-beacond",
+        "status": "specified",
+        "spec_section": 8
+      },
+      {
+        "id": "D02",
+        "name": "eink-refreshd",
+        "status": "specified",
+        "spec_section": 11
+      },
+      {
+        "id": "D03",
+        "name": "solardeck-covert",
+        "status": "specified",
+        "spec_section": 12
+      },
+      {
+        "id": "D04",
+        "name": "solardeck-vault",
+        "status": "specified",
+        "spec_section": 13
+      },
+      {
+        "id": "D05",
+        "name": "solardeck-sinkd",
+        "status": "specified",
+        "spec_section": 15
+      },
+      {
+        "id": "D06",
+        "name": "solardeck-voiced",
+        "status": "specified",
+        "spec_section": 17
+      },
+      {
+        "id": "D07",
+        "name": "solardeck-dockd",
+        "status": "specified",
+        "spec_section": 18
+      },
+      {
+        "id": "D08",
+        "name": "solardeck-sosd",
+        "status": "specified",
+        "spec_section": 19
+      },
+      {
+        "id": "D09",
+        "name": "solardeck-caliper",
+        "status": "specified",
+        "spec_section": 20
+      },
+      {
+        "id": "D10",
+        "name": "solardeck-diag",
+        "status": "specified",
+        "spec_section": 21
+      },
+      {
+        "id": "D11",
+        "name": "solardeck-inkd",
+        "status": "specified",
+        "spec_section": 22
+      },
+      {
+        "id": "D12",
+        "name": "solardeck-tripwired",
+        "status": "specified",
+        "spec_section": 23
+      },
+      {
+        "id": "D13",
+        "name": "solardeck-sunaim",
+        "status": "specified",
+        "spec_section": 24
+      },
+      {
+        "id": "D14",
+        "name": "solardeck-blackboxd",
+        "status": "specified",
+        "spec_section": 25
+      },
+      {
+        "id": "D15",
+        "name": "solardeck-ghostnavd",
+        "status": "specified",
+        "spec_section": 26
+      },
+      {
+        "id": "D16",
+        "name": "solardeck-sweeperd",
+        "status": "specified",
+        "spec_section": 27
+      },
+      {
+        "id": "D17",
+        "name": "solardeck-soundbridged",
+        "status": "specified",
+        "spec_section": 28
+      },
+      {
+        "id": "D18",
+        "name": "solardeck-stormd",
+        "status": "specified",
+        "spec_section": 29
+      },
+      {
+        "id": "D19",
+        "name": "solardeck-stegod",
+        "status": "specified",
+        "spec_section": 30
+      },
+      {
+        "id": "D20",
+        "name": "solardeck-satweathd",
+        "status": "specified",
+        "spec_section": 31
+      },
+      {
+        "id": "D21",
+        "name": "solardeck-traumad",
+        "status": "specified",
+        "spec_section": 32
+      },
+      {
+        "id": "D22",
+        "name": "solardeck-alternatord",
+        "status": "specified",
+        "spec_section": 33
+      },
+      {
+        "id": "D23",
+        "name": "solardeck-logicanalyzerd",
+        "status": "specified",
+        "spec_section": 34
+      },
+      {
+        "id": "D24",
+        "name": "solardeck-foxhuntd",
+        "status": "specified",
+        "spec_section": 35
+      },
+      {
+        "id": "D25",
+        "name": "solardeck-nvgd",
+        "status": "specified",
+        "spec_section": 36
+      },
+      {
+        "id": "D26",
+        "name": "solardeck-trailboxd",
+        "status": "specified",
+        "spec_section": 37
+      },
+      {
+        "id": "D27",
+        "name": "solardeck-stealthluks",
+        "status": "specified",
+        "spec_section": 38
+      },
+      {
+        "id": "D28",
+        "name": "solardeck-stingrayd",
+        "status": "specified",
+        "spec_section": 39
+      },
+      {
+        "id": "D29",
+        "name": "solardeck-epassport",
+        "status": "specified",
+        "spec_section": 40
+      },
+      {
+        "id": "D30",
+        "name": "solardeck-lensworld",
+        "status": "specified",
+        "spec_section": 41
+      },
+      {
+        "id": "D31",
+        "name": "solardeck-evacd",
+        "status": "specified",
+        "spec_section": 42
+      },
+      {
+        "id": "D32",
+        "name": "solardeck-parasited",
+        "status": "specified",
+        "spec_section": 43
+      },
+      {
+        "id": "D33",
+        "name": "solardeck-soild",
+        "status": "specified",
+        "spec_section": 44
+      },
+      {
+        "id": "D34",
+        "name": "solardeck-timberd",
+        "status": "specified",
+        "spec_section": 45
+      },
+      {
+        "id": "D35",
+        "name": "solardeck-microbed",
+        "status": "specified",
+        "spec_section": 46
+      },
+      {
+        "id": "D36",
+        "name": "solardeck-zen-clock",
+        "status": "specified",
+        "spec_section": 47
+      },
+      {
+        "id": "D37",
+        "name": "solardeck-zen-games",
+        "status": "specified",
+        "spec_section": 48
+      },
+      {
+        "id": "D38",
+        "name": "solardeck-zen-oracle",
+        "status": "specified",
+        "spec_section": 49
+      },
+      {
+        "id": "D39",
+        "name": "solardeck-biked",
+        "status": "specified",
+        "spec_section": 50
+      },
+      {
+        "id": "D40",
+        "name": "solardeck-penarb",
+        "status": "specified",
+        "spec_section": 51
+      },
+      {
+        "id": "D41",
+        "name": "solardeck-refreshd",
+        "status": "specified",
+        "spec_section": 52
+      }
+    ],
+    "hotpacks": [
+      {
+        "id": "H1",
+        "name": "Doomsday sky-scan and SIGINT (passive all-band receiver)",
+        "status": "specified"
+      },
+      {
+        "id": "H2",
+        "name": "Tactical dual-mesh and HF shortwave transceiver",
+        "status": "specified"
+      },
+      {
+        "id": "H3",
+        "name": "CBRN and search-and-rescue environmental pack",
+        "status": "specified"
+      },
+      {
+        "id": "H4",
+        "name": "Precision RTK centimetre survey pack",
+        "status": "specified"
+      },
+      {
+        "id": "H5",
+        "name": "15 g thermal night-vision and electrical inspection pack",
+        "status": "specified"
+      },
+      {
+        "id": "H6",
+        "name": "3GPP NTN satellite (Skylo) transceiver and global SAR",
+        "status": "specified"
+      },
+      {
+        "id": "H7",
+        "name": "Sub-surface acoustic and perimeter geophone module",
+        "status": "specified"
+      }
+    ],
+    "accessories": [
+      {
+        "id": "A1",
+        "name": "Solar Armor 7.13 W MagSafe backplate with 2.5 m shade tether",
+        "status": "specified"
+      },
+      {
+        "id": "A2",
+        "name": "Detached 15-28 W folding solar panel",
+        "status": "specified"
+      },
+      {
+        "id": "A3",
+        "name": "IBC bezel solar upgrade",
+        "status": "specified"
+      },
+      {
+        "id": "A4",
+        "name": "DarkBox faraday pouch",
+        "status": "specified"
+      },
+      {
+        "id": "A5",
+        "name": "3D-printed thumb grips, tripods and easel arms",
+        "status": "specified"
+      }
+    ],
+    "acceptance_gates": [
+      {
+        "id": "G1",
+        "name": "S2idle to active keystroke response < 350 ms",
+        "status": "aspirational"
+      },
+      {
+        "id": "G2",
+        "name": "1-bit fast-typing latency < 20 ms",
+        "status": "aspirational"
+      },
+      {
+        "id": "G3",
+        "name": "Zen reading power < 5.0 mW",
+        "status": "aspirational"
+      },
+      {
+        "id": "G4",
+        "name": "Net-positive energy at 500 lux",
+        "status": "aspirational"
+      },
+      {
+        "id": "G5",
+        "name": "Airgap RF radiation 0.000 dBm, 50 MHz-6 GHz",
+        "status": "aspirational"
+      },
+      {
+        "id": "G6",
+        "name": "Zero-brick watchdog rollback < 2.5 ms",
+        "status": "aspirational"
+      }
+    ]
+  }
 }
