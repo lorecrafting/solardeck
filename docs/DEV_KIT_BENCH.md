@@ -33,19 +33,20 @@ exist on real silicon" for ~$550 before a ~$1.5 k PCB turnkey.
 | 1 | **Waveshare 10.3" e-Paper HAT (IT8951 + Carta panel)** | The display controller + panel pair. Every G1/G2/ink-latency number runs through this | Display + EPDC | **$198** | Waveshare official / AliExpress flagship / Amazon reseller | Mono Carta, 1872×1404 — same resolution & IT8951 as the colour panel would use; colour fps stays `null` (ADR-017) |
 | 2 | **Raspberry Pi CM4 8 GB (CM4108032 / DigiKey SC0678)** | The Linux brain — runs the daemons under test | Host compute | **$195** (retail; $75 is a bulk-wish from the BOM — do not plan on it) | DigiKey/Mouser (watch stock), PiShop.us, Amazon | Often OOS at DigiKey; Newark/Seattle-distributed resellers ship to HI |
 | 3 | **Waveshare CM4 Nano Base Board (B)** | Carrier for CM4 on the bench (has GbE + HDMI + USB) | Bench carrier | **$18** | Waveshare / PiShop.us / Amazon | Not the production carrier — bench only |
-| 4 | **Raspberry Pi Pico 2 (RP2350A)** | Stand-in for the RP2350B co-processor (identical RP2350 core; B adds PSRAM/GPIO count) | Co-proc firmware bring-up | **$6 (SC1631)** | DigiKey | Validate the sleep-ladder + wake path; the 0.000 W R3 rung is CM4-side anyway |
+| 4a | **Pimoroni PGA2350 — the actual RP2350B + 8 MB PSRAM** (DigiKey PIM722) | This is the real co-processor silicon the spec names (RP2350B, 48 GPIO, PSRAM frame cache) — flash **our own firmware** on it, tweak power-sipping modes (1 M Hz sleep, reader/dashboard states) on production-identical silicon | Co-proc bring-up + power-tuning | **$12 (PIM722)** | Pimoroni (UK), PiShop.us, DigiKey | Real dev board for the B chip: no USB-C (BOOTSEL bridging + jumper wiring to program), SWD probe for debug — slightly more friction than a Pico, but this is the chip that ships. Available in single unit, no MOQ |
+| 4b | **Raspberry Pi Pico 2 (RP2350A) (SC1631)** | Same RP2350 core as (4a) but plug-and-play USB-C + MicroPython/C out of the box — the low-friction daily driver for first bring-up before touching the PGA | Bring-up speed | **$6 (SC1631)** | DigiKey | Kept because it is the zero-friction path for initial bring-up; 4a is the fidelity target. Total co-proc spend **$18** |
 | 5 | **UNI-T UT61E+ DMM** | µA resolution + data logging — *the* G12 instrument | Sleep-current measurement | **$80** | Amazon / UNI-T direct | Do **not** buy a Fluke 115 — 1 mA resolution cannot read a µA sleep floor; high-burden volts also reset the DUT (see §4) |
 | 6 | 5 V / 3 A bench PSU w/ current display | Wall power + coarse current for bring-up | Power | **$20** | Amazon | Wall-powered bench: no LiFePO₄ pack yet (UN38.3 + no need — see §5) |
 | 7 | Protoboard, jumpers, duponts, 40-pin GPIO extender, assorted | Wiring everything loose | Interconnect | **$25** | Amazon / local | |
 | 8 | USB-C hub + cables + microSD (CM4 eMMC is fine but USB flash convenience) | Flashing, debug console | Tooling | **$20** | Amazon | |
-| | **Bench total** | | | **≈ $362** | | ≈ **$400 shipped** (2–3 vendors, HI freight) |
+| | **Bench total** | | | **≈ $374** | | ≈ **$410–440 shipped** (2–3 vendors, HI freight) |
 
 **What is deliberately NOT on the bench:** the panel's Wacom EMR (pen arbiter comes later, after the
 core gates pass), the audio array, LoRa/EG25-G (standard radios — board-stage), the solar strip
 (0.15 W trickle is a charge-tree question, not a gate), and the BQ charger (charging safety gates
 come after the bench answers).
 
-**Sum total, all-in, Honolulu:** **≈ $400–430** (parts + HI shipping, two small orders — DigiKey
+**Sum total, all-in, Honolulu:** **≈ $410–440** (parts + HI shipping, two small orders — DigiKey
 ships free over $99 and Waveshare direct ships US-side; worst case one Amazon order to fill gaps).
 Instruments for the *second* bench round (EMR + USB-C PD meter at ~$160) are deferred until the
 gates above are green — see §5.
@@ -112,7 +113,7 @@ then go into `spec_values.json` under a `measured <date>` tag — this bench's w
 
 | Tranche | Contents | Why |
 | :--- | :--- | :--- |
-| **1 — now (~$400)** | §2 items 1–8 | One ordering pass is cheaper on HI freight and gets you to first data fast; also the parts with real stock risk (CM4, panel) benefit from earliest ordering |
+| **1 — now (~$410–440)** | §2 items 1–8 | One ordering pass is cheaper on HI freight and gets you to first data fast; also the parts with real stock risk (CM4, panel) benefit from earliest ordering |
 | **2 — on green gates (~$160)** | Wacom EMR panel variant + stylus, USB-C PD power meter | Costs money you shouldn't spend if G1/G2/G12 fail; EMR arbiter work is gated on the core gates anyway |
 | **3 — only after board-stage quotes** | PCB turnkey (1 assembled + 4 bare, ~$1.5 k) + hand-rework kit (~$250, only if the DFM-for-hand path is chosen) | The bench answers whether the ~$1.5 k is worth spending, and what pad/DFM changes to *request* in that quote |
 
@@ -120,5 +121,5 @@ Battery: **no LiFePO₄ pack on this bench.** G12's *idle* numbers are rail-side
 the pack's charge-tree (BQ, NTC cutoff) is a board-stage/bench-2 question, and shipping a bare
 LiFePO₄ pack to HI has UN38.3 friction — skip until it earns its place.
 
-**Bottom line:** yes, buy Tranche 1 all at once (~$400 landed, HI); defer Tranche 2 until the
+**Bottom line:** yes, buy Tranche 1 all at once (~$410–440 landed, HI); defer Tranche 2 until the
 gates pass; do not hand-solder anything until a DFM-for-hand pass makes it sensible.
