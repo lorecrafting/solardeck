@@ -335,3 +335,35 @@ rectangle scheduler). The system gates (G1–G3) still need the real board; no d
 
 **Delta.** $0 hardware decision; optional ~$200–300 if the refresh pipeline is exercised before the
 first board rev.
+
+## ADR-026 — The enrolled voiceprint is co-processor-resident, not a Linux file (2026-11-02)
+
+**Status.** Accepted.
+
+**Context.** AUDIT 5 flagged that the speaker-verification enrollment sitting at
+`/etc/solardeck/owner_voice.npy` on the CM4 (SOFTWARE_SPEC §17.2) is a root-writable file: a
+root-compromised Linux brain can silently swap the voiceprint or re-threshold cosine similarity,
+defeating the entire enrollment-and-rejection design. The documented threat model already keeps the
+wake-word and ADC on the RP2350 co-processor; the identity verdict should live in the same trusted
+domain that cannot be reached by a Linux network stack.
+
+**Decision.** The 256-d Resemblyzer embedding is flashed to RP2350 non-volatile storage at
+enrollment time. The CM4 streams the live sample embedding over the existing CM4↔RP2350 interface and
+the co-processor returns an owner/not-owner verdict. Verification runs in the same 14 mW sleep tier as
+the wake-word, so rejected speech never wakes the CM4 at all. The CM4 holds no reference copy.
+
+**Why RP2350-resident now instead of "tamper-proofing later".** Retrofitting a trust boundary after
+first boards is the expensive kind of later: the enrollment format, the flash layout, and the
+verification IPC would all be frozen in a Linux-side design first. The RP2350 already exists, already
+owns the wake-word trigger, and already has the 16 kHz PIO DMA audio path (§17 pipeline diagram); the
+voiceprint is a few KB of flash. The incremental cost is one IPC contract, not a hardware change.
+
+**What voice identity is, and is not.** Identity is conversational access, never authorization. A
+recorded owner sample passes cosine ≥ 0.78 (replay) and a cloned voice can be synthesized — no
+threshold change fixes either. Consequential operations (crypto sign, wipe) require live liveness
+(challenge phrase) plus physical NFC possession; live cloning remains the named residual threat.
+
+**Enforced consequences.** `spec_values.voice.enrollment_resident = "rp2350-flash"`;
+`check_docs_numbers.py` BANNED pattern forbids `owner_voice.npy` and `/etc/solardeck/owner_voice.npy`
+returning to any non-historical doc (SOFTWARE_SPEC §17.2 states the co-processor-resident design);
+DAEMONS catalogue D06 `solardeck-voiced` keeps `spec_section: 17`.

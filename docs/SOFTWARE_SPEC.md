@@ -619,11 +619,12 @@ The `solardeck-voiced` daemon orchestrates hands-free and push-to-talk voice int
 * **SpeexDSP / WebRTC AEC3:** The acoustic canceller subtracts the known output waveform from the live Knowles MEMS microphone input.
 * **The Result:** Even when the speaker is playing at full volume, the operator can speak *"Stop"* or *"Never mind, check battery instead"*, instantly halting speech output and executing the new directive.
 
-### 17.2 Voice Biometrics Enrollment & Rejection
-* **Enrollment:** The operator runs `solardeck-voice-enroll`, speaking 3 sample sentences. A 256-d d-vector embedding is extracted via Resemblyzer and saved to `/etc/solardeck/owner_voice.npy`.
-* **Cosine Verification:**
+### 17.2 Voice Biometrics Enrollment & Rejection (co-processor-resident)
+* **Enrollment:** The operator runs `solardeck-voice-enroll`, speaking 3 sample sentences. A 256-d d-vector embedding is extracted via Resemblyzer and **flashed to RP2350 non-volatile storage** — never kept as a writable Linux file (ADR-026). The CM4 holds no reference copy, so a root-compromised Linux brain cannot swap or re-threshold the enrolled voiceprint; it can only ask the co-processor for a verdict.
+* **Verification (sleep-tier, 14 mW):** The live sample's 256-d embedding is streamed to the RP2350, which computes the cosine similarity and returns an `owner` / `not-owner` verdict over the existing CM4↔RP2350 interface. Because verification runs in the same co-processor tier as the wake-word (14 mW), rejected speech is discarded *before* the CM4 wakes — no wake occurs at all for bystander or radio chatter.
+* **Cosine verification (reference math, computed co-processor-side):**
   ```python
-  # /usr/local/bin/verify_speaker.py
+  # flashed to RP2350; verdict returned to the CM4
   import numpy as np
 
   def is_owner(sample_emb, owner_emb, threshold=0.78):
@@ -631,6 +632,7 @@ The `solardeck-voiced` daemon orchestrates hands-free and push-to-talk voice int
       return cos_sim >= threshold
   ```
 * **Bystander Immunity:** Radio chatter, bystanders, or synthetic speech with similarity $<0.78$ are discarded; CM4 returns to S2idle without executing commands.
+* **Authorization tiering (identity ≠ authorization):** voice identity alone never authorizes signing, wipe, or destructive ops. Level-2 liveness (challenge phrase: "say the four digits on screen") and level-3 physical possession (NFC tap) gate `solardeck-vaultd` operations. Recorded-replay and recorded-owner audio fail liveness; live cloning is the named residual threat (see ADR-026).
 
 ### 17.3 Self-Improvement & System Modification by Voice
 * Voice commands can invoke the local LLM or Claude Code CLI with tool permissions:

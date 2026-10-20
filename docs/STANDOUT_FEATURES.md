@@ -316,6 +316,23 @@ By orchestrating and cross-wiring the existing hardware components in innovative
   4. Display the signed transaction QR on the E-Ink screen for an online smartphone to broadcast.
 * Completely immune to remote exploits or RF sniffing because the wireless power rails are physically cut by hardware switches!
 
+### 5. Presence-Aware Power Scheduler (Attention-Gap Computing)
+* Combining the **Wacom EMR digitizer**, the **Knowles MEMS wake-word tier**, and the **IT8951 per-rectangle refresh scheduler** into one cognitive budget.
+* Hover-approaching stylus, grip-pressure, and keyboard events feed a *user-present* signal. The system runs refresh scrubbing, LoRa mailbox polling, telemetry bursts, and telemetryd relays **only in attention gaps** — never mid-stroke, never mid-paragraph.
+* **Result:** the perceived smoothness target of Pillar 2 is reached on the *existing* 30 ms partial-rectangle scheduler, and the sleep tier extends further — the device does its housekeeping when you are thinking, not when you are typing.
+
+### 6. RP2350-as-Secure-Element Voiceprint (Tamper-Resistant Identity)
+* The **RP2350 co-processor** (already the wake-word tier) becomes the trust boundary for the speaker-verification enrollment (ADR-026, `SOFTWARE_SPEC.md` §17.2).
+* The 256-d voiceprint is flashed to co-processor non-volatile storage; the CM4 asks the RP2350 for an owner/not-owner verdict over the existing CM4↔RP2350 interface and never holds a reference copy.
+* **Result:** a root-compromised Linux brain cannot swap the voiceprint or re-threshold cosine similarity — the identity anchor survives even a fully owned CM4. And because the verdict runs in the 14 mW tier, stranger speech never wakes Linux at all.
+
+### 7. Acoustic Home-Zone (Privacy-Clean Ambient Fingerprint)
+* The already-always-on Knowles array computes an **ambient-sound feature profile** (energy bands, cadence, occupancy rhythm) — features only, nothing recorded, nothing stored.
+* SolarDeck learns to distinguish *its desk* from *the van* or *the workshop* purely acoustically.
+* **Result:** theft alarm arms only outside the known home-zone; notification and brightness policy switch silently when the device knows where it is; zero camera, zero RF, zero GPS involved.
+
+*(Further out: cooperative barometer mesh forecasting across the LoRa fleet, golden-hour chrono-locked crypto signing gated on verified presence, and the LoRa → LTE → placard comms escalation ladder. Adding any of them touches the same code surface as the three above.)*
+
 ---
 
 ## Pillar 9: Emergent Hardware + Software Synergies (The 6 Zero-Cost Force Multipliers)

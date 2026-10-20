@@ -612,5 +612,14 @@
       "CM4"
     ],
     "strategy": "socketed module + published carrier pinout + 3 spare modules at build time"
+  },
+  "voice": {
+    "_comment": "SOFTWARE_SPEC §17.2 (ADR-026): enrollment is co-processor-resident so a root-compromised Linux brain cannot swap the voiceprint.",
+    "enrollment_resident": "rp2350-flash",
+    "enroll_sample_sentences": 3,
+    "d_vector_dims": 256,
+    "cosine_threshold": 0.78,
+    "verification_tier": "rp2350,wake-word,14mW",
+    "verification_before_cm4_wake": true
   }
 }
