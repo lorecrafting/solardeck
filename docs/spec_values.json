@@ -15,7 +15,7 @@
     14.0
   ],
   "chassis_cavity_depth_mm": 12.5,
-  "display_stack_mm": 2.65,
+  "display_stack_mm": 2.85,
   "battery_cell_mm": [
     142.0,
     90.0,
@@ -31,13 +31,26 @@
     "solar_armor_optional": 7.13
   },
   "epdc_spi_mhz": 32,
+  "refresh_modes": {
+    "full_frame_1bit_fps": 6,
+    "partial_rect_latency_ms": 30,
+    "small_rect_fps_equivalent": 25,
+    "colour_full_refresh_s": 1.5,
+    "colour_motion_supported": false,
+    "kaleido4_fps": null
+  },
+  "pen_arbiter": {
+    "pen_sample_rate_hz": 133,
+    "target_pen_latency_ms": 20,
+    "measured_pen_jitter_sigma_mm": null
+  },
   "hotpacks": 7,
   "standout_pillars": 6,
   "engineering_pillars": 9,
   "verification_phases": 11,
   "core_bom_line_items": 61,
   "schematic_coverage_baseline": 20,
-  "pcb_thickness_mm": 1.2,
+  "pcb_thickness_mm": 1.0,
   "rear_wall_mm": 1.5,
   "mass_g": 620,
   "feature_pillars": 13

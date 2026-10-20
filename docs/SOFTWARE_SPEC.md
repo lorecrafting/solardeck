@@ -1277,3 +1277,55 @@ Transforms SolarDeck into an ultra-rugged 10.3" sunlight-readable bicycle and ad
   * If uncancelled, automatically broadcasts an **emergency SOS distress packet with GPS coordinates** over the 915 MHz Meshtastic LoRa mesh to all nearby riding companions or rescue nodes.
 
 
+## 51. Pen / Refresh Arbiter (`solardeck-penarb`)
+
+*Written 2026-10-20 in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017*
+
+An EMR digitizer placed **above** the electrophoretic panel puts two high-voltage, high-frequency
+systems in the same few tenths of a millimeter. The EMR grid interrogates the stylus with
+resonant bursts; the EPD drive pulses 15–20 V at frame rate. Shielding cannot be used — the EMR field
+has to reach the stylus through the panel, and a ground plane above the grid kills the pen outright.
+The only remedy is time-multiplexing, which this daemon owns:
+
+* **Owns both clocks.** Holds the IT8951/TCON drive gate and the digitizer sample gate, never both.
+* **Pen priority when a stroke is in flight:** sampling at the rate in
+  `spec_values.pen_arbiter.pen_sample_rate_hz`; refresh is allowed only inside inter-sample gaps.
+* **Refresh priority when the framebuffer changes:** pen samples are decimated, then re-filled from
+  the next full sample.
+* **Reports the real cost.** Emits `pen_gate_drop_pct`, `refresh_stall_ms`, `jitter_sigma_mm` to
+  `solardeck-telemetryd`. If `jitter_sigma_mm` exceeds one device pixel, the arbiter says so instead of
+  silently degrading.
+* **Hardware assist.** A small CPLD/FPGA in the substrate does the gating when present; the daemon
+  falls back to software gating (higher jitter, lower refresh) and flags the degraded path in
+  telemetry rather than pretending the two paths are equal.
+
+**Deferred claims.** Pen latency (`spec_values.pen_arbiter.target_pen_latency_ms`) is aspirational until
+measured with the arbiter running. Pen-on-top adds ~0.2 mm of stack; see ADR-018.
+
+## 52. Refresh Scheduler & Mode Ladder (`solardeck-refreshd` extension)
+
+*Written 2026-10-20 in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017*
+
+The panel already exposes a waveform ladder (IT8951: `DU`, `A2`, `GL16`, `GLR16`, `GLD16`, `GC16`,
+`INIT`). "Fast refresh" on shipping e-note devices is **not** a faster panel — it is a policy that picks
+the cheapest mode per dirty rectangle and pays the ghost debt promptly. This scheduler is that policy:
+
+* **Dirty-rect tracking.** The compositor reports damaged regions; only those are transferred and
+  driven. Effective latency scales with rectangle area, not screen area, which is why small-region
+  updates feel far faster than the full-frame figure (`spec_values.refresh_modes`).
+* **Mode picker.** 1-bit text and cursor → `DU`/`A2`. Grey/antialiased → `GLR16`. Images and colour →
+  `GC16`, which is where `spec_values.refresh_modes.colour_full_refresh_s` applies.
+* **Ghost ledger (Regal-class).** Per-tile grey history with a bounded debt counter; when a tile's debt
+  crosses its threshold it gets one `GC16` pass, cheapest tile first. This is the mechanism behind
+  "Regal"/"Super Refresh" ghost control on commercial readers: a policy over a fixed LUT, not new silicon.
+* **Frame pre-composite.** Dither/quantize/upscale on the GPU once, so the TCON only ever receives
+  ready 1-bit or 4-bit planes. Never let the EPD path do pixel math.
+* **Burst discipline.** Sustained fast mode accumulates DC imbalance, which risks pigment burn-in.
+  After `spec_values.refresh_modes` burst budget the scheduler forces one full balanced cycle and says
+  why in the log.
+* **No colour-motion claim.** The scheduler refuses colour fast-path requests and states the limit
+  rather than approximating it: `colour_motion_supported: false`.
+
+**Verification hook.** `scripts/verify_all.py` Phase 4 asserts the mode ladder is monotonic
+(DU ≤ A2 ≤ GLR16 ≤ GC16) and that the ghost ledger drains to zero after a bounded workload. The fps
+figure for a Kaleido 4 TCON stays `null` until it is measured on hardware (ADR-017).

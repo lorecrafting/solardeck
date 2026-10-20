@@ -175,3 +175,56 @@ Format: trigger → decision → what it cost or saved → what still assumes it
   duplicated constant.
 * **Delta:** zero BOM cost; ~1.3 s added to CI.
 * **Still assumes it:** every doc. Add a new number to the JSON first, then reference it.
+## ADR-017 — 24 fps is not a pillar; the panel says no and the bus is not the reason
+
+* **Trigger:** repeated "how do we get to 24 fps" pressure on a 32 MHz SPI IT8951 path (`B3`).
+* **Numbers:** a 1872x1404 1-bit frame is 2.63 Mbit. At 32 MHz SPI that is 82 ms of pure transfer
+  (~6 fps). The IT8951 also has an 8-bit i80 parallel mode that would move the frame in ~13 ms, so
+  transfer is fixable for ~$2 of routing. It is not the wall.
+* **Real wall:** an electrophoretic update is a field-driven pigment traverse, frame-at-a-time. The
+  panels that hit 24-40 fps (Dasung-class) use a custom TCON with a line-interleaved rolling scan and
+  accept heavy ghosting plus periodic full flashes. That is a ~$25-35 part and a multi-month waveform
+  and DC-balance program, for mono only.
+* **Decision:** built-in panel claims full-frame 1-bit at
+  `spec_values.refresh_modes.full_frame_1bit_fps`, partial-rectangle latency at
+  `spec_values.refresh_modes.partial_rect_latency_ms`, and **no colour motion**
+  (`colour_motion_supported: false`). Video-rate on the built-in panel is an ADR-gated option, not a
+  feature. Anyone who needs 24 fps sustained gets a reflective panel accessory, not a firmware rewrite.
+* **Delta:** $0. Optional FPGA TCON = ~$25-35 BOM + schedule, declined.
+* **Kaleido 4:** fps stays `null` in `spec_values` until measured on the dev kit. Oxide TFT mobility
+  makes a rolling scan more plausible, not automatic.
+
+## ADR-018 — Kaleido 4 with the Wacom digitizer over the panel: add an arbiter, defer the fps claim
+
+* **Trigger:** "assume Kaleido 4, with the Wacom digitizer on top."
+* **What stays true:** colour electrophoretic refresh is seconds
+  (`spec_values.refresh_modes.colour_full_refresh_s`); colour motion remains unsupported regardless of
+  panel generation.
+* **What changes:** the panel generation moves the fps question from us to the TCON vendor. Kaleido 4
+  (Oxide TFT backplane, wider colour count, higher white reflectivity and contrast in the same 10.32"
+  envelope and FPC) means the LUT and partial-refresh policy live in the TCON. `kaleido4_fps` is
+  therefore `null`, never guessed.
+* **New constraint:** digitizer **above** the panel means EMR interrogation bursts and EPD drive pulses
+  share the same volume. No shield is possible. Mitigation is `solardeck-penarb` (SOFTWARE_SPEC §51):
+  mutual gating of drive and sample, with jitter and stall reported instead of hidden. The earlier
+  40/50-pin specification places the digitizer rear-laminated; on-top is the tighter-parallax variant
+  and the arbiter is mandatory for it.
+* **Stack:** on-top digitizer raises `spec_values.display_stack_mm`; the cavity still closes.
+* **Delta:** $0 BOM if gating stays in software; +~$3-6 for a CPLD gate if hardware gating is wanted.
+  Rejected: metal shielding over the grid (kills the pen), abandoning pen input (drops a pillar).
+
+## ADR-019 — Fast-feel refresh is a policy, not a panel: adopt the Boox-class ladder
+
+* **Trigger:** "how does Boox Air4C speed up refresh, can we do that?"
+* **Mechanism, honestly:** Boox Super Refresh does not beat particle physics. It combines
+  GPU-side frame pre-composite, dirty-rectangle partial updates, per-region waveform mode selection,
+  and a Regal-class ghost ledger that schedules `GC16` clear passes. The panel is unchanged.
+* **Why we can copy it:** the IT8951 already exposes exactly that ladder (`DU`, `A2`, `GL16`, `GLR16`,
+  `GLD16`, `GC16`, `INIT`). `GLR16`/`GLD16` are the Regal-class incremental modes. Nothing new needs
+  buying; the missing piece is the scheduler.
+* **Decision:** `solardeck-refreshd` gains the scheduler in SOFTWARE_SPEC §52: dirty-rect transfer,
+  monotonic mode picker, bounded per-tile ghost debt, GPU pre-composite, forced balanced cycle after a
+  fast-mode burst. Small-region latency is the metric we publish; screen-wide fps is not.
+* **Metric shift:** from "fps" to "latency for the rectangle the user is actually touching". That is
+  what makes commercial readers feel fast and it is measurable on our own hardware.
+* **Delta:** $0 BOM; scheduler code + Phase 4 ladder/ghost-drain assertions.
