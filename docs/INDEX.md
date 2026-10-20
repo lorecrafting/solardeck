@@ -55,7 +55,7 @@ treat `docs/AUDIT_2026-10-20.md` as the current statement of what is measured, m
 │                                                                             │
 │ 10. docs/HANDOFF_TO_FABLE.md                                                │
 │    • Comprehensive engineering handover for Fable Wednesday audit: Seeed    │
-│      quotation status, 11-phase verification pipeline, and review checklist. │
+│      quotation status, 13-phase verification pipeline, and review checklist. │
 │                                                                             │
 │ 11. docs/FIRST_BOOT_CHECKLIST.md                                            │
 │    • Complete unboxing-to-first-prompt bring-up manual: cold DMM resistance  │
@@ -95,6 +95,9 @@ treat `docs/AUDIT_2026-10-20.md` as the current statement of what is measured, m
 | **Dual-Footprint & DNP Architecture** | `docs/HARDWARE_SPEC.md` §2.22 | 8 Strategic Fallback Footprints| NDP120, RV-3028, WSON-8, CH224K, PCIe|
 | **Autonomous LLM Hardware BIST Engine**| `docs/SOFTWARE_SPEC.md` §21 | `solardeck-diag --json` | 8-Subsystem BIST & Power-Gated Heal|
 | **30-Year Zero-Failure & Hi-Rel HW** | `docs/HARDWARE_SPEC.md` §7 | 5 Hi-Rel Rules + Escape Hatches | 50% Derate, Soft-Term MLCC, GDT, E-Fuse|
+| **Process Layer: Joints, Seals, Retention** | `docs/HARDWARE_SPEC.md` §7.6 | 6 process constraints, no new silicon | Corner bond, VMQ gasket, clamped cell, 0.45 N.m, 20k USB-C|
+| **30-Year Failure Budget & Service Plan** | `docs/LONGEVITY_30Y.md` | 12 failure mechanisms, service kit, 5-interval schedule | G7 drop, G8 thermal cycle, G9 UV, G10 unpowered |
+| **Feature Status Catalogue** | `docs/STATUS.md` (generated) | 80 features x measured/modelled/specified/aspirational | Phase 12 fails on stale or uncatalogued|
 | **Decadal Mechanical Durability** | `docs/HARDWARE_SPEC.md` §7.4 | Knurled Inserts + Poron Relief | 500+ Cycles, 4-Point USB-C, Hard Gold |
 | **30-Year Chemistry & Solid-State** | `docs/HARDWARE_SPEC.md` §7.5 | 3.45V Float, Tantalum, UV LOCA | 10,000+ Cycles, Gold Switches, Ti Nib |
 | **Instant-Ink 4.5mW Legal Pad** | `docs/HARDWARE_SPEC.md` §2.23 | RP2350 + Wacom Direct Blit | Sub-15ms S2idle Legal Pad & solardeck-inkd|
@@ -165,7 +168,7 @@ To verify every hardware rule, firmware state transition, cadence timing, and 3D
   ```bash
   python3 scripts/verify_all.py
   ```
-  Executes all 11 verification phases in ~1.2 seconds with colored pass/fail status and timing metrics.
+  Executes all 13 verification phases in ~1.2 seconds with colored pass/fail status and timing metrics.
 * **Continuous Integration:** `.github/workflows/verify.yml` automatically triggers on every push and pull request to `main`.
 * **Turnkey Box-Build Package:** `hardware/export_production_zip.py` generates the manufacturing bundle for Seeed Studio Fusion from the KiCad/OpenSCAD sources (bundles are CI artifacts, not committed): (`solardeck_gerbers.zip`, `seeed_fusion_bom.csv`, `solardeck_cpl.csv`, `solardeck_chassis.stl`, and `SEEED_FUSION_BOX_BUILD_INSTRUCTIONS.md`).
 

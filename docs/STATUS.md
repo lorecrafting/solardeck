@@ -24,10 +24,10 @@ Read `docs/AUDIT_2026-10-20.md` before treating any row here as a purchase decis
 | :--- | ---: |
 | `measured` | 0 |
 | `modelled` | 2 |
-| `specified` | 60 |
-| `aspirational` | 12 |
+| `specified` | 62 |
+| `aspirational` | 16 |
 | `TBD` | 0 |
-| **total** | **74** |
+| **total** | **80** |
 
 ## Product pillars
 
@@ -36,7 +36,7 @@ What the product is judged on (`README.md` §2).
 | ID | Feature | Status |
 | :--- | :--- | :--- |
 | P1 | Dual-brain instant handoff (<400 ms glass-to-glass) | `aspirational` |
-| P2 | Typewriter-on-paper latency (1-bit DU keystroke, EMR ink, piezo haptics) | `aspirational` |
+| P2 | Typewriter-on-paper latency (1-bit DU keystroke, EMR ink, LRA haptics) | `aspirational` |
 | P3 | Sunlight sovereignty and perpetual indoor harvest | `aspirational` |
 | P4 | Form-morphology: 620 g slate, desk easel, modular grips | `modelled` |
 | P5 | Sovereign field hardening: airgap, LoRa mesh, IP67, rain-lock | `aspirational` |
@@ -105,6 +105,8 @@ Host software specified in `SOFTWARE_SPEC.md`. Evidence is derived from `src/dae
 | D39 | `solardeck-biked` | `specified` | §50 | spec only (§50) |
 | D40 | `solardeck-penarb` | `specified` | §51 | spec only (§51) |
 | D41 | `solardeck-refreshd` | `specified` | §52 | spec only (§52) |
+| D53 | `solardeck-battcare` | `specified` | §53 | spec only (§53) |
+| D54 | `solardeck-nandcare` | `specified` | §54 | spec only (§54) |
 
 ## USB-C Hotpacks
 
@@ -144,6 +146,10 @@ The numbers that decide whether a build is field-ready (`STANDOUT_FEATURES.md`).
 | G4 | Net-positive energy at 500 lux | `aspirational` |
 | G5 | Airgap RF radiation 0.000 dBm, 50 MHz-6 GHz | `aspirational` |
 | G6 | Zero-brick watchdog rollback < 2.5 ms | `aspirational` |
+| G7 | Transit drop survival (1.22 m, 26 orientations) | `aspirational` |
+| G8 | Thermal-cycle joint integrity (500 cycles, dR<10%) | `aspirational` |
+| G9 | UV & weather durability (ASTM G154 1000 h, dE<3) | `aspirational` |
+| G10 | Unpowered storage survival (12 months, data intact) | `aspirational` |
 
 ## How this page stays true
 

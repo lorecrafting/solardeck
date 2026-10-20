@@ -346,22 +346,17 @@ To prevent filesystem corruption from unexpected battery depletion, field discon
   * Bank B firmware must initialize all power rails, test the BQ27441 fuel gauge, and assert `WATCHDOG_KICK`.
   * If the firmware hangs or locks up, the hardware watchdog reboots the RP2350 into Bank A (golden image), eliminating any risk of bricking the hardware power controller during field updates.
 
-### 10.5 Spatial Acoustic Piezo Haptic Daemon (`solardeck-hapticd`)
-* **Purpose:** Drives the quad-corner TDK PowerHap piezoelectric actuator array via dual Boréas BOS1901 CapDrive controllers to deliver coordinate-targeted, localized tactile clicks during bare-glass on-screen typing.
+### 10.5 Haptic Daemon (`solardeck-hapticd`)
+* **Purpose:** Drives the base-build **TI DRV2605L + 8 mm Z-axis LRA** haptic engine, and drives the optional DNP piezo array when that footprint is populated (ADR-020).
 * **Low-Latency Event Pipeline:**
-  1. Hooks into `/dev/input/event*` (Goodix GT911 touch device) at high thread priority (`SCHED_FIFO`, priority 85).
-  2. Upon receiving `EV_KEY` or `BTN_TOUCH` with absolute coordinates $(X, Y)$, maps the touch location relative to the four corner actuators:
-     * $A_1 = \text{Top-Left } (0, 0)$
-     * $A_2 = \text{Top-Right } (1872, 0)$
-     * $A_3 = \text{Bottom-Left } (0, 1404)$
-     * $A_4 = \text{Bottom-Right } (1872, 1404)$
-  3. Calculates localized acoustic phase and amplitude weighting ($w_i \propto 1 / d_i^\alpha$).
-  4. Dispatches differential SPI write transactions to the dual BOS1901 drivers in **< 0.4 milliseconds**:
-     * Primary drive pulse: 1.2ms 140Vpp square-ramp waveform to the nearest corner actuator.
-     * Inverse cancellation pulse: 180° phase-inverted damping pulse to distant actuators to suppress chassis shell vibration.
-* **Autonomous Power Gating & Energy Recovery:**
-  * Uses Boréas CapDrive bidirectional charge recycling, recovering **>80% of pulse energy** back into the power bus (net consumption **~18 mW per key click**).
-  * **SnapDeck Docking Bypass:** When `ID_SENSE` indicates that the physical SnapDeck keyboard is docked, `solardeck-hapticd` immediately places the BOS1901 drivers into deep sleep ($I_Q < 0.1\text{ }\mu\text{A}$), completely eliminating phantom power consumption.
+  1. Hooks `/dev/input/event*` (Goodix GT911) at `SCHED_FIFO` priority 85.
+  2. On `EV_KEY`/`BTN_TOUCH` with absolute $(X, Y)$:
+     * **LRA base build:** selects one of the DRV2605L ROM effects by gesture class (tap, hold, scrub, boundary) and dispatches an I2C `RTP`/`library` trigger within **< 0.6 ms**. Waveform shaping per keystroke is preserved; localization is not (one actuator, one frame).
+     * **Piezo option:** maps the touch to the four corner actuators $A_1..A_4$ at $(0,0)$, $(1872,0)$, $(0,1404)$, $(1872,1404)$, weights by $w_i \propto 1/d_i^\alpha$, fires a 1.2 ms 140 Vpp primary pulse at the nearest corner and a 180° inverted damping pulse at the far corners over dual BOS1901 SPI in **< 0.4 ms**.
+* **Power Gating:**
+  * LRA: DRV2605L standby $I_Q < 10\ \mu\text{A}$; actuator is a serviceable part.
+  * Piezo option: CapDrive recovers >80% of pulse energy (net ~18 mW/click); drivers drop to $I_Q < 0.1\ \mu\text{A}$ when `ID_SENSE` shows a docked keyboard.
+* **Why the default is the LRA:** the piezo array is four adhesively bonded ceramics at the highest-strain location on the device — see `docs/LONGEVITY_30Y.md` §3 and `HARDWARE_SPEC.md` §7.6. Reliability outranks feel in the base SKU; the option stays for demonstration units.
 
 ---
 
@@ -1328,4 +1323,31 @@ the cheapest mode per dirty rectangle and pays the ghost debt promptly. This sch
 
 **Verification hook.** `scripts/verify_all.py` Phase 4 asserts the mode ladder is monotonic
 (DU ≤ A2 ≤ GLR16 ≤ GC16) and that the ghost ledger drains to zero after a bounded workload. The fps
-figure for a Kaleido 4 TCON stays `null` until it is measured on hardware (ADR-017).
+figure for a Kaleido 4 TCON stays `null` until it is measured on hardware (ADR-020).
+
+---
+
+## 53. Battery Conservation & Aging Telemetry (`solardeck-battcare`)
+
+A LiFePO4 cell loses 2%/yr at 25 °C and 4–6%/yr at 40 °C. Over 30 years that is 40–60% of capacity, so the firmware's job is to slow it down and to make the loss visible before it becomes a surprise.
+
+* **Storage parking:** when the device is idle on AC for >72 h with no scheduled use, charges to `spec_values.longevity.storage_soc_pct` (50%) and stops. Full charge is restored on the next user-initiated boot.
+* **Charge ceiling:** 3.45 V float (already the hardware rule, `HARDWARE_SPEC.md` §7.5.1). ~95% of usable energy, near-zero electrolyte stress.
+* **Fade tracking:** reads the BQ27441 Impedance Track state-of-health monthly into `/var/lib/solardeck/health.jsonl`; internal resistance trend is the early-warning signal for electrolyte dry-out, not capacity alone.
+* **Service scheduling:** when retained capacity at 100% drops below `battery_capacity_retained_year30_pct` extrapolated to year 10, raises `[CELL SERVICE DUE]` naming the service kit part.
+* **Never** deep-cycles for calibration; LiFePO4 has a flat curve and a forced full cycle costs a real cycle.
+
+**Acceptance check:** park-at-50%-after-72h, resume-full-on-boot, and a synthetic SoH regression that must emit the service notice.
+
+---
+
+## 54. NAND Retention Scrub (`solardeck-nandcare`)
+
+Client eMMC/NVMe retains data for roughly a year unpowered at 30 °C — a device that lives in a drawer loses its OS silently. Firmware cannot change the physics, so it does two things: exercise the cells while power is available, and tell the truth about archives.
+
+* **Scrub:** on AC and idle, weekly for eMMC and quarterly for the NVMe (both `spec_values.longevity.nand_scrub_interval_days`), reads every allocated block and rewrites any block whose ECC correctable-error count rose since the last pass. Bounded to a byte budget per run so the device stays usable; progress persists in `/var/lib/solardeck/scrub.state`.
+* **Bad-block budget:** tracks per-die spare-block consumption; >50% consumed raises `[STORAGE AGING]`.
+* **Archive honesty:** the NVMe is a working drive, not an archive. `solardeck-nandcare --advise` states the supported archival paths (cold-storage microSD vault, printed/PDF export) and refuses to describe the NVMe as cold storage.
+* **Unpowered warning:** on battery-only idle beyond 30 days, warns once that the OS volumes are past their safe unpowered retention window.
+
+**Acceptance check:** idempotent re-run state, byte-budget enforcement, and a synthetic ECC-growth block that must be rewritten and logged.

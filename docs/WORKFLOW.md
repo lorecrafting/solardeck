@@ -55,7 +55,7 @@ Classify the change before touching anything. The class determines required evid
 | **C2 DESIGN** | Schematic, pinout, bus, thermal, mechanical | Affected propagation artifacts regenerated + relevant Phase + a trap-audit run |
 | **C3 FIRMWARE / SOFTWARE** | RP2350 C, daemons, provisioning | One runnable `assert`-based check (self-test or targeted test) in the same commit |
 | **C4 HYGIENE** | CI, lint, links, licences, renames | Phase 9/10/11 green; no behavioural claim changed |
-| **C5 RELEASE** | Bundle, version bump, CHANGELOG | All 11 phases green + bundle regenerated from source, never hand-edited |
+| **C5 RELEASE** | Bundle, version bump, CHANGELOG | All every phase green + bundle regenerated from source, never hand-edited |
 
 A change that spans classes needs **all** of their evidence. When in doubt, treat it as the higher
 class: C2 beats C1, C3 beats C4.
@@ -210,7 +210,7 @@ becomes debt the moment a number appears without its source.
 | :--- | :--- | :--- |
 | Every commit | `verify_all.py`, Phase 9/10 green | green run |
 | Every stable checkpoint | HANDOFF rewrite + INDEX regen | committed handoff |
-| Every release | full 11 phases + bundle diff review | release notes |
+| Every release | full every phase + bundle diff review | release notes |
 | Every quarter, or after 3 surprise findings | **audit pass** in the shape of `AUDIT_2026-10-20.md`: what is measured vs modelled vs aspirational, what artifact is missing, what claim is unsupported | audit doc + fix plan |
 | Any descope | ADR | decision log entry |
 
@@ -229,7 +229,7 @@ is deleted. Its value is the *findings list with file:line*, not the prose aroun
 [ ] superseded prose deleted; reasoning moved to 90-history/decisions.md
 [ ] generated artifacts regenerated from source, same commit
 [ ] one runnable check added or updated for the changed logic
-[ ] python3 scripts/verify_all.py green (11 phases)
+[ ] python3 scripts/verify_all.py green (every phase)
 [ ] self-review of git diff complete
 [ ] attribution trailers / Written line present
 [ ] what is still unmeasured is stated in one line

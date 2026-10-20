@@ -129,7 +129,8 @@ def render():
         "| `aspirational` | A design goal. Do not quote it as a capability. |",
         "| `TBD` | Unknown, and we refuse to guess. |",
         "",
-        "`specified` is the honest default for this repo: 61 BOM lines, 20 captured in schematics, 0 board nets.",
+        f"`specified` is the honest default for this repo: {SPEC['core_bom_line_items']} BOM lines, "
+        f"{SPEC['schematic_coverage_baseline']} captured in schematics, 0 board nets.",
         "Read `docs/AUDIT_2026-10-20.md` before treating any row here as a purchase decision.",
         "",
     ]

@@ -146,17 +146,13 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
 * **Touch Panel & Hardware-Enforced Zero-Latency Palm Rejection:**
   * **Sensor:** Capacitive multi-touch glass overlay with chemically etched anti-glare matte finish.
   * **Direct Hardware Proximity Blanking Gate:** When the battery-free Wacom stylus approaches within **10–14 mm** of the glass, the Wacom digitizer asserts **`PEN_PROX_INT`** LOW. This signal is routed directly to a hardware logic gate on the Goodix GT911 touch interrupt line, **hardware-suppressing all capacitive touch coordinates** before they reach the CPU. The user can rest their entire hand and forearm on the glass while writing with 100% immunity to stray touch events, with zero software latency or CPU overhead.
-* **Coordinate-Targeted Localized Piezoelectric Haptic Engine (Quad-Corner Acoustic Phase Array):**
-  * **The Problem with Global LRAs:** Conventional smartphones and tablets use a single vibration motor (LRA or ERM) mounted to the chassis. Pressing a virtual key shakes the entire device, vibrating both palms and feeling muddy, artificial, and disconnected from the finger.
-  * **Driver ICs:** Dual **Boréas Technologies BOS1901** (or BOS1211) ultra-low-power CapDrive piezoelectric haptic drivers ($1.45 each) with high-voltage differential outputs (up to 190Vpp from a single 3.3V/5V rail) and integrated energy recovery. CapDrive absorbs **>80% of electrical energy back into the storage capacitor** at the end of each mechanical pulse, slashing power draw to just **15 to 25 mW per click** (10× less power than conventional piezo drivers).
-  * **Actuator Array:** 4× **TDK PowerHap 0904H014V060** (or 1204) miniature multi-layer piezoelectric actuators ($1.25 each) bonded rigidly directly between the chemically etched cover glass perimeter and the CNC aluminum/chassis mounting bracket at the four corners ($TL, TR, BL, BR$).
-  * **Sub-1.0ms Mechanical Acceleration:** Unlike magnetic motors that take 12–20ms to overcome mechanical inertia, piezo ceramics accelerate instantaneously in **< 1.0 millisecond** with massive **>5G peak acceleration** and 15 µm displacement.
-  * **Spatial $(X,Y)$ Coordinate-Targeted Tactile Driving:**
-    * When the Goodix GT911 touch controller registers a keystroke at $(X, Y)$ (e.g. typing the 'A' or 'P' key on the bare-glass virtual terminal keyboard), the haptic daemon (`solardeck-hapticd`) maps the touch coordinate to distance weights across the four corner piezos:
-      $$w_i = \frac{1 / d_i^\alpha}{\sum_j (1 / d_j^\alpha)}$$
-    * The closest corner actuator fires a crisp 1.2ms square/sine displacement pulse into the glass substrate, while opposing corner actuators fire attenuated, microsecond phase-delayed damping waveforms to actively cancel acoustic reflection and chassis resonance.
-    * **The Tactile Feel:** Kinetic displacement concentrates strictly under the touching fingertip. Instead of the whole tablet shaking, the user feels a **sharp, localized mechanical click directly under that individual thumb/finger**, replicating the tactile feedback of a physical microswitch on bare glass.
-  * **Single LRA Fallback (DNP Option):** The PCBA retains an alternate footprint for a single TI **DRV2605L** + Vybronics 8mm Z-axis LRA as a budget build variant for cost-reduced educational runs.
+* **Haptic Engine — Wideband LRA by Default, Piezo Array as DNP Option (ADR-020):**
+  * **Why the default changed:** The quad-corner piezo array (4× TDK PowerHap + 2× Boréas BOS1901) is the best tactile experience in this design and the worst 30-year bet in it. Multi-layer ceramics are adhesively bonded to the glass perimeter — the highest-strain location in a drop — so the array is four crack sites, each of which can debond into a rattle. Age, thermal cycling, and a single 1.22 m corner drop all target exactly that joint (§7.6, `LONGEVITY_30Y.md`).
+  * **Base build:** Single TI **DRV2605L** wideband haptic driver + **Vybronics 8 mm Z-axis LRA** ($2.35), chassis-mounted with the actuator mass on the metal frame rather than the glass. The daemon still shapes per-keystroke waveforms, and the LRA mass is a serviceable part.
+  * **Retained option (DNP):** The PCBA keeps the full piezo footprint — dual **BOS1901CD-TR** CapDrive drivers ($1.45 each, >80% energy recovery, 190 Vpp from 3.3 V) and 4× **TDK PowerHap 0904H014V060** ($1.25 each). Populate it for a demonstration unit or a buyer who explicitly accepts a 10-year glass-bond service life.
+  * **What the option buys:** Sub-1.0 ms acceleration with >5 G peak and 15 µm displacement (magnetic motors need 12–20 ms to overcome inertia), plus spatial $(X,Y)$ weighting across the four corners so kinetic displacement concentrates under the touching fingertip:
+    $$w_i = \frac{1 / d_i^\alpha}{\sum_j (1 / d_j^\alpha)}$$
+  * **What the default gives up:** Localization. An LRA shakes the frame, not the fingertip. That is a real product loss, recorded in ADR-020, taken in exchange for removability and drop survival.
 * **Dual CCT Frontlight Subsystem (Pitch-Black Reading & Circadian Amber):**
   * **Driver IC:** Texas Instruments **TPS61163** dual-channel constant-current step-up LED driver ($0.65).
   * **Dual Interleaved Bezel LED Strings:** 12 cold-white LEDs (5000K) and 12 warm-amber LEDs (2700K) embedded along the bottom-edge lightguide.
@@ -1329,7 +1325,7 @@ To prevent the physical wear, joint fatigue, thread stripping, and material degr
 3. **4-Point Through-Hole Stake-Tab USB-C Receptacles (Torque-Proof Ports):**
    * The #1 hardware failure in modern mobile devices is the USB-C receptacle tearing off the motherboard when a cable is snagged or levered.
    * USB-C Port 1 and Port 2 specify **mid-mount receptacles featuring four heavy through-hole metal anchoring tabs** that penetrate completely through all 6 layers of the 1.6mm FR4 motherboard, soldered with solid 360° copper barrel fillets.
-   * Withstands over **50 Newtons (5.1 kgf) of perpendicular wrenching torque** and 10,000 insertion cycles, completely isolating delicate SMT signal pins from mechanical leverage.
+   * Withstands over **50 Newtons (5.1 kgf) of perpendicular wrenching torque**, and specifies receptacles rated for **>=20,000 insertion cycles** (§7.6.4) — daily charging for 30 years is ~11,000, so a 10,000-cycle part fails first.
 4. **Permanent Acid-Etched Matte Aluminosilicate Glass (Zero Peeling Films):**
    * Consumer tablets apply cheap glued polyethylene terephthalate (PET) "paper-like" film overlays that scratch easily, bubble under tropical humidity, and peel off after 1–2 years.
    * SolarDeck utilizes **chemically etched 1.1mm aluminosilicate glass (Mohs 7+ hardness)** where the anti-glare micro-texture and tactile friction are acid-etched directly into the glass crystalline structure at the foundry.
@@ -1390,3 +1386,76 @@ To guarantee that the electronics and physical components survive 10 to 30 years
 5. **Titanium Stylus Nib on Acid-Etched Glass:**
    * Traditional E-Ink styluses use soft POM plastic nibs that grind down against paper-like textures within months.
    * Because SolarDeck's matte texture is chemically etched directly into Mohs 7+ aluminosilicate glass (harder than structural titanium), operators can use **machined titanium or ceramic-ball stylus nibs** that last for life without replacing tips or scratching the display.
+
+### 7.6 Materials & Process: The Six Process-Layer Gaps (ADR-020 to ADR-022)
+
+§7.1–§7.5 specify components well. What they do not specify is the *process layer* — the joints, seals,
+retention, and records that decide whether a correctly selected part is still attached in year 20. All
+six items below are constraints from `docs/spec_values.json` → `longevity`, audited in
+`docs/LONGEVITY_30Y.md` §1.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│            PROCESS-LAYER CONSTRAINTS (NOT COMPONENT SELECTION)              │
+├─────────────────────┬───────────────────────────────────────────────────────┤
+│ 1. SOLDER JOINTS    │ • Reworkable epoxy CORNER BOND on every DSBGA (both   │
+│                     │   TMUX1575 YCJ) and QFN/WQFN corner                      │
+│                     │ • No full underfill: year-12 rework must remain possible │
+│                     │ • Gate: 500 thermal cycles -40…+85 °C, joint            │
+│                     │   resistance drift <10% (LONGEVITY_30Y.md G8)           │
+├─────────────────────┼───────────────────────────────────────────────────────┤
+│ 2. BATTERY RETENTION│ • Mechanical clamp + stainless bracket. NO adhesive,    │
+│                     │   no tape, no connector friction alone                  │
+│                     │ • Must survive 600 g peak (1.22 m drop, 2 mm stroke)    │
+│                     │ • Poron 4701-30 swelling relief retained (§7.4.2)       │
+│                     │ • Cell is a service item: hatch access, JST, 10 years   │
+├─────────────────────┼───────────────────────────────────────────────────────┤
+│ 3. SEAL             │ • Die-cut VMQ silicone gasket, 27% compression, P/N'd   │
+│                     │   in the BOM as a wear item ($2.10)                     │
+│                     │ • TPU bumpers are impact-only; they are not the seal    │
+│                     │ • Gate: IP67 after 500 open/reseal cycles                │
+├─────────────────────┼───────────────────────────────────────────────────────┤
+│ 4. CONNECTORS       │ • USB-C receptacles rated >=20,000 insertion cycles      │
+│                     │   (base spec said 10,000: daily charging for 30 years    │
+│                     │   is ~11,000, i.e. the port outlives its rating)        │
+│                     │ • 4 through-hole stake tabs, >50 N lateral (§7.4.3)     │
+├─────────────────────┼───────────────────────────────────────────────────────┤
+│ 5. FASTENERS        │ • 0.45 N·m torque, stated in ONE place only             │
+│                     │ • Low-strength threadlocker on the 12 perimeter screws  │
+│                     │ • <=2 screw types in the whole device                   │
+├─────────────────────┼───────────────────────────────────────────────────────┤
+│ 6. RECORDS          │ • Service kit P/N'd; gasket, cell, RTC cell, bumpers,   │
+│                     │   nibs, desiccant                                       │
+│                     │ • Quarterly NAND scrub daemon (solardeck-nandcare)      │
+│                     │ • 50% SOC storage parking (solardeck-battcare)          │
+│                     │ • Archival build container + printed key shares         │
+└─────────────────────┴───────────────────────────────────────────────────────┘
+```
+
+1. **Corner-Bonded Fine-Pitch Packages (Solder-Joint Fatigue):**
+   * The two TMUX1575 DSBGA packages sit between the two brains on the highest-flexure region of the
+     carrier board, and their 16 bumps have no compliant lead to absorb CTE mismatch.
+   * A reworkable epoxy corner bond staked at four corners of each DSBGA and each QFN/WQFN survives
+     thermal cycling without full underfill, which would make a $2 switch unrepairable in year 12.
+   * Qualification is a thermal-cycle gate, not an opinion: 500 cycles, joint resistance drift <10%.
+2. **Mechanically Clamped Battery Cell (No Adhesive Retention):**
+   * A 130 g pouch held by tape sees ~78 N of peel demand at a 1.22 m drop. Tape-based cell retention is
+     the single most common "my tablet died" failure in the consumer market, and it also blocks
+     replacement.
+   * The cell sits in a stainless bracket clamped to the chassis bosses, behind the service hatch, on a
+     keyed JST connector. Swelling relief stays as specified in §7.4.2.
+3. **Die-Cut VMQ Silicone Gasket as a P/N'd Wear Item:**
+   * §4 already specifies a continuous silicone gasket at 30% compression; the BOM did not contain it and
+     no service interval existed. It is now a $2.10 line item at 27% compression (one number, in
+     `spec_values.longevity.gasket_compression_pct`), replaced at the 10-year service.
+4. **20,000-Cycle USB-C Receptacles:**
+   * At ~1 insertion/day for 30 years the device needs 11,000 cycles, against a 10,000-cycle rating.
+     The requirement is raised to 20,000 so the port is not the first thing to fail.
+5. **One Torque, One Threadlocker, Two Screw Types:**
+   * The same joint was specified at 0.45 N·m in §7.4.1 and 0.25 N·m in earlier drafts. `longevity`
+     now holds 0.45 N·m as the single source. Low-strength threadlocker on the 12 perimeter screws keeps
+     a vibration environment from backing them out without welding them shut.
+6. **Service Records Instead of Folklore:**
+   * The service kit, the 10-year interval, the quarterly NAND scrub, the 50% storage parking, and the
+     archival build container are all specified in `LONGEVITY_30Y.md` §4–§6 and catalogued in
+     `STATUS.md`. A part you cannot obtain in 2036 is a part that does not exist.

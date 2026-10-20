@@ -71,7 +71,7 @@ On 2026-10-19, the complete Turnkey PCBA and Box-Build quotation package was off
 │       ├── solardeck_test_plan.zip         # Functional test plan bundle
 │       └── SEEED_FUSION_BOX_BUILD_INSTRUCTIONS.md # Complete assembly & DHL guide
 ├── scripts/
-│   └── verify_all.py                       # 11-phase master verification engine
+│   └── verify_all.py                       # 13-phase master verification engine
 └── src/
     ├── daemons/
     │   ├── eink-refreshd/                  # Cadence-aware anti-ghosting engine
@@ -90,7 +90,7 @@ All engineering tracks are continuously tested by a single, zero-dependency mast
 python3 scripts/verify_all.py
 ```
 
-### Verification Pipeline Breakdown (11 phases, derived from `PHASES` in `scripts/verify_all.py`)
+### Verification Pipeline Breakdown (every phase, derived from `PHASES` in `scripts/verify_all.py`)
 
 1. **Phase 1: KiCad schematics & netlist structure** -- parses all 5 sheets; runs `kicad-cli sch erc` and `kicad-cli pcb drc` when the tool is installed.
 2. **Phase 2: Netlist electrical trap audit (7 rules)** -- floating nets, I2C pull-ups, power-domain back-powering, AON rail brownout, S2idle wake connectivity, ternary LiFePO4 ceiling, dual-SIM bus contention.
@@ -102,7 +102,9 @@ python3 scripts/verify_all.py
 8. **Phase 8: OS provisioning** -- `tools/provision/setup_solardeck_os.sh --test`.
 9. **Phase 9: Documentation presence, attribution and relative-link integrity.**
 10. **Phase 10: Single source of truth** -- every quantitative claim in the docs must agree with `docs/spec_values.json`.
-11. **Phase 11: BOM <-> netlist <-> CPL coverage** -- fails when the netlist, CPL and BOM disagree on part count. Currently reports 20/61 (33%) schematic coverage.
+11. **Phase 11: BOM <-> netlist <-> CPL coverage** -- fails when the netlist, CPL and BOM disagree on part count. Currently reports 24/61 (39%) schematic coverage.
+12. **Phase 12: feature status catalogue** -- `docs/STATUS.md` must be generated and current; a daemon with a SOFTWARE_SPEC heading but no declared status fails the build.
+13. **Phase 13: 30-year longevity constraints** -- every constraint in `spec_values.longevity` must be present in the artifact that implements it (HARDWARE_SPEC §7.6, the BOM, the aging daemons, gates G7-G10, the maintenance plan).
 
 *Execution Time:* **~1.5 seconds**, fully automated in GitHub Actions CI (`.github/workflows/verify.yml`).
 

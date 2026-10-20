@@ -98,10 +98,11 @@ SolarDeck treats text entry like an **electric IBM Selectric typewriter striking
    * Wacom EMR digitizer sits laminated **behind the display backplane** (0% optical distortion, zero added surface reflection, zero parallax).
    * Passive, battery-free stylus with 4096 pressure levels and tilt detection.
    * `solardeck-inkd` renders pen strokes directly into EPDC hardware memory, providing zero-latency inking for sketching, mathematical derivations, and code margin notes.
-4. **Coordinate-Targeted Piezoelectric Haptic Engine (Spatial Acoustic Array):**
+4. **Haptic Engine: Wideband LRA by Default, Spatial Piezo Array as an Option:**
    * *The Problem with Global Vibration:* Standard phones and tablets shake the entire aluminum body when you tap a virtual key, vibrating both palms and feeling artificial.
-   * *The Solution:* 4× **TDK PowerHap** miniature piezoelectric actuators mounted at the four glass corners, driven by dual **Boréas BOS1901** CapDrive ICs (with 80% energy recovery).
-   * *Spatial Acoustic Focusing:* When typing on bare glass, `solardeck-hapticd` fires a sub-1.0ms impulse into the nearest corner actuator and phase-inverted damping pulses at opposing corners. Kinetic displacement concentrates strictly under the touching fingertip, producing a **crisp, localized mechanical click directly under that individual thumb/key**, replicating the tactile feel of an authentic physical microswitch on flat glass.
+   * *Base build:* A single TI **DRV2605L** + 8 mm Z-axis LRA, chassis-mounted with its mass on the metal frame. `solardeck-hapticd` still shapes per-keystroke waveforms (<0.6 ms trigger), and the actuator is a replaceable part. The whole frame moves slightly; it feels like a good phone, not like a microswitch.
+   * *Why:* The spatial array puts four adhesively bonded ceramics at the highest-strain location in a drop. It is the best tactile experience here and the worst 30-year bet here (ADR-020, `HARDWARE_SPEC.md` §7.6).
+   * *Retained option (DNP footprint):* 4× **TDK PowerHap** at the glass corners + dual **Boréas BOS1901** CapDrive drivers with >80% energy recovery. `solardeck-hapticd` fires a sub-1.0 ms impulse into the nearest corner and phase-inverted damping pulses at the opposite corners, concentrating displacement under the fingertip for a genuine **localized mechanical click on flat glass**. Populate it for demos or for a buyer who accepts a 10-year glass-bond service life.
 
 ---
 
@@ -541,6 +542,10 @@ Before any prototype PCBA or firmware build is declared ready for field release,
 | **G4** | Ambient Indoor Solar Sustainability | **Positive Net Energy** | Lux chamber @ 500 lux; verify battery charge current $> 0\text{ }\mu\text{A}$. |
 | **G5** | Airgap RF Radiation | **0.000 dBm (Noise Floor)** | Rohde & Schwarz / HackRF sweep in anechoic chamber across 50MHz–6GHz. |
 | **G6** | Zero-Brick Watchdog Auto-Rollback | **< 2.5 milliseconds** | Fault injected into Bank B; verify hardware WDT fallback to Golden Image. |
+| **G7** | Transit Drop Survival | **1.22 m, 26 orientations, functional** | MIL-STD-810H 516.8 procedure IV; corner drops first (cell retention, corner bond). |
+| **G8** | Thermal-Cycle Joint Integrity | **500 cycles −40…+85 °C, ΔR < 10%** | Per-package joint resistance sampled before/after; proves the DSBGA corner bond (§7.6). |
+| **G9** | UV & Weather Durability | **ASTM G154 1000 h, ΔE < 3, no crazing** | Quartz-xenon chamber on PA12 + anodised samples; colour SKU degrades faster by design. |
+| **G10** | Unpowered Storage Survival | **12 months, boots, OS volumes intact** | Powered off at 50% SOC, 30 °C; validates the NAND scrub policy against real retention loss. |
 
 ---
 

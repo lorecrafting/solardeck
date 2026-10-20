@@ -45,11 +45,11 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
 1. **The "Dual-Brain" Instant Handoff (<400ms Glass-to-Glass):**
    * *Never off, yet never dies:* Sips ~110 µW as a perpetual indoor solar desk clock and 300-day Zen reader on the RP2350 co-processor.
    * *Zero boot friction:* The millisecond you touch a key or pen, the Linux CM4 wakes from S2idle in **<300 milliseconds**, restoring your terminal, Neovim buffers, and Claude Code sessions on screen in **under 400ms total**.
-2. **The "Typewriter-on-Paper" Latency Engine (<20ms Keystroke, Inking & Localized Piezo Haptics):**
+2. **The "Typewriter-on-Paper" Latency Engine (<20ms Keystroke, Inking & Haptics):**
    * *Zero perceptible lag:* Hardware-synchronized 1-bit Direct Update (DU) waveforms deliver crisp keystroke rendering in **18–20 milliseconds**, eliminating the sluggishness of traditional e-paper.
    * *Intelligent Anti-Ghosting (`eink-refreshd`):* Zero flashes during fast typing bursts; silently sweeps micro-ghosting during natural 1.2-second pauses in human thought.
    * *Sub-18ms Wacom EMR Inking:* Battery-free, 4096-level pressure pen laminated behind the display with zero optical distortion or parallax.
-   * *Coordinate-Targeted Piezo Haptics:* 4× TDK PowerHap corner actuators + dual Boréas BOS1901 drivers concentrate sub-1ms tactile clicks directly under the touching finger on bare glass.
+   * *Haptics:* Base build is a single TI DRV2605L + 8 mm LRA with per-keystroke waveform shaping. The spatial quad-corner PowerHap + BOS1901 array is a retained **DNP option** that concentrates sub-1 ms clicks under the touching finger; it is off the default BOM because four glass-bonded ceramics are the device's worst drop-fatigue site (ADR-020).
 3. **Sunlight Sovereignty & Perpetual Indoor Life:**
    * *The brighter the sun, the better it gets:* 10.3" Color E-Ink (Carta 1200 / Kaleido 4, 227 PPI monochrome / 114–150 PPI colour) with 0% glare and zero power to hold a static page. 24–32 hours of active terminal coding under direct noon sun with 0W backlight.
    * *Perpetual Indoor Harvesting:* High-efficiency indoor a-Si micro-strip + TI BQ25504 nano-boost yields a **net positive power balance under 500 lux indoor room light**, allowing SolarDeck to live on a desk or shelf forever without ever plugging into a wall.
@@ -212,7 +212,7 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
 | **Display Panel** | 10.3" E-Ink Kaleido 3 / Kaleido 4 (1872×1404, 227 PPI B&W / 114–150 PPI Color) + Wacom EMR |
 | **Display Bus** | Single-path SPI @32 MHz to IT8951 EPDC (flexible refresh) + TMUX1575 fallback to RP2350 (4.5 mW Zen Reader); no MIPI-DSI video path |
 | **Waveform Engine** | Dynamic Quad-Zone Temperature-Compensated Waveform LUT Matrix (-10°C to +50°C in `eink-refreshd`) |
-| **Haptic Feedback** | Quad-Corner TDK PowerHap Piezo Matrix + Dual Boréas BOS1901 CapDrive Drivers (Localized (X,Y) glass click) |
+| **Haptic Feedback** | Base: TI DRV2605L + 8 mm Z-Axis LRA (per-gesture waveforms). DNP option: Quad-Corner TDK PowerHap + Dual Boréas BOS1901 (localized (X,Y) glass click) |
 | **Frontlight** | Dual CCT Bezel Lightguide (TI TPS61163 Step-Up Driver, 2048-step circadian warm amber/white) |
 | **Digitizer & Touch**| Laminated Wacom EMR (<18ms ink) + Hardware `PEN_PROX_INT` Palm Blanking Gate + 0.1mm Mu-Metal |
 | **All-Weather Rain** | Torrential Rain "Water-Lock" Mode (TPS22918 capacitive touch cutoff; 100% water-immune Wacom stylus) |

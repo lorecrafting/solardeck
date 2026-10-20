@@ -19,6 +19,7 @@ Every doc that mentions a phase count is checked against docs/spec_values.json b
   Phase 10: Single source of truth (docs/spec_values.json) consistency
   Phase 11: BOM <-> netlist <-> CPL coverage
   Phase 12: Status catalogue (docs/STATUS.md generated and current)
+  Phase 13: 30-year longevity constraints (docs/spec_values.json -> longevity)
 
 NOTE: a green run means "the artifacts are internally consistent". It does NOT mean the design is
 fabricable -- the schematic is still a partial capture and the production bundles are placeholders.
@@ -160,6 +161,8 @@ PHASES = [
      lambda: run_step("Phase 11: BOM <-> netlist <-> CPL coverage", [sys.executable, "scripts/check_bom_coverage.py"])),
     ("Status catalogue generated and current",
      lambda: run_step("Phase 12: feature status catalogue (docs/STATUS.md)", [sys.executable, "scripts/gen_status.py", "--check"])),
+    ("30-year longevity constraints enforced",
+     lambda: run_step("Phase 13: longevity constraints (docs/LONGEVITY_30Y.md)", [sys.executable, "scripts/check_longevity.py"])),
 ]
 
 

@@ -14,7 +14,8 @@ Written 2026-10-20 04:13 UTC in the Pi harness by openrouter/deepseek/deepseek-v
 | 4 | `SOFTWARE_SPEC.md` | Kernel, E-Ink pipeline, power profiles, daemons |
 | 5 | `MECHANICAL_FIT_AND_ENCLOSURE_WORKFLOW.md` | XY/Z budgets, tolerances, the actual enclosure |
 | 6 | `HARDWARE_VERIFICATION_WORKFLOW.md` | What each verification phase proves, and what it does not |
-| 7 | `BOM_COST_ESTIMATE.md` | $388.85 across 61 line items, supplier sourcing |
+| 7 | `BOM_COST_ESTIMATE.md` | $383.30-$408.30 across 61 line items, supplier sourcing |
+| 7b | `LONGEVITY_30Y.md` | The 30-year failure budget, service kit, maintenance schedule, gates G7-G10 |
 | 8 | `OFFGRID_TACTICAL_SENSORS.md` | Field/maritime/foraging sensing, 7 Hotpacks, daemon catalog |
 | 9 | `STANDOUT_FEATURES.md` | The 6 product pillars and 7 feature chapters |
 | 10 | `FIRST_BOOT_CHECKLIST.md` | Bench bring-up and acceptance gates |
@@ -40,7 +41,7 @@ Every claim is one of these. Anything unlabelled is **aspirational**.
 2. **Delete superseded text.** Move the reasoning into `90-history/decisions.md` as an ADR. Never
    leave a "descoped" note next to the full spec of the descoped thing.
 3. Generated content (BOM tables, phase lists, production bundles) is generated, not authored.
-4. `python3 scripts/verify_all.py` before every push. 11 phases, ~1.3 s.
+4. `python3 scripts/verify_all.py` before every push (13 phases, ~1.2 s).
 
 ## Deliberately not split (yet)
 

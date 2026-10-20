@@ -47,7 +47,7 @@
   "hotpacks": 7,
   "standout_pillars": 6,
   "engineering_pillars": 9,
-  "verification_phases": 11,
+  "verification_phases": 13,
   "core_bom_line_items": 61,
   "schematic_coverage_baseline": 20,
   "pcb_thickness_mm": 1.0,
@@ -64,7 +64,7 @@
       },
       {
         "id": "P2",
-        "name": "Typewriter-on-paper latency (1-bit DU keystroke, EMR ink, piezo haptics)",
+        "name": "Typewriter-on-paper latency (1-bit DU keystroke, EMR ink, LRA haptics)",
         "status": "aspirational"
       },
       {
@@ -381,6 +381,18 @@
         "name": "solardeck-refreshd",
         "status": "specified",
         "spec_section": 52
+      },
+      {
+        "id": "D53",
+        "name": "solardeck-battcare",
+        "status": "specified",
+        "spec_section": "53"
+      },
+      {
+        "id": "D54",
+        "name": "solardeck-nandcare",
+        "status": "specified",
+        "spec_section": "54"
       }
     ],
     "hotpacks": [
@@ -477,7 +489,63 @@
         "id": "G6",
         "name": "Zero-brick watchdog rollback < 2.5 ms",
         "status": "aspirational"
+      },
+      {
+        "id": "G7",
+        "name": "Transit drop survival (1.22 m, 26 orientations)",
+        "status": "aspirational"
+      },
+      {
+        "id": "G8",
+        "name": "Thermal-cycle joint integrity (500 cycles, dR<10%)",
+        "status": "aspirational"
+      },
+      {
+        "id": "G9",
+        "name": "UV & weather durability (ASTM G154 1000 h, dE<3)",
+        "status": "aspirational"
+      },
+      {
+        "id": "G10",
+        "name": "Unpowered storage survival (12 months, data intact)",
+        "status": "aspirational"
       }
     ]
+  },
+  "longevity": {
+    "_comment": "30-year design budget. Checked by scripts/check_longevity.py (CI Phase 13). Anything here is a constraint, not a claim.",
+    "design_life_years": 30,
+    "drop_height_m": 1.22,
+    "drop_peak_g": 600,
+    "battery_capacity_retained_year30_pct": 50,
+    "battery_service_interval_years": 10,
+    "rtc_backup": "socketed CR2032",
+    "gasket_material": "VMQ silicone",
+    "gasket_compression_pct": 27,
+    "fastener_torque_nm": 0.45,
+    "max_fastener_types": 2,
+    "underfill": "corner bond on DSBGA/QFN (reworkable)",
+    "capacitor_policy": "no aluminium electrolytic; aluminium-polymer or C0G/X7R only, >=2x voltage margin",
+    "conformal_coat": "acrylic, reworkable, connector-masked",
+    "uv_stabiliser": "PA12 with HALS UV package",
+    "anodise": "Type III hard anodise, sealed",
+    "salt_fog_hours": 96,
+    "nand_scrub_interval_days": 90,
+    "storage_soc_pct": 50,
+    "service_kit_items": [
+      "gasket set",
+      "battery cell",
+      "RTC cell",
+      "bumper set",
+      "stylus nibs",
+      "desiccant"
+    ],
+    "usb_c_rated_cycles": 20000,
+    "battery_retention": "mechanical clamp + bracket (no adhesive)",
+    "screw_types_max": 2,
+    "thermal_cycles": 500,
+    "thermal_uv_hours": 1000,
+    "unpowered_months": 12,
+    "drop_orientations": 26
   }
 }

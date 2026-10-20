@@ -62,18 +62,18 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **ESD Suppression** | Low-Capacitance TVS Diode Arrays for USB & Pogo Pins (x4) | Texas Instruments / Mouser | TPD4E05U06 (x4) + SMAJ5.0A | $0.80 |
 | **RTC 32kHz Crystal**| Precision 32.768 kHz Tuning Fork Crystal for RP2350 RTC | Citizen / Epson / Mouser | CM200S 32.768kHz | $0.25 |
 | **RTC Backup Battery**| 3.3V Rechargeable Lithium Micro-Battery (5.5 mAh, >100 days hold)| Seiko Instruments / Mouser | MS621FE-FL11E | $0.65 |
-| **Spatial Haptic Drivers**| Dual Ultra-Low-Power CapDrive Piezo Drivers (Energy Recovery) | Boréas Technologies / Mouser | BOS1901CD-TR (x2) | $2.90 |
-| **Quad Piezo Actuators**| 4x Miniature High-Acceleration Piezo Actuators (Corner Array)| TDK / Mouser / Digi-Key | PowerHap 0904H014V060 (x4)| $5.00 |
 | **JEITA Resistors** | 0.1% Precision Resistors (5.23k / 30.1k) for BQ25895 TS | Yageo / Panasonic 0603 | Precision Thin-Film (x2)| $0.15 |
 | **CM4 Retention** | CNC Aluminum CM4 Retention Bracket & Thermal Interface Pad | Custom CNC / Laird | Custom Bracket + Tflex | $1.80 |
 | **RF Pi-Matching** | Precision 0402 RF Inductors & C0G/NP0 Capacitors (5 nets) | Murata / TDK / LCSC | 0402 Precision RF Kit | $0.40 |
 | **Solar Aerogel** | 0.5mm Die-Cut Pyrogel Aerogel / Kapton Thermal Barrier | Aspen Aerogels / 3M | Pyrogel Insulation Strip | $0.60 |
 | **Airgap Switch** | Sub-Miniature 2-Position Gold Contact Slide Switch | C&K / E-Switch / LCSC | JS202011CQN | $0.45 |
 | **GORE Vent** | ePTFE Pressure Equalization Vent Plug | W. L. Gore / Amphenol | PMF100396 | $1.50 |
+| **Haptic Engine** | Wideband Haptic Driver + Z-Axis LRA (Piezo array = DNP option) | Texas Instruments / Vybronics | DRV2605L + 8mm Z-Axis LRA | $2.35 |
+| **Perimeter Gasket** | Die-Cut VMQ Silicone O-Ring, 27% Compression (Service Item) | Custom / Rogers | Custom Die-Cut VMQ | $2.10 |
 | **Enclosure (PA12)**| SLS 3D-Printed PA12 Nylon Shell + 85A TPU Corner Bumpers | JLC3D / Craftcloud | Custom CAD Housing (Streamlined)| $25.00 |
-| **Total Core BOM**| **(Sum of 61 Core Line Items — of which 20 are captured in the schematic so far, see docs/AUDIT_2026-10-20.md)** | | | **$388.85 – $413.85** |
+| **Total Core BOM**| **(Sum of 61 Core Line Items — of which 24 are captured in the schematic so far, see docs/AUDIT_2026-10-20.md)** | | | **$383.30 – $408.30** |
 
-*(Note: Specifying the 4GB RAM CM4 base configuration reduces the Total Core BOM to **$368.85 – $393.85**).*
+*(Note: Specifying the 4GB RAM CM4 base configuration reduces the Total Core BOM to **$363.30 – $388.30**).*
 
 ---
 

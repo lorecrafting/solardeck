@@ -228,3 +228,51 @@ Format: trigger → decision → what it cost or saved → what still assumes it
 * **Metric shift:** from "fps" to "latency for the rectangle the user is actually touching". That is
   what makes commercial readers feel fast and it is measurable on our own hardware.
 * **Delta:** $0 BOM; scheduler code + Phase 4 ladder/ghost-drain assertions.
+
+## ADR-020 — Quad piezo haptics demoted to a DNP option
+
+* **Trigger:** 30-year audit (`docs/LONGEVITY_30Y.md` §1 row 2, §3). Localized piezo haptics were a
+  headline feature and are the device's worst drop-fatigue site.
+* **Mechanism:** 4× TDK PowerHap actuators are multi-layer ceramics adhesively bonded to the cover-glass
+  perimeter — the highest-strain location in a 1.22 m corner drop (600 g peak). Age and thermal cycling
+  work on the same bond. A debonded actuator is a rattle the user cannot fix.
+* **Decision:** base build = single TI **DRV2605L** + **8 mm Z-axis LRA** ($2.35), chassis-mounted with
+  the actuator mass on the metal frame. The full quad-corner PowerHap + dual BOS1901 footprint stays on
+  the board as a **DNP option**; `solardeck-hapticd` supports both.
+* **What we lose:** localization. An LRA shakes the frame, not the fingertip. Recorded as a real product
+  loss, not a rounding error.
+* **Delta:** −$5.55 BOM ($7.90 removed, $2.35 added), −4 failure modes, core BOM total
+  $388.85 → **$383.30–$408.30** at 61 line items.
+* **Reversible:** one BOM line and one daemon flag. If a buyer accepts a 10-year glass-bond service life,
+  populate the option.
+
+## ADR-021 — The 30-year constraint set lives in `spec_values.json`, not in prose
+
+* **Trigger:** the first audit found a *documentation* truth problem, but said nothing about the
+  *durability* problem: no corner bond, no gasket line item, adhesive-only cell retention, no NAND scrub,
+  no stated RTC service interval. None of these is visible to a netlist checker.
+* **Decision:** `docs/spec_values.json` → `longevity` holds 23 machine-readable constraints (drop height
+  and peak g, thermal cycles, gasket compression, torque, USB-C cycles, scrub interval, storage SOC,
+  service-kit contents). `docs/LONGEVITY_30Y.md` holds the failure budget and the maintenance schedule.
+  `scripts/check_longevity.py` (Phase 13) fails the build when a constraint is absent from the artifact
+  that implements it.
+* **Why a checker and not a review:** every item is presence-of-constraint, not a measurement. No bench
+  has run, so demanding numbers would force someone to invent them.
+* **Enforced consequences:** HARDWARE_SPEC §7.6 states the six process-layer constraints; the gasket is a
+  $2.10 BOM line item; the haptic engine is a BOM line; PowerHap/BOS1901 must **not** appear in the BOM
+  (a descope that creeps back is a lost decision); gates G7–G10 exist in STANDOUT_FEATURES and in the
+  status catalogue.
+* **Delta:** +$2.10 gasket; −$5.55 haptics; net −$3.45 core BOM, plus one checker and one new phase.
+
+## ADR-022 — Gasket compression and fastener torque each get exactly one value
+
+* **Trigger:** the same gasket was "compressed 30 %" in §4 and 27 % in the longevity budget; the same M2.5
+  joint was 0.45 N·m in §7.4.1 and 0.25 N·m in a draft. Two numbers for one joint is how a build
+  instruction becomes folklore.
+* **Decision:** `spec_values.longevity.gasket_compression_pct = 27` and
+  `fastener_torque_nm = 0.45`. Prose cites them; Phase 13 fails if HARDWARE_SPEC does not state them.
+* **Why those values:** 27 % sits inside the 15–30 % usable range for die-cut VMQ with good recovery;
+  0.45 N·m is a safe M2.5 steel-into-brass-insert torque with threadlocker.
+* **Delta:** $0. Prevents a future build from over-compressing the seal (which takes a permanent set) or
+  stripping a brass insert (which ends the teardown story at cycle 3).
+

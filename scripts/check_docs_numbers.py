@@ -39,7 +39,9 @@ BANNED = [
     (r"\b4-layer\b(?!.*ADR)", "carrier PCB is 6-layer"),
     (r"7-Phase|7 Phase", "verification has 9 phases (spec_values.verification_phases)"),
     (r"12\.55\s*mm", "stackup is now bounded by spec_values.chassis_cavity_depth_mm"),
-    (r"227x165x9\\.8|227\\s*×\\s*165\\s*×\\s*9\\.8|227\\.0\\s*×\\s*165\\.0", "chassis is 236 x 178 x 14.0 (B4)"),
+    (r"227x165x9\\.8|227\\s*×\\s*165\\s*×\\s*9\\.8|227\\.0\\s*×\\s*165\\.0", "chassis is 232 x 170 x 14.0 (B4)"),
+    (r"10,000 insertion cycles", "USB-C rating raised to >=20,000 cycles (longevity.usb_c_rated_cycles)"),
+    (r"\\$388\\.85|\\$413\\.85", "core BOM total is $383.30-$408.30 (ADR-020)"),
     (r"SnapDeck Keyboard", "keyboard descoped to Phase 2; external USB-C/BT only"),
     (r"ready for fabrication", "placeholder artifacts are not a design sign-off"),
 ]
