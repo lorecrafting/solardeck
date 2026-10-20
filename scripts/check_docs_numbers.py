@@ -96,6 +96,15 @@ def check_numbers(path, text, err):
     for n in {int(x) for x in re.findall(r"(\d+)\s+(?:verification\s+)?phases", text, re.I)}:
         if n != SPEC["verification_phases"]:
             err(f"{path}: '{n} phases' contradicts spec_values.verification_phases={SPEC['verification_phases']}")
+    for n in {int(x) for x in re.findall(r"(\d+)\s+(?:thermal\s+)?zones", text, re.I)}:
+        if n != SPEC["telemetry"]["thermal_zones"]:
+            err(f"{path}: '{n} zones' contradicts spec_values.telemetry.thermal_zones={SPEC['telemetry']['thermal_zones']}")
+    for n in {int(x) for x in re.findall(r"(\d+)\s+TPS22918[\- ]gated rails?", text, re.I)}:
+        if n != SPEC["telemetry"]["gated_rails"]:
+            err(f"{path}: '{n} TPS22918-gated rails' contradicts spec_values.telemetry.gated_rails={SPEC['telemetry']['gated_rails']}")
+    for n in {int(x) for x in re.findall(r"(\d+)\s+module health register", text, re.I)}:
+        if n != SPEC["telemetry"]["module_health_registers"]:
+            err(f"{path}: '{n} registers' contradicts spec_values.telemetry.module_health_registers={SPEC['telemetry']['module_health_registers']}")
 
 
 def check_links(path, text, err):

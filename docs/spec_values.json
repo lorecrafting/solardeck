@@ -678,5 +678,11 @@
     "cacheable_land_s": 1.0,
     "fast_path_s": 1.5,
     "noncacheable": "no preview (fast-restore only)"
+  },
+  "telemetry": {
+    "_comment": "LLM sensory surface (Deck-Builder guide section 4): counts enforced by check_docs_numbers.py",
+    "thermal_zones": 6,
+    "gated_rails": 4,
+    "module_health_registers": 8
   }
 }

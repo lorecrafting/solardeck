@@ -474,18 +474,32 @@ To completely eliminate bus arbitration lockups and the hardware address collisi
     * **Rail 2 (Display):** IT8951 EPDC and high-voltage rails. Pinpoints display power draw per waveform mode.
     * **Rail 3 (RF Radios):** Quectel modem, LoRa transceiver, Wi-Fi/BT. Catches hung cellular RRC sockets and rogue radio beacons.
   * Direct telemetry to Claude Code CLI and `solardeck-telemetryd` SQLite database for empirical algorithmic power profiling.
+  * **Per-gated-rail current sense (TPS22918 [- 4 TPS22918-gated rails](DECK_BUILDER_LAYOUT.md)):** each of the 4 TPS22918 peripheral load-switch rails (LTE, Wi-Fi, audio, expansion) carries a µA-grade shunt + INA3221/ADC tap into the RP2350, so the LLM can distinguish "EG25-G overdraws" from "Wi-Fi radio storm" instead of only seeing RF aggregate. This is the Deck-Builder self-diagnosis contract (§4) made physical: **rail sense is the difference between a diagnosis and a guess.**
 * **Coulomb Counter & Battery Fuel Gauge (Texas Instruments BQ27441-G1):**
   * Integrated Impedance Track™ fuel-gauge technology tracks exact milliamp-hours entering and leaving the pack (true Coulomb counting).
   * Measures battery cell internal impedance ($R_{\text{cell}}$ in mΩ) and computes true State-of-Health (SOH %) across 3,000+ charge cycles.
   * Enables charging optimization: signals the BQ25895 charger to reduce charge current when cell resistance rises or temperatures elevate, doubling battery operational lifespan to 10+ years.
-* **Multi-Zone Precision Thermal Triad (Texas Instruments TMP112 + SoC Diode - KEPT FOR THERMAL LOGS):**
-  * High-precision ($\pm 0.5^\circ\text{C}$), ultra-thin SOT-563 digital temperature sensors placed at strategic thermal points:
-    * **Battery Zone:** Directly adhered to the pouch cell under the thermal protection sleeve for millidegree charging logs.
-    * **Display Zone:** Adhered to the aluminum backplate behind the E-Ink panel. Directly feeds the IT8951 EPDC Look-Up Table (`TEMP_REG`) via the RP2350 bridge to dynamically adjust waveform voltage pulses as liquid microcapsule viscosity changes with temperature (eliminating ghosting in winter cold and bleeding in summer heat).
-    * **Compute Zone:** Monitored via CM4 internal thermal diode and modem AT commands (`AT+QTEMP`).
+* **Multi-Zone Precision Thermal Array — 6 zones (Texas Instruments TMP112 + SoC Diode - KEPT FOR THERMAL LOGS):**
+  * High-precision ($\pm 0.5^\circ\text{C}$), ultra-thin SOT-563 digital temperature sensors placed at strategic thermal points. Three hard-wired TMP112s, three derived zones:
+    * **Battery Zone:** Directly adhered to the pouch cell under the thermal protection sleeve for millidegree charging logs. (TMP112 #1)
+    * **Display Zone:** Adhered to the aluminum backplate behind the E-Ink panel. Directly feeds the IT8951 EPDC Look-Up Table (`TEMP_REG`) via the RP2350 bridge to dynamically adjust waveform voltage pulses as liquid microcapsule viscosity changes with temperature (eliminating ghosting in winter cold and bleeding in summer heat). (TMP112 #2)
+    * **Compute Zone:** Monitored via CM4 internal thermal diode and modem AT commands (`AT+QTEMP`). (TMP112 #3 + SoC diode)
+    * **RF/Modem Zone:** derived from `AT+QTEMP` on the EG25-G modem, so certification-relevant heat spikes in the radio stack are visible to the LLM.
+    * **Charger-Rail Zone:** derived from the BQ25895 die-temperature and the charger rail sense, catching thermal stress that degrades the charge path before it becomes a longevity claim violation.
+    * **Audio Zone:** derived from the amplifier die — audio is a 4th TPS22918-gated rail, so thermal sanity of the audio channel is part of the LLM telemetry surface.
+  * All 6 zones land in the `thermal_zones` table (§3.3.1) — the LLM reads the array, not a single dial.
 * **Ambient Light & Solar Lux Sensing (Via Bezel Solar Strip & RP2350 ADC - Zero BOM):**
   * Rather than adding a dedicated photodiode IC, the RP2350's internal 12-bit ADC directly samples the open-circuit voltage ($V_{OC}$) of the top-bezel IXYS solar strip. Dynamic range spans from 0.01 lux up to 120,000 lux.
   * Enables dynamic E-Ink contrast optimization: disables front-lights completely in full sunlight ($>10,000\text{ lux}$), decreases anti-ghosting frequency, and calculates optimal solar panel angles when external folding panels are connected.
+* **Module Health Registers (the Deck-Builder contract, §5):**
+  * Every user-serviceable module (CM4, LTE, eSIM, LoRa, panel, audio, battery, solar — 8 registers) emits a `(ok | waning | fault, value)` row into the `module_health` table (§3.3.1):
+    * **CM4:** SMART + eMMC wear + rail sense
+    * **LTE:** `AT+CSQ`, GNSS fix stats, rail sense
+    * **LoRa:** RSSI/SNR, rail sense
+    * **Panel:** per-refresh ACK latency + ghosting counter
+    * **Battery:** coulomb-counted charge/discharge curve + ESR
+    * **Audio:** loopback self-test (padded output, measured mic RMS)
+  * These registers are what a welded board cannot see: the LLM's diagnosis interface is per-module, not per-sensor.
 * **Motion & Kinematics Accelerometer (Bosch BMA400):**
   * Ultra-low-power 12-bit 3-axis accelerometer drawing **3.5 µA**.
   * Continuous autonomous motion detection: picks up physical desk wake interrupts, detects orientation (portrait vs. landscape), double-tap frame gestures, and free-fall conditions (firing an emergency interrupt to flush eMMC dirty buffers before ground impact).

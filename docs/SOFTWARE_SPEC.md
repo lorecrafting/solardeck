@@ -135,14 +135,18 @@ The background daemon `solardeck-telemetryd` logs all physical metrics into a co
    `timestamp`, `vbus_v`, `core_mw`, `display_mw`, `rf_mw`, `total_mw`, `peak_inrush_ma`
 2. **`battery_health` Table:**
    `timestamp`, `soc_pct`, `mah_remaining`, `cell_esr_mohm`, `soh_pct`, `charge_cycles`, `temp_c`
-3. **`thermal_zones` Table:**
-   `timestamp`, `battery_c`, `display_backplane_c`, `soc_die_c`, `modem_c`
-4. **`rf_metrics` Table:**
+3. **`thermal_zones` Table (6 zones — `spec_values.telemetry.thermal_zones`):**
+   `timestamp`, `battery_c`, `display_backplane_c`, `soc_die_c`, `modem_c`, `charger_rail_c`, `audio_c`
+4. **`module_health` Table (8 module health registers — `spec_values.telemetry.module_health_registers`):**
+   `timestamp`, `module` (cm4|lte|esim|lora|panel|audio|battery|solar), `state` (ok|waning|fault), `value`, `unit`
+5. **`rf_metrics` Table:**
    `timestamp`, `lte_rsrp`, `lte_sinr`, `lte_rrc_state`, `lora_rssi`, `lora_snr`, `lora_airtime_pct`, `wifi_rssi`, `gnss_cn0`, `gnss_ttff`
 5. **`environment_motion` Table:**
    `timestamp`, `ambient_lux`, `baro_hpa`, `relative_altitude_m`, `motion_state`, `tilt_angle`
 6. **`system_workload` Table:**
    `timestamp`, `active_window`, `cpu_governor`, `core_freqs_mhz`, `emmc_wear_pct`, `epdc_refresh_count`
+
+The full schema is the LLM's read surface: Tier 1/2 AI feedback (below) and the local AI assistant both query these tables directly against `spec_values.json` budgets — this DB is the "as much hardware telemetry as possible" commit.
 
 #### 3.3.2 The Three AI Feedback Tiers
 1. **Tier 1: Immediate Autonomous Hardware Adaptation (< 100ms response):**
