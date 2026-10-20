@@ -304,3 +304,34 @@ intervals, and test points instead.
 
 **Why.** Random failure is 14× further out than the first wear-out item. Redundancy would be bought
 against the wrong curve, and every redundant part is itself a FIT contribution and a failure mode.
+
+## ADR-025 — Kaleido 4 is not buyable bare; the K3 + IT8951 module is the pipeline test rig (2026-10-20)
+
+**Context.** `spec_values.refresh_modes.kaleido4_fps` stays `null` (ADR-017/018/020), and AUDIT 5 §5.2
+said the path to filling it was "buy the dev kit; measure three numbers". The three numbers there
+(S2idle power, wake latency, keystroke latency) are *system* numbers and do need the board — but the
+Kaleido 4 *display* answers are unobtainable by any purchase today: E Ink ships no bare K4 panel or
+module; K4 is locked to first retail devices (Hanvon M10C II, China-first). It is an oxide-TFT backplane
+with a T2000-class TCON — **not** the IT8951, which cannot drive it.
+
+**Decision.** Two test rigs, honest about what each measures:
+
+1. **Display pipeline answers** (partial-rect latency, colour-refresh time, ghosting/DC balance, thermal
+   LUT switching — the behaviour `eink-refreshd` §52 schedules against): a ~$200–300 following
+   10.3" Kaleido 3 + IT8951 HAT module. These answers are generation-stable pipeline facts and they are
+   what the software risk actually lives in. Results are tagged `measured <date> (Kaleido 3)` — never
+   promoted to K4 numbers.
+2. **K4-specific fps**: stays `null`. The only future path is measuring inside a retail K4 device
+   (different TCON — partial credit at best), or an E Ink datasheet. E Ink's announcement figures
+   (>40k colours, ~18 fps) are marketing until a spec sheet exists; §3.2 forbids them outright.
+
+**Why.** The dev-kit purchase AUDIT 5 recommended for the display half of the question cannot be made —
+"buy the K4 dev kit" is chasing a product that does not exist in any channel. The K3-IT8951 module is
+real, cheap, and exercises precisely the pipeline the repo ships (`eink-refreshd`, thermal bands,
+rectangle scheduler). The system gates (G1–G3) still need the real board; no display answers those.
+
+**Enforced consequences.** `kaleido4_fps` remains `null` in `spec_values`; `SOFTWARE_SPEC.md:1326`
+(ADR-020) wording stays; AUDIT 5 §5.2 reworded so the next reader does not chase an unbuyable kit.
+
+**Delta.** $0 hardware decision; optional ~$200–300 if the refresh pipeline is exercised before the
+first board rev.
