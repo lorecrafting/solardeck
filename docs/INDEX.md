@@ -62,6 +62,7 @@ treat `docs/AUDIT_2026-10-20.md` as the current statement of what is measured, m
 │      checks, RP2350 .uf2 flashing, OS provisioning, and BIST pass gate.     │
 │                                                                             │
 │ 12. AGENTS.md                                                               │
+│ 12b. docs/WORKFLOW.md                                                       │
 │    • Developer & AI agent instructions, coding discipline, and safety rules.│
 └─────────────────────────────────────────────────────────────────────────────┘
 ```

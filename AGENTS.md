@@ -1,106 +1,129 @@
 # AGENTS.md — SolarDeck Engineering Guide
 
-Written 2026-10-18 17:35 UTC in the Pi harness by antigravity/gemini-3.8-flash
+Written 2026-10-20 05:10 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017
+
+**Read `docs/WORKFLOW.md` before your first change.** It is the operating procedure: claim tags,
+change classes, the intent→ledger lifecycle, the 13 non-negotiables from the audit, and the
+definition of done. This file is the map and the hard rules; that file is the method.
+
+Start here, in order: `docs/README.md` → `docs/AUDIT_2026-10-20.md` → the spec you touch →
+`docs/WORKFLOW.md`.
 
 ---
 
-## 1. Project Overview
+## 1. What SolarDeck is
 
-**SolarDeck** (Codename: *XuanDeck* / *KoaDeck*) is an open-hardware, sunlight-readable 10.3" Color E-Ink mobile workstation and tactical terminal running mainline bare-metal Linux.
+An open-hardware, sunlight-readable 10.3" colour E-Ink mobile workstation and tactical terminal
+running mainline bare-metal Linux. Open hardware; CERN-OHL-S-2.0 + MIT, see `LICENSES/PATHS.md`.
 
-### Key Architecture Tenets
-* **Compute Split ("Dual-Brain"):**
-  * **Main Processor:** Raspberry Pi Compute Module 4 (CM4: Quad Cortex-A72 @ 1.8GHz, 4GB/8GB RAM, 32GB eMMC) running Linux 6.6 LTS, Sway/Wayland, Claude Code CLI, offline Kiwix, and Neovim.
-  * **Ultra-Low-Power Co-Processor:** Raspberry Pi RP2350B (Dual Cortex-M33 / Hazard3 RISC-V @ 150MHz, 10 µA sleep / 4.5 mW Zen reader mode) running bare-metal C for perpetual RTC clock ticks, ambient solar voltage sampling (ADC shadow gestures), 8MB QSPI PSRAM framebuffer caching, and 0.3s S2idle instant-wake triggering via GPIO interrupt.
-* **Display & Waveform:** 10.3" E-Ink Kaleido 3 / Carta 1200 (1872×1404, 227 PPI) via IT8951 EPDC isolated by TI TMUX1575 8-channel SPDT bus switch, with customized 1-bit 20ms fast-typing waveforms and an asynchronous anti-ghosting daemon (`eink-refreshd`). Laminated Wacom EMR digitizer with battery-free stylus for sub-20ms pen latency.
-* **Power & Energy Harvesting:** 8,000–10,000 mAh LiFePO4 chemistry (26–32 Wh, 3.2V nominal, -10°C to +65°C safe, 3,000+ cycle life) managed by TI BQ25895 buck charger with dedicated USB-PD sink controller (STUSB4500 / CH224K for 20W PD), front-facing monocrystalline micro-solar bezel strip (IXYS SM141K06L, 0.15W peak trickle top-up), dedicated Always-On 3.3V low-IQ buck-boost (TI TPS62840, 60 nA IQ), and TPS22918 peripheral power load switches.
-* **Comms & Hardware Multi-Tool:** M.2 Key-B 4G/LTE (Quectel EG25-G Global), 915 MHz LoRa (SX1262 / Meshtastic dedicated to RP2350), and rear 8-pin hermetic magnetic pogo bus mating to Modular RF Backpack with onboard bridge MCU and USB hub driving RTL2832U SDR, TI CC1101 Sub-GHz, Vishay IR TX/RX, NXP PN532 NFC, and EM4095 125kHz RFID.
-* **Mounting & Open Keyboard Architecture:** Descoping the custom keyboard from the V1 release allows developers to connect any standard Bluetooth or USB-C keyboard (ThinkPad, Corne, Keychron, Apple, or $20 handheld BlackBerry Q20 thumb keyboards). The rear chassis integrates **Universal M2.5 Threaded Brass Inserts & a MagSafe-Compatible Magnetic Anchor Array** for snapping on 3D-printed handheld thumb grips, camera tripods, and desk easel arms. IP67 CNC 6061 aluminum or PA12 SLS enclosure with GORE ePTFE pressure vent and 85A TPU bumpers.
+| Subsystem | Design | Spec |
+| :--- | :--- | :--- |
+| **Dual-brain compute** | Raspberry Pi CM4 (quad A72, 4/8 GB, 32 GB eMMC) running Linux; RP2350B co-processor at 10 µA sleep / 4.5 mW reader mode handling RTC, ADC solar sampling, PSRAM frame cache and S2idle wake. Bus isolation via a pair of TI TMUX1575 4-channel switches (two devices = 8 channels). | `docs/MVP_ARCHITECTURE.md` |
+| **Display** | 10.3" Kaleido 3 / Kaleido 4 (colour) or Carta 1200 (mono), 1872×1404, driven by an IT8951 EPDC. Frame rates are per-rectangle, not per-screen; colour motion is unsupported. All figures: `spec_values.refresh_modes`. On-top Wacom EMR variants require the pen/refresh arbiter. | `docs/HARDWARE_SPEC.md` §2.2, `docs/SOFTWARE_SPEC.md` §51–52 |
+| **Power** | LiFePO4 26–32 Wh, BQ25895 charger + USB-PD sink, 0.15 W solar bezel strip (larger harvest is an accessory), TPS62840 always-on rail, TPS22918 peripheral load switches | `docs/HARDWARE_SPEC.md` §3 |
+| **Comms** | M.2 Key-B LTE (EG25-G), SX1262 LoRa on the RP2350, USB-C only (the pogo bus is descoped) | `docs/HARDWARE_SPEC.md` §2.5 |
+| **Ergonomics** | External USB-C/BT keyboard only — no keyboard firmware in this repo (ADR-001). Rear M2.5 inserts + MagSafe anchor array for grips, tripods, easel arms. | `docs/MECHANICAL_FIT_AND_ENCLOSURE_WORKFLOW.md` |
+
+Fabrication status is **not** implied by a green CI run. See `docs/AUDIT_2026-10-20.md`.
 
 ---
 
-## 2. Repository Layout
+## 2. Repository layout
 
 ```
 .
-├── README.md                  # Executive overview, core pillars, specs table
-├── AGENTS.md                  # Developer & AI agent instructions (this document)
-├── LICENSE                    # CERN-OHL-S-2.0 (hardware) + MIT (software), see LICENSES/
-├── SECURITY.md                # Threat model, key handling, disclosure policy
-├── CONTRIBUTING.md            # How to propose, build, verify and submit changes
+├── README.md                  # Executive overview, pillars, specs table
+├── AGENTS.md                  # This file: map + hard rules
+├── CONTRIBUTING.md            # How to propose, build, verify, submit
+├── SECURITY.md                # Threat model, key handling, disclosure
+├── LICENSE, LICENSES/         # CERN-OHL-S-2.0 / MIT / CC-BY-SA, per-path map
+├── CHANGELOG.md
 ├── docs/
-│   ├── INDEX.md               # Master index, cross-reference table, decision log
-│   ├── spec_values.json       # SINGLE SOURCE OF TRUTH for every quantitative claim
-│   ├── AUDIT_2026-10-20.md    # What is measured / modelled / aspirational, and what is broken
-│   ├── MVP_ARCHITECTURE.md    # Dual-brain architecture, power tiers, state transitions
-│   ├── HARDWARE_SPEC.md       # Carrier board, bus topology, pinouts, RF & power
+│   ├── README.md              # Reading order + claim-status vocabulary (start here)
+│   ├── WORKFLOW.md            # THE METHOD: tags, classes, lifecycle, done criteria
+│   ├── spec_values.json       # Single source of truth for every quantitative claim
+│   ├── AUDIT_2026-10-20.md    # What is measured/modelled/aspirational, and what is broken
+│   ├── INDEX.md               # Generated cross-reference table
+│   ├── MVP_ARCHITECTURE.md    # Dual-brain split, power tiers, state transitions
+│   ├── HARDWARE_SPEC.md       # Carrier board, buses, pinouts, RF, power
 │   ├── SOFTWARE_SPEC.md       # Kernel, E-Ink pipeline, power profiles, daemons
-│   ├── BOM_COST_ESTIMATE.md   # BOM, supplier sourcing, turnkey cost breakdown
+│   ├── BOM_COST_ESTIMATE.md   # 61 line items, supplier sourcing
 │   ├── MECHANICAL_FIT_AND_ENCLOSURE_WORKFLOW.md
-│   ├── HARDWARE_VERIFICATION_WORKFLOW.md
-│   ├── OFFGRID_TACTICAL_SENSORS.md
+│   ├── HARDWARE_VERIFICATION_WORKFLOW.md   # What each phase proves, and what it does not
+│   ├── OFFGRID_TACTICAL_SENSORS.md         # Field/maritime/foraging sensing, 7 Hotpacks
 │   ├── STANDOUT_FEATURES.md
 │   ├── FIRST_BOOT_CHECKLIST.md
-│   └── HANDOFF_TO_FABLE.md
-├── hardware/                  # KiCad 8 (partial capture - see AUDIT block B1), netlist, audits
-│   ├── audit_hardware_traps.py
-│   ├── verify_schematics.py
-│   ├── export_production_zip.py
+│   ├── HANDOFF_TO_FABLE.md    # Reviewer checklist before any purchase
+│   └── 90-history/decisions.md             # ADR-001…019, why things were dropped
+├── hardware/                  # KiCad 8 (partial capture), netlist, trap audits
+│   ├── verify_schematics.py, audit_hardware_traps.py, export_production_zip.py
 │   ├── enclosure/             # solardeck_chassis.scad + verify_enclosure.py
 │   └── production/            # generated bundles + verify_manufacturing_package.py
-├── firmware/
-│   └── rp2350/                # Bare-metal C (Pico SDK): state machine, ADC, RTC, S2idle wake
-├── src/
-│   ├── daemons/               # eink-refreshd, solardeck-telemetryd
-│   └── dts/                   # solardeck-cm4.dts device-tree overlay
+├── firmware/rp2350/           # Bare-metal C (Pico SDK): state machine, ADC, RTC, wake
+├── src/daemons/, src/dts/     # eink-refreshd, telemetryd, device-tree overlay
 ├── config/                    # sway, waybar, foot, mako, gammastep
-├── tools/
-│   └── provision/             # setup_solardeck_os.sh (testable, --test)
+├── tools/provision/           # setup_solardeck_os.sh (--test)
 └── scripts/                   # verify_all.py, check_docs_numbers.py, check_bom_coverage.py
 ```
 
-Note: there is **no custom keyboard firmware** in this repo. The SnapDeck keyboard is descoped;
-any standard Bluetooth/USB-C keyboard is used (`docs/INDEX.md` ADR-001).
+---
+
+## 3. Hard rules
+
+### 3.1 Numbers
+One file: `docs/spec_values.json`. Never hard-code a dimension, capacity, PPI, count or fps in prose or
+in a test. Reference the key; `scripts/check_docs_numbers.py` (Phase 10) enforces it. `verify_enclosure.py`
+reads the same file, so CAD and spec cannot disagree.
+
+### 3.2 Claims
+Every figure is `measured <date>`, `datasheet`, `modelled`, `aspirational`, or `null`/TBD. Untagged =
+defect. Unknown numbers stay `null` with an ADR saying what unlocks them — never an estimate dressed as
+a spec. Details: `docs/WORKFLOW.md` §1 and §5.
+
+### 3.3 Search
+`ast-grep`/`sg --json` for structural code queries; `rg` for config and prose; `kicad-cli` for
+hardware. Do not text-grep a syntax tree.
+
+### 3.4 Change discipline
+Classify as C1 CLAIM / C2 DESIGN / C3 SOFTWARE / C4 HYGIENE / C5 RELEASE (`docs/WORKFLOW.md` §2) and
+supply that class's evidence. Non-trivial logic ships with one runnable `assert`-based check. Ponytail
+ladder: YAGNI → reuse → stdlib → native platform → existing dependency → one line → minimum code.
+
+### 3.5 Verification
+`python3 scripts/verify_all.py` before every push. Green means *internally consistent*, never
+design-approved. If the suite cannot catch your change, the assertion you add is part of the change.
+Never lower a threshold to pass; raise the artifact or downgrade the claim.
+
+### 3.6 Generated files
+Netlists, gerbers, BOM exports, bundles, `docs/INDEX.md` and BOM tables are generated. Regenerate from
+source in the same commit. Never hand-edit them.
+
+### 3.7 Self-review
+One pass over the real `git diff` for correctness, edge cases, safety, leftover superseded prose, and
+attribution before you call the task done.
 
 ---
 
-## 2.1 Numbers Live In One File
+## 4. Safety constraints (never trade these for a smaller diff)
 
-Never hard-code a dimension, capacity, PPI, pillar count or phase count in prose or in a test.
-Add it to `docs/spec_values.json`, reference it symbolically in the doc, and let
-`python3 scripts/check_docs_numbers.py` (CI Phase 10) catch drift. `verify_enclosure.py` and the
-mechanical workflow read the same file, so CAD and spec cannot disagree.
-
----
-
-## 3. Agent Operating Rules & Discipline
-
-### 3.1 Global Coding & Search Guidelines
-* **Structural Search:** Always prefer `ast-grep` (`sg`) with `--json` for structural syntax queries in supported languages; do not use raw text search (`rg` / `grep`) unless plain-text search is strictly requested.
-* **Ponytail Philosophy:** Apply the Ponytail discipline to all changes. Enforce the ladder:
-  1. YAGNI: Skip speculative features.
-  2. Reuse existing helpers and patterns.
-  3. Prefer standard library and native Linux kernel/system interfaces.
-  4. Minimal dependencies, minimal working diffs.
-  5. Provide a single, runnable verification check (`assert`-based self-test or targeted test) for any non-trivial logic.
-* **Self-Review:** Before completing code tasks, run a self-review pass on the actual `git diff` for correctness, edge cases, and safety.
-
-### 3.2 Attribution & Stamping Standards
-When operating under the Pi harness:
-* **Git Commits:** Append commit trailers using `git commit --trailer`:
-  ```
-  Co-Authored-By: <model display name> <noreply@anthropic.com>
-  Harness: pi (<provider>/<model>, session <id>)
-  ```
-* **Documents & Technical Records:** Add the mandatory attribution line in the header or section start:
-  `Written <YYYY-MM-DD HH:MM> UTC in the Pi harness by <provider>/<model>`
-* **Issue / PR Comments:** Prefix with `[Pi · <provider>/<model> · session <id>]`.
+1. **LiFePO4 only.** 3.2 V nominal, 3.65 V charge limit. Never configure 4.2 V Li-ion parameters.
+   Verify NTC cutoff behaviour before any charging change.
+2. **Sleep power.** TPS22918 loads hard off in S2idle; the gate is measured (<25 mW), not assumed
+   (`docs/FIRST_BOOT_CHECKLIST.md` §5b).
+3. **Waveform DC balance.** Any LUT change must keep net DC bias ≈ 0 V across refresh cycles. Fast-mode
+   bursts need a forced balanced cycle; pigment burn-in is permanent (`docs/SOFTWARE_SPEC.md` §52).
+4. **RF limits.** CC1101/SX1262 respect regional ISM bands and EIRP (915 MHz NA, 868 MHz EU). No
+   transmission config ships without the region.
+5. **Input validation at trust boundaries** and error handling that prevents data loss are never
+   simplified away.
 
 ---
 
-## 4. Engineering & Safety Constraints
+## 5. Attribution (required)
 
-1. **Battery Management & Thermal Safety:** LiFePO4 operates at 3.2V nominal (3.65V charge limit). Never configure charging parameters for standard 3.7V Li-ion/LiPo (4.2V), which creates severe over-voltage hazards. Always verify NTC thermistor cutoffs.
-2. **Peripheral Power Gating:** The TPS22918 load switches must be kept in hard cut-off state during sleep to maintain the 15 mW S2idle power envelope.
-3. **EPDC & E-Ink Waveform Caution:** Improper voltage LUT cycling on electrophoretic displays can cause permanent DC pigment burn-in. Waveform alterations must ensure net DC bias across refresh cycles averages to 0V.
-4. **RF Multi-Tool Emission Safety:** Sub-GHz (CC1101) and LoRa (SX1262) transmissions must respect regional ISM band limits and maximum EIRP rules (e.g. 915 MHz North America, 868 MHz Europe).
+- **Commits:** `Co-Authored-By: <model display name> <noreply@anthropic.com>` and
+  `Harness: pi (<provider>/<model>, session <8-char id>)`, added with `git commit --trailer`.
+- **Documents/records:** `Written <YYYY-MM-DD HH:MM> UTC in the Pi harness by <provider>/<model>` in the
+  header or at the start of the appended section.
+- **Tracker comments:** `[Pi · <provider>/<model> · session <id>]`.
+- Subagents and reviewers you launch inherit these rules — put them in the prompt.

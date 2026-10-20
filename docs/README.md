@@ -7,6 +7,7 @@ Written 2026-10-20 04:13 UTC in the Pi harness by openrouter/deepseek/deepseek-v
 | # | Document | Why |
 | :-- | :--- | :--- |
 | 0 | `../README.md` | What the product is, in 5 minutes |
+| 0.5 | `WORKFLOW.md` | **The method.** Claim tags, change classes, lifecycle, non-negotiables, done criteria. Read before your first change. |
 | 1 | `AUDIT_2026-10-20.md` | **What is actually built versus what is written.** 10 blockers, 20 contradictions, the fix plan. Read before trusting anything else. |
 | 2 | `MVP_ARCHITECTURE.md` | Dual-brain split, power tiers, state transitions |
 | 3 | `HARDWARE_SPEC.md` | Carrier board, buses, pinouts, RF, power |
