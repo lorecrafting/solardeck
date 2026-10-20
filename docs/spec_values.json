@@ -48,7 +48,7 @@
   "standout_pillars": 7,
   "engineering_pillars": 9,
   "verification_phases": 16,
-  "core_bom_line_items": 61,
+  "core_bom_line_items": 62,
   "schematic_coverage_baseline": 20,
   "pcb_thickness_mm": 1.0,
   "rear_wall_mm": 1.5,
@@ -569,10 +569,10 @@
     "unpowered_months": 12,
     "drop_orientations": 26
   },
-  "bom_total_low": 385.4,
-  "bom_total_high": 410.4,
-  "bom_total_low_4gb": 365.4,
-  "bom_total_high_4gb": 390.4,
+  "bom_total_low": 387.4,
+  "bom_total_high": 414.4,
+  "bom_total_low_4gb": 367.4,
+  "bom_total_high_4gb": 394.4,
   "power": {
     "insolation_kwh_m2_day": 4.28,
     "derate": 0.7,

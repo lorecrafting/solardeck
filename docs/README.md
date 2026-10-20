@@ -21,8 +21,9 @@ Written 2026-10-20 04:13 UTC in the Pi harness by openrouter/deepseek/deepseek-v
 | 6c | `USB_ROBUSTNESS.md` | Every USB-C failure mode and the rules that close them (gate G11) |
 | 6d | `ARCHIVAL_BUILD.md` | Toolchain survival, offline reproducible build |
 | 6 | `HARDWARE_VERIFICATION_WORKFLOW.md` | What each verification phase proves, and what it does not |
-| 7 | `BOM_COST_ESTIMATE.md` | $385.40-$410.40 across 61 line items, supplier sourcing |
+| 7 | `BOM_COST_ESTIMATE.md` | $387.40-$414.40 across 62 line items, supplier sourcing |
 | 7b | `LONGEVITY_30Y.md` | The 30-year failure budget, service kit, maintenance schedule, gates G7-G10 |
+| 7c | `FMEA.md` | Failure family → countermeasure → detector → actuator → gate matrix. Read when adding a sensor or a repair hatch |
 | 8 | `OFFGRID_TACTICAL_SENSORS.md` | Field/maritime/foraging sensing, 7 Hotpacks, daemon catalog |
 | 9 | `STANDOUT_FEATURES.md` | The 7 product pillars and 7 feature chapters |
 | 10 | `FIRST_BOOT_CHECKLIST.md` | Bench bring-up and acceptance gates |

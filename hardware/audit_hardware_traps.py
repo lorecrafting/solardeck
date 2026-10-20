@@ -121,6 +121,23 @@ def audit_hardware_traps():
         assert "J_SIM" in s_refs, f"{name} missing Nano-SIM (J_SIM) node"
     print("  ✓ Passed: Dual-SIM lines correctly multiplexed between Quectel modem, ST4SIM eSIM, and Nano-SIM.")
 
+    # Trap 8: Banned/descoped nets must not re-enter the electrical layer (longevity + ADR guards)
+    print("\n[Rule 8] Checking Banned/Descoped Nets are Absent (ADR-004/006/008/020/024)...")
+    banned_nets = [
+        (r"POGO", "rear pogo bus descoped, USB-C only (ADR-006)"),
+        (r"SNAP", "SnapDeck keyboard is Phase 2, not a V1 board net (ADR-020)"),
+        (r"8.?CH|8_?CH", "TMUX1575 is 4-channel; eight channels need two devices (ADR-004, B2)"),
+        (r"24.?FPS|FPS_24", "video-rate claim removed; 32MHz SPI gives ~6 fps 1-bit (ADR-018, B3)"),
+        (r"TMUX1575PWR", "TMUX1575 has no PWR package; DSBGA YCJ only (B2)"),
+    ]
+    banned_hits = [f"{name} ({why})" for name in nets
+                   for pat, why in banned_nets if re.search(pat, name)]
+    if banned_hits:
+        print(f"  ❌ TRAP DETECTED: descoped nets present: {banned_hits}")
+        traps_found += 1
+    else:
+        print("  ✓ Passed: no descoped/banned nets in the netlist (all ADR-004/006/008/020 closures hold).")
+
     print("\n===================================================================")
     if traps_found == 0:
         print("  🎉 AUDIT RESULT: 0 TRAPS DETECTED. ALL HARDWARE RULES PASSED!")

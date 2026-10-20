@@ -1330,8 +1330,8 @@ To achieve true decades-long operational longevity in off-grid expeditionary env
 4. **Rule 4: Solid-State Electronic E-Fuses & Ideal Diodes:**
    * **TI TPS259xx Electronic E-Fuses:** Replace consumable physical fuses on peripheral power branches. The silicon detects overcurrent in 500 nanoseconds, clamps fault current, and resets automatically upon fault removal or software command with zero physical wear over millions of cycles.
    * **TI LM74700 Ideal Diode Controllers:** Drive ultra-low-resistance ($3\text{ m}\Omega$) N-channel MOSFETs on raw DC and battery charge inputs. Blocks reverse voltages down to -36V and disconnects overvoltages in **50 nanoseconds**, eliminating the 0.7V drop and continuous heat dissipation of traditional Schottky diodes.
-5. **Rule 5: Conformal Dielectric & Moisture Barrier (Mil-Spec Parylene):**
-   * Following SMT reflow and automated optical inspection, the populated PCBA receives an automated **thin-film conformal coating (Parylene or silicone-modified polyurethane)**.
+5. **Rule 5: Conformal Dielectric & Moisture Barrier (Reworkable Acrylic; Parylene is DNP):**
+   * Following SMT reflow and automated optical inspection, the populated PCBA receives an automated **thin-film reworkable acrylic conformal coating (IPC-CC-830, silicone-modified polyurethane), connectors masked** — per `spec_values.longevity.conformal_coat`. Reworkability is the point: ADR-024 (spares over redundancy) requires that a $2 load switch be reworkable in year 12, and vapor-deposited Parylene is *not* reworkable. Parylene remains a DNP option only for a sealed, non-serviceable variant (no ADR authorizes it yet).
    * Creates an impenetrable, hermetic dielectric barrier ($>1500\text{ V/mil}$) over all IC leads and copper traces, protecting against condensation, tropical humidity, salt-fog corrosion, and the spontaneous growth of metallic tin whiskers.
 
 ### 7.2 The "Just-In-Case" Physical Repair Escape Hatches

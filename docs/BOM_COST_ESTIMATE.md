@@ -71,9 +71,10 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **Haptic Engine** | Wideband Haptic Driver + Z-Axis LRA (Piezo array = DNP option) | Texas Instruments / Vybronics | DRV2605L + 8mm Z-Axis LRA | $2.35 |
 | **Perimeter Gasket** | Die-Cut VMQ Silicone O-Ring, 27% Compression (Service Item) | Custom / Rogers | Custom Die-Cut VMQ | $2.10 |
 | **Enclosure (PA12)**| SLS 3D-Printed PA12 Nylon Shell + 85A TPU Corner Bumpers | JLC3D / Craftcloud | Custom CAD Housing (Streamlined)| $25.00 |
-| **Total Core BOM**| **(Sum of 61 Core Line Items — of which 24 are captured in the schematic so far, see docs/AUDIT_2026-10-20.md)** | | | **$385.40 – $410.40** |
+| **Conformal Coat** | IPC-CC-830 Reworkable Acrylic Conformal Coating, Connector-Masked (spec_values.longevity.conformal_coat) | PSI / Applied Post-SMT | IPC-CC-830 (UC-2605) | $2.00 – $4.00 |
+| **Total Core BOM**| **(Sum of 62 Core Line Items — of which 24 are captured in the schematic so far, see docs/AUDIT_2026-10-20.md)** | | | **$387.40 – $414.40** |
 
-*(Note: Specifying the 4GB RAM CM4 base configuration reduces the Total Core BOM to **$365.40 – $390.40**).*
+*(Note: Specifying the 4GB RAM CM4 base configuration reduces the Total Core BOM to **$367.40 – $394.40**).*
 
 ---
 
@@ -136,7 +137,7 @@ Because standard surface-mount components from JLCPCB's / PCBWay's Basic and Ext
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  SOLARDECK CORE TABLET (8GB RAM Baseline)  │ $385 – $410    │
+│  SOLARDECK CORE TABLET (8GB RAM Baseline)  │ $387 – $414    │
 │  (Or 4GB CM4 Base Config)                  │ $363 – $388    │
 ├─────────────────────────────────────────────────────────────┤
 │  OPTIONAL SNAPDECK KEYBOARD (PHASE 2)      │ $47.55         │
