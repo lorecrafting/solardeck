@@ -547,5 +547,17 @@
     "thermal_uv_hours": 1000,
     "unpowered_months": 12,
     "drop_orientations": 26
+  },
+  "bom_total_low": 385.4,
+  "bom_total_high": 410.4,
+  "bom_total_low_4gb": 365.4,
+  "bom_total_high_4gb": 390.4,
+  "power": {
+    "insolation_kwh_m2_day": 4.28,
+    "derate": 0.7,
+    "solar_strip_w": 0.15,
+    "rp2350_idle_mw": 4.5,
+    "lora_repeater_mw_low": 12,
+    "lora_repeater_mw_high": 15
   }
 }

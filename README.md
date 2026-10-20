@@ -110,7 +110,7 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
 
 ### I. The Dual-Brain Display Mux (Zero-Leakage 300-Day Reader & Mesh Node)
 * **The Problem:** Linux processors (like the CM4) draw 1.5W–3W just sitting idle, draining large batteries in hours.
-* **The Genius Fix:** A **Raspberry Pi RP2350B** microcontroller (Dual Cortex-M33 / RISC-V) with **8MB QSPI PSRAM** acts as a secondary brain. When Linux is powered completely off (0.000W), the RP2350 takes over the E-Ink display via a **Texas Instruments TMUX1575** 8-channel high-speed bus switch, isolating all SPI and control signals (`SPI_MOSI`, `SPI_MISO`, `SPI_SCLK`, `SPI_CS`, `HRDY`, `RESET`).
+* **The Genius Fix:** A **Raspberry Pi RP2350B** microcontroller (Dual Cortex-M33 / RISC-V) with **8MB QSPI PSRAM** acts as a secondary brain. When Linux is powered completely off (0.000W), the RP2350 takes over the E-Ink display via **2× Texas Instruments TMUX1575** high-speed bus switches (4 channels each, 8 total), isolating all SPI and control signals (`SPI_MOSI`, `SPI_MISO`, `SPI_SCLK`, `SPI_CS`, `HRDY`, `RESET`).
 * **30ms Zen Reading:** Double-buffers full 1872×1404 page images in PSRAM, handling reading page turns at ~4.5 mW (**300+ days battery life**).
 * **24/7 Meshtastic Repeater:** Directly interfaces with the Semtech SX1262 LoRa radio, autonomously relaying encrypted emergency mesh packets across off-grid networks for **80+ days** without ever waking the Linux SoC.
 

@@ -15,7 +15,7 @@ SolarDeck is a sovereign, general-purpose open-hardware computing platform desig
    * **Built-in Primary Off-Grid LoRa Mesh:** Semtech SX1262 LoRa (868/915 MHz) wired directly to RP2350 SPI for 80+ day low-power Meshtastic repeating & zero-watt E-Ink pager mode
    * **Built-in Near Field Communication (13.56 MHz NFC):** Dedicated STMicroelectronics ST25R3916 / NXP PN7160 with top-bezel FPC loop antenna for YubiKey / FIDO2 hardware SSH/login, LUKS disk decryption, and tap-to-pair P2P mesh contact exchange
    * Worldwide Multi-Constellation Satellite Navigation (Integrated Qualcomm GNSS in Quectel EG25-G)
-   * Dual-brain ultra-low-power supervisor (RP2350B + 8MB PSRAM) with **2× TI TMUX1575 (8-channel) display bus isolation** for 4.5 mW 30ms Zen reading, 24/7 LoRa mesh repeating, and 300+ day desk clock modes
+   * Dual-brain ultra-low-power supervisor (RP2350B + 8MB PSRAM) with **2× TI TMUX1575 (4-channel each, 8 total) display bus isolation** for 4.5 mW 30ms Zen reading, 24/7 LoRa mesh repeating, and 300+ day desk clock modes
    * 12MP Sony IMX708 PDAF Macro rear camera for Claude Code multimodal inspection, PCB loupe, document OCR, and celestial plate-solving navigation
    * Top-bezel **IP67 Bulkhead SMA female connector** for tactical tuned LoRa whip, plus internal Taoglas FXUB63 2×2 MIMO cellular antennas
    * **Core Internal Tactical Sensor Cluster:** High-precision DS3231 RTC, Bosch BMI270 + BMM350 9-DOF IMU (compass & Stellarium), Bosch BMP390 Barometer (10cm altimeter & weather storm barograph), VEML7700 / Solar ADC ambient light sensor, and low-noise PDM digital microphone (Whisper voice-to-text tactical PTT memos)

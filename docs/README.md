@@ -15,8 +15,10 @@ Written 2026-10-20 04:13 UTC in the Pi harness by openrouter/deepseek/deepseek-v
 | 3 | `HARDWARE_SPEC.md` | Carrier board, buses, pinouts, RF, power |
 | 4 | `SOFTWARE_SPEC.md` | Kernel, E-Ink pipeline, power profiles, daemons |
 | 5 | `MECHANICAL_FIT_AND_ENCLOSURE_WORKFLOW.md` | XY/Z budgets, tolerances, the actual enclosure |
+| 6a | `REGULATORY.md` | Certification matrix — **no certificate, no ship** |
+| 6b | `ARCHIVAL_BUILD.md` | Toolchain survival, offline reproducible build |
 | 6 | `HARDWARE_VERIFICATION_WORKFLOW.md` | What each verification phase proves, and what it does not |
-| 7 | `BOM_COST_ESTIMATE.md` | $383.30-$408.30 across 61 line items, supplier sourcing |
+| 7 | `BOM_COST_ESTIMATE.md` | $385.40-$410.40 across 61 line items, supplier sourcing |
 | 7b | `LONGEVITY_30Y.md` | The 30-year failure budget, service kit, maintenance schedule, gates G7-G10 |
 | 8 | `OFFGRID_TACTICAL_SENSORS.md` | Field/maritime/foraging sensing, 7 Hotpacks, daemon catalog |
 | 9 | `STANDOUT_FEATURES.md` | The 6 product pillars and 7 feature chapters |

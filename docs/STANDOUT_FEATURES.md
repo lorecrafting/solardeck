@@ -55,7 +55,7 @@ SolarDeck destroys this friction. When resting on a desk or shelf, it operates a
 ```
 
 ### Engineering Rules to Enforce:
-1. **Zero Bus Contention:** The **Texas Instruments TMUX1575** 8-channel bus switch guarantees that when the RP2350 owns the display bus during Zen reading, all CM4 display pins are galvanically isolated with zero parasitic back-powering ($I_{\text{off}}$).
+1. **Zero Bus Contention:** The **2× Texas Instruments TMUX1575** bus switch pair (4 channels each, 8 total) guarantees that when the RP2350 owns the display bus during Zen reading, all CM4 display pins are galvanically isolated with zero parasitic back-powering ($I_{\text{off}}$).
 2. **Deterministic Wake Pins:** Keyboard keystroke IRQ (via USB-C or BLE), Wacom `PEN_PROX_INT`, BMA400 tap detection, and the 5-way navigation rocker are hardwired directly to RP2350 edge-triggered interrupt pins (GPIO 10–13), guaranteeing sub-microsecond interrupt capture.
 3. **No Bootloader Delays:** In S2idle suspend, RAM remains refreshed at 15 mW. In cold hibernate, an immutable Linux kernel image with `initramfs` resides on high-speed eMMC with all non-essential systemd services disabled.
 

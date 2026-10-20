@@ -69,6 +69,32 @@ def check_docs(err):
             err(f"HARDWARE_SPEC.md does not state: {why}")
 
 
+SUPERSEDED = [
+    (r"compressed 30\s*%", "superseded gasket compression 30% still present (ADR-022 says 27%)"),
+    (r"0[.]25\s*N[·.]m", "superseded fastener torque 0.25 N.m still present (ADR-022 says 0.45)"),
+    (r"24\s*fps|24\s*FPS", "superseded 24 fps claim still present (ADR-005/018: 6 fps honest)"),
+    (r"8-channel TMUX1575|TMUX1575.*8-channel", "superseded 8-channel TMUX1575 claim (ADR-004: 2 devices)"),
+]
+
+
+def check_superseded(err):
+    """Phase 10/13 assert a value is PRESENT. This asserts the replaced value is ABSENT.
+
+    ADR-022 recorded 27% compression; the prose kept saying 30% for a whole round because a presence
+    check cannot see a leftover. Every reversal needs both halves. Lines that cite an ADR, or say
+    "earlier"/"superseded"/"removed", are historical discussion and are allowed.
+    """
+    for rel in ("docs/HARDWARE_SPEC.md", "docs/SOFTWARE_SPEC.md", "docs/MVP_ARCHITECTURE.md",
+                "docs/STANDOUT_FEATURES.md", "README.md"):
+        for lineno, line in enumerate(read(rel).split("\n"), 1):
+            if re.search(r"ADR-0\d\d|earlier|superseded|removed|no longer", line, re.I):
+                continue
+            for pat, why in SUPERSEDED:
+                if re.search(pat, line):
+                    err(f"{rel}:{lineno}: {why}")
+                    break
+
+
 def check_bom(err):
     bom = read("docs/BOM_COST_ESTIMATE.md")
     must = [
@@ -130,6 +156,7 @@ def main():
     err = errors.append
     check_schema(err)
     check_docs(err)
+    check_superseded(err)
     check_bom(err)
     check_daemons(err)
     check_gates(err)

@@ -587,7 +587,7 @@ To guarantee true 0.000V electrical isolation and zero phantom leakage across al
    * All digital lines crossing between power tiers (UART to Quectel modem, UART to GPS, SPI to LoRa, and I2S to microphone) pass through Texas Instruments **TXU0104** or **SN74LVC1G125** buffers featuring **$I_{\text{off}}$ circuitry**.
    * When either $V_{CCA}$ or $V_{CCB}$ is 0V, the device automatically forces all I/O lines into a high-impedance (Hi-Z) state, guaranteeing leakage current **$I_{\text{leak}} < 1\text{ µA}$**.
 3. **Display Bus Multiplexer Isolation (TMUX1575):**
-   * The high-speed SPI bus to the IT8951 controller is isolated by the TI TMUX1575 8-channel switch. Its fail-safe inputs tolerate up to 5.5V independent of supply voltage, completely preventing display signals from back-powering the CM4 in deep sleep.
+   * The high-speed SPI bus to the IT8951 controller is isolated by **2× TI TMUX1575** (4 channels each, 8 total — ADR-004). Its fail-safe inputs tolerate up to 5.5V independent of supply voltage, completely preventing display signals from back-powering the CM4 in deep sleep.
 4. **Physical Line-Breaker for Microphone & Cameras:**
    * The physical airgap switch cuts `VDD_MIC`, shunts `I2S_CLK` and `I2S_DATA` to GND, and disables the camera load switches, cutting `VCC_CAM_FRONT` and `VCC_CAM_REAR` to 0.000V.
 
@@ -847,6 +847,34 @@ The base configuration ships the 0.15 W IXYS SM141K06L bezel strip priced in `BO
 ### 2.29 **[OPTIONAL ACCESSORY — separate BOM block]** Snap-On MagSafe 7.1W "Solar Armor" Backplate & Remote Shade Tether (`SOLAR-ARMOR-V1`)
 *Written 2026-10-19 16:10 UTC in the Pi harness by antigravity/gemini-3.8-flash*
 
+#### Energy budget — stated assumptions (the numbers below are derived, not asserted)
+
+Every endurance claim in this repo depends on three assumptions. They are stated here so a reader can
+recheck them, and `scripts/check_cost_and_power.py` (CI Phase 14) recomputes both claims from
+`docs/spec_values.json` → `power`:
+
+| Assumption | Value | Basis |
+| :--- | :--- | :--- |
+| Peak insolation | **4.28 kWh/m²/day** | Hawaii-typical annual average, horizontal panel |
+| Combined panel + MPPT + orientation derate | **70 %** | BQ25504 FOCV efficiency, flat-mount cosine loss |
+| RP2350 always-on idle (RTC + ADC + LoRa listen) | **4.5 mW** | `SOFTWARE_SPEC.md` §6 power tiers |
+
+| Claim | Derivation | Result |
+| :--- | :--- | :--- |
+| Bezel strip sustains the ambient station forever | 0.15 W × 4.28 × 0.70 = **0.45 Wh/day** vs 4.5 mW × 24 h = **0.108 Wh/day** | **4.2× margin** — claim holds |
+| LoRa repeater lasts 80+ days | 32 Wh ÷ (12–15 mW × 24 h) | **89–111 days** — claim holds |
+
+Two limits this makes explicit:
+
+1. **Harvested energy charges the pack, not the rails.** The TPS25750 PD path and the TPS61088 (SMA
+   inputs) push energy into the battery; at peak the CM4 draws 2.2 A on 5 V against a 1.7–1.8 A
+   remaining budget. So "runs on sunlight" (true, via the pack) and "runs while charging from sunlight
+   at full load" (false) are different claims.
+2. **The CSV 7.6 Wh cell does not inherit any endurance claim.** At exploration duty it is 18–23 h;
+   the 32 Wh pack is what every multi-day figure refers to.
+
+---
+
 To achieve massive off-grid energy generation without permanently burdening the tablet with weight, bulk, or solar heat conduction:
 
 ```
@@ -1015,7 +1043,7 @@ To ensure reliable, error-free operation in pitch darkness, under strict militar
 └─────────────────────────────────────────────────────────────┘
 ```
 
-1. **Waterproofing Seams:** Continuous perimeter channel with 1.5 mm hollow-core silicone gasket, compressed 30% by 12 stainless steel M2.5 Torx screws.
+1. **Waterproofing Seams:** Continuous perimeter channel with 1.5 mm hollow-core VMQ silicone gasket, compressed **27 %** (see `spec_values.longevity.gasket_compression_pct`) by 12 stainless steel M2.5 Torx screws at **0.45 N·m** with low-strength threadlocker.
 2. **Glass Bonding:** Front glass is recessed 1 mm below an aluminum lip and bonded from behind with 3M 5952 VHB tape.
 3. **Pressure Equalization:** A **Gore-Tex ePTFE vent plug** on the bottom plate allows internal air pressure to equalize during temperature swings (preventing vacuum moisture suction) while blocking 100% of liquid water and humidity.
 4. **Drop Armor:** 85A durometer TPU rubber bumpers permanently molded around all four corners to absorb 4-foot drops onto concrete or rock.
@@ -1452,7 +1480,7 @@ six items below are constraints from `docs/spec_values.json` → `longevity`, au
    * At ~1 insertion/day for 30 years the device needs 11,000 cycles, against a 10,000-cycle rating.
      The requirement is raised to 20,000 so the port is not the first thing to fail.
 5. **One Torque, One Threadlocker, Two Screw Types:**
-   * The same joint was specified at 0.45 N·m in §7.4.1 and 0.25 N·m in earlier drafts. `longevity`
+   * The same joint was specified at two torques in earlier drafts; ADR-022 fixes it at 0.45 N·m. `longevity`
      now holds 0.45 N·m as the single source. Low-strength threadlocker on the 12 perimeter screws keeps
      a vibration environment from backing them out without welding them shut.
 6. **Service Records Instead of Folklore:**
