@@ -2,7 +2,7 @@
 
 Written 2026-10-18 17:31 UTC in the Pi harness by antigravity/gemini-3.8-flash
 
-Comprehensive bill of materials, component part numbers, verified suppliers, and turnkey manufacturing cost projections for the core tablet, the parallel SnapDeck keyboard, and the modular RF backpack.
+Comprehensive bill of materials, component part numbers, verified suppliers, and turnkey manufacturing cost projections for the core tablet and the modular RF backpack. The SnapDeck keyboard is an optional Phase 2 accessory (§2), not part of the V1 BOM.
 
 ---
 
@@ -13,7 +13,7 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **Compute** | Raspberry Pi Compute Module 4 (8GB RAM, 32GB eMMC, Wi-Fi) | DigiKey / Newark / PiShop | CM4108032 (or 4GB CM4104032 @ $55) | $75.00 |
 | **Co-Processor** | Dual Cortex-M33 / RISC-V Microcontroller (Power Master) | DigiKey / Mouser / LCSC | Raspberry Pi RP2350B | $1.25 |
 | **Co-Proc PSRAM** | 8MB Ultra-Low-Power QSPI PSRAM (Page Double-Buffer) | Mouser / LCSC | APMemory APS6404L-3SQR-SN | $0.75 |
-| **Bus Multiplexer**| High-Speed 8-Channel SPDT Display Bus Isolator / Switch | Texas Instruments / Mouser | TMUX1575PWR | $0.55 |
+| **Bus Multiplexer**| High-Speed 8-Channel SPDT Display Bus Isolator / Switch | Texas Instruments / Mouser | TMUX1575YCJR (x2) | $0.55 |
 | **Display Panel** | 10.3" E-Ink Kaleido 3 / Kaleido 4 (Color) + Capacitive Touch + Wacom EMR | Waveshare / Good-Display / Linshu | ED103TC2 / Kaleido 4 (227 PPI) | $95.00 – $120.00 |
 | **EMR Shielding** | 0.1mm High-Permeability Mu-Metal / Ferrite Flux Absorber Sheet | 3M / Wurth / AliExpress | Custom Die-Cut Shield Foil | $1.80 |
 | **Controller** | High-Speed EPDC Display Controller (32MHz Fast SPI Engine) | ITE Tech / Waveshare | IT8951 / IT8961 | $14.50 |
@@ -71,7 +71,7 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **Airgap Switch** | Sub-Miniature 2-Position Gold Contact Slide Switch | C&K / E-Switch / LCSC | JS202011CQN | $0.45 |
 | **GORE Vent** | ePTFE Pressure Equalization Vent Plug | W. L. Gore / Amphenol | PMF100396 | $1.50 |
 | **Enclosure (PA12)**| SLS 3D-Printed PA12 Nylon Shell + 85A TPU Corner Bumpers | JLC3D / Craftcloud | Custom CAD Housing (Streamlined)| $25.00 |
-| **Total Core BOM**| **(Mathematically Verified Sum of 61 Core Line Items)** | | | **$388.85 – $413.85** |
+| **Total Core BOM**| **(Sum of 61 Core Line Items — of which 20 are captured in the schematic so far, see docs/AUDIT_2026-10-20.md)** | | | **$388.85 – $413.85** |
 
 *(Note: Specifying the 4GB RAM CM4 base configuration reduces the Total Core BOM to **$368.85 – $393.85**).*
 

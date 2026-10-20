@@ -7,15 +7,15 @@
 $fn = 60;
 
 // Core Chassis Dimensions (Locked V1 Spec)
-CHASSIS_WIDTH  = 227.0; // mm (X)
-CHASSIS_HEIGHT = 165.0; // mm (Y)
-CHASSIS_DEPTH  = 9.8;   // mm (Z)
+CHASSIS_WIDTH  = 232.0; // mm (X)
+CHASSIS_HEIGHT = 170.0; // mm (Y)
+CHASSIS_DEPTH  = 14.0;  // mm (Z)
 WALL_THICKNESS = 2.0;   // mm
 CORNER_RADIUS  = 6.0;   // mm (85A TPU bumper contour)
 
 // Display Window (10.3" E-Ink Kaleido 3 / Carta 1200)
-DISPLAY_ACTIVE_W = 209.0;
-DISPLAY_ACTIVE_H = 157.0;
+DISPLAY_ACTIVE_W = 210.0;
+DISPLAY_ACTIVE_H = 157.5;
 DISPLAY_LIP_DEPTH = 1.5;
 
 // Solar Bezel Strip Recess (IXYS SM141K06L)

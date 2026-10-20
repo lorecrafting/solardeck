@@ -125,6 +125,30 @@ Before inserting the CM4, initialize the RP2350B co-processor to confirm power s
 
 ---
 
+### 5b. S2idle Gate (the 15 mW / 0.3 s pillar rests on this)
+
+The 300-day desk clock and the 0.3 s instant wake both assume the CM4 can actually enter `s2idle`.
+On BCM2711 this is board-firmware and kernel-version dependent, and nothing in CI measures it.
+Run this gate before accepting the power claims:
+
+```bash
+cat /sys/power/state                    # must contain "freeze"
+grep -c . /sys/power/suspend_stats/success
+sudo rtcwake -m freeze -s 10            # measure the round trip
+cat /sys/power/suspend_stats/last_failed_dev   # empty means no device vetoed it
+```
+
+* **Pass:** `freeze` present, `success` increments by 1, wall time 10 s ± 0.5 s, and a measured
+  current draw (USB-C PD meter or INA3221 telemetry) **< 25 mW** with radios gated.
+* **If it fails:** record the kernel version and the firmware commit in this checklist, downgrade
+  the pillar to `modelled` in `README.md`, and re-scope the runtime arithmetic in
+  `MVP_ARCHITECTURE.md`. Do not ship a marketing number for a suspend state the board does not enter.
+* **Replace the constant:** the <300 ms wake figure is currently a hardcoded constant in
+  `firmware/rp2350/src/solardeck_sm.c`. Once measured, put the real number in `docs/spec_values.json`
+  and assert against that.
+
+---
+
 ## 6. Wacom Stylus & Touch Calibration
 
 1. **Stylus Hover & Pressure:**

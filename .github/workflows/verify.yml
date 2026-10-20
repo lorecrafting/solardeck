@@ -8,7 +8,7 @@ on:
 
 jobs:
   verify:
-    name: 7-Phase System Verification
+    name: 11-Phase System Verification
     runs-on: ubuntu-latest
 
     steps:
@@ -25,6 +25,22 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y gcc make
 
+      - name: Install KiCad CLI (ERC / DRC)
+        run: |
+          sudo apt-get install -y --no-install-recommends kicad || echo "kicad unavailable; Phase 1b/1c will report SKIP"
+
       - name: Run Master Verification Suite
         run: |
           python3 scripts/verify_all.py
+
+      - name: Regenerate production bundles (must be reproducible, not committed)
+        run: |
+          python3 hardware/export_production_zip.py
+          python3 scripts/verify_all.py
+
+      - name: Upload production bundles
+        uses: actions/upload-artifact@v4
+        with:
+          name: solardeck-production
+          path: hardware/production/*.zip
+          if-no-files-found: warn

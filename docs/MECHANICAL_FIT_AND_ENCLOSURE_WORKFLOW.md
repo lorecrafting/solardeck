@@ -75,30 +75,46 @@ In KiCad 8 PCB Editor (`hardware/solardeck-carrier.kicad_pcb`):
 Import all solid bodies into your mechanical CAD suite (Fusion 360, SolidWorks, or Onshape).
 
 ### 4.1 XY Perimeter Clearance (+0.4mm)
-* **The Physics:** Electrophoretic display glass is $0.78\,\text{mm}$ thin and brittle. Direct contact with aluminum walls during drop impacts or chassis flex will crack the glass substrate.
-* **The Constraint:** The enclosure display pocket must have a **$+0.40\,\text{mm}$ to $+0.50\,\text{mm}$ XY perimeter offset** ($228.5\,\text{mm} \times 166.6\,\text{mm}$ pocket for $227.7\,\text{mm} \times 165.8\,\text{mm}$ glass).
-* **Shock Gasket:** A die-cut **$0.30\,\text{mm}$ Poron foam gasket** sits between the glass perimeter and chassis wall to absorb shock and thermal expansion.
 
-### 4.2 Z-Stackup Budget (12.55mm Target)
-The vertical layer stack is calculated to ensure zero rattling and zero pinch pressure on the glass:
+* **The Physics:** Electrophoretic display glass is $0.78\,\text{mm}$ thin and brittle. Direct contact with aluminum walls during drop impacts or chassis flex will crack the glass substrate.
+* **The Constraint:** The panel module outline (glass plus its bonded driver border) is $227.7 \times 165.8\,\text{mm}$; the active area is $209.664 \times 157.248\,\text{mm}$.
+* **The Enclosure:** the pocket is $228.5 \times 166.6\,\text{mm}$ ($+0.40\,\text{mm}$ per side over the glass), inside a **$232.0 \times 170.0\,\text{mm}$** chassis, giving **2.15 mm** of wall per side. The $180^\circ$ FPC tail exits through a filleted midframe slot rather than adding to the outline.
+* **Superseded:** the earlier $227.0 \times 165.0\,\text{mm}$ chassis was *smaller than the glass it has to contain* by 0.7 mm (ADR-008).
+* **Shock Gasket:** a die-cut **$0.30\,\text{mm}$ Poron foam gasket** sits between the glass perimeter and the chassis wall to absorb shock and thermal expansion.
+
+### 4.2 Z-Stackup Budget (14.0mm Chassis, 12.5mm Cavity)
+
+Two vertical branches share the cavity. The limit is the **battery branch**, not the compute branch:
 
 ```
 ┌─────────────────────────────────────────────────────────┬───────────┐
-│ MECHANICAL LAYER                                        │ THICKNESS │
+│ BRANCH A — DISPLAY + COMPUTE                            │ THICKNESS │
 ├─────────────────────────────────────────────────────────┼───────────┤
-│ 1. Front Bezel Lip & Protective Anti-Glare PMMA / Glass │  1.10 mm  │
-│ 2. Optically Clear Adhesive (OCA)                       │  0.15 mm  │
-│ 3. 10.3" E-Ink Panel + Wacom EMR Sensor Foil            │  1.10 mm  │
-│ 4. Die-Cut Poron Foam Shock Gasket                      │  0.30 mm  │
-│ 5. CNC Aluminum Internal Midframe (Structural & Heatsink│  1.00 mm  │
-│ 6. Main Carrier PCB (4-layer ENIG)                      │  1.20 mm  │
-│ 7. Hirose DF40 Standoff Mating Gap                      │  1.50 mm  │
-│ 8. Raspberry Pi Compute Module 4 (CM4 with RF Shield)   │  4.70 mm  │
-│ 9. Rear Unibody Enclosure Wall (CNC 6061-T6 / PA12)     │  1.50 mm  │
+│ 1. Front Bezel Lip & Anti-Glare PMMA / Glass             │  1.10 mm  │
+│ 2. Optically Clear Adhesive (OCA)                        │  0.15 mm  │
+│ 3. 10.3" E-Ink Panel + Wacom EMR Sensor Foil             │  1.10 mm  │
+│ 4. Die-Cut Poron Foam Shock Gasket                       │  0.30 mm  │
+│ 5. CNC Aluminum Internal Midframe (Structural/Heatsink)  │  1.00 mm  │
+│ 6. Hirose DF40 Standoff Mating Gap                       │  1.50 mm  │
+│ 7. Raspberry Pi Compute Module 4 (CM4 with RF Shield)    │  4.70 mm  │
+│    Branch A total (compute side, above the PCB)          │  9.85 mm  │
 ├─────────────────────────────────────────────────────────┼───────────┤
-│ TOTAL NOMINAL DEVICE THICKNESS                          │ 12.55 mm  │
+│ BRANCH B — DISPLAY + BATTERY (the binding constraint)   │ THICKNESS │
+├─────────────────────────────────────────────────────────┼───────────┤
+│ 1-4. Display glass stack (as above)                      │  2.65 mm  │
+│ 5. Main Carrier PCB (6-layer ENIG)                       │  1.20 mm  │
+│ 6. LiFePO4 flat pouch cell (142 x 90 x 8.5mm, 32 Wh)     │  8.50 mm  │
+│    Branch B total (cavity requirement)                   │ 12.35 mm  │
+├─────────────────────────────────────────────────────────┼───────────┤
+│ 7. Rear Unibody Enclosure Wall (CNC 6061-T6 / PA12)      │  1.50 mm  │
+├─────────────────────────────────────────────────────────┼───────────┤
+│ TOTAL OVERALL THICKNESS (2.65+1.20+8.50+1.50 + 0.15 tol) │ 14.00 mm  │
 └─────────────────────────────────────────────────────────┴───────────┘
 ```
+
+The CM4 sits *beside* the cell, not on top of it: a 142 x 90 mm pouch occupies the lower-left of the cavity and the CM4 + DF40 stack occupies the upper-right, sharing the same 2.65 mm display stack above them. The cavity is 12.5 mm so the 12.35 mm battery branch clears with a 0.15 mm tolerance.
+
+**Why not thinner:** 32 Wh of LiFePO4 needs ~8.5 mm of cell. A 5.0 mm cell caps the pack at roughly 18 Wh. `docs/90-history/decisions.md` ADR-009 records the trade: V1 keeps 32 Wh at 14.0 mm and 620 g; a 10.5 mm / 18 Wh "thin" variant is a deferred SKU, not a free change.
 
 ### 4.3 FPC Ribbon Bend Radius & Relief Slot
 * The ribbon cable must bend $180^\circ$ around the internal midframe to reach the carrier PCB ZIF connector on the reverse side.

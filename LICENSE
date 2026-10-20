@@ -1,0 +1,16 @@
+SolarDeck is dual-licensed by artifact type.
+
+  Hardware  (hardware/, docs/mechanical content, enclosure CAD)  ->  CERN-OHL-S-2.0
+  Software  (firmware/, src/, tools/, scripts/, config/, docs code)  ->  MIT
+
+Full texts live in LICENSES/. Where a file's category is ambiguous, the license of the directory
+above it applies (see LICENSES/PATHS.md).
+
+Copyright (c) 2026 the SolarDeck contributors.
+
+CERN-OHL-S-2.0 is a strongly reciprocal open-hardware license: you may build, modify and sell
+SolarDeck hardware, but modified designs must be published under the same terms, and the source of
+the design must be made available. If you need different terms, ask.
+
+MIT is a permissive software license: use it, ship it, sell it, keep your changes private, just keep
+the copyright notice.

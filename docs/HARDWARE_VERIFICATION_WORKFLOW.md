@@ -134,6 +134,6 @@ Before releasing purchase orders or fab files, all boxes must be checked:
 - [x] **KiCad Schematics:** All 5 hierarchical sheets structurally verified (`hardware/verify_schematics.py`).
 - [x] **Firmware Logic:** RP2350 host tests pass with $\Delta t_{\text{wake}} < 300\text{ ms}$ (`test_rp2350_sm`).
 - [x] **Cadence Daemon:** Anti-ghosting lockout and scrub verified (`test_refreshd`).
-- [x] **Chassis Fit:** OpenSCAD envelope verified for 227 × 165 × 9.8 mm (`verify_enclosure.py`).
+* [x] **Chassis Fit:** OpenSCAD envelope verified against `docs/spec_values.json` (232 × 170 × 14.0 mm, 12.5 mm cavity) by `verify_enclosure.py`.
 - [ ] **Physical PCB Layout:** 6-layer routing completed and DRC clean.
 - [ ] **BOM / CPL Alignment:** Turnkey Pick-and-Place centroid file matches BOM LCSC part numbers 1:1.

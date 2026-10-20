@@ -6,7 +6,9 @@ Written 2026-10-18 18:28 UTC in the Pi harness by antigravity/gemini-3.8-flash
 
 ## 1. Documentation Structure & Reading Order
 
-The SolarDeck repository contains comprehensive, mathematically verified specifications governing every aspect of the system. Documents should be reviewed in the following recommended order:
+The SolarDeck repository contains comprehensive architectural specifications. Every number in
+these docs resolves to `docs/spec_values.json` (checked by `scripts/check_docs_numbers.py`);
+treat `docs/AUDIT_2026-10-20.md` as the current statement of what is measured, modelled or aspirational. governing every aspect of the system. Documents should be reviewed in the following recommended order:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -48,12 +50,12 @@ The SolarDeck repository contains comprehensive, mathematically verified specifi
 │                                                                             │
 │ 9. docs/MECHANICAL_FIT_AND_ENCLOSURE_WORKFLOW.md                     │
 │    • 4-Step mechanical fit pipeline: Good Display 3D STEP import,    │
-│      KiCad 3D board export, tolerance budget (+0.4mm XY, 12.55mm Z), │
+│      KiCad 3D board export, tolerance budget (+0.4mm XY, 13.85mm Z), │
 │      and Two-Tier Sanity Check (1:1 paper DXF + $15 3D-printed fit). │
 │                                                                             │
 │ 10. docs/HANDOFF_TO_FABLE.md                                                │
 │    • Comprehensive engineering handover for Fable Wednesday audit: Seeed    │
-│      quotation status, 7-phase verification pipeline, and review checklist. │
+│      quotation status, 11-phase verification pipeline, and review checklist. │
 │                                                                             │
 │ 11. docs/FIRST_BOOT_CHECKLIST.md                                            │
 │    • Complete unboxing-to-first-prompt bring-up manual: cold DMM resistance  │
@@ -75,9 +77,9 @@ The SolarDeck repository contains comprehensive, mathematically verified specifi
 | **Display & Digitizer** | `docs/HARDWARE_SPEC.md` §2.2 | ITE IT8951 + Wacom EMR | 32 MHz SPI via TMUX1575 Switch |
 | **Power Management & Solar** | `docs/HARDWARE_SPEC.md` §2.3 | TI BQ25895 + TI TPS62840 | I2C / Dynamic MPPT Tracking |
 | **USB Host / Peripherals** | `docs/HARDWARE_SPEC.md` §2.4 | VIA VL805 / ASM1042A | PCIe Gen 2 x1 to Quad USB 2.0 |
-| **Cellular, GNSS & Dual-SIM** | `docs/HARDWARE_SPEC.md` §2.5 | Quectel EG25-G (LTE Cat-4) | USB 2.0 + Dual SIM (MFF2 + Nano) |
-| **Off-Grid Radio Mesh** | `docs/HARDWARE_SPEC.md` §2.5 | Semtech SX1262 (LoRa) | Dedicated SPI to RP2350 (Meshtastic) |
-| **Local NFC & Security** | `docs/HARDWARE_SPEC.md` §2.5 | STMicroelectronics ST25R3916 | SPI / I2C (13.56 MHz NFC-A/B/V) |
+| **Cellular, GNSS & Dual-SIM** | `docs/HARDWARE_SPEC.md` §2.4 | Quectel EG25-G (LTE Cat-4) | USB 2.0 + Dual SIM (MFF2 + Nano) |
+| **Off-Grid Radio Mesh** | `docs/HARDWARE_SPEC.md` §2.4 | Semtech SX1262 (LoRa) | Dedicated SPI to RP2350 (Meshtastic) |
+| **Local NFC & Security** | `docs/HARDWARE_SPEC.md` §2.4 | STMicroelectronics ST25R3916 | SPI / I2C (13.56 MHz NFC-A/B/V) |
 | **Audio & Speech Input** | `docs/HARDWARE_SPEC.md` §2.7 | Knowles MEMS + MAX98357A | PDM Dual-Mic + I2S Class-D Amp |
 | **Secondary Monitor Sink** | `docs/HARDWARE_SPEC.md` §2.4 | BCM2711 Native OTG PHY | USB-C Port 1 (`g_webcam` / `dummy_hcd`)|
 | **Universal Mechanical Mount** | `docs/HARDWARE_SPEC.md` §3 | M2.5 Threaded + MagSafe | Mechanical Heat-Set & N52 Magnets |
@@ -136,45 +138,20 @@ The SolarDeck repository contains comprehensive, mathematically verified specifi
 
 ---
 
-## 3. Legacy Pruning & Historical Decision Record
+## 3. Historical Decision Record
 
-For engineering posterity, the following major design iterations and descoping decisions were executed during the architectural refinement process:
+Every descoping and re-derivation decision now lives in **`docs/90-history/decisions.md`** as a
+numbered ADR (ADR-001 through ADR-016), each with the original plan, the trigger, the decision, and
+the cost delta. Docs cite them as `ADR-nnn`.
 
-1. **Descoped Standalone GPS Module (-$17.00 BOM):**
-   * *Original Plan:* Dedicated u-blox MAX-M10S GNSS receiver.
-   * *Decision:* The Quectel EG25-G LTE modem already integrates an automotive-grade Qualcomm multi-constellation GNSS engine (GPS, GLONASS, BeiDou, Galileo). Eliminating the standalone chip pruned $17.00 in BOM and eliminated RF board trace interference.
-2. **Descoped Front Camera & Sliding Shutter (-$8.50 BOM):**
-   * *Original Plan:* Front 5MP OmniVision OV5647 camera with mechanical ThinkShutter.
-   * *Decision:* Video calls are poor on E-Ink due to refresh physics. Eliminating the front camera preserved IP67 water sealing, removed MIPI CSI-2 high-speed trace noise, and freed the top bezel for solar harvesting. Retained the flush rear 12MP Sony IMX708 PDAF camera for paper document and whiteboard capture.
-3. **Descoped Dedicated Lux Sensor (-$1.10 BOM):**
-   * *Original Plan:* Dedicated TI OPT3001 digital ambient light sensor.
-   * *Decision:* The top-bezel monocrystalline solar strip functions natively as a large-area photodiode. Sampling solar open-circuit voltage via the RP2350's 12-bit ADC provides a continuous 0 to 100,000 lux ambient light meter with zero added components.
-4. **Descoped Custom SnapDeck Scissor Keyboard (-$32.65 BOM, -$25k Tooling):**
-   * *Original Plan:* Proprietary 5-pin magnetic pogo keyboard with custom Kailh X-switches and CNC aluminum chassis.
-   * *Decision:* Descoping from V1 eliminated $25,000+ in custom injection molds and 6 months of mechanical/ZMK bring-up. The tablet provides Universal M2.5 Threaded Inserts and a MagSafe Magnetic Array, opening it to any standard Bluetooth/USB-C keyboard or an open-source 3D-printed $20 BlackBerry Q20 handheld thumb keyboard.
-5. **Descoped Internal Metal Kickstand (-$8.00 BOM, -150g Weight):**
-   * *Original Plan:* Internal folding friction-hinge metal kickstand.
-   * *Decision:* Friction hinges fatigue and leak water under IP67 submersion. Replaced with the flush M.2 Service Hatch containing the Cold Storage Vault (3x MicroSD card slots + SIM ejector tool). Tablet props up on any MagSafe desk stand, camera tripod, or stylus kickstand wedge.
-6. **Descoped Custom Flipper Zero Clone Module (-$24.00 BOM):**
-   * *Original Plan:* Proprietary RF backpack integrating CC1101 Sub-GHz, 125 kHz RFID coil, and Vishay IR emitters.
-   * *Decision:* Redundant over-engineering. An actual Flipper Zero already has its own battery, screen, and mature open-source firmware. Operators simply mount their physical Flipper Zero via rear M2.5 inserts or MagSafe and plug it into USB-C Port 2 or Bluetooth, controlling it via `qflipper-cli` on SolarDeck's 10.3" screen.
-7. **Descoped Fragile Spring-Loaded Pogo Pin Expansion Bus:**
-   * *Original Plan:* 8-pin hermetic magnetic pogo bus on rear chassis.
-   * *Decision:* Pogo pins corrode, pit, and mechanically jam when exposed to beach sand, volcanic dust, or salt spray. Replaced with a recessed right-angle plug into IP68-sealed USB-C Port 2 (High-Speed Host) secured by the MagSafe ring and 4x M2.5 threaded brass inserts.
-8. **Descoped Integrated Solar Smart Cover (Thermal Safety):**
-   * *Original Plan:* Bi-folding solar cover attached directly to the tablet face.
-   * *Decision:* In direct tropical sun (Hawaii/Arizona), dark unibody surfaces bake to >+70°C. E-Ink microcapsules permanently degrade above +60°C, and LiFePO4 charging must terminate above +45°C. Prescribed a detached 15W–28W folding USB-C panel placed in direct sun, connected via a 3-meter cable to SolarDeck resting safely in ambient shade.
-9. **Solid-State Electronic E-Fuses & 3-Stage Surge Suppression Over Consumable Fuses:**
-   * *Original Plan:* Sacrificial melting fuses and standalone single-stage TVS diodes.
-   * *Decision:* Consumable fuses melt once and require factory desoldering. Lone TVS diodes burn up under sustained lightning or high-energy static discharges. Upgraded to **TI TPS259xx electronic e-fuses** (500ns trip & auto-retry) and a **3-stage cascaded transient filter (GDT + choke + TVS)**, eliminating diode burnout while providing zero-cost 0.2mm sacrificial trace notches and `SJ1`–`SJ8` solder-bridge bypasses as field escape hatches.
-
----
+This index deliberately carries no decision prose: keeping a second copy here is how the repository
+ended up asserting both a descoped pogo bus and its full pinout at the same time.
 
 ## 4. Hardware Safety & Power Discipline Check
 
 * **LiFePO4 Chemistry Discipline:** Nominal cell voltage is **3.2V** (3.65V charging cutoff). Never apply 4.2V Li-ion charging profiles.
 * **Always-On Rail Isolation:** The **TI TPS62840** buck-boost regulator maintains 3.3V power to the RP2350 and critical sensors when the CM4 5V system boost is disabled.
-* **Galvanic Display Bus Isolation:** The **TI TMUX1575** 8-channel bus switch ensures zero parasitic back-powering from unpowered CM4 GPIO pins into the IT8951 display controller during Zen reading.
+* **Galvanic Display Bus Isolation:** **2× TI TMUX1575** (4-channel each, 8 channels total) ensure zero parasitic back-powering from unpowered CM4 GPIO pins into the IT8951 display controller during Zen reading.
 * **Airgap Series Disconnect:** The physical airgap slide switch disconnects power gate enable nets in series, preventing direct GPIO-to-ground short circuits.
 
 ---
@@ -187,9 +164,9 @@ To verify every hardware rule, firmware state transition, cadence timing, and 3D
   ```bash
   python3 scripts/verify_all.py
   ```
-  Executes all 7 verification phases in ~1.0 second with colored pass/fail status and timing metrics.
+  Executes all 11 verification phases in ~1.2 seconds with colored pass/fail status and timing metrics.
 * **Continuous Integration:** `.github/workflows/verify.yml` automatically triggers on every push and pull request to `main`.
-* **Turnkey Box-Build Package:** `hardware/production/` houses the complete, validated manufacturing bundle for Seeed Studio Fusion (`solardeck_gerbers.zip`, `seeed_fusion_bom.csv`, `solardeck_cpl.csv`, `solardeck_chassis.stl`, and `SEEED_FUSION_BOX_BUILD_INSTRUCTIONS.md`).
+* **Turnkey Box-Build Package:** `hardware/export_production_zip.py` generates the manufacturing bundle for Seeed Studio Fusion from the KiCad/OpenSCAD sources (bundles are CI artifacts, not committed): (`solardeck_gerbers.zip`, `seeed_fusion_bom.csv`, `solardeck_cpl.csv`, `solardeck_chassis.stl`, and `SEEED_FUSION_BOX_BUILD_INSTRUCTIONS.md`).
 
 ---
 

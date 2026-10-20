@@ -15,13 +15,13 @@ SolarDeck is a sovereign, general-purpose open-hardware computing platform desig
    * **Built-in Primary Off-Grid LoRa Mesh:** Semtech SX1262 LoRa (868/915 MHz) wired directly to RP2350 SPI for 80+ day low-power Meshtastic repeating & zero-watt E-Ink pager mode
    * **Built-in Near Field Communication (13.56 MHz NFC):** Dedicated STMicroelectronics ST25R3916 / NXP PN7160 with top-bezel FPC loop antenna for YubiKey / FIDO2 hardware SSH/login, LUKS disk decryption, and tap-to-pair P2P mesh contact exchange
    * Worldwide Multi-Constellation Satellite Navigation (Integrated Qualcomm GNSS in Quectel EG25-G)
-   * Dual-brain ultra-low-power supervisor (RP2350B + 8MB PSRAM) with **TI TMUX1575 8-channel display bus isolation** for 4.5 mW 30ms Zen reading, 24/7 LoRa mesh repeating, and 300+ day desk clock modes
+   * Dual-brain ultra-low-power supervisor (RP2350B + 8MB PSRAM) with **2× TI TMUX1575 (8-channel) display bus isolation** for 4.5 mW 30ms Zen reading, 24/7 LoRa mesh repeating, and 300+ day desk clock modes
    * 12MP Sony IMX708 PDAF Macro rear camera for Claude Code multimodal inspection, PCB loupe, document OCR, and celestial plate-solving navigation
    * Top-bezel **IP67 Bulkhead SMA female connector** for tactical tuned LoRa whip, plus internal Taoglas FXUB63 2×2 MIMO cellular antennas
    * **Core Internal Tactical Sensor Cluster:** High-precision DS3231 RTC, Bosch BMI270 + BMM350 9-DOF IMU (compass & Stellarium), Bosch BMP390 Barometer (10cm altimeter & weather storm barograph), VEML7700 / Solar ADC ambient light sensor, and low-noise PDM digital microphone (Whisper voice-to-text tactical PTT memos)
    * High-capacity **8,000–10,000 mAh (26–32 Wh LiFePO4 / 30–37 Wh Li-ion)** battery (airline-compliant <100Wh)
    * Lightweight, rugged SLS 3D-printed PA12 Nylon enclosure or CNC 6061-T6 aluminum with RF window cap
-2. **Modular Expansion ("Hotpacks"):** Rather than building a clumsy, monolithic "kitchen-sink" backpack or replicating existing gadgets, specialized payloads are partitioned into **four focused, hot-swappable USB-C Hotpacks** connecting via USB-C Port 2 and rear MagSafe / M2.5 anchors (pure USB-C, no fragile pogo pins!):
+2. **Modular Expansion ("Hotpacks"):** Rather than building a clumsy, monolithic "kitchen-sink" backpack or replicating existing gadgets, specialized payloads are partitioned into **seven focused, hot-swappable USB-C Hotpacks** connecting via USB-C Port 2 and rear MagSafe / M2.5 anchors (pure USB-C, no fragile pogo pins!):
    * **Hotpack 1 (Doomsday Sky-Scan & SIGINT):** RTL-SDR v4 wideband tuner (500 kHz – 1.76 GHz) with dual top SMA ports and switched 137 MHz / 1090 MHz SAW filters for passive NOAA weather satellite cloud imaging (`satdump`) and live aircraft radar (`readsb`). 100% stealth passive reception.
    * **Hotpack 2 (Tactical Dual-Mesh & HF Shortwave Transceiver):** Secondary SX1262 LoRa transceiver (dedicated to **MeshCore / Reticulum** with its own SMA port, enabling concurrent dual-mesh operation with zero RF loss), QRP 5W HF shortwave digital text transceiver (JS8Call / FT8 on 40m/20m bands bouncing 500–2,000 miles off the ionosphere with BNC jack), and hardware APRS / AX.25 TNC via 3.5mm TRRS port.
    * **Hotpack 3 (CBRN & SAR Environmental):** PocketGeiger Type 5 / BG51 solid-state ionizing radiation dosimeter ($\mu\text{Sv/h}$ fallout graphing), FLIR Lepton 3.5 / InfiRay P2 radiometric thermal camera (sees through wildfire smoke and pitch darkness), and Sensirion SCD41 photoacoustic CO2 / toxic gas detector.
@@ -37,9 +37,9 @@ SolarDeck is a sovereign, general-purpose open-hardware computing platform desig
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 1. BRAIN:     Raspberry Pi CM4 (8GB RAM, 32GB eMMC, Wi-Fi/BT)               │
 │ 2. CO-PROC:   RP2350B (Cortex-M33/RISC-V) + 8MB PSRAM (300-Day Zen Reader)  │
-│ 3. DISPLAY BUS: Dual-Path MIPI-DSI (CM4 24 FPS Video) + TMUX1575 SPI (RP2350)│
+│ 3. DISPLAY BUS: IT8951 EPDC over SPI @32MHz + 2x TMUX1575 (RP2350 fallback) │
 │ 4. SCREEN:    10.3" E-Ink (Carta 1200 / Kaleido 3 / Kaleido 4, 227 PPI) + EMR│
-│ 5. CAMERAS:   12MP Sony IMX708 PDAF Macro Rear (Multimodal Claude Code / OCR)│
+│ 5. CAMERA:    12MP Sony IMX708 PDAF Macro Rear (Multimodal Claude Code / OCR)│
 │ 6. CELLULAR:  M.2 Quectel EG25-G LTE + Onboard Soldered MFF2 eSIM (ST4SIM)  │
 │ 7. MESH/GNSS: Built-In Semtech SX1262 LoRa (Meshtastic) + Qualcomm GNSS     │
 │ 8. NFC:       Built-In ST25R3916 13.56 MHz (YubiKey FIDO2 / LUKS / P2P Pair)│
@@ -88,13 +88,13 @@ To achieve maximum field battery life without an excessively heavy device:
 * **Tier 2: Perpetual LoRa Mesh Repeater (RP2350 @ 12–15 mW):** **80+ DAYS (2.6 Months)** of continuous off-grid packet hopping without waking Linux.
 * **Tier 3: Paper-Feel Scribe Slate (CM4 1-Core @ ~0.60W):** **58 Hours** continuous active writing (460+ hours study mode with S2idle).
 * **Tier 4: Adaptive Mixed Workstation (Web/Discord/Claude @ ~1.40W avg):** **25 Hours** continuous screen-on time (3 to 6 real-world days).
-* **Tier 5: Video Teleconference Mode (Front Cam + Mic + H.264 @ ~2.10W):** **16.5 Hours** of continuous client video calls.
-* **Tier 5b: V1 Cinema Video Playback Mode (24 FPS MIPI-DSI @ ~2.80W–3.40W):** **10 to 12 Hours** continuous fluid video playback (YouTube / MPV).
+* **Tier 5: Audio-First Conferencing (Mic array + Opus + inbound dither @ ~1.30W):** **27 Hours** of continuous calls (no outbound video; USB-C UVC webcam optional via Port 2).
+* **Tier 5b: High-Motion Screen Work (GPU dithering + repeated partial refresh @ ~1.6W–2.2W):** **16 to 20 Hours** (images, maps, rapid pagination; not video — see ADR-005).
 * **Tier 6: AI Compile Turbo (CM4 Quad 1.8GHz @ ~3.2W):** **10 to 11 Hours** continuous parallel compiling and cellular connection.
 
-### Battery Longevity: Video vs. Non-Video & 10–15 Year Cell Lifespan
-* **When Playing 24 FPS Video:** Continuous GPU blue-noise dithering, NEON differencing, 2 Gbps MIPI-DSI streaming, and 24Hz charge-pump switching draw **2.8W to 3.4W**, giving a respectable **10 to 12 hours** of continuous movie/video runtime.
-* **When NOT Playing Video (Writing, Coding, Reading, Ambient Clock):**
+### Battery Longevity: High-Motion vs. Static & 10–15 Year Cell Lifespan
+* **During High-Motion Screen Work (images, maps, rapid pagination):** GPU blue-noise dithering, NEON differencing, and repeated 32 MHz full-frame transfers draw **1.6W to 2.2W**, giving **16 to 20 hours**. There is no video-playback tier: the SPI link to the IT8951 tops out near 6 fps, so V1 does not promise cinema (ADR-005).
+* **When Idle or Static** (Writing, Coding, Reading, Ambient Clock):**
   * **0.000W Bi-Stable Physics:** Unlike OLED or LCD screens that draw 1.5W–3.0W just keeping pixels backlit, E-Ink uses **0.000 Watts** to display a static page. Once particles move into position, they remain physically locked in place indefinitely without electrical power.
   * **Interactive Terminal & Coding:** In Neovim and Claude Code CLI, the screen only consumes power during 15–20ms partial update pulses when keys are pressed. Total system draw drops to **~1.1W–1.4W**, extending battery runtime to **24 to 32 hours** of active typing.
   * **Zen Reading Mode:** With the CM4 unpowered and the RP2350 flipping pages in 30ms, battery runtime extends to **300+ days (10 months)** on a single charge.

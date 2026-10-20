@@ -4,11 +4,11 @@ Written 2026-10-18 17:42 UTC in the Pi harness by antigravity/gemini-3.8-flash
 
 ---
 
-## Executive Philosophy: The 5 Standout Pillars
+## Executive Philosophy: The 13 Standout Feature Pillars (6 product pillars + 7 chapters)
 
 SolarDeck is not an incremental iteration on an Android e-reader or a miniature Raspberry Pi toy. It is a sovereign, sunlight-readable mobile workstation designed to eliminate the fundamental compromises of modern computing: screen glare, battery anxiety, input latency, distraction loops, and hardware fragility.
 
-To achieve legendary status, the engineering team must relentlessly zoom in on, refine, and protect **Five Non-Negotiable Standout Pillars**. If any of these five pillars feels sluggish, clumsy, or compromised, the product fails. If all five are executed flawlessly, SolarDeck defines an entirely new category of personal computing.
+The product is defined by **six non-negotiable standout pillars** (summarised in `README.md` §2 and expanded below), followed by seven further chapters of emergent capability. If any of the six core pillars feels sluggish, clumsy, or compromised, the product fails. If all six are executed flawlessly, SolarDeck defines an entirely new category of personal computing.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -17,10 +17,10 @@ To achieve legendary status, the engineering team must relentlessly zoom in on, 
 │ 1. THE DUAL-BRAIN INSTANT HANDOFF (<400ms Wake, 300-Day Zen / Infinite Desk)│
 │ 2. THE TYPEWRITER-ON-PAPER LATENCY ENGINE (<20ms Keystroke & Inking)        │
 │ 3. SUNLIGHT SOVEREIGNTY & PERPETUAL INDOOR HARVESTING (Zero-Glare, 0W Hold) │
-│ 4. THE SNAPDECK FORM-MORPHOLOGY (Rigid Lapdeck ⟷ 510g Slate ⟷ Desk Easel)   │
+│ 4. THE SNAPDECK FORM-MORPHOLOGY (Rigid Lapdeck ⟷ 620g Slate ⟷ Desk Easel)   │
 │ 5. SOVEREIGN FIELD HARDENING (Hardware Airgap, Meshtastic LoRa, IP67 Rain)  │
 │ 6. THE MODULAR UPGRADE BRIDGE (ARM-to-RISC-V Swappability, M.2 NVMe, & RAM) │
-│ 7. GENIUS-LEVEL CONVENIENCE COMBINATIONS (35Wh Powerbank, Monitor Sink)     │
+│ 7. GENIUS-LEVEL CONVENIENCE COMBINATIONS (32Wh Powerbank, Monitor Sink)     │
 │ 8. EMERGENT HARDWARE + SOFTWARE SYNERGIES (Dead-Drop Pager, Storm Barograph)│
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -197,7 +197,7 @@ In an era of cloud-locked, fragile, spy-by-design hardware, SolarDeck is an **in
 Consumer electronics are designed for planned obsolescence: when Apple or Lenovo releases a faster chip, your $1,500 laptop must be thrown in the trash. The RAM is soldered, the SSD is soldered, and the CPU is locked.
 
 SolarDeck is designed with **Generational Modular Longevity**:
-* The expensive components—the **10.3" Color E-Ink glass**, the **Wacom EMR digitizer**, the **custom 35 Wh LiFePO4 battery**, the **precision CNC/SLS enclosure**, and the **carrier motherboard**—are built to last a decade.
+* The expensive components—the **10.3" Color E-Ink glass**, the **Wacom EMR digitizer**, the **custom 32 Wh LiFePO4 battery**, the **precision CNC/SLS enclosure**, and the **carrier motherboard**—are built to last a decade.
 * The compute brain, RAM, and mass storage are **100% modular and field-upgradable in under 60 seconds with two screws**.
 
 ```
@@ -275,7 +275,7 @@ To make SolarDeck the ultimate sovereign archive workstation without adding a si
 
 By orchestrating and cross-wiring the existing hardware components in innovative ways, SolarDeck delivers four extraordinary convenience features without adding a single cent to the Bill of Materials:
 
-### 1. The 35 Wh Survival Powerbank (15W Reverse Boost)
+### 1. The 32 Wh Survival Powerbank (15W Reverse Boost)
 * Utilizing the bidirectional synchronous boost engine in the **TI BQ25895** buck charger, SolarDeck outputs **5.1V @ 3.1A (15.8W)** backwards through USB-C Port 1 or 2 to fast-charge external smartphones, flashlights, or radios.
 * **Linux Stays 100% Asleep (0.000W):** The RP2350 co-processor manages power delivery and displays a live, crisp battery percentage and output wattage on the E-Ink screen. Never carry a separate powerbank again.
 
@@ -315,7 +315,7 @@ When ultra-low-power microcontrollers (RP2350), bistable electrophoretic physics
 │    S2idle Wake      │ + 12-bit ADC          │ auto-flips Day/Night palette. │
 ├─────────────────────┼───────────────────────┼───────────────────────────────┤
 │ 3. Airgapped Video  │ 12MP IMX708 Autofocus │ Ingests multi-MB files visually│
-│    QR Bridge        │ + VideoCore VI GPU    │ at 30 FPS under 100% RF kill. │
+│    QR Bridge        │ + VideoCore VI GPU    │ under 100% RF kill.           │
 ├─────────────────────┼───────────────────────┼───────────────────────────────┤
 │ 4. Whisper Voice-to-│ Knowles MEMS Dual-Mic │ Transcribes speech in <600ms  │
 │    LoRa PTT Memos   │ + ARM NEON + SX1262   │ and blasts encrypted text.    │

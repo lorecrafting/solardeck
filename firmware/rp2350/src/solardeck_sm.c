@@ -59,7 +59,8 @@ void solardeck_sm_transition(solardeck_ctx_t *ctx, solardeck_state_t next_state)
 void solardeck_sample_solar_mppt(solardeck_ctx_t *ctx, uint16_t measured_voc_mv) {
     if (!ctx) return;
     ctx->solar_voc_mv = measured_voc_mv;
-    // Monocrystalline solar maximum power point is nominally ~78% of Voc
+    // BQ25504 FOCV samples at 80% of Voc; the 2% margin below is deliberate headroom for
+    // cold-temperature Voc inflation and ADC error.
     ctx->solar_vmpp_mv = (uint16_t)(((uint32_t)measured_voc_mv * 78) / 100);
 }
 
@@ -89,7 +90,8 @@ bool solardeck_check_power_thresholds(solardeck_ctx_t *ctx, uint16_t vbat_mv) {
     if (!ctx) return false;
     ctx->vbat_mv = vbat_mv;
 
-    // LiFePO4 safe cutoff: 2.80V (2800 mV). Critical alarm if <= 2900 mV
+    // LiFePO4 cutoff: 2900 mV (alarm). The PCM hard-trips at 2500 mV; 2.80-2.90V is where
+    // the SoC has enough headroom left to write state and enter the deep-sleep path.
     uint16_t cutoff_mv = ctx->is_lifepo4 ? 2900 : 3400;
 
     if (vbat_mv <= cutoff_mv) {

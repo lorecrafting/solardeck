@@ -4,7 +4,12 @@
 > 
 > *Written 2026-10-18 17:35 UTC in the Pi harness by antigravity/gemini-3.8-flash*
 > 
-> *Open-Hardware Linux • AI Coding Terminal • Dual MIPI Cameras • Wacom Stylus Slate • Meshtastic LoRa Node • Worldwide 4G LTE with Soldered eSIM • 300-Day Ambient Desk Clock • Parallel SnapDeck Keyboard • Hardware Airgap Switch • IP67 Rugged Enclosure.*
+>
+> **Status (2026-10-20): reference architecture, not yet fabricable.** Specs and BOM are complete and
+> internally consistent; schematic capture covers 20 of 61 core BOM parts and the PCB is unrouted.
+> Read `docs/AUDIT_2026-10-20.md` before quoting or ordering anything.
+>
+> *Open-Hardware Linux • AI Coding Terminal • 12MP Rear Camera • Wacom Stylus Slate • Meshtastic LoRa Node • Worldwide 4G LTE with Soldered eSIM • 300-Day Ambient Desk Clock • External USB-C / Bluetooth Keyboard • Hardware Airgap Switch • IP67 Rugged Enclosure.*
 
 ---
 
@@ -31,7 +36,7 @@ SolarDeck is a sovereign, sunlight-readable, distraction-free field workstation 
 
 ---
 
-## 2. The 5 Standout Pillars (What We Must Get Flawlessly Right)
+## 2. The 6 Standout Pillars (What We Must Get Flawlessly Right)
 
 *(See [`docs/STANDOUT_FEATURES.md`](docs/STANDOUT_FEATURES.md) for the full architectural specification, latency budgets, and acceptance gates.)*
 
@@ -46,10 +51,10 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
    * *Sub-18ms Wacom EMR Inking:* Battery-free, 4096-level pressure pen laminated behind the display with zero optical distortion or parallax.
    * *Coordinate-Targeted Piezo Haptics:* 4× TDK PowerHap corner actuators + dual Boréas BOS1901 drivers concentrate sub-1ms tactile clicks directly under the touching finger on bare glass.
 3. **Sunlight Sovereignty & Perpetual Indoor Life:**
-   * *The brighter the sun, the better it gets:* 10.3" Color E-Ink (Carta 1200 / Kaleido 4, 300 PPI B&W / 150 PPI Color) with 0% glare and zero power to hold a static page. 24–32 hours of active terminal coding under direct noon sun with 0W backlight.
+   * *The brighter the sun, the better it gets:* 10.3" Color E-Ink (Carta 1200 / Kaleido 4, 227 PPI monochrome / 114–150 PPI colour) with 0% glare and zero power to hold a static page. 24–32 hours of active terminal coding under direct noon sun with 0W backlight.
    * *Perpetual Indoor Harvesting:* High-efficiency indoor a-Si micro-strip + TI BQ25504 nano-boost yields a **net positive power balance under 500 lux indoor room light**, allowing SolarDeck to live on a desk or shelf forever without ever plugging into a wall.
-4. **The Sovereign Form-Morphology (Tactical 510g Slate, Desk Easel, & Modular Thumb Grips):**
-   * *Total Input Freedom:* Descoping a proprietary keyboard for V1 leaves the core tablet ultra-light (~510g) and razor-thin (9.8mm), allowing developers to connect their favorite keyboard (ThinkPad, Corne, NuPhy, Keychron, Apple Magic Keyboard) via low-latency Bluetooth 5.0 or USB-C.
+4. **The Sovereign Form-Morphology (Tactical 620g Slate, Desk Easel, & Modular Thumb Grips):**
+   * *Total Input Freedom:* Descoping a proprietary keyboard for V1 leaves the core tablet ultra-light (~620g) and slim (14.0mm), allowing developers to connect their favorite keyboard (ThinkPad, Corne, NuPhy, Keychron, Apple Magic Keyboard) via low-latency Bluetooth 5.0 or USB-C.
    * *Universal Mechanical Mounting:* Standard **M2.5 threaded brass heat-set inserts + MagSafe magnetic anchor array** on the rear chassis enable instant clipping of 3D-printed handheld thumb keyboards (e.g. $25 BlackBerry Q20 clicky keyboard), camera tripods, or desk arms.
    * *The Ultimate Desk Easel:* MagSafe magnetic array + M2.5 mounts snap effortlessly onto any standard magnetic desk stand, origami folio, or OEM tablet stand, propping the tablet in portrait to display 80+ lines of uninterrupted code while typing on a desktop keyboard.
 5. **Sovereign Field Hardening (Airgap, LoRa, & IP67 All-Weather):**
@@ -71,9 +76,9 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 1. BRAIN:     Raspberry Pi CM4 (Quad A72 @ 1.8GHz, 8GB RAM, 32GB eMMC, Wi-Fi)│
 │ 2. CO-PROC:   RP2350B (Cortex-M33 / RISC-V) + 8MB PSRAM (300-Day Zen Reader) │
-│ 3. DISPLAY BUS: Dual-Path MIPI-DSI (24 FPS Video) + TMUX1575 SPI (RP2350 Mux)│
+│ 3. DISPLAY BUS: Single IT8951 EPDC over SPI @32MHz + 2x TMUX1575 Bus Mux   │
 │ 4. SCREEN:    10.3" E-Ink (Carta 1200 / Kaleido 3 / Kaleido 4, 227 PPI) + EMR│
-│ 5. CAMERAS:   12MP Sony IMX708 PDAF Macro Rear (Multimodal Claude Code / OCR)│
+│ 5. CAMERA:    12MP Sony IMX708 PDAF Macro Rear (Multimodal Claude Code / OCR)│
 │ 6. CELLULAR:  M.2 Quectel EG25-G LTE + Standard Push-Push Nano-SIM Tray      │
 │ 7. MESH/GNSS: Built-In Semtech SX1262 LoRa (868–928MHz) + Qualcomm GNSS     │
 │ 8. ANTENNAS:  Top-Edge IP67 SMA (LoRa) + Internal Taoglas FXUB63 MIMO (LTE) │
@@ -101,7 +106,7 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
 
 ---
 
-## 4. Deep-Dive Architectural Innovations (The 8 Engineering Pillars)
+## 4. Deep-Dive Architectural Innovations (The 9 Engineering Pillars)
 
 ### I. The Dual-Brain Display Mux (Zero-Leakage 300-Day Reader & Mesh Node)
 * **The Problem:** Linux processors (like the CM4) draw 1.5W–3W just sitting idle, draining large batteries in hours.
@@ -151,18 +156,16 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
   * **Zero-BOM Ambient Lux Sensor (Solar Strip via RP2350 ADC):** Samples top-bezel solar cell open-circuit voltage ($V_{OC}$) to calculate precise ambient lux (10 to 120,000 lux) and automatically adjust display contrast without adding a dedicated photodiode IC.
 * **The AI Evolution Loop:** A rolling circular SQLite database (`/var/log/solardeck/telemetry.db`) feeds structured physics logs to Claude Code CLI. Because SolarDeck is documented in plain text and open-source formats, engineers and AI assistants can query real-world inrush currents, thermal maps, and battery impedance over time to guide precise component sizing and layout optimizations for Rev 2.
 
-### VIII. V1 24 FPS Cinema Video Engine & Thermal Viscosity Assist
-* **The Problem:** Traditional E-Ink screens are notoriously slow, maxing out at single-digit refresh rates or 12–18 FPS with heavy motion ghosting and bus bottlenecks.
-* **The Genius Fix:** 
-  1. *MIPI-DSI High-Speed Bus:* Rather than bottlenecking video over a 48 MHz SPI bus (55 ms transfer time), the CM4 routes its native 2-lane MIPI-DSI port directly to a high-speed video bridge/EPDC, transferring delta frames in **< 2.5 milliseconds**.
-  2. *GPU Blue-Noise Dithering & NEON Deltas:* Broadcom VideoCore VI GLSL shaders convert 24 FPS video into 1-bit/2-bit blue-noise dithered bitmaps, while ARM NEON SIMD extracts XOR differences, pushing only moving bounding boxes.
-  3. *Thermal Viscosity Acceleration:* A copper thermal dissipation plane couples waste heat from the CM4 CPU shield into the panel backplane, maintaining 30°C–33°C. Fluid viscosity drops by **>40%**, accelerating particle velocity **$1.8\times$** to hold smooth 24 FPS video without motion trails.
-* **Battery Lifespan (Video vs. Non-Video Workloads):**
-  * *During 24 FPS Video Playback:* Continuous GPU dithering and 24Hz charge-pump cycling consume ~2.8W–3.4W, delivering **10 to 12 hours** of continuous movie/video runtime.
-  * *When NOT Playing Video (Writing, Coding, Reading, Ambient Clock):* E-Ink consumes **0.000 Watts** to display a static image. Active terminal coding provides **24 to 32 hours** of typing, Zen reading provides **300+ days**, and ambient desk-clock mode with micro-solar has **infinite battery life**. LiFePO4 cells yield 3,000–5,000 cycles, lasting **10 to 15+ years** before degrading.
+### VIII. Thermal Viscosity Assist (No Video Engine in V1)
+* **The Problem:** E-Ink is slow, and not only because of the bus. Electrophoretic particle mobility ($\mu$) is inversely proportional to fluid viscosity ($\eta$): $\mu \propto 1/\eta(T)$. In a cold room the microcapsule fluid thickens and the same drive pulse moves pigment more slowly.
+* **The Genius Fix:** A copper thermal plane couples waste heat from the CM4 shield into the panel backplane, holding it at **30°C–33°C**. Viscosity drops >40%, particles accelerate **$1.8\times$** under identical pulses, and `eink-refreshd` widens DU pulse width below 15°C instead of pretending the panel is fast.
+* **Honest Throughput:** the IT8951 is fed over 32 MHz SPI, so a full 1872×1404 1-bit frame costs ~82 ms (~6 fps); small rectangles (caret, line, clock digits) run 15–25 fps. That is why the daemon is rectangle-driven. There is no MIPI-DSI video path and no cinema mode (ADR-005) — video decodes at ~6 fps dithered, or not at all.
+* **Battery Lifespan:**
+  * *High-motion screen work (dithering + repeated partial refresh):* ~1.6–2.2W, **16 to 20 hours**.
+  * *Writing, Coding, Reading, Ambient Clock:* E-Ink consumes **0.000 Watts** to hold a static image. Active terminal coding gives **24 to 32 hours**, Zen reading **300+ days**, and ambient desk-clock with micro-solar is indefinite. LiFePO4 yields 3,000–5,000 cycles, **10 to 15+ years**.
 
 ### IX. Genius Convenience Combinations ($0.00 Added BOM)
-1. **The 35 Wh Survival Powerbank (15W Reverse Boost):**
+1. **The 32 Wh LiFePO4 Survival Powerbank (15W Reverse Boost):**
    * Utilizing the bidirectional synchronous boost engine in the **TI BQ25895** buck charger, SolarDeck outputs **5.1V @ 3.1A (15.8W)** backwards through USB-C Port 1 or 2 to fast-charge external smartphones, flashlights, or radios.
    * **Linux Stays 100% Asleep (0.000W):** The RP2350 co-processor manages power delivery and displays a live, crisp battery percentage and output wattage on the E-Ink screen. Never carry a separate powerbank again.
 2. **The Solar Micro-Strip as an Ambient Light Meter ($0.00 Cost):**
@@ -205,9 +208,9 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
 | :--- | :--- |
 | **Main Compute** | Raspberry Pi Compute Module 4 (CM4) — Quad Cortex-A72 @ 1.8GHz, 8GB RAM, 32GB eMMC (or CM5 / RK3566) |
 | **Co-Processor** | Raspberry Pi RP2350B (Dual Cortex-M33 / RISC-V @ 150MHz) + 8MB QSPI PSRAM + DS3231 TCXO RTC |
-| **Display Isolator**| Texas Instruments **TMUX1575** 8-Channel SPDT Bus Switch (Fail-Safe Power-Off Protection, all 6 lines) |
+| **Display Isolator**| **2×** Texas Instruments **TMUX1575** 4-Channel SPDT Bus Switch (8 channels, fail-safe power-off protection, all 6 lines) |
 | **Display Panel** | 10.3" E-Ink Kaleido 3 / Kaleido 4 (1872×1404, 227 PPI B&W / 114–150 PPI Color) + Wacom EMR |
-| **Display Bus & Video**| Dual-Path: 2-Lane MIPI-DSI (24 FPS Cinema Video Engine) + TMUX1575 SPI (4.5 mW Zen Reader) |
+| **Display Bus** | Single-path SPI @32 MHz to IT8951 EPDC (flexible refresh) + TMUX1575 fallback to RP2350 (4.5 mW Zen Reader); no MIPI-DSI video path |
 | **Waveform Engine** | Dynamic Quad-Zone Temperature-Compensated Waveform LUT Matrix (-10°C to +50°C in `eink-refreshd`) |
 | **Haptic Feedback** | Quad-Corner TDK PowerHap Piezo Matrix + Dual Boréas BOS1901 CapDrive Drivers (Localized (X,Y) glass click) |
 | **Frontlight** | Dual CCT Bezel Lightguide (TI TPS61163 Step-Up Driver, 2048-step circadian warm amber/white) |
@@ -255,8 +258,14 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
 .
 ├── README.md                  # Master manifesto, problem statement, and executive architecture
 ├── AGENTS.md                  # Developer, AI agent, and hardware safety rules
+├── LICENSE / LICENSES/        # CERN-OHL-S-2.0 (hardware) + MIT (software) + CC-BY-SA (docs)
+├── SECURITY.md                # Threat model, what hardware enforces, disclosure policy
+├── CONTRIBUTING.md            # How to propose, verify and submit changes
 ├── docs/
-│   ├── INDEX.md               # Master 50-item specification index & architecture cross-reference
+│   ├── README.md              # Reading order + claim-status vocabulary (start here)
+│   ├── AUDIT_2026-10-20.md    # What is built vs written; fix plan. Read before trusting specs
+│   ├── spec_values.json       # SINGLE SOURCE OF TRUTH for every quantitative claim
+│   ├── INDEX.md               # Cross-reference table: claim -> file section
 │   ├── STANDOUT_FEATURES.md   # Core standout pillars, latency budgets, & emergent superpowers
 │   ├── MVP_ARCHITECTURE.md    # Dual-brain architecture, power state transitions, block diagrams
 │   ├── HARDWARE_SPEC.md       # Complete carrier board schematic, pinouts, RF & power design
@@ -266,8 +275,9 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
 │   ├── HANDOFF_TO_FABLE.md    # Turnkey Seeed Studio Fusion & manufacturing handoff package
 │   ├── OFFGRID_TACTICAL_SENSORS.md # Navigation, plate-solving, CBRN, & Hotpacks 1–7
 │   ├── MECHANICAL_FIT_AND_ENCLOSURE_WORKFLOW.md # Tolerance, CAD envelope, & 2-tier checks
-│   └── HARDWARE_VERIFICATION_WORKFLOW.md # 7-rule netlist electrical trap audit guide
-├── hardware/
+│   ├── HARDWARE_VERIFICATION_WORKFLOW.md # 7-rule netlist trap audit; what each phase proves
+│   └── 90-history/decisions.md# ADR-001..016: what was descoped and why
+├── hardware/                  # NOTE: partial capture (20/61 parts), unrouted PCB -- see AUDIT
 │   ├── solardeck-carrier.*    # KiCad 8 schematics, PCB layout, and netlists
 │   ├── enclosure/             # OpenSCAD 3D chassis models and dimensional verification
 │   └── production/            # Seeed Studio Fusion Gerber zip, BOM, CPL, & box-build guides
@@ -279,5 +289,7 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
 ├── tools/
 │   └── provision/             # setup_solardeck_os.sh automated OS provisioning engine
 └── scripts/
-    └── verify_all.py          # 9-phase automated master system verification test runner
+    ├── verify_all.py         # 11-phase automated master verification runner
+    ├── check_docs_numbers.py # docs vs spec_values.json (CI Phase 10)
+    └── check_bom_coverage.py # BOM <-> netlist <-> CPL (CI Phase 11)
 ```

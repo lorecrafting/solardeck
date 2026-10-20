@@ -23,22 +23,53 @@ Written 2026-10-18 17:35 UTC in the Pi harness by antigravity/gemini-3.8-flash
 
 ```
 .
-├── README.md                  # Executive overview, core personas, specs table
+├── README.md                  # Executive overview, core pillars, specs table
 ├── AGENTS.md                  # Developer & AI agent instructions (this document)
+├── LICENSE                    # CERN-OHL-S-2.0 (hardware) + MIT (software), see LICENSES/
+├── SECURITY.md                # Threat model, key handling, disclosure policy
+├── CONTRIBUTING.md            # How to propose, build, verify and submit changes
 ├── docs/
-│   ├── MVP_ARCHITECTURE.md    # Dual-brain architecture, power state transitions, block diagrams
-│   ├── HARDWARE_SPEC.md       # Carrier board schematic, bus topology, pinouts, RF & power
-│   ├── SOFTWARE_SPEC.md       # Linux kernel, DRM waveform drivers, power profiles, daemons
-│   └── BOM_COST_ESTIMATE.md   # Bill of materials, supplier sourcing, turnkey cost breakdown
-└── (Planned tree additions)
-    ├── hardware/              # KiCad schematics, PCB layout, Gerber/BOM exports, STEP 3D models
-    ├── firmware/
-    │   ├── rp2350/            # Bare-metal C/Pico-SDK co-processor firmware (RTC, ADC, S2idle wake)
-    │   └── keyboard/          # ZMK / QMK keyboard firmware for nRF52840
-    └── src/
-        ├── drivers/           # Custom IT8951 LUTs, DRM/KMS patches
-        └── daemons/           # eink-refreshd, solar gesture listener, solardeck-telemetryd
+│   ├── INDEX.md               # Master index, cross-reference table, decision log
+│   ├── spec_values.json       # SINGLE SOURCE OF TRUTH for every quantitative claim
+│   ├── AUDIT_2026-10-20.md    # What is measured / modelled / aspirational, and what is broken
+│   ├── MVP_ARCHITECTURE.md    # Dual-brain architecture, power tiers, state transitions
+│   ├── HARDWARE_SPEC.md       # Carrier board, bus topology, pinouts, RF & power
+│   ├── SOFTWARE_SPEC.md       # Kernel, E-Ink pipeline, power profiles, daemons
+│   ├── BOM_COST_ESTIMATE.md   # BOM, supplier sourcing, turnkey cost breakdown
+│   ├── MECHANICAL_FIT_AND_ENCLOSURE_WORKFLOW.md
+│   ├── HARDWARE_VERIFICATION_WORKFLOW.md
+│   ├── OFFGRID_TACTICAL_SENSORS.md
+│   ├── STANDOUT_FEATURES.md
+│   ├── FIRST_BOOT_CHECKLIST.md
+│   └── HANDOFF_TO_FABLE.md
+├── hardware/                  # KiCad 8 (partial capture - see AUDIT block B1), netlist, audits
+│   ├── audit_hardware_traps.py
+│   ├── verify_schematics.py
+│   ├── export_production_zip.py
+│   ├── enclosure/             # solardeck_chassis.scad + verify_enclosure.py
+│   └── production/            # generated bundles + verify_manufacturing_package.py
+├── firmware/
+│   └── rp2350/                # Bare-metal C (Pico SDK): state machine, ADC, RTC, S2idle wake
+├── src/
+│   ├── daemons/               # eink-refreshd, solardeck-telemetryd
+│   └── dts/                   # solardeck-cm4.dts device-tree overlay
+├── config/                    # sway, waybar, foot, mako, gammastep
+├── tools/
+│   └── provision/             # setup_solardeck_os.sh (testable, --test)
+└── scripts/                   # verify_all.py, check_docs_numbers.py, check_bom_coverage.py
 ```
+
+Note: there is **no custom keyboard firmware** in this repo. The SnapDeck keyboard is descoped;
+any standard Bluetooth/USB-C keyboard is used (`docs/INDEX.md` ADR-001).
+
+---
+
+## 2.1 Numbers Live In One File
+
+Never hard-code a dimension, capacity, PPI, pillar count or phase count in prose or in a test.
+Add it to `docs/spec_values.json`, reference it symbolically in the doc, and let
+`python3 scripts/check_docs_numbers.py` (CI Phase 10) catch drift. `verify_enclosure.py` and the
+mechanical workflow read the same file, so CAD and spec cannot disagree.
 
 ---
 

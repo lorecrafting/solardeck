@@ -1,0 +1,11 @@
+CERN Open Hardware Licence Version 2 - Strongly Reciprocal (CERN-OHL-S-2.0)
+
+Full text: https://ohwr.org/cern_ohl_s_v2.txt
+
+Summary of obligations that matter for SolarDeck:
+  * You may use, copy, modify and manufacture the design, including commercially.
+  * If you manufacture and sell, you must make the complete design source available to recipients
+    under this same licence, including your modifications.
+  * You must not add restrictions that limit recipients' rights under this licence.
+  * No warranty. Hardware you build from these files is your responsibility, including all electrical,
+    thermal, RF and battery-safety obligations.

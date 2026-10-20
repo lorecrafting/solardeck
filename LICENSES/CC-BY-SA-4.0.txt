@@ -1,0 +1,7 @@
+Documentation in docs/ is licensed under Creative Commons Attribution-ShareAlike 4.0 International.
+
+Full text: https://creativecommons.org/licenses/by-sa/4.0/legalcode
+
+You are free to share and adapt the documentation for any purpose, provided you give appropriate
+credit, link to the license, indicate changes, and distribute your contributions under the same
+license.

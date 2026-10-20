@@ -245,7 +245,7 @@ The Raspberry Pi CM4 integrates a dedicated **Broadcom VideoCore VI (V3D 4.2 @ 5
 ```
 
 1. **Hardware-Accelerated Temporal Blue-Noise Dithering (`dither.glsl`):**
-   * Electrophoretic displays physically cannot switch 24-bit RGB or 256-level grayscale at 30–60 FPS.
+   * Electrophoretic displays physically cannot switch 24-bit RGB or 256-level greyscale at video rates.
    * A custom GLSL fragment shader running on the VideoCore VI GPU dynamically maps 24-bit frames into 1-bit binary or 2-bit (4-level) dithered bitmaps in **under 2.0 milliseconds**, creating smooth optical gradients with near-zero CPU load.
 2. **Vulkan Matrix Compute Acceleration (`llama.cpp` & `whisper.cpp`):**
    * Leveraging Mesa's native `v3dv` Vulkan driver, matrix multiplications and token embedding lookups can be partially offloaded from the Cortex-A72 cores to the GPU shaders, improving local STT transcription latency and conserving battery.
@@ -424,7 +424,9 @@ To achieve true physical reliability, zero-leakage battery efficiency, and foolp
 
 The following custom software utilities and daemons leverage SolarDeck's bi-stable E-Ink display, dual-brain architecture, tactical radios, and sensor array:
 
-### 7.1 Tactical RF, Air Radar & Signals
+## 9. Cross-Domain Daemon Catalog (Field, Maritime & Writing)
+
+### 9.1 Tactical RF, Air Radar & Signals
 1. **`solardeck-waterfall` (High-Contrast E-Ink RF Spectrum & Air Radar):**
    * Captures raw I/Q samples from the onboard RTL-SDR and CC1101 radios.
    * Renders a real-time RF waterfall using custom 1-bit Atkinson dithering optimized for high sunlight visibility.
@@ -437,7 +439,7 @@ The following custom software utilities and daemons leverage SolarDeck's bi-stab
    * Encodes and decodes weak-signal digital text messages bounced off the ionosphere across continental distances using less than 5W of RF power.
    * Decodes 144.390 MHz VHF APRS packets, tracking local search-and-rescue teams, weather stations, and repeaters on the e-ink screen.
 
-### 7.2 Acoustic, Solar & Inertial Field Navigation
+### 9.2 Acoustic, Solar & Inertial Field Navigation
 4. **`solardeck-acoustic-compass` (Dual-Mic Acoustic Angle-of-Arrival Tracker):**
    * Utilizes the 65 mm Knowles dual-MEMS microphone array to compute the Time Difference of Arrival (TDoA) of sudden sharp transients (gunshots, distant engine revs, whistles, shouting).
    * Renders a 360-degree tactical compass HUD with an arrow pointing toward the bearing of the sound source.
@@ -448,7 +450,7 @@ The following custom software utilities and daemons leverage SolarDeck's bi-stab
    * Connects via BLE to laser distance measurers (Bosch GLM, Leica DISTO) to automatically sketch real-time floor plans with Wacom EMR in CAD/SVG.
    * Uses the Bosch IMU as a high-precision digital clinometer for surveying slope grades, vehicle roll/pitch, and solar panel tilt optimization.
 
-### 7.3 Maritime, UAV & Hardware Engineering
+### 9.3 Maritime, UAV & Hardware Engineering
 7. **`solardeck-marine` (Waterproof Salt-Spray E-Ink Marine Chartplotter):**
    * Runs **OpenCPN** and **Signal K** connected to NMEA 2000 / NMEA 0183 boat instrument buses and AIS ship receivers.
    * Delivers 0% glare under blinding open-ocean sunlight.
@@ -460,7 +462,7 @@ The following custom software utilities and daemons leverage SolarDeck's bi-stab
    * Pairs with open-source USB logic analyzers via `sigrok` and `PulseView` on USB-C Port 2.
    * Turns SolarDeck into an outdoor 24 MHz 8-channel logic analyzer and oscilloscope for probing SPI/I2C/UART lines on field hardware in direct sun.
 
-### 7.4 Sovereign Writing, Focus & Cryptography
+### 9.4 Sovereign Writing, Focus & Cryptography
 10. **`solardeck-zen` (Sovereign Prose Typewriter & S2idle Power Gating):**
     * A distraction-free markdown environment running on the 20ms 1-bit typing waveform.
     * Automatically drops into S2idle (15 mW) between keystroke pauses and wakes in <300ms, providing **35 to 45 hours of continuous active writing** outdoors.

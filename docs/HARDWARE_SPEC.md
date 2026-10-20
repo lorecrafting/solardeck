@@ -106,9 +106,9 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
     3. **Hardware Power Master & Anti-Brownout Shield:** Continuously monitors the TI BQ27441 fuel gauge; blocks CM4 boot if battery voltage is $<3.0\text{V}$, preventing inrush brownouts and eMMC filesystem corruption.
     4. **Shadow Environmental Telemetry Logger:** Samples BMP390 barometric trends and TMP112 thermals every 60 seconds into a circular PSRAM buffer; dumps a 7-day weather barograph to Linux upon wake in 2ms.
     5. **Autonomous Bezel Touch Gestures:** Scans capacitive side-bezel touch traces at 10 Hz (15 µA) for instant page-flip navigation.
-* **Dual-Master Display Bus Multiplexer:** Texas Instruments **TMUX1575** (8-channel SPDT bus switch).
-  * High-speed **8-channel SPDT bidirectional bus switch** with Fail-Safe Power-Off Protection ($I_{\text{off}}$).
-  * Completely isolates all 6 EPDC control and data lines: `SPI_MOSI`, `SPI_MISO`, `SPI_SCLK`, `SPI_CS`, `HRDY` (status flag), and `RESET`.
+* **Dual-Master Display Bus Multiplexer:** **2 × Texas Instruments TMUX1575** (each a 4-channel SPDT bus switch, giving 8 channels). TMUX1575 is only available in the 16-bump DSBGA (YCJ) package. See `docs/90-history/decisions.md` ADR-004.
+  * High-speed **8-channel (2 × 4-channel) SPDT bidirectional bus switch pair** with Fail-Safe Power-Off Protection ($I_{\text{off}}$).
+  * Between them the two devices completely isolate all 6 EPDC control and data lines: `SPI_MOSI`, `SPI_MISO`, `SPI_SCLK`, `SPI_CS`, `HRDY` (status flag), and `RESET`.
   * **Zero-Leakage Isolation Safety:** When CM4 is powered down to 0.000V, the TMUX1575 completely disconnects CM4 lines to eliminate parasitic back-powering and pin leakage ($I_{\text{leak}} < 10\text{ nA}$), allowing the RP2350 to update the display in deep sleep while drawing only **4.5 mW total system power**.
 * **Real-Time Clock (RTC):** Maxim **DS3231** temperature-compensated crystal oscillator (TCXO).
   * Drift: < 2 minutes per year ($\pm 2$ ppm).
@@ -120,17 +120,17 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
   * Resolution: 1872 × 1404 pixels (**227 PPI** black/white, 114–150 PPI color).
   * Active Area: 209.66 mm × 157.25 mm; Contrast Ratio: 15:1.
   * **Kaleido 4 Ready (Drop-in Panel Compatibility):** Supports the newly released Kaleido 4 panel featuring an **Oxide TFT backplane** ($10\times$ higher electron mobility, >40,000 colors, +15% white reflectivity, +50% contrast) sharing the identical 10.32" mechanical envelope, 40/50-pin FPC interface, and rear-laminated Wacom digitizer.
-* **V1 24 FPS Cinema Video & High-Speed Display Architecture:**
-  * **Dual-Path Host Bus Architecture:**
-    1. *High-Speed MIPI-DSI Video Path (CM4 Host - 24 to 30 FPS):* The CM4 routes its native 2-lane MIPI-DSI display bus (1 Gbps per lane = 2,000 Mbps aggregate bandwidth) to a high-speed video bridge / timing controller (TI SN65DSI83 DSI-to-FlatLink bridge / Lattice CrossLink-NX FPGA / IT8961). Transferring a full 1872×1404 frame takes **< 2.5 milliseconds** (eliminating the legacy 55ms SPI transfer bottleneck). This frees up **39 ms of the 41.67 ms frame budget** purely for electrophoretic particle motion, unlocking **24 FPS cinema video playback** and fluid Wayland desktop rendering.
-    2. *Ultra-Low-Power SPI Fallback Path (RP2350 Co-Processor - 4.5 mW Zen Mode):* When the CM4 and MIPI-DSI rails are completely powered down (0.000W), the TI TMUX1575 bus switch routes the RP2350's SPI lines to the display controller, enabling autonomous 30ms book page flips and 1-second clock updates drawing only **4.5 mW total system power**.
+* **Display Transport & Honest Throughput Budget:**
+  * **Single-path architecture (V1):** the CM4 routes `SPI0` through the TMUX1575 pair to the IT8951 EPDC at **32 MHz**. At 1 bit/pixel a full 1872 x 1404 frame is ~2.63 Mbit, so a full-frame transfer takes ~82 ms before any particle motion. Practical result: **~6 fps full-frame**, 15-25 fps for small partial rectangles (caret, line of text, clock digits). This is why the daemon is rectangle-driven rather than frame-driven.
+  * **Removed from V1 (ADR-005):** the earlier "dual-path MIPI-DSI at 24 fps" plan required an LVDS/DSI timing controller that no shipping e-paper panel accepts, and e-paper particle motion cannot hold video rates regardless. There is **no DSI or LVDS bridge on the carrier board**.
+  * **RP2350 fallback path:** when the CM4 and its rails are at 0.000V, the TMUX1575 pair routes the RP2350's SPI lines to the EPDC instead, enabling autonomous 30 ms book page flips and 1-second clock updates at **4.5 mW total system power**.
   * **Thermal-Assisted Fluid Viscosity Coupling (Overdrive Viscosity Assist):**
     * Electrophoretic particle mobility ($\mu$) is inversely proportional to fluid viscosity ($\eta$): $\mu \propto 1/\eta(T)$.
     * In cold conditions (<20°C), microcapsule fluid is viscous and sluggish. At 30°C–33°C, dielectric fluid viscosity drops by **>40%**, enabling pigment particles to accelerate **$1.8\times$ faster** under identical electrical drive pulses.
     * The V1 PCBA integrates a balanced internal copper thermal dissipation plane that routes heat from the CM4 CPU shield directly beneath the display backplane.
-    * During 24 FPS video playback, the thermal management daemon (`solardeck-thermal-boostd`) uses waste CPU heat to maintain the backplane at a controlled **30°C–33°C** (monitored by the panel TMP112 sensor), completely eliminating motion trails and holding fluid 24 FPS without dedicated heater elements.
+    * During sustained high-motion work (rapid pagination, dither-heavy imaging), the thermal daemon (`solardeck-thermal-boostd`) uses waste CPU heat to hold the backplane at **30°C–33°C** (monitored by the panel TMP112 sensor), cutting motion trails without dedicated heater elements.
 * **EPDC (Electronic Paper Display Controller):** Dedicated High-Speed Controller (ITE **IT8951** / **IT8961** with MIPI bridge).
-  * *SoC-Direct Drive Architectural Evaluation:* While driving E-Ink directly from an SoC's integrated controller (e.g. RK3566 `rockchip-ebc`) eliminates an $18 chip, it creates fatal system lock-in: the display cannot be driven when the main CPU is powered down to 0.000W. Retaining a dedicated EPDC with dual-bus inputs (MIPI-DSI from CM4 for 24 FPS video + SPI from RP2350 for Zen reading) is mandatory to enable both the **universal modular compute socket** and the **RP2350 dual-brain co-processor** (which commands the display over SPI to achieve 160+ day desk-clock and 300+ day reading lifespans).
+  * *SoC-Direct Drive Architectural Evaluation:* While driving E-Ink directly from an SoC's integrated controller (e.g. RK3566 `rockchip-ebc`) eliminates an $18 chip, it creates fatal system lock-in: the display cannot be driven when the main CPU is powered down to 0.000W. Retaining a dedicated EPDC with a switchable SPI host (CM4 for compute, RP2350 for Zen reading) is mandatory to enable both the **universal modular compute socket** and the **RP2350 dual-brain co-processor** (which commands the display over SPI to achieve 160+ day desk-clock and 300+ day reading lifespans).
 * **reMarkable-Grade Stylus Digitizer & Tactile Paper-Feel:**
   * **Digitizer Sensor:** Genuine **Wacom EMR (Electro-Magnetic Resonance)** sensor board laminated behind the e-paper panel (240 Hz sampling rate, 4,096 levels of pressure and tilt, `wacom_w9013` driver).
   * **Magnetic Shielding & Flux Absorption:** Wacom EMR is inherently sensitive to external magnetic fields (~560 kHz resonant coil). To prevent coordinate warping or pen drift from the SnapDeck keyboard pogo magnets, backpack dock, or internal speaker:
@@ -215,7 +215,7 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
   * **Zero-Compute Autonomous Operation:** The entire reverse powerbank session runs under RP2350 supervision while the power-hungry CM4 Linux brain remains **100% powered off (0.000W)**.
   * The E-Ink screen displays a live, high-contrast charging gauge updated every 10 seconds:
     `"Powering External Device: 5.10V @ 2.40A (12.2W) | Battery: 74% (25.9 Wh) | Est: 2h 15m remaining"`.
-  * Turns the 35 Wh LiFePO4 tablet into an ultra-durable, flame-safe emergency power bank for smartphones, GPS handhelds, and flashlights in off-grid emergencies.
+  * Turns the 32 Wh LiFePO4 tablet into an ultra-durable, flame-safe emergency power bank for smartphones, GPS handhelds, and flashlights in off-grid emergencies.
 * **Rigid Voltage Regulators (Anti-Brownout Engineering):**
   1. *Always-On 3.3V System Rail (`VDD_3V3_AON`):* Dedicated Texas Instruments **TPS62840** ultra-low quiescent current (**60 nA $I_Q$**) synchronous buck-boost converter. Powered directly from VBAT (2.5V–4.35V), it supplies a stable, ultra-clean 3.3V rail at up to 750 mA to the RP2350, 8MB PSRAM, DS3231 RTC, `I2C_ALWAYS_ON` sensors, and Semtech SX1262 LoRa module continuously, ensuring perpetual operation when the main CM4 5V boost converter is completely unpowered.
   2. *Main 5.0V System Boost:* Texas Instruments **TPS61088** synchronous boost converter steps up 3.0V–4.2V battery voltage to a rigid 5.0V @ 3.5A rail, delivering up to 17.5W peak power for CM4 turbo compilation, USB peripheral bus power, and display supply.
@@ -334,12 +334,12 @@ To guarantee peak radiation efficiency, prevent destructive transmitter reflecti
 * **Inner-Layer Ground Keepout:** A continuous **3.0 mm copper clearance void** is etched across all internal PCBA ground layers directly beneath each surface-mount U.FL pad, eliminating parasitic shunt capacitance that would otherwise detune high-frequency RF launches.
 * **Molded Coaxial Cable Retention Channels:** Internal chassis ribs feature recessed silicone-gasketed micro-routing channels that lock IPEX MHF4 / U.FL micro-coaxial pigtails securely in place, completely preventing cable detachment or microphonics during heavy vehicle vibration and 4-foot drops.
 
-### 2.6 Dual-Camera Subsystem (Multimodal AI & Video Conferencing)
-SolarDeck leverages the Broadcom SoC's dual independent MIPI CSI-2 camera ports (`CAM0` and `CAM1`) and hardware Image Signal Processor (ISP) to deliver complete visual intelligence and teleconferencing with zero USB overhead:
+### 2.6 Rear Camera Subsystem (Multimodal AI)
+SolarDeck leverages one of the Broadcom SoC's MIPI CSI-2 camera ports (`CAM1`) and the hardware Image Signal Processor (ISP) to deliver visual intelligence with zero USB overhead. No forward-facing camera exists in V1 (ADR-006):
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                    SOLARDECK DUAL-CAMERA ARCHITECTURE                       │
+│                    SOLARDECK REAR CAMERA ARCHITECTURE                       │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 1. REAR FLUSH CAMERA FOR AI VISUAL REASONING (Back Chassis):                 │
 │    • Sensor: Sony IMX708 (12.0 Megapixels, 4608 × 2592, HDR, PDAF)          │
@@ -410,7 +410,7 @@ For field operations, astronomy observation, and night maneuvers requiring zero 
 * **Acoustic Squelch:** Hardware gate pulls `MUTE` on the MAX98357A Class-D speaker amplifier and disables PWM oscillations to the SMT piezo buzzer, guaranteeing absolute zero sound emission.
 
 ### 2.8 Dual-Brain Display Isolation & Fail-Safe Bus Multiplexing (TI TMUX1575)
-To allow the RP2350B co-processor to sip 4.5 mW of power while driving the E-Ink screen with the CM4 completely unpowered (0.000W), the high-speed SPI display bus passes through a Texas Instruments **TMUX1575** 8-channel SPDT bidirectional switch:
+To allow the RP2350B co-processor to sip 4.5 mW of power while driving the E-Ink screen with the CM4 completely unpowered (0.000W), the high-speed SPI display bus passes through **two Texas Instruments TMUX1575** switches (8 SPDT channels total):
 
 ```
                       ┌──────────────────────┐
@@ -427,7 +427,7 @@ CM4_CLAIM_DISPLAY ────────┘         └── GND (Always Enab
 ```
 
 1. **Complete 6-Signal Galvanic Isolation (Power-Off Protection):**
-   * Unlike 4-channel switches that leave status flags exposed, the **TMUX1575 (8-channel SPDT)** switches all 6 EPDC lines: `SPI_MOSI`, `SPI_MISO`, `SPI_SCLK`, `SPI_CS`, `HRDY` (Host Ready flag), and `RESET`.
+   * The design uses **two 4-channel TMUX1575 devices** (8 SPDT channels, one spare) to switch all 6 EPDC lines: `SPI_MOSI`, `SPI_MISO`, `SPI_SCLK`, `SPI_CS`, `HRDY` (Host Ready flag), and `RESET`.
    * The TMUX1575 features fail-safe inputs ($I_{\text{off}}$ circuitry): when CM4 `VDD_3V3` drops to 0.0V, the switch maintains giga-ohm impedance on the CM4 side, completely eliminating parasitic back-powering through internal ESD clamping diodes into unpowered rails ($I_{\text{leak}} < 10\text{ nA}$).
 2. **Deterministic Hardware Arbitration:**
    * The `SEL` line is pulled down to GND via a 10 kΩ resistor, defaulting bus ownership to the RP2350B.
@@ -596,7 +596,7 @@ To guarantee true 0.000V electrical isolation and zero phantom leakage across al
 
 #### Summary of SolarDeck Tiered Power Domains
 
-| Operating Tier | Active Brain | Display Driver | Powered Subsystems | Total Power Draw | Battery Runtime (35 Wh Pack) |
+| Operating Tier | Active Brain | Display Driver | Powered Subsystems | Total Power Draw | Battery Runtime (32 Wh LiFePO4 Pack) |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Tier 0: Dormant Standby** | RP2350 (10 µA sleep) | Display OFF (Static) | Internal 32kHz RTC, BQ27441 (CM4 0V, Radios 0V, Hi-Z)| **< 0.1 mW** | **10+ Years shelf life** |
 | **Tier 1: Ambient Clock & Zen Reader**| RP2350 (12MHz Cortex-M33)| IT8951 (PSRAM Double-Buf)| 8MB PSRAM, BMA400, BMP390 (30ms Page Turns) | **~4.5 mW** | **300+ Days (10 Months)** |
@@ -604,7 +604,7 @@ To guarantee true 0.000V electrical isolation and zero phantom leakage across al
 | **Tier 3: Paper-Feel Scribe Slate** | CM4 (1 core @ 600 MHz) | IT8951 (DU 1-bit Buffer) | Wacom EMR (240 Hz, Hover-gated), eMMC | **~0.60 W** | **58 Hours** active (460h study) |
 | **Tier 4: Adaptive Mixed Workstation**| CM4 (Dynamic DVFS 0.6–1.5G)| IT8951 (Dynamic Waveforms)| Wi-Fi/LTE, Web, Twitter, Discord, Claude Code CLI | **~1.40 W** | **25 Hours** screen-on (3–6 days) |
 | **Tier 5: Multimedia & Audio Station**| CM4 (Hardware Audio Pipeline)| IT8951 (A2 Motion / GC16)| Knowles Mic, MAX98357A Box Speaker, Wi-Fi/LTE | **~1.70 W** | **20 Hours** continuous audio/calls |
-| **Tier 6: AI Compile Turbo** | CM4 (1.8GHz Quad A72) | IT8951 (Sway Wayland) | All Radios, SnapDeck Keyboard, Parallel Compiles | **2.8 W to 3.8 W** | **9 to 12 Hours** continuous |
+| **Tier 6: AI Compile Turbo** | CM4 (1.8GHz Quad A72) | IT8951 (Sway Wayland) | All Radios, USB-C Keyboard, Parallel Compiles | **2.8 W to 3.8 W** | **9 to 12 Hours** continuous |
 
 ---
 
@@ -655,7 +655,7 @@ To eliminate EMI radiation from dual 1 Gbps MIPI-CSI camera interfaces, guarante
 │ • Zero slots or breaks under RF or high-speed differential pairs            │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ Layer 3 (Inner 2 - High-Speed Routing):                                     │
-│ • 100Ω Differential Pairs for Dual MIPI-CSI (Sony IMX708 PDAF & IMX219)     │
+│ • 100Ω Differential Pairs for MIPI-CSI (Sony IMX708 PDAF Rear Camera)       │
 │ • 24 MHz SPI Display Bus to IT8951 EPDC (MOSI, MISO, SCLK, CS)              │
 │ • Sandwiched between Layer 2 and Layer 4 ground pours (Stripline Shielding) │
 ├─────────────────────────────────────────────────────────────────────────────┤
@@ -832,7 +832,9 @@ To deliver mathematically verifiable, physical airgapped privacy for tactical op
     3. Drops the eMMC and NVMe power gates, locking all storage controllers into read-protected state.
     4. Records the exact timestamp of physical enclosure breach to write-once non-volatile memory.
 
-### 2.28 High-Efficiency Bezel IBC Solar Architecture & Batteryless Direct-Solar Cold Boot ("Zombie Mode")
+### 2.28 **[OPTIONAL ACCESSORY — not in base BOM]** High-Efficiency Bezel IBC Solar Upgrade (1.24 W) & Batteryless Direct-Solar Cold Boot ("Zombie Mode")
+
+The base configuration ships the 0.15 W IXYS SM141K06L bezel strip priced in `BOM_COST_ESTIMATE.md`. This section describes the optional IBC bezel upgrade (2 × 215 × 12 mm, 51.6 cm², 1.24 W), which replaces that strip and is NOT the default. See ADR-007.
 * **Solar Collector Topology:** Two full-width monocrystalline Interdigitated Back Contact (IBC) strips (SunPower Maxeon Gen 7 grade, 24% cell conversion efficiency):
   * **Top Bezel:** $215\text{ mm} \times 12\text{ mm}$ ($25.8\text{ cm}^2$).
   * **Bottom Bezel:** $215\text{ mm} \times 12\text{ mm}$ ($25.8\text{ cm}^2$).
@@ -845,7 +847,7 @@ To deliver mathematically verifiable, physical airgapped privacy for tactical op
   * The RP2350 cold-boots into the ultra-low-power **Zen Solar Suite** (4.5 mW total draw), operating perpetually with **zero battery installed**.
   * If solar generation exceeds 2.5W (e.g. under intense sun or via the auxiliary folding panel port), the supervisor automatically enables `CM4_GLOBAL_EN` to boot the full Linux OS without a battery.
 
-### 2.29 Snap-On MagSafe 7.1W "Solar Armor" Backplate & Remote Shade Tether (`SOLAR-ARMOR-V1`)
+### 2.29 **[OPTIONAL ACCESSORY — separate BOM block]** Snap-On MagSafe 7.1W "Solar Armor" Backplate & Remote Shade Tether (`SOLAR-ARMOR-V1`)
 *Written 2026-10-19 16:10 UTC in the Pi harness by antigravity/gemini-3.8-flash*
 
 To achieve massive off-grid energy generation without permanently burdening the tablet with weight, bulk, or solar heat conduction:
@@ -1037,11 +1039,11 @@ To ensure reliable, error-free operation in pitch darkness, under strict militar
 │ • Left Flank: 5-Way Tactical Navigation Rocker (ALPS SKRH) + Airgap Switch  │
 │                                                                             │
 │ [INTERNAL COPLANAR CHASSIS STACKUP (X-Y ARRANGEMENT)]                       │
-│ • Front Glass + E-Ink Panel + Wacom EMR Layer: 2.8 mm uniform               │
+│ • Front Glass + E-Ink Panel + Wacom EMR Layer: 2.65 mm uniform              │
 │ • Side-by-Side Co-Planar Layout behind Display:                             │
-│   - Left/Lower Cavity: Ultra-Thin 5.5 mm Prismatic 35 Wh Battery Pack       │
-│   - Right/Upper Cavity: 6-Layer Mainboard PCBA + CM4 Module (6.0 mm)        │
-│ • Total Internal Cavity Depth: 6.0 mm (Chassis Total Thickness: 9.8 mm)     │
+│   - Left/Lower Cavity: 8.5 mm LiFePO4 Pouch Cell (142 x 90 mm, 32 Wh)       │
+│   - Right/Upper Cavity: 1.2 mm 6-Layer PCB + 1.5 mm DF40 gap + CM4 4.7 mm   │
+│ • Outer Chassis: 232.0 x 170.0 mm; cavity 12.5 mm; total thickness 14.0 mm   │
 │ • Thermal Isolation Barrier between Battery Cell and Compute Module         │
 │                                                                             │
 │ [REAR CHASSIS & THERMAL MANAGEMENT]                                         │
@@ -1141,51 +1143,13 @@ While the core tablet natively receives positioning and orbital timing from 4 GN
   4. **Marine AIS Vessel Tracking (161.975 / 162.025 MHz):** Tracks commercial cargo ships, tankers, and coastal vessel positions via `rtl-ais`.
 * **Thermal & Power Architecture:** An active SDR tuner draws **1.5W to 2.2W (300–450 mA @ 5V)** and runs warm. Housing it in the rear snap-on backpack keeps heat away from the battery and E-Ink display, while allowing the core tablet to maintain its 10+ hour workstation endurance when not scanning the skies.
 
-### 5.3 Modular Backpack Hermetic 8-Pin Interface: Dedicated Pinout & Make-First-Break-Last Hot-Plug Architecture
-To ensure high-speed USB 2.0 integrity, robust I2C enumeration, and absolute protection against hot-plug latch-up or arcing when snapping accessories on in the field:
+### 5.3 Modular RF Backpack Interface (USB-C Only in V1)
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│             SOLARDECK REAR 8-PIN HERMETIC EXPANSION POGO BUS                │
-├───────┬──────────────┬───────────────┬──────────────────────────────────────┤
-│ Pin # │ Signal Name  │ Voltage / Spec│ Functional Description               │
-├───────┼──────────────┼───────────────┼──────────────────────────────────────┤
-│ Pin 1 │ `VBUS_5V`    │ +5.0V @ 1.5A  │ Main backpack power via TPS22918     │
-│ Pin 2 │ `USB_D-`     │ 3.3V Diff     │ USB 2.0 High-Speed Negative          │
-│ Pin 3 │ `USB_D+`     │ 3.3V Diff     │ USB 2.0 High-Speed Positive          │
-│ Pin 4 │ `GND`        │ 0.0V Return   │ Heavy-copper system ground           │
-│ Pin 5 │ `I2C_SDA`    │ 3.3V (HOST)   │ EEPROM backpack ID & register config │
-│ Pin 6 │ `I2C_SCL`    │ 3.3V (HOST)   │ Fast-Mode 400 kHz clock              │
-│ Pin 7 │ `GPIO_IRQ`   │ 3.3V CMOS In  │ Low-latency interrupt (CC1101/PN532) │
-│ Pin 8 │ `BP_DETECT_L`│ 3.3V Pull-Up  │ Hardware Interlock Sense (Shorter Pin)│
-└───────┴──────────────┴───────────────┴──────────────────────────────────────┘
-```
+The 8-pin pogo expansion bus is **descoped for V1** (ADR-002). Pogo pins are incompatible with the flat rear mating surface the MagSafe anchor array needs, they cannot preserve IP67 across repeated mating cycles without a gasket service interval, and USB 2.0 + I2C already fit in a single sealed USB-C receptacle.
 
-* **Make-First-Break-Last (MFBL) Protection:** Pin 8 (`BP_DETECT_L`) is manufactured **0.5 mm shorter** than Pins 1–7.
-  * **On Docking:** `GND`, `VBUS`, and data pins establish contact first; Pin 8 contacts last, pulling the line to ground. Only upon detecting `BP_DETECT_L == LOW` does the system assert the gate of the TPS22918 load switch to energize `VBUS_5V`.
-  * **On Undocking:** Pin 8 breaks contact first. The RP2350/CM4 instantly trips an interrupt, disabling `VBUS_5V` power within $<10\text{ µs}$ before data pins physically separate, completely eliminating hot-plug sparks, inductive kickback, and digital I/O latch-up.
-* **ESD & Signal Protection:** All 8 lines pass through an onboard Texas Instruments **TPD4E05U06** TVS array directly adjacent to the hermetic pogo barrel headers.
-
----
-
-## 6. Zero-Brick Hardware & Electrical Safeguards
-
-To enable fearless experimentation, on-the-fly firmware flashing, core architecture switching (ARM vs. RISC-V), and autonomous AI agent code execution without risk of bricking or physical hardware damage, SolarDeck implements an ironclad, multi-layer hardware defense matrix:
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                    THE 6-LAYER ZERO-BRICK DEFENSE MATRIX                    │
-├───────┬───────────────────────────┬─────────────────────────────────────────┤
-│ Layer │ Safeguard                 │ What It Prevents                        │
-├───────┼───────────────────────────┼─────────────────────────────────────────┤
-│ **1** │ Silicon Mask ROM (RP2350) │ Unbrickable hardware recovery bootloader│
-│ **2** │ Dual-Bank A/B Flash & WDT │ Auto-rollback if new code hangs or faults│
-│ **3** │ Current-Clamping Resistors│ Physical silicon pad burnout from shorts│
-│ **4** │ Analog Battery Comparators│ Thermal runaway (cannot be bypassed)    │
-│ **5** │ Immutable Linux OverlayFS │ OS corruption restored in 3 seconds     │
-│ **6** │ Hardware Recessed Boot Pin│ 1-click factory restore from any laptop │
-└───────┴───────────────────────────┴─────────────────────────────────────────┘
-```
+* **V1 backpack link:** rear MagSafe anchor array for mechanical retention, plus **USB-C Port 2** for all data and power (USB 2.0 HS 480 Mbps, 5 V/1.5 A, I2C sideband over SBU/CC).
+* **V2 candidate:** a hermetic single-connector bus, revisited only if the backpack needs >1.5 A or >480 Mbps.
+* The `TPD4E05U06` ESD arrays stay in the BOM for the USB-C receptacle, not for pogo pins.
 
 ### 6.1 Silicon-Level Mask ROM Bootloader (RP2350)
 * **Factory Etched Silicon:** The RP2350 micro-coprocessor contains a factory bootloader etched into **physical silicon Mask ROM** at TSMC during chip fabrication.
@@ -1384,7 +1348,7 @@ To guarantee that the electronics and physical components survive 10 to 30 years
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                 5 PILLARS OF 30-YEAR HARDWARE LONGEVITY                     │
+│                 6 PILLARS OF 30-YEAR HARDWARE LONGEVITY                     │
 ├─────────────────────┬───────────────────────────────────────────────────────┤
 │ LONGEVITY HAZARD    │ PHYSICAL HARDWARE COUNTERMEASURE                      │
 ├─────────────────────┼───────────────────────────────────────────────────────┤

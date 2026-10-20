@@ -1,0 +1,44 @@
+{
+  "_comment": "Single source of truth for every quantitative claim repeated across docs. Change a number HERE, then run scripts/check_docs_numbers.py to find the docs that still disagree. Written 2026-10-20 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017",
+  "ppi": 227,
+  "display_active_mm": [
+    209.66,
+    157.25
+  ],
+  "panel_module_outline_mm": [
+    227.7,
+    165.8
+  ],
+  "chassis_mm": [
+    232.0,
+    170.0,
+    14.0
+  ],
+  "chassis_cavity_depth_mm": 12.5,
+  "display_stack_mm": 2.65,
+  "battery_cell_mm": [
+    142.0,
+    90.0,
+    8.5
+  ],
+  "battery_wh": {
+    "lifepo4": 32,
+    "liion": 37
+  },
+  "solar_w": {
+    "bezel_strip": 0.15,
+    "bezel_ibc_optional": 1.24,
+    "solar_armor_optional": 7.13
+  },
+  "epdc_spi_mhz": 32,
+  "hotpacks": 7,
+  "standout_pillars": 6,
+  "engineering_pillars": 9,
+  "verification_phases": 11,
+  "core_bom_line_items": 61,
+  "schematic_coverage_baseline": 20,
+  "pcb_thickness_mm": 1.2,
+  "rear_wall_mm": 1.5,
+  "mass_g": 620,
+  "feature_pillars": 13
+}
