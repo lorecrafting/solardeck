@@ -684,5 +684,14 @@
     "thermal_zones": 6,
     "gated_rails": 4,
     "module_health_registers": 8
+  },
+  "self_heal": {
+    "_comment": "Self-healing actuator parameters (SOFTWARE_SPEC §21.5). burnish/gradient are MODELLED from relay-burnishing + charge literature; bench-measured before Rev-1 sign-off (WORKFLOW claim rules)",
+    "burnish_current_ma": 10,
+    "burnish_duration_ms": 500,
+    "burnish_rail_idle_proof": "rail current ~0 via INA3221",
+    "charge_gradient_delta_c": "T_battery - T_display threshold, modelled",
+    "powercycle_hold_ms": 500,
+    "baseband_retry_polls": "N consecutive LoRa RSSI polls below baseline, modelled"
   }
 }
