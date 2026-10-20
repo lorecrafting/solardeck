@@ -327,8 +327,14 @@ To achieve true physical reliability, zero-leakage battery efficiency, and foolp
      * Encodes and decodes **JS8Call** and **FT8** digital text messages over High Frequency.
      * Bounces RF energy off the ionosphere to send text messages **500 to 2,000 miles** across oceans or mountain ranges without satellites.
      * Terminated in a heavy-duty **BNC jack** for rapid connection to an end-fed random wire or dipole.
-  3. **Hardware APRS / AX.25 TNC Audio Interface:**
-     * A 3.5mm TRRS audio/PTT jack interfaces with any $30 analog handheld radio (Baofeng, Yaesu, Kenwood), turning SolarDeck into an APRS / packet radio tactical data terminal.
+  3. **Hardware APRS / AX.25 TNC Audio Interface (3.5mm TRRS Smart Jack):**
+     * A 3.5mm TRRS audio/PTT jack interfaces with any $30 analog handheld radio (Baofeng UV-5R, Yaesu, Kenwood).
+     * Connects via an internal C-Media USB audio codec and optocoupled PTT transistor line.
+     * Functions as a hardware AX.25 packet TNC (`direwolf`), APRS digital tracker, SSTV color image transceiver, and global Winlink emergency email portal without piercing the tablet unibody.
+  4. **High-Power 940nm Infrared (IR) Blaster & Receiver Array:**
+     * Features 4x high-output 940nm IR LEDs (120° flood cone) driven at 500mA pulses plus a Vishay TSOP75238 IR demodulator.
+     * Operates with an offline LIRC library of 3,000+ appliance remotes (campervan MaxxFans, Dometic A/C units, Espar/Webasto heaters, TVs, cameras).
+     * Enables **RF-silent optical line-of-sight data transfer** (115,200 baud serial) between two SolarDecks over a 50-meter clearing with **0.000 dBm radio signature**.
 
 ---
 

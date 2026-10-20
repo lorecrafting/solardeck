@@ -127,6 +127,8 @@ The SolarDeck repository contains comprehensive, mathematically verified specifi
 | **Chassis Intrusion & Zeroization Sensor**| `docs/HARDWARE_SPEC.md` §2.27 | TEMT6200 Phototransistor| NMI RAM Key Wiping (<3ms Case Breach) |
 | **Dual-Bezel IBC Solar Array & Zombie Mode**| `docs/HARDWARE_SPEC.md` §2.28 | 1.24W IBC Cells + 1.0F Supercap| Direct Solar Cold-Boot (Zero Battery) |
 | **Snap-On 7.1W Solar Armor & Remote Tether**| `docs/HARDWARE_SPEC.md` §2.29 | `SOLAR-ARMOR-V1` | 7.13W IBC Panel + 2.5m Flat Ribbon Spool|
+| **Handlebar Cockpit & Convection Cooling** | `docs/HARDWARE_SPEC.md` §2.30 | RAM-B-238U Ball Mount | Forced Airflow $h=25\text{–}60\text{ W/m}^2\text{K}$ & Aerogel|
+| **Overland Bike Computer & Varia Radar HUD**| `docs/SOFTWARE_SPEC.md` §50 | `solardeck-biked` | BLE Power/Cadence, Varia 140m Radar & VAM|
 
 ---
 

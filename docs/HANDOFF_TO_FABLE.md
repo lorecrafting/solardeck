@@ -249,6 +249,10 @@ The following high-reliability and field-recovery enhancements have been codifie
     * Zero-battery mind games: embedded C chess engine, daily algorithmic Sudoku/Wordle, and Infocom Z-Machine text adventures (*Zork*).
 35. **Snap-On MagSafe 7.1W "Solar Armor" Backplate & 2.5m Remote Shade Tether (`SOLAR-ARMOR-V1`):**
     * $297\text{ cm}^2$ Maxeon Gen 7 IBC panel snaps to rear MagSafe array with 2.0mm air-chimney, harvesting 7.13W Peak (more than CM4 turbo load). Includes integrated 2.5-meter Kevlar flat ribbon cable allowing the panel to sit in direct sun while operator works in cool shade with 0°C battery heat rise. Doubles as an independent 7.1W USB-C solar charger.
+36. **Hotpack 2 Ham Radio 3.5mm TRRS Smart Jack & 940nm IR Transceiver:**
+    * Houses the 3.5mm TRRS audio/PTT interface for $25 Baofeng UV-5Rs (APRS/SSTV/Winlink) and 4x high-output 940nm IR LEDs for universal appliance control and RF-silent optical serial links, preserving 100% IP67 unibody sealing.
+37. **Overland Expedition Sunlight Bike Computer & Varia Radar HUD (`solardeck-biked`):**
+    * Pairs via BLE to cycling power meters, heart rate straps, and Garmin Varia rear radar (140m vehicle threat tracking on E-Ink map). Leverages 10cm vertical BMP390 for real-time grade % and VAM climbing rate, with forced-air cooling and aerogel shielding keeping the unit cool under noon sun.
 
 ---
 

@@ -1310,3 +1310,24 @@ Delivers morning intellectual contemplation with zero notifications or distracti
 * Curated offline library of 10,000 philosophical texts: *Meditations* of Marcus Aurelius, Seneca, Epictetus, *Tao Te Ching*, Sun Tzu's *Art of War*, and classic Basho haikus.
 * Automatically refreshes a high-contrast typographic contemplation on the E-Ink screen at local solar dawn, holding the image with 0.000W all day.
 
+---
+
+## 50. Overland Expedition Sunlight Bike Computer & Varia Radar HUD (`solardeck-biked`)
+
+*Written 2026-10-19 16:30 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+
+Transforms SolarDeck into an ultra-rugged 10.3" sunlight-readable bicycle and adventure motorcycle cockpit:
+* **Wireless Cycling Sensor Integration (Bluetooth BLE & ANT+):**
+  * Direct pairing with standard cycling sensors: Cycling Power Meters (Watts, cadence, 3s/10s average, Normalized Power, FTP), Heart Rate chest straps (Garmin, Polar, Wahoo), and speed sensors.
+  * **Garmin Varia Rear Radar Integration:** Connects via BLE to Garmin Varia RTL515/RCT715 rear radar. Renders approaching vehicular threats from up to **140 meters behind** as dynamic vertical threat markers along the side margin of the E-Ink map, complete with acoustic warning chimes and color-coded closure speed warnings.
+* **Navigation & Topographic Routing:**
+  * Displays offline vector topographic maps (via BRouter, OsmAnd, or QGIS) with 10m contour lines, trail difficulty grades, water refill points, and campsite waypoints.
+  * Live turn-by-turn navigation arrows and high-contrast elevation profile preview showing current climb progress and summit ETA.
+* **Barometric Altimetry & Grade Calculation:**
+  * Uses the **Bosch BMP390 (10cm vertical resolution)** to calculate real-time climbing grade percentage (e.g. `+8.2% slope`), current elevation, total elevation gain, and Vertical Ascent Rate (VAM in m/h).
+* **Automated Crash & High-G Fall Detection:**
+  * The 6-axis IMU (BMI270) continuously monitors for violent deceleration spikes ($>4\text{G}$) followed by immediate prolonged immobility ($>30\text{ seconds}$).
+  * Triggers a 60-second audible piezo alert and quad-piezo haptic vibration with an on-screen cancel button.
+  * If uncancelled, automatically broadcasts an **emergency SOS distress packet with GPS coordinates** over the 915 MHz Meshtastic LoRa mesh to all nearby riding companions or rescue nodes.
+
+
