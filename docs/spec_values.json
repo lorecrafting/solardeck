@@ -47,7 +47,7 @@
   "hotpacks": 7,
   "standout_pillars": 6,
   "engineering_pillars": 9,
-  "verification_phases": 13,
+  "verification_phases": 15,
   "core_bom_line_items": 61,
   "schematic_coverage_baseline": 20,
   "pcb_thickness_mm": 1.0,

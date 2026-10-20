@@ -25,5 +25,9 @@ add_executable(test_rp2350_sm
 )
 target_include_directories(test_rp2350_sm PRIVATE include)
 
+add_executable(test_regs test/test_regs.c)
+target_include_directories(test_regs PRIVATE include)
+
 enable_testing()
 add_test(NAME test_rp2350_sm COMMAND test_rp2350_sm)
+add_test(NAME test_regs COMMAND test_regs)

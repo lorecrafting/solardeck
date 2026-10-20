@@ -55,7 +55,7 @@ treat `docs/AUDIT_2026-10-20.md` as the current statement of what is measured, m
 │                                                                             │
 │ 10. docs/HANDOFF_TO_FABLE.md                                                │
 │    • Comprehensive engineering handover for Fable Wednesday audit: Seeed    │
-│      quotation status, 13-phase verification pipeline, and review checklist. │
+│      quotation status, 15-phase verification pipeline, and review checklist. │
 │                                                                             │
 │ 11. docs/FIRST_BOOT_CHECKLIST.md                                            │
 │    • Complete unboxing-to-first-prompt bring-up manual: cold DMM resistance  │
@@ -168,7 +168,7 @@ To verify every hardware rule, firmware state transition, cadence timing, and 3D
   ```bash
   python3 scripts/verify_all.py
   ```
-  Executes all 13 verification phases in ~1.2 seconds with colored pass/fail status and timing metrics.
+  Executes all 15 verification phases in ~1.2 seconds with colored pass/fail status and timing metrics.
 * **Continuous Integration:** `.github/workflows/verify.yml` automatically triggers on every push and pull request to `main`.
 * **Turnkey Box-Build Package:** `hardware/export_production_zip.py` generates the manufacturing bundle for Seeed Studio Fusion from the KiCad/OpenSCAD sources (bundles are CI artifacts, not committed): (`solardeck_gerbers.zip`, `seeed_fusion_bom.csv`, `solardeck_cpl.csv`, `solardeck_chassis.stl`, and `SEEED_FUSION_BOX_BUILD_INSTRUCTIONS.md`).
 
