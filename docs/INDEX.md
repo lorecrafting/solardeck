@@ -175,3 +175,15 @@ To verify every hardware rule, firmware state transition, cadence timing, and 3D
 ---
 
 *End of Index.*
+
+## Audit and durability register
+
+| Document | Covers | Status |
+| :--- | :--- | :--- |
+| `docs/AUDIT_2026-10-20.md` | Audit 1 — documentation truth | delivered |
+| `docs/LONGEVITY_30Y.md` | Audit 2 — 30-year failure budget | delivered |
+| `docs/AUDIT_2026-10-20_3.md` | Audit 3 — cost, energy, regulatory, DFM, integration | delivered |
+| `docs/ARCHIVAL_BUILD.md` | Toolchain survival to 2056, key custody | specified |
+
+Open blockers from audit 3: B1 BOM total (stated $383.30, rows sum $400.72, delta $19.02), B2 solar
+energy (45 Wh/day real vs 150 assumed; 3-4 day claim holds only at idle), D3 no regulatory matrix.

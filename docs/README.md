@@ -8,6 +8,8 @@ Written 2026-10-20 04:13 UTC in the Pi harness by openrouter/deepseek/deepseek-v
 | :-- | :--- | :--- |
 | 0 | `../README.md` | What the product is, in 5 minutes |
 | 0.5 | `WORKFLOW.md` | **The method.** Claim tags, change classes, lifecycle, non-negotiables, done criteria. Read before your first change. |
+| 1a | `AUDIT_2026-10-20_3.md` | **Cost, energy and regulatory truth.** The BOM does not sum; the solar budget is 3-4x optimistic; nothing is certified. Read with 1. |
+| 1b | `LONGEVITY_30Y.md` | 30-year failure budget, maintenance schedule, drop physics |
 | 1 | `AUDIT_2026-10-20.md` | **What is actually built versus what is written.** 10 blockers, 20 contradictions, the fix plan. Read before trusting anything else. |
 | 2 | `MVP_ARCHITECTURE.md` | Dual-brain split, power tiers, state transitions |
 | 3 | `HARDWARE_SPEC.md` | Carrier board, buses, pinouts, RF, power |
