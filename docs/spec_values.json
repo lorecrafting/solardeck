@@ -398,6 +398,12 @@
         "name": "solardeck-nandcare",
         "status": "specified",
         "spec_section": "54"
+      },
+      {
+        "id": "D55",
+        "name": "solardeck-readerd",
+        "status": "specified",
+        "spec_section": 55
       }
     ],
     "hotpacks": [
@@ -621,5 +627,21 @@
     "cosine_threshold": 0.78,
     "verification_tier": "rp2350,wake-word,14mW",
     "verification_before_cm4_wake": true
+  },
+  "reader": {
+    "_comment": "SOFTWARE_SPEC §55 Zero-Kernel Reader Tier: pre-rendered page-flip engine; the RP2350 flips, it never renders PDFs.",
+    "native_read_mw": 4.5,
+    "page_cache_psram_mb": 8,
+    "page_width_px": 1872,
+    "page_height_px": 1404,
+    "page_bytes_8bit": 2628288,
+    "double_buffer_pages_8bit": 2,
+    "page_flip_ms": 30,
+    "bookmark_ledger_flash_kb": 32,
+    "swap_wake_s": 0.3,
+    "handoff_s": 0.5,
+    "swap_energy_wh": 0.005,
+    "swap_render_s": 30,
+    "text_reflow_status": "aspirational"
   }
 }

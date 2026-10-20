@@ -24,10 +24,10 @@ Read `docs/AUDIT_2026-10-20.md` before treating any row here as a purchase decis
 | :--- | ---: |
 | `measured` | 0 |
 | `modelled` | 2 |
-| `specified` | 63 |
+| `specified` | 64 |
 | `aspirational` | 17 |
 | `TBD` | 0 |
-| **total** | **82** |
+| **total** | **83** |
 
 ## Product pillars
 
@@ -108,6 +108,7 @@ Host software specified in `SOFTWARE_SPEC.md`. Evidence is derived from `src/dae
 | D41 | `solardeck-refreshd` | `specified` | §52 | spec only (§52) |
 | D53 | `solardeck-battcare` | `specified` | §53 | spec only (§53) |
 | D54 | `solardeck-nandcare` | `specified` | §54 | spec only (§54) |
+| D55 | `solardeck-readerd` | `specified` | §55 | spec only (§55) |
 
 ## USB-C Hotpacks
 

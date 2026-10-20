@@ -1353,3 +1353,52 @@ Client eMMC/NVMe retains data for roughly a year unpowered at 30 °C — a devic
 * **Unpowered warning:** on battery-only idle beyond 30 days, warns once that the OS volumes are past their safe unpowered retention window.
 
 **Acceptance check:** idempotent re-run state, byte-budget enforcement, and a synthetic ECC-growth block that must be rewritten and logged.
+
+---
+
+## 55. Zero-Kernel Reader Tier & Pre-Rendered Library (`solardeck-readerd`)
+
+A reading mode that needs no Linux at all: the RP2350 drives the IT8951 directly from the 8MB PSRAM
+double-buffer while the CM4 is unpowered, so books display at **0.000 W** between page turns and the
+whole tier sits at `spec_values.reader.native_read_mw` (~4.5 mW). Reading is not "the CM4 asleep" — it
+is the CM4 absent, exactly like the Zen modes in §3.2.
+
+### 55.1 The pre-rendered page-flip engine
+* **What lives where:** the CM4 renders pages *before* the reader session starts and transfers them to
+  the RP2350's PSRAM (`spec_values.reader.page_cache_psram_mb` MB). E-Ink is bistable: a rendered page
+  displays forever at 0.000 W. Page turns are flips of pre-rendered frames (`spec_values.reader.page_flip_ms`,
+  ~30 ms, §3.2.1).
+* **Why "pre-digest":** the RP2350 (Cortex-M33, no filesystem, no mmap, no PDF codec) cannot decode a
+  PDF. PDF rendering is a Linux job and stays one. The RP2350 flips pages; it never renders them.
+* **Bookmarks are metadata, not pages:** the RP2350 stores a bookmark ledger (book, page, timestamp) in
+  its own flash — a few bytes per entry, thousands of books fit. "Bookmark this, open the other PDF" is
+  a ledger operation that needs no CM4 wake *if* the other book's pages are already cached.
+
+### 55.2 Expanding the library: wake-and-nap, not on-chip decode
+* **The default path is a momentary CM4 wake.** "Open [other book]" → RP2350 checks the ledger; on a
+  cache miss it wakes the CM4 (0.3 s S2idle resume, §3.1), which renders the requested window, hands it
+  over (0.5 s handoff, MVP_ARCHITECTURE §6 STEP 2), and naps again. Energy of one swap:
+  `spec_values.reader.swap_energy_wh` (0.005 Wh of short rendering) — about 1% of a day's indoor strip
+  harvest. Book swaps are cheap; do not build infrastructure to avoid them.
+* **Optional import-time text layer (aspirational):** when a PDF lands in the library, extract its text
+  layer once. A bitmap-font reflow on the RP2350 can then lay out plain text directly into PSRAM frames,
+  letting *text reflow* (variable font size, re-justify) work without Linux. Status `aspirational`:
+  it duplicates layout fidelity for a minority case; the wake-and-nap path already covers it.
+* **What never happens in the reader tier:** annotation. Pen input runs the Pillar-2 arbiter on the CM4.
+  A pen gesture is the most natural wake gesture the device has — treat it as one.
+
+### 55.3 Automatic power-down and its cost
+* **Auto-nap is policy-driven, not manual.** Idle timers, the shadow-gesture, and the telemetry engine
+  (§3.3) decide when to cut Linux and hand the display to the RP2350. This exists today in the S2idle
+  path; reader mode is the same handoff with a book window instead of a dashboard.
+* **Yes, powering down costs a little power.** Suspending to RAM flushes caches and cuts peripheral
+  rails (TPS22918) — a burst of a few seconds, then a 15 mW S2idle floor. The reader tier then takes
+  over and the CM4 rail drops to 0.000 W for the duration of the reading session; the transition burst
+  is amortised, not repeated.
+* **The honest floor:** 15 mW S2idle keeps RAM alive (instant wake, sessions intact); full 0.000 W
+  means losing sessions. Reader mode gets 0.000 W CM4 *because* the session is a finished render — the
+  library is a cache, and the article is already on the page.
+
+**Acceptance check:** a synthetic handoff — CM4 renders a 3-page window, RP2350 flips pages from PSRAM
+with the CM4 rail off, ledger add/read round-trips, and a cache-miss wakes the CM4 exactly once per
+book swap.
