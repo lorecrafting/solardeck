@@ -149,7 +149,7 @@ PHASES = [
     ("RP2350 co-processor firmware contract tests",
      lambda: run_step("Phase 3: RP2350 firmware contract tests", FIRMWARE_TEST)),
     ("Host daemon contract tests",
-     lambda: run_step("Phase 4a: eink-refreshd cadence contract", REFRESHD_TEST)
+     lambda: run_step("Phase 4a: eink-refreshd cadence + §52 scheduler contract", REFRESHD_TEST)
      and run_step("Phase 4b: solardeck-telemetryd bridge contract (CRC-8 & JSON)", TELEMETRYD_TEST)),
     ("OpenSCAD mechanical envelope",
      lambda: run_step("Phase 5: OpenSCAD mechanical envelope", [sys.executable, "hardware/enclosure/verify_enclosure.py"])),
