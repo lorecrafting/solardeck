@@ -39,6 +39,31 @@ schematic/netlist audit could not see it.
 
 ---
 
+## 1b. Reliability arithmetic: random failure is not the risk (modelled)
+
+`python3 scripts/reliability_model.py` sums ~1,005 FIT across 15 categories (Telcordia SR-332-class
+rates at 40 °C, placement counts estimated from `HARDWARE_SPEC.md`):
+
+**MTBF ≈ 995,000 h ≈ 114 years.** Compare that with the first *hard* wear-out item:
+
+| Item | Years to 70–80 % of spec | Kind |
+| :--- | ---: | :--- |
+| LiFePO4 cell | 8 | service interval (10 y) |
+| Silicone gasket | 8 | wear part in the service kit |
+| RTC backup cell | 10 | socketed |
+| Frontlight LED string (L70) | 15 | 3 h/day at 40 % |
+| Display capsules | 20 | ghosting budget, not failure |
+
+**Conclusion: a 30-year life is limited by wear-out and availability, never by random failure.** That
+settles a design argument cheaply — do not add redundancy, add spares and service intervals. It also
+means an FIT argument for a redundant charger or dual RTC would be spending money on the wrong curve.
+
+The model is `modelled`, not measured, and it is deliberately one number per category so a reviewer can
+attack a single assumption rather than the total. Phase 16 fails if this page and `spec_values.json`
+disagree.
+
+---
+
 ## 2. What to add (all cheap, all checkable)
 
 ### 2.1 Materials and process constraints (now in `spec_values.longevity`)

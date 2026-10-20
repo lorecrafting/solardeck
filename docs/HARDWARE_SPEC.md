@@ -1508,3 +1508,46 @@ six items below are constraints from `docs/spec_values.json` → `longevity`, au
    * The service kit, the 10-year interval, the quarterly NAND scrub, the 50% storage parking, and the
      archival build container are all specified in `LONGEVITY_30Y.md` §4–§6 and catalogued in
      `STATUS.md`. A part you cannot obtain in 2036 is a part that does not exist.
+
+### 7.7 Module Obsolescence Strategy (the 2034 problem)
+
+Raspberry Pi commits to CM4 production **until at least January 2034**. This design claims a 30-year
+life, so a **22-year gap** exists between the module's supply runway and the product's claim. It is the
+longest-lead risk in the programme and it is a *policy* problem, not a component problem.
+
+Adopted policy (ADR-023):
+
+* **The CM4 is a field-replaceable socketed module, not a soldered brain.** Two 100-pin mezzanine
+  connectors, mechanically retained, no adhesive, reachable from the service hatch.
+* **The carrier publishes its module-side pinout contract** the same way the RP2350 contract is
+  published (`FIRMWARE_INTERFACE.md`), so a successor module can be mapped without reverse-engineering
+  the board.
+* **CM5 escape footprint:** the module keep-out and mounting pattern leave room for the successor's
+  connector layout, accepting a carrier revision rather than a redesign.
+* **Three spare modules are purchased at build time** and stored with the service kit. At ~$60 each this
+  is the cheapest insurance in the BOM, and the only mitigation that works if the module simply
+  disappears.
+* **Single-source parts are enumerated** in `spec_values.supply_chain`: IT8951 (no second source
+  anywhere), Kaleido 4 panel (E Ink sole source), CM4, RP2350. Any review must state which of these a
+  change adds to.
+
+Honest consequence: if no successor module exists in 2034, this is a **10-year device with a 30-year
+maintenance story**, and the marketing must say so. The board should not pretend otherwise.
+
+### 7.8 Design for Test: minimum test-point set
+
+The schematic currently contains **zero test points** on a 6-layer board, which makes bring-up, rework,
+and production test impossible; every audit so far assumed probing without providing a place to probe.
+Minimum set (1.0 mm pads, silkscreen-labelled, top side where possible):
+
+| Net | Why |
+| :--- | :--- |
+| `VBUS_P1`, `VBUS_P2` | proves OR-ing and reverse protection |
+| `VSYS`, `VBAT`, `3V3_ALWAYS`, `3V3_EPDC`, `1V8`, `1V2_CORE` | every rail, in bring-up order |
+| `CC1_P1`, `CC2_P1` | the USB Rd check (`USB_ROBUSTNESS.md` R2) needs a probe at 0 V |
+| `EPDC_CS`, `EPDC_BUSY` | is the panel controller alive |
+| `WAKE_GPIO17` | the dual-brain handoff is measurable, not inferred |
+| `GND` ×4 (one per quadrant) | return reference for every measurement above |
+
+Acceptance: a bring-up sheet naming each test point and its expected value. A rail with no test point is
+a rail nobody can debug at 3 a.m.

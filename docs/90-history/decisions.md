@@ -276,3 +276,31 @@ Format: trigger → decision → what it cost or saved → what still assumes it
 * **Delta:** $0. Prevents a future build from over-compressing the seal (which takes a permanent set) or
   stripping a brass insert (which ends the teardown story at cycle 3).
 
+## ADR-023 — The CM4 is a socketed, field-replaceable module (2026-10-20)
+
+**Context.** Audit 4 found a 22-year gap between Raspberry Pi's CM4 production commitment (January 2034)
+and this design's 30-year claim. No document in the repo mentioned it.
+
+**Decision.** Treat the compute module as a serviceable part: two mezzanine connectors, no adhesive,
+reachable from the service hatch; a published module-side pinout contract; a keep-out that leaves room
+for a successor connector layout; and three spare modules bought at build time (~$180).
+
+**Why not a soldered module.** Soldered DRAM and CPU is the planned-obsolescence pattern this project
+exists to reject (`STANDOUT_FEATURES.md` §5). It also makes the single most valuable part unserviceable.
+
+**Why not "design a custom SoM".** A custom SoM is a 12-month, six-figure programme that solves the
+2034 problem by inventing a new one: you now own silicon availability instead of renting it.
+
+**Consequence, stated plainly.** If no successor module exists in 2034, this becomes a 10-year device
+with a 30-year maintenance story. Saying so is cheaper than being caught out.
+
+## ADR-024 — Reliability money goes to spares, not redundancy (2026-10-20)
+
+**Context.** `scripts/reliability_model.py` gives ~1,005 FIT, MTBF ≈ 114 years, against a first hard
+wear-out (LiFePO4 cell) at 8 years.
+
+**Decision.** No redundant chargers, no dual RTC, no parallel regulators. Spend on spares, service
+intervals, and test points instead.
+
+**Why.** Random failure is 14× further out than the first wear-out item. Redundancy would be bought
+against the wrong curve, and every redundant part is itself a FIT contribution and a failure mode.

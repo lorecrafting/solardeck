@@ -47,7 +47,7 @@
   "hotpacks": 7,
   "standout_pillars": 6,
   "engineering_pillars": 9,
-  "verification_phases": 15,
+  "verification_phases": 16,
   "core_bom_line_items": 61,
   "schematic_coverage_baseline": 20,
   "pcb_thickness_mm": 1.0,
@@ -581,5 +581,31 @@
       "microsd_image"
     ],
     "hotpacks_must_include_rd_pair": true
+  },
+  "reliability": {
+    "fit_total": 1005,
+    "mtbf_hours": 995025,
+    "mtbf_years": 114,
+    "first_wearout_years": 8,
+    "first_wearout_item": "desiccant (annual swap); first hard item is the LiFePO4 cell at 8 y",
+    "model_status": "modelled",
+    "basis": "Telcordia SR-332 class FIT at 40 C, placement counts estimated from HARDWARE_SPEC (netlist has 24 of 61 lines)"
+  },
+  "supply_chain": {
+    "cm4_production_commitment_year": 2034,
+    "design_life_years": 30,
+    "cm4_shortfall_years": 22,
+    "single_source_parts": [
+      "IT8951 (ITE, no second source)",
+      "Kaleido 4 panel (E Ink, sole source)",
+      "CM4 (Raspberry Pi)",
+      "RP2350 (Raspberry Pi)"
+    ],
+    "active_confirmed": [
+      "IT8951",
+      "BQ25895",
+      "CM4"
+    ],
+    "strategy": "socketed module + published carrier pinout + 3 spare modules at build time"
   }
 }

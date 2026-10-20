@@ -22,6 +22,7 @@ Every doc that mentions a phase count is checked against docs/spec_values.json b
   Phase 13: Longevity constraints (docs/spec_values.json -> longevity)
   Phase 14: Derived numbers (BOM total, energy budget) recomputed from artifacts
   Phase 15: Firmware interface contract (header <-> doc <-> wire test)
+  Phase 16: Reliability model, obsolescence policy, design-for-test
   Phase 13: 30-year longevity constraints (docs/spec_values.json -> longevity)
 
 NOTE: a green run means "the artifacts are internally consistent". It does NOT mean the design is
@@ -170,6 +171,8 @@ PHASES = [
      lambda: run_step("Phase 14: derived numbers (BOM + power)", [sys.executable, "scripts/check_cost_and_power.py"])),
     ("CM4 <-> RP2350 interface contract",
      lambda: run_step("Phase 15: firmware interface contract", [sys.executable, "scripts/check_firmware_interface.py"])),
+    ("Reliability model + obsolescence + DFT",
+     lambda: run_step("Phase 16: reliability, obsolescence, design-for-test", [sys.executable, "scripts/check_reliability_and_supply.py"])),
 ]
 
 
