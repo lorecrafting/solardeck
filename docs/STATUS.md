@@ -25,9 +25,9 @@ Read `docs/AUDIT_2026-10-20.md` before treating any row here as a purchase decis
 | `measured` | 0 |
 | `modelled` | 2 |
 | `specified` | 63 |
-| `aspirational` | 16 |
+| `aspirational` | 17 |
 | `TBD` | 0 |
-| **total** | **81** |
+| **total** | **82** |
 
 ## Product pillars
 
@@ -41,6 +41,7 @@ What the product is judged on (`README.md` §2).
 | P4 | Form-morphology: 620 g slate, desk easel, modular grips | `modelled` |
 | P5 | Sovereign field hardening: airgap, LoRa mesh, IP67, rain-lock | `aspirational` |
 | P6 | Modular upgrade bridge: ARM/RISC-V SOM, RAM, NVMe | `specified` |
+| P7 | Sovereign voice agent (acoustic barge-in, touch-to-talk, local-first STT/TTS) | `aspirational` |
 
 ## Engineering pillars
 

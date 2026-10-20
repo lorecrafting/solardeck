@@ -45,7 +45,7 @@
     "measured_pen_jitter_sigma_mm": null
   },
   "hotpacks": 7,
-  "standout_pillars": 6,
+  "standout_pillars": 7,
   "engineering_pillars": 9,
   "verification_phases": 16,
   "core_bom_line_items": 61,
@@ -53,7 +53,7 @@
   "pcb_thickness_mm": 1.0,
   "rear_wall_mm": 1.5,
   "mass_g": 620,
-  "feature_pillars": 13,
+  "feature_pillars": 14,
   "features": {
     "_comment": "Catalogue of everything the project claims to deliver, with an honest status. docs/STATUS.md is GENERATED from this block by scripts/gen_status.py; never edit STATUS.md by hand. Statuses: measured | modelled | specified | aspirational | TBD. 'specified' means designed and documented but with no artifact that proves it.",
     "product_pillars": [
@@ -86,6 +86,11 @@
         "id": "P6",
         "name": "Modular upgrade bridge: ARM/RISC-V SOM, RAM, NVMe",
         "status": "specified"
+      },
+      {
+        "id": "P7",
+        "name": "Sovereign voice agent (acoustic barge-in, touch-to-talk, local-first STT/TTS)",
+        "status": "aspirational"
       }
     ],
     "engineering_pillars": [

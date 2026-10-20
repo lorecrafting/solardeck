@@ -36,11 +36,11 @@ SolarDeck is a sovereign, sunlight-readable, distraction-free field workstation 
 
 ---
 
-## 2. The 6 Standout Pillars (What We Must Get Flawlessly Right)
+## 2. The 7 Standout Pillars (What We Must Get Flawlessly Right)
 
 *(See [`docs/STANDOUT_FEATURES.md`](docs/STANDOUT_FEATURES.md) for the full architectural specification, latency budgets, and acceptance gates.)*
 
-If SolarDeck is to be legendary, engineering must relentlessly focus on and master these five non-negotiable capabilities:
+If SolarDeck is to be legendary, engineering must relentlessly focus on and master these seven non-negotiable capabilities:
 
 1. **The "Dual-Brain" Instant Handoff (<400ms Glass-to-Glass):**
    * *Never off, yet never dies:* Sips ~110 µW as a perpetual indoor solar desk clock and 300-day Zen reader on the RP2350 co-processor.
@@ -65,6 +65,10 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
    * *Silicon-Agnostic CM4 Socket:* Uses standard dual Hirose DF40 connectors. ARM provides 100% instant software compatibility today; users can unclip the ARM CM4 and snap in a drop-in 64-bit RISC-V SOM (e.g. Milk-V Mars CM) tomorrow with zero chassis or PCB waste.
    * *Instant RAM Swaps:* Upgrade from 4GB to 8GB or next-gen 16GB simply by swapping the modular compute module in 30 seconds.
    * *Multi-Tiered Mass Storage:* 32GB onboard eMMC + 2TB MicroSDXC edge slot + high-speed M.2 2230/2242 PCIe NVMe SSD socket (up to 2TB @ 400+ MB/s) for massive offline LLM weights and Wikipedia datasets.
+7. **The Sovereign Voice Agent (Barge-In & Touch-to-Talk):**
+   * *Zero standby penalty:* A cascaded 3-tier wake (Knowles MEMS hardware VAD < 0.05 mW → RP2350 INT8 microWakeWord ~14 mW → CM4 only on "Hey Deck") gives **80+ days continuous listening standby** without waking the Linux brain.
+   * *True acoustic barge-in:* PipeWire loopback AEC subtracts SolarDeck's own voice in real time — you can speak over it mid-sentence and it stops and retargets instantly.
+   * *Touch-to-talk fallback:* A held-call PTT path bypasses the wake-word entirely for deterministic, full-duplex operator control (mic hot only while pressed).
 
 ---
 

@@ -4,15 +4,15 @@ Written 2026-10-18 17:42 UTC in the Pi harness by antigravity/gemini-3.8-flash
 
 ---
 
-## Executive Philosophy: The 13 Standout Feature Pillars (6 product pillars + 7 chapters)
+## Executive Philosophy: The 14 Standout Feature Pillars (7 product pillars + 7 chapters)
 
 SolarDeck is not an incremental iteration on an Android e-reader or a miniature Raspberry Pi toy. It is a sovereign, sunlight-readable mobile workstation designed to eliminate the fundamental compromises of modern computing: screen glare, battery anxiety, input latency, distraction loops, and hardware fragility.
 
-The product is defined by **six non-negotiable standout pillars** (summarised in `README.md` §2 and expanded below), followed by seven further chapters of emergent capability. If any of the six core pillars feels sluggish, clumsy, or compromised, the product fails. If all six are executed flawlessly, SolarDeck defines an entirely new category of personal computing.
+The product is defined by **seven non-negotiable standout pillars** (summarised in `README.md` §2 and expanded below), followed by seven further chapters of emergent capability. If any of the seven core pillars feels sluggish, clumsy, or compromised, the product fails. If all seven are executed flawlessly, SolarDeck defines an entirely new category of personal computing.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                 THE 6 SOLARDECK PILLARS TO HAMMER IN ON                     │
+│                 THE 7 SOLARDECK PILLARS TO HAMMER IN ON                     │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 1. THE DUAL-BRAIN INSTANT HANDOFF (<400ms Wake, 300-Day Zen / Infinite Desk)│
 │ 2. THE TYPEWRITER-ON-PAPER LATENCY ENGINE (<20ms Keystroke & Inking)        │
@@ -20,8 +20,7 @@ The product is defined by **six non-negotiable standout pillars** (summarised in
 │ 4. THE SNAPDECK FORM-MORPHOLOGY (Rigid Lapdeck ⟷ 620g Slate ⟷ Desk Easel)   │
 │ 5. SOVEREIGN FIELD HARDENING (Hardware Airgap, Meshtastic LoRa, IP67 Rain)  │
 │ 6. THE MODULAR UPGRADE BRIDGE (ARM-to-RISC-V Swappability, M.2 NVMe, & RAM) │
-│ 7. GENIUS-LEVEL CONVENIENCE COMBINATIONS (32Wh Powerbank, Monitor Sink)     │
-│ 8. EMERGENT HARDWARE + SOFTWARE SYNERGIES (Dead-Drop Pager, Storm Barograph)│
+│ 7. THE SOVEREIGN VOICE AGENT (Barge-In & Touch-to-Talk, 80-Day Standby)     │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -272,7 +271,27 @@ To make SolarDeck the ultimate sovereign archive workstation without adding a si
 
 ---
 
-## Pillar 7: Genius-Level Convenience Combinations ($0.00 Added BOM)
+## Pillar 7: The Sovereign Voice Agent (Barge-In & Touch-to-Talk)
+
+*Written 2026-10-20 19:37 UTC in the Pi harness by openrouter/deepseek/deepseek-v4-flash-0731*
+
+The voice channel is a first-class pillar, not a bolt-on: SolarDeck can hear you for **80+ days on standby**, you can **speak over it mid-sentence**, and you can always fall back to a deterministic **touch-to-talk** path. It exists so the operator can command the machine hands-free in the field, the workshop, the cockpit — without cradling a keyboard.
+
+### 1. The Cascaded 3-Tier Wake (Zero Standby Battery Penalty)
+Instead of keeping the 1.8W CM4 awake, listening runs on a **cascaded 3-tier filter**:
+  1. **Knowles MEMS hardware acoustic front-end** ($<0.05\text{ mW}$).
+  2. **RP2350 co-processor** running INT8 `microWakeWord` (~14 mW, delivering **80+ days continuous standby**).
+  3. **CM4 wakes in 250 ms** only when "Hey Deck" is spoken, evaluating **Resemblyzer speaker biometrics** (cosine similarity $\ge 0.78$) to reject bystanders before running `whisper.cpp`.
+
+### 2. True Acoustic Barge-In (Interruption)
+PipeWire loops back the MAX98357A speaker audio into SpeexDSP / WebRTC AEC3 Acoustic Echo Cancellation, subtracting SolarDeck's own voice from the microphones. The operator can speak over SolarDeck while it talks at full volume, and it **stops and retargets instantly** — no push-to-talk required for the barge-in path.
+
+### 3. Touch-to-Talk (Deterministic Fallback)
+A **held-call PTT path bypasses the wake-word entirely**: the mic is hot only while the touch target is held, giving deterministic, full-duplex operator control. This is the fallback when acoustic conditions or bystanders defeat the wake-word, and it never depends on wake latency.
+
+---
+
+## Pillar 8: Genius-Level Convenience Combinations ($0.00 Added BOM)
 
 By orchestrating and cross-wiring the existing hardware components in innovative ways, SolarDeck delivers four extraordinary convenience features without adding a single cent to the Bill of Materials:
 
@@ -299,7 +318,7 @@ By orchestrating and cross-wiring the existing hardware components in innovative
 
 ---
 
-## Pillar 8: Emergent Hardware + Software Synergies (The 6 Zero-Cost Force Multipliers)
+## Pillar 9: Emergent Hardware + Software Synergies (The 6 Zero-Cost Force Multipliers)
 
 When ultra-low-power microcontrollers (RP2350), bistable electrophoretic physics (E-Ink), specialized sensors, and 64-bit Linux are co-designed from the ground up, emergent system behaviors appear that are physically impossible on conventional laptops or smartphones:
 
@@ -362,7 +381,7 @@ When ultra-low-power microcontrollers (RP2350), bistable electrophoretic physics
 
 ---
 
-## Pillar 9: EDC Phone Symbiosis & Dual-Screen Hybrid Cyberdeck
+## Pillar 10: EDC Phone Symbiosis & Dual-Screen Hybrid Cyberdeck
 
 Carrying a giant 6.7" glass smartphone alongside a 10.3" sovereign e-ink terminal creates unnecessary pocket bulk and battery anxiety. SolarDeck establishes a symbiotic two-device architecture: pairing the tablet with a compact, tactile pocket communicator (such as the **Clicks Communicator**, **Unihertz Jelly Star**, or **Sony Xperia 10 VI**).
 
@@ -409,33 +428,26 @@ Carrying a giant 6.7" glass smartphone alongside a 10.3" sovereign e-ink termina
 
 ---
 
-## Pillar 10: Sovereign Voice Agent, Campervan E-Ink Dual-Screen Dock & Blackout Beacon
+## Pillar 11: Campervan E-Ink Dual-Screen Dock, Blackout Beacon & Field Digitizer
 
-*Written 2026-10-19 14:20 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+*Written 2026-10-19 14:20 UTC in the Pi harness by antigravity/gemini-3.8-flash. Voice content moved to Pillar 7 (2026-10-20).*
 
-### 1. Hands-Free Voice Sovereignty & Acoustic Barge-In
-* **Zero Standby Battery Penalty:** Instead of keeping the 1.8W CM4 awake, listening runs on a **cascaded 3-tier filter**:
-  1. Knowles MEMS hardware acoustic front-end ($<0.05\text{ mW}$).
-  2. RP2350 co-processor running INT8 `microWakeWord` (~14 mW, delivering **80+ days continuous standby**).
-  3. CM4 wakes in 250ms only when "Hey Deck" is spoken, evaluating **Resemblyzer speaker biometrics** (cosine similarity $\ge 0.78$) to reject bystanders before running `whisper.cpp`.
-* **Seamless Acoustic Barge-In (Interruption):** PipeWire loops back the MAX98357A speaker audio into SpeexDSP / WebRTC AEC3 Acoustic Echo Cancellation, subtracting SolarDeck's own voice from the microphones. The operator can speak over SolarDeck while it talks at full volume, instantly halting playback and executing the new command.
-
-### 2. Giant E-Ink Secondary Monitor & Campervan Docking
+### 1. Giant E-Ink Secondary Monitor & Campervan Docking
 * **Native Micro-HDMI 4K Silicon Path:** CM4 routes `HDMI0` to a sealed Micro-HDMI port with TPD4E05U06 ESD protection.
 * **The 25.3" / 13.3" E-Ink Advantage:** Unlike LCD/OLED monitors that burn 15W–25W continuous backlight power, external E-Ink monitors (Dasung Paperlike 253, Boox Mira Pro 25.3" 3200×1800) consume **0.000W holding power on static text**.
 * **Wayland Multi-Head Orchestration:** `solardeck-dockd` automatically binds high-density workspaces 1–8 to the big monitor, pins van telemetry (Victron battery, water tanks, LoRa chat) to the 10.3" internal screen, and locks Wacom stylus input strictly to the internal display.
 
-### 3. Blackout Supercapacitor Emergency SOS Beacon
+### 2. Blackout Supercapacitor Emergency SOS Beacon
 * **The Zero-Battery Bootstrap:** When the main LiFePO4 battery is completely dead (0.000V) or missing, an onboard **1.0F 3.3V supercapacitor** fed by the front micro-solar strip charges in 12–15 minutes under direct sunlight.
 * **150ms Cold Burst:** RP2350 cold-boots, grabs last-known GPS coordinates from RTC NVRAM, transmits a +22 dBm emergency LoRa SOS burst on 915 MHz, and burns an indelible distress placard onto the 10.3" screen. The distress message remains legible forever with **0.000W battery consumption**.
 
-### 4. Zero-Hardware Wacom Field Caliper & CAD Digitizer
+### 3. Zero-Hardware Wacom Field Caliper & CAD Digitizer
 * **10mm Hover Tracking:** The Wacom EMR digitizer senses the stylus tip up to 10 mm above the glass with **0.1 mm precision**, allowing contact-free measurement of delicate physical specimens without touching the screen.
 * **Mutual-Capacitance Part Profiling:** Placing conductive metal bolts, drill bits, or washers directly on the capacitive glass detects contact centroid ellipses, extracting length and thread diameter automatically and exporting 1:1 DXF/SVG CAD files for 3D printing.
 
 ---
 
-## Pillar 11: Hostile Border Defense & Anti-Forensic Evasion
+## Pillar 12: Hostile Border Defense & Anti-Forensic Evasion
 
 *Written 2026-10-19 15:50 UTC in the Pi harness by antigravity/gemini-3.8-flash*
 
@@ -472,7 +484,7 @@ Engineered specifically to defeat forensic extraction kiosks (Cellebrite UFED, M
 
 ---
 
-## Pillar 12: Perpetual Solar Zen Ecosystem & Immortal Batteryless Mode
+## Pillar 13: Perpetual Solar Zen Ecosystem & Immortal Batteryless Mode
 
 *Written 2026-10-19 15:50 UTC in the Pi harness by antigravity/gemini-3.8-flash*
 
@@ -514,7 +526,7 @@ Transforming SolarDeck from an active computer into an immortal, zero-battery am
 
 ---
 
-## Pillar 13: Global Travel & Field Biology Sovereign Recon
+## Pillar 14: Global Travel & Field Biology Sovereign Recon
 
 *Written 2026-10-19 15:50 UTC in the Pi harness by antigravity/gemini-3.8-flash*
 
@@ -532,7 +544,7 @@ Equipping the sovereign traveler and wilderness naturalist with completely offli
 
 ## Verification & Acceptance Gate (The North Star Metrics)
 
-Before any prototype PCBA or firmware build is declared ready for field release, it must be benchmarked against these six non-negotiable gates:
+Before any prototype PCBA or firmware build is declared ready for field release, it must be benchmarked against these eleven non-negotiable gates:
 
 | # | Metric | Target Threshold | Method of Verification |
 | :--- | :--- | :--- | :--- |

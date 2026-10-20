@@ -1394,7 +1394,7 @@ To guarantee that the electronics and physical components survive 10 to 30 years
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                 6 PILLARS OF 30-YEAR HARDWARE LONGEVITY                     │
+│  THE 5 HARDWARE LONGEVITY HAZARDS & COUNTERMEASURES                         │
 ├─────────────────────┬───────────────────────────────────────────────────────┤
 │ LONGEVITY HAZARD    │ PHYSICAL HARDWARE COUNTERMEASURE                      │
 ├─────────────────────┼───────────────────────────────────────────────────────┤

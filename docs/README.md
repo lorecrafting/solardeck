@@ -24,7 +24,7 @@ Written 2026-10-20 04:13 UTC in the Pi harness by openrouter/deepseek/deepseek-v
 | 7 | `BOM_COST_ESTIMATE.md` | $385.40-$410.40 across 61 line items, supplier sourcing |
 | 7b | `LONGEVITY_30Y.md` | The 30-year failure budget, service kit, maintenance schedule, gates G7-G10 |
 | 8 | `OFFGRID_TACTICAL_SENSORS.md` | Field/maritime/foraging sensing, 7 Hotpacks, daemon catalog |
-| 9 | `STANDOUT_FEATURES.md` | The 6 product pillars and 7 feature chapters |
+| 9 | `STANDOUT_FEATURES.md` | The 7 product pillars and 7 feature chapters |
 | 10 | `FIRST_BOOT_CHECKLIST.md` | Bench bring-up and acceptance gates |
 | 11 | `INDEX.md` | Cross-reference table: claim → file § |
 | 12 | `90-history/decisions.md` | Why things were dropped. ADR-001…ADR-016. |
