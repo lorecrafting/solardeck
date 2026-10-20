@@ -247,6 +247,8 @@ The following high-reliability and field-recovery enhancements have been codifie
     * Runs at 4.5 mW on RP2350 with dual-bezel IBC solar array; displays 100-year astronomical calendar and 12-hour predictive weather arrow.
 34. **Perpetual Solar Entertainment: Infinite Chess, Puzzles & Infocom (`solardeck-zen-games`):**
     * Zero-battery mind games: embedded C chess engine, daily algorithmic Sudoku/Wordle, and Infocom Z-Machine text adventures (*Zork*).
+35. **Snap-On MagSafe 7.1W "Solar Armor" Backplate & 2.5m Remote Shade Tether (`SOLAR-ARMOR-V1`):**
+    * $297\text{ cm}^2$ Maxeon Gen 7 IBC panel snaps to rear MagSafe array with 2.0mm air-chimney, harvesting 7.13W Peak (more than CM4 turbo load). Includes integrated 2.5-meter Kevlar flat ribbon cable allowing the panel to sit in direct sun while operator works in cool shade with 0°C battery heat rise. Doubles as an independent 7.1W USB-C solar charger.
 
 ---
 

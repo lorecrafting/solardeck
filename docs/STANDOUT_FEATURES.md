@@ -507,6 +507,9 @@ Transforming SolarDeck from an active computer into an immortal, zero-battery am
 2. **Batteryless Direct Solar Cold-Boot ("Zombie Mode"):** Even with the LiFePO4 battery missing or drained to 0.000V, sunlight charges the onboard 1.0F supercapacitor in **under 25 seconds**, cold-booting the RP2350 into the Zen Solar Suite indefinitely.
 3. **Mind Games & Intellectual Entertainment:** Infinite E-Ink chess, Infocom interactive fiction (*Zork*), procedural daily Sudoku/Wordle, and stoic philosophy oracles run completely offline with **zero battery drain** between user actions.
 4. **Perpetual Solar Mesh Relay:** Operates as a permanent, immortal Meshtastic LoRa packet repeater atop a mountain or campervan roof, forwarding regional emergency communications without needing a battery.
+5. **Snap-On MagSafe 7.1W "Solar Armor" Backplate & 2.5m Remote Shade Tether (`SOLAR-ARMOR-V1`):**
+   * Snaps via the embedded MagSafe N52 magnetic ring with a 2.0mm convective chimney to dissipate heat, harvesting **7.13W Peak** in direct tropical sun—surpassing the 5.5W full turbo compilation load of the quad-core CM4.
+   * **The Remote Shade Tether:** Features an integrated 2.5-meter Kevlar-reinforced flat ribbon cable that unspools from the backplate. The panel sits out on a sunlit boulder or vehicle roof generating 7.1W, while the operator sits comfortably in the cool shade using the 510g tablet with **zero thermal stress on the LiFePO4 battery**. Doubles as an independent 7.1W USB-C solar charger for phones and flashlights.
 
 ---
 

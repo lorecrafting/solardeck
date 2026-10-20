@@ -126,6 +126,7 @@ The SolarDeck repository contains comprehensive, mathematically verified specifi
 | **Hardware USB Shield & Port Isolation** | `docs/HARDWARE_SPEC.md` §2.26 | TS3USB221A Analog SPST | D+/D- Mechanical Break Juice-Jacking Cut|
 | **Chassis Intrusion & Zeroization Sensor**| `docs/HARDWARE_SPEC.md` §2.27 | TEMT6200 Phototransistor| NMI RAM Key Wiping (<3ms Case Breach) |
 | **Dual-Bezel IBC Solar Array & Zombie Mode**| `docs/HARDWARE_SPEC.md` §2.28 | 1.24W IBC Cells + 1.0F Supercap| Direct Solar Cold-Boot (Zero Battery) |
+| **Snap-On 7.1W Solar Armor & Remote Tether**| `docs/HARDWARE_SPEC.md` §2.29 | `SOLAR-ARMOR-V1` | 7.13W IBC Panel + 2.5m Flat Ribbon Spool|
 
 ---
 

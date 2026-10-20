@@ -845,6 +845,52 @@ To deliver mathematically verifiable, physical airgapped privacy for tactical op
   * The RP2350 cold-boots into the ultra-low-power **Zen Solar Suite** (4.5 mW total draw), operating perpetually with **zero battery installed**.
   * If solar generation exceeds 2.5W (e.g. under intense sun or via the auxiliary folding panel port), the supervisor automatically enables `CM4_GLOBAL_EN` to boot the full Linux OS without a battery.
 
+### 2.29 Snap-On MagSafe 7.1W "Solar Armor" Backplate & Remote Shade Tether (`SOLAR-ARMOR-V1`)
+*Written 2026-10-19 16:10 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+
+To achieve massive off-grid energy generation without permanently burdening the tablet with weight, bulk, or solar heat conduction:
+
+```
+                  SNAP-ON MAGSAFE "SOLAR ARMOR" & REMOTE TETHER
+  ┌────────────────────────────────────────────────────────────────────────┐
+  │ [SOLARDECK UNIBODY] (510g, 9.8mm slim, dual-bezel ambient harvesting)  │
+  └──────────────────────────────────┬─────────────────────────────────────┘
+                                     │
+          ┌──────────────────────────┴─────────────────────────┐
+          │                                                    │
+          ▼ [MODE A: FLUSH SNAP-ON]                            ▼ [MODE B: REMOTE TETHER]
+  ┌───────────────────────────────────┐               ┌───────────────────────────────────┐
+  │ Snapped flush to rear unibody via │               │ Unsnapped & placed 2.5m away in   │
+  │ MagSafe N52 ring + 2mm chimney.   │               │ direct sun (rock, vehicle roof).  │
+  │ 40mm silicone flat-ribbon jumper. │               │ 2.5m Kevlar flat ribbon cable.    │
+  │ Easel mode: back to sun (7.1W),   │               │ Operator sits in cool tree shade  │
+  │ screen in shade (0% glare).       │               │ using 510g tablet (0°C heat rise).│
+  └───────────────────────────────────┘               └───────────────────────────────────┘
+```
+
+* **Physical Dimensions & Construction:**
+  * **Dimensions:** $205\text{ mm} \times 145\text{ mm} \times 3.2\text{ mm}$ (Weight: **145 grams**).
+  * **Photovoltaic Array:** $297.25\text{ cm}^2$ aperture of SunPower Maxeon Gen 7 back-contact IBC monocrystalline silicon (**~24% conversion efficiency**).
+  * **Armor Facing:** Laminated with UV-stabilized, high-transmission textured **ETFE (Ethylene Tetrafluoroethylene)** with honeycombed micro-prisms for off-axis light capture, scratch resistance against granite/sand, and zero yellowing over 20+ years.
+  * **Peak Power:** **7.13W Peak** in direct tropical sun ($1000\text{ W/m}^2$, $V_{\text{MP}} = 7.0\text{V}, I_{\text{MP}} = 1.02\text{A}$); generates **1.42W in open shade / overcast**.
+* **Thermal Isolation & Convective Chimney:**
+  * When snapped to the tablet, four perimeter standoff ribs create a **2.0mm air-gap chimney**.
+  * Hot air naturally vents out the top while drawing cool ambient air from the bottom, reducing thermal conduction to the internal LiFePO4 battery and E-Ink display by **>80%** compared to a bonded panel.
+* **Dual-Mode Connection & Remote Tethering Architecture:**
+  1. **Mode A: Flush Snap-On Easel Link:**
+     * A recessed 40mm ultra-flexible silicone ribbon jumper tucks flush into an internal perimeter channel, plugging directly into USB-C Port 2.
+     * Deploys the integrated 45° folding kickstand: the back faces south toward the sun harvesting 7.1W, while the front E-Ink screen faces north into the shade for glare-free typing.
+  2. **Mode B: Remote Shade Tether (2.5-Meter Kevlar Flat Ribbon):**
+     * An ultra-thin 2.5-meter (8.2 ft) Kevlar-reinforced flat ribbon cable unspools from an integrated cavity in the backplate.
+     * The operator places the Solar Armor panel out on a sunlit boulder, car hood, or backpack in the open sun (generating 7.1W), while sitting comfortably 2.5 meters away in the cool shade of a tree or tent using the lightweight 510g tablet.
+     * **Zero heat conducts to the battery or display**, completely preventing the +60°C thermal charging lockout.
+* **Standalone Independent Utility:**
+  * The backplate incorporates an autonomous micro buck regulator with a dedicated USB-C output port.
+  * When detached from SolarDeck, the panel functions as an independent **7.1W outdoor solar charger** capable of charging smartphones, headlamps, GPS units, or power banks directly from the sun.
+* **Rigging & Mounting:**
+  * 4x corner eyelets for paracord lashing to backpacks, tent flies, or kayak decks.
+  * Embedded MagSafe 54mm N52 magnetic ring with anti-shear indexing pins for instant 1-second snap-on attachment.
+
 ---
 
 ## 3. Universal Mechanical Mount, Handheld Thumb Grips & Open Keyboard Architecture
