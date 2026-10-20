@@ -24,10 +24,10 @@ Read `docs/AUDIT_2026-10-20.md` before treating any row here as a purchase decis
 | :--- | ---: |
 | `measured` | 0 |
 | `modelled` | 2 |
-| `specified` | 62 |
+| `specified` | 63 |
 | `aspirational` | 16 |
 | `TBD` | 0 |
-| **total** | **80** |
+| **total** | **81** |
 
 ## Product pillars
 
@@ -150,6 +150,7 @@ The numbers that decide whether a build is field-ready (`STANDOUT_FEATURES.md`).
 | G8 | Thermal-cycle joint integrity (500 cycles, dR<10%) | `aspirational` |
 | G9 | UV & weather durability (ASTM G154 1000 h, dE<3) | `aspirational` |
 | G10 | Unpowered storage survival (12 months, data intact) | `aspirational` |
+| G11 | USB-C interoperability (10-row matrix, incl. dead-battery Rd) | `specified` |
 
 ## How this page stays true
 

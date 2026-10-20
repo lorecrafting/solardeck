@@ -509,6 +509,11 @@
         "id": "G10",
         "name": "Unpowered storage survival (12 months, data intact)",
         "status": "aspirational"
+      },
+      {
+        "id": "G11",
+        "name": "USB-C interoperability (10-row matrix, incl. dead-battery Rd)",
+        "status": "specified"
       }
     ]
   },
@@ -559,5 +564,22 @@
     "rp2350_idle_mw": 4.5,
     "lora_repeater_mw_low": 12,
     "lora_repeater_mw_high": 15
+  },
+  "usb": {
+    "sink_cc_rd_ohm": 5100,
+    "sink_cc_rd_tolerance_pct": 1,
+    "rd_independent_per_cc_pin": true,
+    "rd_present_at_0v": true,
+    "cc_max_capacitance_pf": 0,
+    "port1_role": "DRP",
+    "port2_role": "host",
+    "port2_current_limit_a": 1.5,
+    "no_data_lines_diagnostic_s": 3,
+    "recovery_doors": [
+      "bootsel_pinhole",
+      "uart_swd_header",
+      "microsd_image"
+    ],
+    "hotpacks_must_include_rd_pair": true
   }
 }

@@ -17,7 +17,8 @@ Written 2026-10-20 04:13 UTC in the Pi harness by openrouter/deepseek/deepseek-v
 | 5 | `MECHANICAL_FIT_AND_ENCLOSURE_WORKFLOW.md` | XY/Z budgets, tolerances, the actual enclosure |
 | 6a | `REGULATORY.md` | Certification matrix — **no certificate, no ship** |
 | 6b | `FIRMWARE_INTERFACE.md` | The CM4 <-> RP2350 register contract (header is canonical) |
-| 6c | `ARCHIVAL_BUILD.md` | Toolchain survival, offline reproducible build |
+| 6c | `USB_ROBUSTNESS.md` | Every USB-C failure mode and the rules that close them (gate G11) |
+| 6d | `ARCHIVAL_BUILD.md` | Toolchain survival, offline reproducible build |
 | 6 | `HARDWARE_VERIFICATION_WORKFLOW.md` | What each verification phase proves, and what it does not |
 | 7 | `BOM_COST_ESTIMATE.md` | $385.40-$410.40 across 61 line items, supplier sourcing |
 | 7b | `LONGEVITY_30Y.md` | The 30-year failure budget, service kit, maintenance schedule, gates G7-G10 |

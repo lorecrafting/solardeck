@@ -546,6 +546,7 @@ Before any prototype PCBA or firmware build is declared ready for field release,
 | **G8** | Thermal-Cycle Joint Integrity | **500 cycles −40…+85 °C, ΔR < 10%** | Per-package joint resistance sampled before/after; proves the DSBGA corner bond (§7.6). |
 | **G9** | UV & Weather Durability | **ASTM G154 1000 h, ΔE < 3, no crazing** | Quartz-xenon chamber on PA12 + anodised samples; colour SKU degrades faster by design. |
 | **G10** | Unpowered Storage Survival | **12 months, boots, OS volumes intact** | Powered off at 50% SOC, 30 °C; validates the NAND scrub policy against real retention loss. |
+| **G11** | USB-C interoperability: 10-row matrix incl. dead-battery Rd and charge-only-cable diagnostic | Every row passes on the dev kit | `USB_ROBUSTNESS.md` §3 |
 
 ---
 

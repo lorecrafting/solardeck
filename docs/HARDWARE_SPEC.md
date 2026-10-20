@@ -508,6 +508,27 @@ SolarDeck provides two rugged IP68 Type-C ports engineered with autonomous hardw
 * **Port 2 Current-Limited Host Switch (TI TPS2051B):**
   * When SolarDeck powers external USB devices (flash drives, keyboards) from Port 2, a **TI TPS2051B** power distribution switch limits output current to 1.5A with automatic short-circuit cutoff and thermal shutdown, protecting the tablet from rogue USB peripherals.
 
+#### 2.11b USB-C Interoperability Constraints (why a C-to-C cable works here)
+
+Full taxonomy and test matrix: `docs/USB_ROBUSTNESS.md`. Four constraints are non-negotiable because
+their absence is the most common field failure in this product class:
+
+* **Two independent 5.1 kΩ ±1 % Rd resistors per sink port, one on each CC pin.** Not one shared
+  resistor (reads 2.55 kΩ and is interpreted as an audio accessory), not one pin only (fails on
+  C-to-C, works on C-to-A — the worst failure mode because it is intermittent).
+* **Rd present at 0 V.** The resistors are populated whether or not TUSB320/TPS25750 is powered, so a
+  flat battery still charges from a C-to-C charger. Bench check: 0 V supply, probe CC1/CC2 to GND,
+  expect 5.1 kΩ ±1 %. A CC controller alone cannot satisfy this and is the cause of "my device will
+  not wake up".
+* **No capacitance on CC.** No filter caps, no TVS on CC outside the controller, no long stubs: CC is
+  current-mode PD signalling and ~100 pF of convenience breaks it.
+* **Every Hotpack repeats both.** A USB-C sink accessory without an Rd pair reproduces the failure for
+  the whole tablet; it is in the Hotpack spec and the Hotpack acceptance checklist.
+
+**Recovery never depends on USB enumeration** — three doors: RP2350 BOOTSEL pinhole, a UART/SWD 4-pin
+header under the M.2 service hatch, and a signed microSD recovery image. A charge-only cable is then a
+diagnostic message (`USB_NO_DATA_LINES`), not a brick.
+
 ### 2.12 Physical Hardware Airgap Switch (Stealth / Zero-EMF Zen Reader Mode)
 For true sovereign privacy, commercial flight compliance, sensitive compartmented facilities (SCIFs), and zero-distraction reading, SolarDeck incorporates a recessed, physical 2-position slide switch on the chassis side (`RADIO ACTIVE` vs. `AIRGAP STEALTH`):
 

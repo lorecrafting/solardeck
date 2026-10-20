@@ -151,6 +151,40 @@ def check_plan(err):
             err(why)
 
 
+def check_usb(err):
+    """USB-C interoperability constraints (docs/USB_ROBUSTNESS.md)."""
+    U = SPEC["usb"]
+    hw = read("docs/HARDWARE_SPEC.md")
+    doc = read("docs/USB_ROBUSTNESS.md")
+    for pat, why in [
+        (r"5[.]1\s*k", "HARDWARE_SPEC.md does not state the 5.1 kOhm Rd value"),
+        (r"independent 5[.]1", "HARDWARE_SPEC.md does not state Rd independence per CC pin"),
+        (r"[Rr]d present at 0 V|at 0 V", "HARDWARE_SPEC.md does not state dead-battery Rd"),
+        (r"[Bb]OOTSEL", "no BOOTSEL recovery door in HARDWARE_SPEC.md"),
+        (r"USB_NO_DATA_LINES", "charge-only-cable diagnostic not specified"),
+    ]:
+        if not re.search(pat, hw):
+            err(f"USB: {why}")
+    for pat, why in [
+        (r"dead.battery|Dead-battery|dead battery", "USB_ROBUSTNESS.md missing the dead-battery rule"),
+        (r"2[.]55\s*k", "USB_ROBUSTNESS.md missing the shared-Rd misread"),
+        (r"Hotpack", "USB_ROBUSTNESS.md does not extend the rules to Hotpacks"),
+    ]:
+        if not re.search(pat, doc, re.I):
+            err(f"USB: {why}")
+    if U["sink_cc_rd_ohm"] != 5100 or U["cc_max_capacitance_pf"] != 0:
+        err("USB: spec_values.usb contradicts the Type-C sink rules")
+    if not U["rd_present_at_0v"] or not U["hotpacks_must_include_rd_pair"]:
+        err("USB: dead-battery Rd or Hotpack Rd rule was disabled")
+    if len(U["recovery_doors"]) < 3:
+        err("USB: fewer than three recovery doors")
+    gates = {e["id"] for e in SPEC["features"]["acceptance_gates"]}
+    if "G11" not in gates:
+        err("USB: gate G11 missing from features.acceptance_gates")
+    if "**G11**" not in read("docs/STANDOUT_FEATURES.md"):
+        err("USB: gate G11 missing from STANDOUT_FEATURES.md")
+
+
 def main():
     errors = []
     err = errors.append
@@ -161,6 +195,7 @@ def main():
     check_daemons(err)
     check_gates(err)
     check_plan(err)
+    check_usb(err)
     if errors:
         for e in errors:
             print(f"   • {e}")
