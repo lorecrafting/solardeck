@@ -46,13 +46,13 @@ capture (ADR-034, AUDIT 6 X8). The table below states the V1 design:
 | **01** | **Phantom Back-Powering** | Unpowered CM5 CPU receives 3.3V GPIO leakage via display bus, destroying internal ESD diodes. | **TI TMUX1575** SPDT switch with fail-safe $I_{\text{off}}$ circuit isolation. | Check display nets pass through TMUX isolation when CM5 is 0V. |
 | **02** | **Floating Open-Drain Bus** | I2C SDA/SCL lines float without pull-up resistors, causing bus hangs. | Dedicated 4.7 kΩ pull-ups to `VDD_3V3_AON`. | Verify pull-up resistance paths exist on all open-drain nets. |
 | **03** | **LTE Burst Brown-Out** | Deferred to V2 (ADR-034). | — | — |
-| **04** | **LiFePO4 Over-Voltage** | Applying standard 4.2V Li-ion charge voltage causes thermal runaway in 3.2V LiFePO4 cells. | One chemistry, no strap (ADR-035): the **BQ25798** enable pin holds charging off until the RP2350 writes VREG = `battery.charge_limit_v`; a BQ29706-class protector backs it up. | Verify the charger enable net is driven by the RP2350 and defaults to charge-off. |
+| **04** | **Wrong pack / reset charger** | A pack of another chemistry or rating, or a charger reset to its defaults, is charged with settings that do not match the cell. | One chemistry per revision, keyed pack, no strap (ADR-035, ADR-048): the **BQ25798** enable pin holds charging off until the RP2350 has written VREG = `battery.charge_limit_v`, disabled the watchdog and matched the pack gauge's charge voltage; the pack's own protector backs it up. | Verify the charger enable net is driven by the RP2350 and defaults to charge-off. |
 | **05** | **Power Rail Collision** | Accidentally tying 5.0V system rail to a 3.3V logic line. | Distinct power net naming (`VDD_5V_SYS`, `VDD_3V3_AON`). | Assert 0 ohm shorts do not exist between separate voltage codes. |
 | **06** | **Floating Reset Pins** | Active-low RESET lines float and trigger random spurious resets. | Hardware 10 kΩ pull-ups to appropriate local rail. | Check all active-low `#RESET` pins have pull-ups or active drivers. |
 | **07** | **Unbuffered ADC Clipping** | Solar panel Voc exceeds 3.3V ADC pin rating, burning co-processor ADC. | Resistor voltage divider (1/2 scaling) protecting RP2350 ADC0. | Check maximum Vin does not exceed $V_{\text{ref}} = 3.3\text{V}$. |
 | **08** | **Net Netname Typo Island** | Slight spelling difference creates an un-driven floating net island. | Netlist parser flags single-node nets (`pin count == 1`). | Flag any net with only 1 connected node. |
 | **09** | **Ground Loop Disconnect** | Separate analog and digital grounds without single-point star ground. | Unified low-impedance ground plane on Layers 2 and 5. | Assert all component grounds route to master `GND`. |
-| **10** | **Reverse Battery Polarity** | Inserting LiFePO4 cell backward blows input buck PMIC. | Reverse-polarity protection on `VBAT` (part chosen at schematic capture with the protector, ADR-035). | Verify reverse battery protection present on `VBAT` input. |
+| **10** | **Reverse Battery Polarity** | Inserting the battery pack backward blows the input converter. | Reverse-polarity protection on `VBAT` (part chosen at schematic capture with the protector, ADR-035). | Verify reverse battery protection present on `VBAT` input. |
 
 ---
 
@@ -62,8 +62,8 @@ Using KiCad's integrated **ngspice** engine:
 1. **Transient Load Step Test:**
    * Apply a simulated 0.1A $\rightarrow$ 2.5A pulse (10 µs rise time) to `VDD_5V_SYS`.
    * **Pass Criteria:** Voltage sag $\Delta V \le 150\text{ mV}$; rail settles within 200 µs without ringing.
-2. **LiFePO4 Power-Fail Hold-Up Slew Rate:**
-   * Simulate battery cutoff at 2.85V.
+2. **Power-Fail Hold-Up Slew Rate:**
+   * Simulate the pack falling through `battery.low_alarm_v` to its protector's trip.
    * **Pass Criteria:** `VDD_3V3_AON` stays within 3.1V–3.3V for $\ge 150\text{ ms}$ under 20 mA RP2350 load, allowing emergency NVMe/eMMC cache sync.
 3. **Solar Energy Harvester MPPT Tracking:**
    * Sweep light levels from 200 lux (cloudy room) to 80,000 lux (direct sun).
@@ -114,7 +114,7 @@ To ensure internal electronics mate with the unibody chassis without mechanical 
    * **Component-to-Chassis Roof Clearance:** $\ge 0.8\text{ mm}$ (except thermal interface pads).
    * **Thermal Interface Contact:** CM5 SoC pedestal must compress thermal pad by exactly $0.3\text{ mm} \pm 0.1\text{ mm}$.
    * **Display FPC Bend Radius:** $\ge 1.5\text{ mm}$ minimum curvature radius to prevent conductor fatigue.
-   * **Battery Pouch Swell Allowance:** $\ge 0.8\text{ mm}$ Z-clearance above LiFePO4 pouch cell to accommodate normal 3,000-cycle pouch swelling.
+   * **Battery Pouch Swell Allowance:** $\ge 0.8\text{ mm}$ Z-clearance above the Li-ion pouch to accommodate normal end-of-life swelling (re-check against the cell datasheet).
 3. **Automated Verification:**
    ```bash
    python3 hardware/enclosure/verify_enclosure.py

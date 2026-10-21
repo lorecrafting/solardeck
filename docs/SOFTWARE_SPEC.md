@@ -1363,7 +1363,7 @@ The V1 Li-ion cell is the first hard wear-out item (`reliability.first_wearout_y
 * **Storage parking:** when the device is idle on AC for >72 h with no scheduled use, charges to `spec_values.longevity.storage_soc_pct` (50%) and stops. Full charge is restored on the next user-initiated boot.
 * **Charge ceiling:** `battery.charge_limit_v`, set and read back by the RP2350 before charging (the hardware rule, AGENTS §4.1, ADR-048).
 * **Fade tracking:** reads the BQ27Z561-R2 Impedance Track state-of-health monthly into `/var/lib/solardeck/health.jsonl`; internal resistance trend is the early-warning signal for electrolyte dry-out, not capacity alone.
-* **Service scheduling:** when retained capacity at 100% drops below `battery_capacity_retained_year30_pct` extrapolated to year 10, raises `[CELL SERVICE DUE]` naming the service kit part.
+* **Service scheduling:** when the pack gauge's state of health drops below `longevity.battery_soh_service_pct`, raises `[CELL SERVICE DUE]` naming the service kit part.
 * **Never** deep-cycles for calibration; a forced full cycle costs a real cycle.
 
 **Acceptance check:** park-at-50%-after-72h, resume-full-on-boot, and a synthetic SoH regression that must emit the service notice.

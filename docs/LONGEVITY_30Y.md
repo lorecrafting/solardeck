@@ -136,8 +136,7 @@ positioning change, not a cost saving.
 | Quarterly | Powered NAND scrub (`solardeck-nandcare`); capacity fade logged | automatic while charging |
 | Annually | Gasket compression check, desiccant swap, bumper inspection, torque check | user, 20 min, one driver |
 | Every 3 years | Salt/UV inspection of anodise and TPU; stylus nib; vent membrane | user |
-| Every 3 years (modelled, `longevity.battery_service_interval_years`) | Replace the Li-ion smart pack; sooner if the gauge reports it worn (ADR-048) | user |
-| On battcare notice | Li-ion smart pack swap (first expected at `reliability.first_wearout_years`, modelled; ADR-048) | user, screws + keyed connector |
+| On battcare notice | Li-ion smart pack swap when the gauge's state of health falls below `longevity.battery_soh_service_pct`; typically about 3 years (`longevity.battery_service_interval_years`, modelled; ADR-048) | user, screws + keyed connector |
 | Every 10 years | RTC cell, gasket set, bumper set | service kit |
 | As needed | Display module (bonded unit), USB-C receptacle | module swap |
 

@@ -126,8 +126,10 @@ def check_charger(err):
     ov = 1.5 * h["vbias_v"] * (1 + h["rov2_mohm"] / h["rov1_mohm"])
     if abs(ov - h["vbat_ov_v"]) > 0.01:
         err(f"harvester.vbat_ov_v {h['vbat_ov_v']} V != {ov:.3f} V from rov1/rov2 (BQ25504 Eq. 3)")
-    if ov * (1 + h["threshold_accuracy_pct"] / 100) > b["charge_limit_v"]:
-        err(f"harvester VBAT_OV {ov:.3f} V +{h['threshold_accuracy_pct']}% exceeds the {b['charge_limit_v']} V charge limit")
+    # Worst case: the threshold's own accuracy plus both divider resistors at tolerance.
+    worst = ov * (1 + h["threshold_accuracy_pct"] / 100) * (1 + 2 * h["resistor_tol_pct"] / 100)
+    if worst > b["charge_limit_v"]:
+        err(f"harvester VBAT_OV worst case {worst:.3f} V exceeds the {b['charge_limit_v']} V charge limit")
     alarm_mv = round(b["low_alarm_v"] * 1000)
     m = re.search(r"#define\s+SD_LOW_BATT_ALARM_MV\s+(\d+)", hdr)
     if not m or int(m.group(1)) != alarm_mv:

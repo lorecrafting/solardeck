@@ -554,7 +554,7 @@
     "design_life_years": 30,
     "drop_height_m": 1.22,
     "drop_peak_g": 600,
-    "battery_capacity_retained_year30_pct": 50,
+    "battery_soh_service_pct": 80,
     "battery_service_interval_years": 3,
     "rtc_backup": "MS621FE rechargeable (BOM)",
     "gasket_material": "VMQ silicone",
@@ -742,11 +742,12 @@
     "part": "BQ25504",
     "vbias_v": 1.25,
     "threshold_accuracy_pct": 5,
-    "rov1_mohm": 4.75,
-    "rov2_mohm": 5.36,
-    "vbat_ov_v": 3.99,
-    "source": "datasheet: TI BQ25504 SLUSAH0G VBIAS and VBAT_ACCURACY (§7.5), Eq. 3; vbat_ov_v is modelled from rov1/rov2. The harvester charges the cell without the CE gate, so Phase 14 asserts vbat_ov_v x (1 + accuracy) <= battery.charge_limit_v.",
-    "temperature_gate": "hardware: harvester output switched off outside the cell's charge-temperature window by a comparator on the pack NTC, no firmware (ADR-048)"
+    "rov1_mohm": 4.87,
+    "rov2_mohm": 5.23,
+    "vbat_ov_v": 3.89,
+    "source": "datasheet: TI BQ25504 SLUSAH0G VBIAS and VBAT_ACCURACY (§7.5), Eq. 3; vbat_ov_v is modelled from rov1/rov2. The harvester charges the cell without the CE gate, so Phase 14 asserts vbat_ov_v x (1 + accuracy) x (1 + 2 x resistor_tol) <= battery.charge_limit_v.",
+    "temperature_gate": "hardware: harvester output switched off outside the cell's charge-temperature window by a comparator on the pack NTC, no firmware (ADR-048)",
+    "resistor_tol_pct": 1
   },
   "power_bank": {
     "otg_max_a": 2.0,

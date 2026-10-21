@@ -270,7 +270,7 @@ Source: SLUSAH0G Table 6-1, §8.3.2–8.3.3, §9.1, §9.2.1. The resistor sums a
 | 3 | VOC_SAMP | — | ROC2 4.42 MΩ from VIN_DC, ROC1 15.6 MΩ to GND: MPP at 78 % of VOC (§9.2.1.2) |
 | 4 | VREF_SAMP | — | 10 nF low-leakage to GND (CREF) |
 | 5 | OT_PROG | `GND` | lower over-temperature setting (pin table: 60 °C; §7.5 TSD_PROTL: 65 °C) |
-| 6 | VBAT_OV | — | ROV1 = `harvester.rov1_mohm` to GND, ROV2 = `harvester.rov2_mohm` to VRDIV, 0.1 % |
+| 6 | VBAT_OV | — | ROV1 = `harvester.rov1_mohm` to GND, ROV2 = `harvester.rov2_mohm` to VRDIV, 1 % or better (`harvester.resistor_tol_pct`) |
 | 7 | VRDIV | — | top of the OV and UV dividers |
 | 8 | VBAT_UV | — | RUV1 5.60 MΩ to GND, RUV2 4.42 MΩ to VRDIV (§9.2.1.2) |
 | 9 | OK_HYST | `GND` | VBAT_OK not used (pin table) |
@@ -426,7 +426,7 @@ with the read-back in step 6). Read-modify-write every register that holds other
 | 6 | REG01 | VREG_10:0 | read back | firmware sets `charger_vreg_mv` from this read; `solardeck_charge_enable_allowed()` (firmware test 7) |
 | 6a | pack gauge (address §6) | charge-voltage parameter | read; must equal `battery.charge_limit_v` | ADR-048: refuse any pack built for another chemistry or limit; leave `CHG_CE_N` high and report. The parameter's command or data-flash name is in the TRM (not in hand, open item 16). Not "Design Voltage": SLUSCY0C §7.2.1's example sets that to 4000 mV, below the charge limit |
 | 7 | — | `CHG_CE_N` | drive low | only if step 6 equals step 5 and step 6a passed |
-| 8 | REG01, REG10 | VREG, WATCHDOG | re-read on every `CHG_INT_N` pulse and periodically | if either changed, the charger was reset (POR, REG_RST or a watchdog that something re-enabled): stop charging at once by letting `CHG_CE_N` go high (stop driving it low), then restart at step 1 |
+| 8 | REG10, REG01 | WATCHDOG (primary), VREG | re-read on every `CHG_INT_N` pulse and periodically | WATCHDOG comes up enabled after any charger reset, so it is the reset detector (on Li-ion VREG's POR value equals the limit and cannot reveal a reset; firmware gate `charger_wdt_off`); if either changed, the charger was reset (POR, REG_RST or a watchdog that something re-enabled): stop charging at once by letting `CHG_CE_N` go high (stop driving it low), then restart at step 1 |
 
 Rules that follow from the datasheet:
 

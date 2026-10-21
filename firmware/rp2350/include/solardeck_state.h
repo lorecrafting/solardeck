@@ -48,6 +48,8 @@ typedef struct {
     uint16_t solar_voc_mv;     // Solar panel open-circuit voltage (mV)
     uint16_t solar_vmpp_mv;    // Target MPP voltage (approx 78% Voc)
     uint16_t charger_vreg_mv;  // VREG read back from the charger; 0 until written (ADR-035)
+    bool charger_wdt_off;      // WATCHDOG read back as disabled: proves the init ran since the last charger reset
+    uint16_t pack_charge_mv;   // charge voltage reported by the pack's gauge; 0 until read (ADR-048)
 } solardeck_ctx_t;
 
 // Core Functions

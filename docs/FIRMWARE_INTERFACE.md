@@ -92,7 +92,7 @@ protocol version, and CRC, in that order.
 | `SD_FLAG_CM5_SELECTED` | 0 | TMUX is on the CM5 side |
 | `SD_FLAG_5V_ENABLED` | 1 | TPS61088 boost on |
 | `SD_FLAG_PWRFAIL` | 2 | powerfail pin asserted |
-| `SD_FLAG_LIFEPO4` | 3 | always 1: LiFePO4 is the only chemistry; the strap was deleted (ADR-035) |
+| `SD_FLAG_PACK_MATCH` | 3 | the pack gauge's charge voltage matches `battery.charge_limit_v` (ADR-048); 0 = charging refused |
 | `SD_FLAG_LOW_BATT` | 4 | below cutoff threshold |
 | `SD_FLAG_CHARGING` | 5 | charger active |
 
