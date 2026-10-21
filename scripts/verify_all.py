@@ -87,8 +87,29 @@ def verify_kicad_cli():
             return False
         print(f"{Colors.YELLOW}[SKIP]{Colors.END} {msg}")
         return True
-    return (run_step("Phase 1b: kicad-cli schematic ERC", "kicad-cli sch erc --severity-error --exit-code-violations hardware/solardeck-carrier.kicad_sch")
-            and run_step("Phase 1c: kicad-cli PCB DRC", "kicad-cli pcb drc --severity-error --exit-code-violations hardware/solardeck-carrier.kicad_pcb"))
+
+    # kicad-cli subcommand sets differ across releases (e.g. apt kicad 8.0.x exposes
+    # only 'sch export'; 'sch erc' appeared later). Probe what THIS install advertises
+    # so ERC/DRC run when available and degrade to a loud SKIP otherwise -- never a
+    # hard failure caused by a newer KiCad moving a subcommand.
+    def advertised(tool):
+        res = subprocess.run(["kicad-cli", tool, "--help"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        m = re.search(r"\{([^}]+)\}", res.stdout or "")
+        return {s.strip() for s in m.group(1).split(",")} if m else set()
+
+    ok = True
+    sch_cmds, pcb_cmds = advertised("sch"), advertised("pcb")
+    if "erc" in sch_cmds:
+        ok &= run_step("Phase 1b: kicad-cli schematic ERC",
+                       "kicad-cli sch erc --severity-error --exit-code-violations hardware/solardeck-carrier.kicad_sch")
+    else:
+        print(f"{Colors.YELLOW}[SKIP]{Colors.END} kicad-cli sch does not advertise 'erc' (has: {sorted(sch_cmds) or 'none'}); schematic ERC skipped")
+    if "drc" in pcb_cmds:
+        ok &= run_step("Phase 1c: kicad-cli PCB DRC",
+                       "kicad-cli pcb drc --severity-error --exit-code-violations hardware/solardeck-carrier.kicad_pcb")
+    else:
+        print(f"{Colors.YELLOW}[SKIP]{Colors.END} kicad-cli pcb does not advertise 'drc' (has: {sorted(pcb_cmds) or 'none'}); PCB DRC skipped")
+    return ok
 
 
 def verify_docs_present():
