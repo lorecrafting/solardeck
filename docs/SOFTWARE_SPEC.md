@@ -474,7 +474,7 @@ Secures device data against physical chassis compromise, laboratory probing, or 
 * **Emergency Zeroization Button:** Depressing the recessed `REC_MCU` pinhole switch continuously for 10 seconds triggers the same session zeroization cascade with audible confirmation (3 micro-piezo clicks before wipe).
 * **Cryptographic Invalidation:** Because the transactional F2FS root and home partitions are encrypted via `fscrypt` with hardware-derived keys, wiping the session tokens permanently locks the eMMC partitions against forensic recovery.
 * **Airgapped Transaction Signing & Document Notary Pipeline:**
-  * When the physical Hardware Airgap Switch is in STEALTH mode, `solardeck-vault --sign-tx` or `solardeck-vault --notarize <file>` executes in absolute radio isolation:
+  * When the privacy switch is in FULL BLACKOUT, `solardeck-vault --sign-tx` or `solardeck-vault --notarize <file>` executes in absolute radio isolation:
     1. **Visual Ingestion (QR camera):** V2 (ADR-034).
     2. **High-Contrast Verification:** Full transaction details (recipient address, smart contract parameters, transfer amounts, and network gas fees) are displayed in razor-sharp typography on the 10.3" E-Ink screen.
     3. **Hardware Authorization:** The operator signs using an encrypted local GPG/Ed25519 key. NFC YubiKey/Tangem/Coldcard tap: V2 (ADR-034).
@@ -665,7 +665,7 @@ The `solardeck-voiced` daemon orchestrates voice control — hold-to-talk first,
 
 * **Voice button — hold-to-talk, always available, zero standby cost:** with the wake word off, the mic is live only while the button is held. At press the RP2350 starts capturing audio into PSRAM immediately and asserts GPIO 17 so the CM5 boots or resumes in parallel; when Linux is up, `solardeck-voiced` drains the PSRAM buffer and transcribes it from the first syllable, so no words are lost to boot time. With Linux already running, the same button feeds the CM5 directly.
 * **Hands-free wake word — opt-in:** off by default and shown in settings with its measured battery cost. It runs on the CM5 when Linux is up (no extra cost) and on the RP2350 when Linux is off; RP2350 wake-word power is TBD until measured on the bench. A dedicated low-power voice chip is the V2 path if that cost is too high.
-* **Front end:** two MEMS microphones, a speaker echo-cancel reference (§17.1), and a hardware mute switch (`PRIVACY_STAT` MIC_MUTE, §21.1) that the software cannot override.
+* **Front end:** two MEMS microphones, a speaker echo-cancel reference (§17.1), and the privacy switch's MIC MUTE position (`PRIVACY_MUTE_N`, §21.1) that the software cannot override.
 
 ### 17.1 Acoustic Echo Cancellation (AEC) & Seamless Interruption
 * **The Barge-In Mechanism:** When SolarDeck speaks or generates audio, the audio frame buffer feeding the MAX98357A I2S amplifier is mirrored into a PipeWire loopback sink (`module-loopback`).
@@ -748,11 +748,11 @@ fi
 
 ## 19. Blackout Emergency SOS Beacon Engine (`solardeck-sosd`)
 
-Governs the zero-battery supercapacitor cold-boot survival sequence:
-1. When supercapacitor reaches 3.3V, RP2350 executes emergency bootstrap from ROM.
+Governs the low-battery distress placard (HARDWARE_SPEC §2.19; there is no zero-battery boot, ADR-049):
+1. When the power-fail alarm fires (`battery.low_alarm_v`), the RP2350 starts the sequence.
 2. Ingests the last-valid fix from the u-blox MAX-M10S GNSS on its own UART (ADR-038) and the RTC timestamp from the battery-backed RTC.
 3. Radio distress burst: V2 (ADR-044); V1 uses a paired Meshtastic node over BLE.
-4. Renders indelible high-contrast distress placard onto the 10.3" bi-stable screen before voltage drops below 2.0V.
+4. Renders indelible high-contrast distress placard onto the 10.3" bi-stable screen before the pack protector trips.
 5. Once drawn, the distress message remains visible on the E-Ink display indefinitely with **0.000W battery consumption**.
 
 ---
@@ -790,7 +790,7 @@ When invoked via CLI or local agent tool call (`solardeck-diag --json`), the eng
 2. **Co-Processor & Low-Power Bus Domain (RP2350B):**
    * Pings the RP2350 over SPI/UART with a 64-byte random challenge; verifies CRC-8 return checksum in $<10\text{ms}$.
    * Queries 8MB PSRAM memory test pattern registers and checks RV-3028-C7-class RTC synchronization drift ($|\Delta t| < 500\text{ms}$).
-   * Reads 12-bit ADC raw voltages from the top-bezel IXYS micro-solar strip and supercapacitor rail.
+   * Reads 12-bit ADC raw voltages from the top-bezel IXYS micro-solar strip.
 3. **Display & Waveform Controller Domain (Kaleido 4 display controller, TBD, ADR-032):**
    * Reads the controller's device info: validates panel geometry (against `spec_values.panel_sku.resolution_px`, TBD), engine firmware version, and Look-Up Table (LUT) integrity.
    * Polls the controller's ready/busy line (signal TBD, ADR-032); checks for stuck busy flags indicating unseated FPC ribbon cables or frozen pigment microcapsules.
@@ -815,8 +815,7 @@ When invoked via CLI or local agent tool call (`solardeck-diag --json`), the eng
    * Reads M.2 NVMe SSD SMART health telemetry (`smartctl --json`) for bad sectors and temperature.
    * Checks Micro-HDMI Hot-Plug Detect (`HPD`) GPIO pin state.
    * Checks USB-C Port 1 and Port 2 CC controller registers (TUSB320) for VBUS voltage, orientation, and short-circuit faults.
-   * Reads physical Hardware Airgap Switch state pin (`AIRGAP_SENSE`): 0V (Stealth Airgap Active) vs 3.3V (Normal Radio Operation).
-   * Reads 3-Position Hardware Privacy & Stealth Switch (`PRIVACY_STAT`): `0x01` (NORMAL), `0x02` (MIC_MUTE - PDM clock shunted to GND), `0x03` (FULL_BLACKOUT - mics and RF rails isolated to 0.000V).
+   * Reads the single 3-position privacy switch (HARDWARE_SPEC §2.25) from its two sense lines (`PRIVACY_MUTE_N`, `PRIVACY_BLACKOUT_N`): NORMAL, MIC_MUTE (mic bit clock broken) or FULL_BLACKOUT (mics, GNSS and CM5 radios off).
 
 ### 21.2 Structured Diagnostic JSON Output Schema
 ```json
@@ -874,8 +873,7 @@ When invoked via CLI or local agent tool call (`solardeck-diag --json`), the eng
       "nvme_temp_c": 38.0
     },
     "safety_airgap": {
-      "airgap_switch": "NORMAL_3.3V",
-      "privacy_switch": "NORMAL_ALL_ACTIVE",
+      "privacy_switch": "NORMAL",
       "rf_enabled": true,
       "mics_hardware_clock_active": true
     }
@@ -886,7 +884,7 @@ When invoked via CLI or local agent tool call (`solardeck-diag --json`), the eng
 ### 21.3 LLM Reasoning & Plain-English Interpretation Rules
 When the user queries system health ("Is anything broken?"), the LLM follows four strict diagnostic rules:
 1. **Symptom-to-Hardware Correlation:** Never state raw register values alone; explain the physical meaning (e.g. *"Rail 3 is drawing current while every radio reports idle, which means a radio is stuck transmitting"*).
-2. **False-Positive Filtering:** Cross-check the Hardware Airgap Switch (`AIRGAP_SENSE`). If the airgap switch is in STEALTH mode, radio NACKs are expected and reported as *"Radios safely unpowered by physical airgap switch (0.000W)"* rather than hardware failures.
+2. **False-Positive Filtering:** Cross-check the privacy switch (`PRIVACY_BLACKOUT_N`). If it is in FULL BLACKOUT, radio NACKs are expected and reported as *"Radios safely unpowered by physical airgap switch (0.000W)"* rather than hardware failures.
 3. **Safety Clamping:** If battery cell impedance exceeds $85\text{ m}\Omega$ or display temperature exceeds $+55^\circ\text{C}$, the LLM flags an immediate safety alert and instructs the operator to disconnect solar charging.
 4. **Dew-Point & Humidity Mitigation:** If internal cavity humidity from the Sensirion SHT40 sensor exceeds 65% RH with falling ambient temperature, the LLM alerts the operator: *"Internal humidity alert: 68% RH. Condensation risk detected on front lens. Please remove and regenerate the orange desiccant sachet located inside the rear M.2 service hatch."*
 

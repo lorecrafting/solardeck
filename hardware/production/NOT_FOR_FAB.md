@@ -6,7 +6,7 @@ Nothing in this directory can be ordered. The schematic is a partial capture wit
 connectivity and the PCB is unrouted (AUDIT 6 X8).
 
 `solardeck_bom.csv` and `solardeck_cpl.csv` mirror the placeholder netlist so Phases 6 and 11 can
-check that the three agree. They still list pre-V1 parts (ADR-034, ADR-044) and are replaced by the
+check that the three agree. They still list pre-V1 and superseded parts (ADR-034, ADR-044; e.g. BQ27441, BQ29700, TPS62840, TPS61088, CH224K, ADR-048/049) and are replaced by the
 first real capture, not edited by hand.
 
 The synthetic Gerbers, turnkey bundles, quote guides and the hand-generated chassis STL were removed

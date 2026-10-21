@@ -184,25 +184,12 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
     * **$T > 60^\circ\text{C}$ (Overheat Lockout):** Complete charger shutdown.
 * **Dual-Stage Solar Harvesting & Ambient Sensing Architecture:**
   1. *High-Power Field Solar (Fast Recharge via USB-C):* Standard USB-C Port 2 supports 5V–14V input from folding 15W–28W outdoor panels. The BQ25798's integrated dynamic input voltage management (**VINDPM / VOC-scaling MPPT**) tracks optimal solar output to recharge the pack safely in field conditions.
-  2. *Dedicated Nano-Power Bezel Harvester (Texas Instruments BQ25504 & Full-Width Dual-Bezel IBC Solar Array):*
-     * Harvests at cell voltages below the primary charger's input range.
-     * **Full-Width Dual-Bezel High-Efficiency IBC Solar Array:** Instead of an isolated single cell, the top and bottom bezels integrate custom back-contact Interdigitated Back Contact (IBC) monocrystalline solar strips (SunPower Maxeon Gen 7 grade, ~24% cell efficiency).
-       * Top Bezel Array: $215\text{ mm} \times 12\text{ mm}$ ($25.8\text{ cm}^2$).
-       * Bottom Bezel Array: $215\text{ mm} \times 12\text{ mm}$ ($25.8\text{ cm}^2$).
-       * Total Surface Area: **$51.6\text{ cm}^2$**.
-       * **Peak Solar Power:** **1.24W in direct sunlight** ($1000\text{ W/m}^2$), producing up to **350 mA charging current** into the battery rail.
-       * **Outdoor top-up only:** the strip tops up the idle co-processor outdoors; there is no indoor net-positive claim (ADR-041).
-     * **Hardware temperature gate (ADR-048):** the harvester charges the pack without the charger's CE gate, so a comparator on the pack NTC switches the harvester's output off outside the cell's charge-temperature window, with no firmware in the loop (`harvester.temperature_gate`). Its OV threshold sits below the Li-ion limit (`harvester.vbat_ov_v`, Phase 14).
-     * Dedicated ultra-low-quiescent boost converter ($1.80) wired directly to the bezel solar array.
-     * Cold-starts from as low as **330 mV** and continuously harvests down to **100 mV**.
-     * Executes autonomous 80% Fractional Open-Circuit Voltage (FOCV) MPPT sampling, boosting micro-solar energy directly into the battery rail with >90% efficiency, topping up the idle RP2350 co-processor outdoors (ADR-041).
-  3. *Batteryless Direct Solar Cold-Boot ("Zombie Mode"):*
-     * If the battery pack is flat (protector open), damaged, or physically removed, SolarDeck operates in pure **Batteryless Solar Mode**.
-     * The bezel solar array charges the onboard **1.0F 3.3V supercapacitor**.
-     * Once supercapacitor voltage crosses 3.0V, the low-IQ always-on buck-boost engages, cold-booting the RP2350 co-processor in under 15 ms.
-     * **Open (ADR-048):** with the pack removed there is no pack NTC for the harvester's temperature gate; whether the supercapacitor path sits upstream of that gate is decided at capture, so this mode is unconfirmed until then.
-     * The co-processor boots into the **Zen Solar Dashboard** (clock, barometer, offline text adventures, and chess), running perpetually off ambient light with zero battery required.
-     * If direct sunlight provides $>2.5\text{W}$ (or via the auxiliary DC / folding panel port), the power supervisor asserts `CM5_GLOBAL_EN` to cold-boot the full Linux desktop without a battery.
+  2. *Dedicated Nano-Power Bezel Harvester (Texas Instruments BQ25504 + the base IXYS SM141K06L strip, `power.solar_strip_w`):*
+     * Harvests at cell voltages below the primary charger's input range; the 1.24 W dual-bezel IBC array is an optional accessory (§2.28), not the base build.
+     * **Outdoor top-up only:** the strip tops up the idle co-processor outdoors; there is no indoor net-positive claim (ADR-041).
+     * **Hardware temperature gate (ADR-048):** the harvester charges the pack without the charger's CE gate, so a comparator on the pack NTC switches the harvester's output off outside the cell's charge-temperature window, with no firmware in the loop (`harvester.temperature_gate`, `docs/EVT0_POWER_BOARD.md` §2.7.1). Its OV threshold sits below the Li-ion limit (`harvester.vbat_ov_v`, Phase 14).
+     * Cold-start and minimum operating input voltages are the datasheet's VIN(CS) and VIN(DC) (TI SLUSAH0G §7.5); fractional open-circuit-voltage MPPT set by the VOC_SAMP divider (`docs/EVT0_POWER_BOARD.md` §2.7).
+  3. *No batteryless mode (ADR-049):* solar never powers the device or revives a pack on its own. The temperature gate reads the pack's NTC, so with the pack removed it fails off; its comparator and pull-up run from the always-on rail, which is down when the pack is tripped and there is no VBUS; and there is no supercapacitor in the BOM. A tripped or flat pack recovers from USB-C only.
   4. *Zero-BOM Ambient Lux Sensor (Solar Strip via RP2350 ADC):*
      * The open-circuit voltage ($V_{OC}$) of the top-bezel solar strip is tapped through a high-impedance 10:1 divider (1.0 MΩ / 110 kΩ, <3 µA draw) into RP2350 analog input pin `RP2350_ADC0`.
      * The co-processor maps cell photodiode voltage across a calibrated log curve from 10 lux (candlelit room) to 120,000 lux (blinding noon sunlight).
@@ -216,7 +203,7 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
     `"Powering External Device: <V> @ <A> | Battery: <%> | Est: <time> remaining"`.
   * Turns the tablet into an emergency power bank for smartphones, GPS handhelds, and flashlights in off-grid emergencies.
 * **Rigid Voltage Regulators (Anti-Brownout Engineering):**
-  1. *Always-On 3.3V System Rail (`VDD_3V3_AON`):* A low-quiescent **buck-boost** (TPS63900 class, to be confirmed from its datasheet; ADR-048) replaces the buck-only TPS62840 (ADR-047), so the rail holds 3.3 V down to an empty pack. It supplies the always-on rail to the RP2350, 8MB PSRAM, RV-3028-C7-class RTC, and `I2C_ALWAYS_ON` sensors continuously, ensuring perpetual operation when the main CM5 5V boost converter is completely unpowered.
+  1. *Always-On 3.3V System Rail (`VDD_3V3_AON`):* A low-quiescent **TPS63900 buck-boost** (TI SLVSET3D; pins in `docs/EVT0_POWER_BOARD.md` §2.5; ADR-048) holds the rail at 3.3 V down to an empty pack. It supplies the always-on rail to the RP2350, 8MB PSRAM, RV-3028-C7-class RTC, and `I2C_ALWAYS_ON` sensors continuously, ensuring perpetual operation when the main CM5 5V boost converter is completely unpowered.
   2. *Main 5.0V System Boost:* A synchronous boost converter (TPS61088 as drafted; re-selected from an in-production part, ADR-047, ADR-048) steps up battery voltage to a rigid 5.0V @ 3.5A rail, delivering up to 17.5W peak power for CM5 turbo compilation (CM5 peak draw TBD — verify against the CM5 datasheet), USB peripheral bus power, and display supply.
   3. *Cellular modem supply (TPS63020):* Deferred to V2 (ADR-034).
 * **Power Gating (Physical Cutoff Switches):**
@@ -327,7 +314,7 @@ Inspired by iconic ambient communicator status lights (Clicks, BlackBerry, Palm)
   * **Pulsing Amethyst Purple (Comms Mention):** Discord ping, Slack huddle, or Matrix room notification.
   * **Urgent Strobe Ruby Red (Environmental Hazard / Critical Battery):** Rapid barometric drop (storm warning) or battery $<5\%$.
   * **Steady Dim Warm White (Ambient Locator / Nightstand):** Ultra-faint glow for finding the tablet in complete darkness.
-  * **Physical Airgap Cutoff:** LED VDD rail is routed through the Hardware Airgap Switch; in `STEALTH` mode, LED power is physically cut to 0.000V.
+  * **Physical Airgap Cutoff:** LED VDD rail is routed through the privacy switch (§2.25); in FULL BLACKOUT, LED power is physically cut to 0.000V.
 
 ### 2.7.2 Tactical Covert & Night Vision (NVG) Stealth Hardware Architecture
 For field operations, astronomy observation, and night maneuvers requiring zero white/colored light bloom and acoustic silence:
@@ -446,7 +433,7 @@ To completely eliminate bus arbitration lockups and the hardware address collisi
 * **Precision Barometer & Altimeter (Bosch BMP390):**
   * 0.1m relative altitude precision; samples ambient air pressure to plot barometric barographs on the ambient desk clock and alert the user to incoming weather fronts.
 * **Benchtop Diagnostic Test Points & Hardware Probing Straps:**
-  * Labeled 1.0mm gold SMD test pads (`TP_VCC_CORE`, `TP_SPI_SCK`, `TP_CHG_STAT`, `TP_AIRGAP_SENSE`) exposed on the secondary PCB layer for oscilloscope and logic analyzer probing.
+  * Labeled 1.0mm gold SMD test pads (`TP_VCC_CORE`, `TP_SPI_SCK`, `TP_CHG_STAT`, `TP_PRIVACY_BLACKOUT_N`) exposed on the secondary PCB layer for oscilloscope and logic analyzer probing.
 
 ### 2.11 Dual USB-C Architecture, Driverless Monitor Mode & Host Protection
 SolarDeck provides two rugged IP68 Type-C ports engineered with autonomous hardware protection against reverse currents and accidental cross-plugging:
@@ -500,26 +487,25 @@ For true sovereign privacy, commercial flight compliance, sensitive compartmente
    All Peripherals Under OS Control                        All Radio Load Switches Dead:
                                                            • u-blox MAX-M10S GNSS (0.000V)
                                                            • CM5 Wi-Fi/BT (WL/BT_nDisable low)
-                                                           • Knowles MEMS Mic (0.000V)
-                                                           • Rear Backpack Pogo (0.000V)
+                                                           • MEMS mics (0.000V)
 ```
 
 1. **Hardware-Guaranteed Safe Series Disconnect (Zero GPIO Short-Circuit Risk):**
    * Unlike dangerous designs that short active microcontroller GPIOs directly to ground, the SolarDeck Airgap Switch acts as a **hardware series disconnect**:
      * In **NORMAL** mode, the switch passes the active-high gate enable signals from the CM5 and RP2350 to the `ON` pins of the respective TPS22918 load switches.
-     * In **STEALTH** mode, the physical switch opens the gate drive nets and pulls each load switch `ON` pin to GND through dedicated 100 kΩ pull-down resistors. The microcontrollers' GPIO drivers are completely isolated and never shorted to ground, ensuring zero silicon stress while guaranteeing absolute 0.000V shutdown of all radio and sensor rails.
-     * **CM5 on-module Wi-Fi/BT** cannot be cut by a carrier load switch. In **STEALTH** the switch's second pole ties the CM5's `WL_nDisable` and `BT_nDisable` pins to GND; per the CM5 datasheet (§2.1.1–2.1.2) these pins may only be driven low, and held low they prevent Wi-Fi and Bluetooth from powering up. Exact connector pin numbers: TBD — verify against the CM5 datasheet pinout (ADR-031).
+     * In **FULL BLACKOUT**, the physical switch opens the gate drive nets and pulls each load switch `ON` pin to GND through dedicated 100 kΩ pull-down resistors. The microcontrollers' GPIO drivers are completely isolated and never shorted to ground, ensuring zero silicon stress while guaranteeing absolute 0.000V shutdown of all radio and sensor rails.
+     * **CM5 on-module Wi-Fi/BT** cannot be cut by a carrier load switch. In **FULL BLACKOUT** the switch's second pole ties the CM5's `WL_nDisable` and `BT_nDisable` pins to GND; per the CM5 datasheet (§2.1.1–2.1.2) these pins may only be driven low, and held low they prevent Wi-Fi and Bluetooth from powering up. Exact connector pin numbers: TBD — verify against the CM5 datasheet pinout (ADR-031).
 2. **Absolute Zero EMF & Radio Silence:**
    * **0.000 dBm RF output.** Completely undetectable by RF spectrum analyzers, direction-finding antennas, or cell-tower triangulators.
    * Eliminates all radio-frequency electromagnetic fields, leaving only the DC static magnetic field of the earth and low-frequency CPU clock traces shielded by internal PCB ground planes and the aluminum chassis.
 3. **Pure Zen Reader / Scribe Operating Mode:**
-   * When the switch is flipped, a sense line (`AIRGAP_SENSE`, on the always-on GPIO expander) interrupts the RP2350, which reports it to Linux over the link.
+   * The switch position reaches the RP2350 through two sense lines on the always-on GPIO expander (`PRIVACY_MUTE_N`, `PRIVACY_BLACKOUT_N`, §2.25), and the RP2350 reports it to Linux over the link.
    * Sway/Wayland renders a padlock badge: `[AIRGAP LOCKED: 0.000 dBm]`.
    * CPU governor immediately throttles to `powersave` (600 MHz single-core), and all radio daemons are frozen.
    * Active system power drops from 2.5W to **under 0.75W**!
    * **Battery Life:** Reading PDFs in Zathura, annotating with the battery-free Wacom stylus, and browsing offline Wikipedia in Kiwix lasts a runtime that is TBD until the cell is chosen (ADR-040).
 4. **Airgapped Cold-Storage Cryptographic Signer & Document Notary:**
-   * When flipped to STEALTH, SolarDeck becomes an impenetrable, mathematically verifiable cold-storage signing station:
+   * In FULL BLACKOUT, SolarDeck becomes an impenetrable, mathematically verifiable cold-storage signing station:
      * **Zero RF Transmission:** Hardware power switches disconnect the GNSS receiver to 0.000V, and Wi-Fi/Bluetooth are held disabled.
      * **Visual Optical Ingestion (QR camera signing):** V2 (ADR-034).
      * **High-Contrast On-Screen Verification:** The decoded recipient address, smart contract bytecode, and fee breakdown are rendered in high contrast on the 10.3" E-Ink paper screen.
@@ -672,16 +658,10 @@ To provide 100% mission reliability in severe sub-zero weather, dust storms, and
   * Internal 10.3" E-Ink serves as dedicated live van telemetry palette (Victron battery SoC, water levels, Meshtastic chat via a paired node, terminal scratchpad).
   * External 25.3" E-Ink / 4K monitor serves as primary high-density code and Kiwix browser workspace.
 
-### 2.19 Blackout Supercapacitor Emergency SOS Beacon (Zero-Battery Survival Boot)
-* **The Operational Ceiling:** In catastrophic backcountry scenarios where the battery pack is flat (protector open), missing, or physically damaged, standard mobile terminals cannot boot.
-* **The Supercapacitor Circuit:**
-  * A **1.0F 3.3V ultra-low-leakage EDLC supercapacitor** (AVX BestCap / Eaton / Cornell Dubilier, $0.95) is wired directly across the Always-On 3.3V rail fed by the dual-bezel IBC solar array via a low-drop Schottky diode (BAT54CW).
-* **Zero-Battery Survival Sequence:**
-  1. **Direct Sunlight Charging:** In direct sunlight (100,000 lux), the front dual-bezel solar array generates ~280 mA (1.24W), charging the 1.0F supercapacitor from 0.0V to 3.3V in **under 25 seconds** with no battery installed.
-  2. **150ms Cold-Boot Burst:** The always-on buck-boost asserts `POWER_GOOD`, releasing the RP2350 reset line.
-  3. **Coordinate Capture:** The RP2350 reads last-known GPS coordinates from RTC NVRAM. The radio SOS burst is V2 (ADR-044).
-  4. **Indelible E-Ink Distress Stamping:** While the remaining supercapacitor energy bleeds down, the RP2350 pulses the display controller to burn an indelible high-contrast distress placard onto the 10.3" E-Ink screen: `EMERGENCY SOS | COORD: 21.3069 N, 157.8583 W | TIME: 2026-10-19 14:00 UTC | BLOOD: O-POS | ZERO-BATTERY SOLAR PLACARD`.
-  5. **Bistable Permanence:** The distress text remains frozen on the screen with **0.000W power draw** indefinitely, visible to SAR teams even if the device is submerged or abandoned.
+### 2.19 Low-Battery Emergency SOS Placard
+* **What it does:** when the RP2350's power-fail alarm fires (`battery.low_alarm_v`), it reads the last GNSS fix and the RTC time and draws a high-contrast distress placard on the E-Ink panel before the pack protector trips. The panel is bistable, so the placard stays visible with no power. The radio SOS burst is V2 (ADR-044).
+* **What it does not do (ADR-049):** boot with a flat, tripped or missing pack. The earlier zero-battery supercapacitor boot is withdrawn: no supercapacitor is in the BOM and the harvester's temperature gate is off without a pack (§2.3).
+* **Unverified:** the energy between `battery.low_alarm_v` and the protector's UVP has to cover one display update; measured at EVT-1 with the panel.
 
 ### 2.20 Cascaded Edge Audio ML Hardware & Acoustic Barge-In Pipeline
 * **The Standby Power Problem:** Running full continuous speech recognition on the CM5 keeps the main SoC at watt-level draw (the CM5 datasheet idle alone is watt-level, AUDIT 6 X4), draining the pack in hours.
@@ -727,7 +707,7 @@ To eliminate supply-chain bottlenecks, enable budget vs. pro hardware tiers, and
    * Winbond 16MB SPI Flash (`W25Q128`) and APMemory 8MB PSRAM (`APS6404L`) route to nested footprints: WSON-8 flat leadless pads sit inside extended gull-wing SOIC-8 pads on identical nets.
    * Allows turnkey assembly houses to solder whichever package is in stock with zero layout changes.
 4. **USB-PD 20W Fast Charge Sink: STUSB4500 (QFN-24) ⟷ 5.1kΩ Pull-Downs:**
-   * One STMicroelectronics STUSB4500 footprint (ADR-048); the CH224K alternate pad is dropped.
+   * One STMicroelectronics STUSB4500 footprint (ADR-048).
    * Two DNP 0402 pads allow omitting active PD silicon entirely and populating standard 5.1 kΩ pull-down resistors for basic 5V 3A (15W) charging.
 5. **PCIe steering bridge:** Removed. The CM5's single PCIe Gen 2 x1 lane goes directly to the M.2 Key-M NVMe socket; USB comes from the CM5's native ports (ADR-042).
 6. **Onboard LoRa SX1262:** DNP in V1; deferred to V2 (ADR-044); the V1 board reserves the footprint and pins (ADR-045, docs/PIN_BUDGET.md).
@@ -764,7 +744,7 @@ To deliver mathematically verifiable, physical airgapped privacy for tactical op
   1. **Position 1: NORMAL (Green Index):** All microphones and radio load switches operate normally under Linux kernel software power management.
   2. **Position 2: MIC MUTE (Yellow Index):** Mechanically breaks the I²S bit clock (`MIC_BCLK`, RP2350 GPIO 26) between the RP2350 and both Knowles MEMS microphones, and a pull-down holds the microphone side at GND. The switch never shorts the driven RP2350 pin. Without a clock signal, the MEMS charge pump cannot oscillate; audio eavesdropping is physically and electrically impossible (0.000V signal level). The radios remain operational.
   3. **Position 3: FULL BLACKOUT (Red Index):** Mechanically disconnects power (`VCC`) to both microphones and also breaks `MIC_BCLK` as in MIC MUTE, so no clock is driven into unpowered mics, de-asserts the hardware gate on the u-blox MAX-M10S GNSS receiver to 0.000V and pulls the CM5's `WL_nDisable`/`BT_nDisable` low.
-* **Diagnostic Sense Line (`PRIVACY_STAT`):** An auxiliary sense pin informs the RP2350 and Linux kernel of the physical switch position, allowing the OS to display a permanent hardware padlock icon on the 10.3" E-Ink screen with zero CPU overhead.
+* **Sense lines (`PRIVACY_MUTE_N`, `PRIVACY_BLACKOUT_N`, always-on expander EXP 2 and EXP 7, `docs/PIN_BUDGET.md`):** two poles report the position (high/high NORMAL, low/high MIC MUTE, low/low FULL BLACKOUT; one line cannot encode three positions), allowing the OS to display a permanent hardware padlock icon on the 10.3" E-Ink screen with zero CPU overhead.
 
 ### 2.26 Hardware USB Data-Line Shield & Forensic Isolation ("Juice-Jacking" Defense)
 * **Threat Mitigation:** Prevents hostile border kiosks (Cellebrite, GrayKey), forensic intercept cables (O.MG), and airport charging stations from executing BadUSB HID injection, protocol fuzzing, or direct memory access (DMA) attacks.
@@ -785,7 +765,7 @@ To deliver mathematically verifiable, physical airgapped privacy for tactical op
     3. Drops the eMMC and NVMe power gates, locking all storage controllers into read-protected state.
     4. Records the exact timestamp of physical enclosure breach to write-once non-volatile memory.
 
-### 2.28 **[OPTIONAL ACCESSORY — not in base BOM]** High-Efficiency Bezel IBC Solar Upgrade (1.24 W) & Batteryless Direct-Solar Cold Boot ("Zombie Mode")
+### 2.28 **[OPTIONAL ACCESSORY — not in base BOM]** High-Efficiency Bezel IBC Solar Upgrade (1.24 W)
 
 The base configuration ships the 0.15 W IXYS SM141K06L bezel strip priced in `BOM_COST_ESTIMATE.md`. This section describes the optional IBC bezel upgrade (2 × 215 × 12 mm, 51.6 cm², 1.24 W), which replaces that strip and is NOT the default. See ADR-007.
 * **Solar Collector Topology:** Two full-width monocrystalline Interdigitated Back Contact (IBC) strips (SunPower Maxeon Gen 7 grade, 24% cell conversion efficiency):
@@ -793,12 +773,7 @@ The base configuration ships the 0.15 W IXYS SM141K06L bezel strip priced in `BO
   * **Bottom Bezel:** $215\text{ mm} \times 12\text{ mm}$ ($25.8\text{ cm}^2$).
   * **Total Active Area:** **$51.6\text{ cm}^2$**.
   * **Peak Output:** **1.24W** in direct sunlight ($1000\text{ W/m}^2$, ~350 mA @ 3.5V); harvests **120 mW to 240 mW** in open shade or bright overcast daylight.
-* **Direct Solar Cold-Boot ("Zombie Mode"):**
-  * When the battery pack is removed, worn out, or flat (protector open):
-  * Energy from the bezel solar array flows through the TI BQ25504 nano-power boost harvester into the onboard **1.0F 3.3V supercapacitor**.
-  * Reaching 3.0V takes under **25 seconds** in sunlight, triggering the always-on buck-boost to assert `POWER_GOOD`.
-  * The RP2350 cold-boots into the ultra-low-power **Zen Solar Suite** (4.5 mW total draw), operating perpetually with **zero battery installed**.
-  * If solar generation exceeds 2.5W (e.g. under intense sun or via the auxiliary folding panel port), the supervisor automatically enables `CM5_GLOBAL_EN` to boot the full Linux OS without a battery.
+* **No batteryless mode (ADR-049):** with the upgrade fitted, solar still reaches only the pack, through the same hardware temperature gate (§2.3), so a removed or tripped pack is not bypassed.
 
 ### 2.29 **[OPTIONAL ACCESSORY — separate BOM block]** Snap-On MagSafe 7.1W "Solar Armor" Backplate & Remote Shade Tether (`SOLAR-ARMOR-V1`)
 *Written 2026-10-19 16:10 UTC in the Pi harness by antigravity/gemini-3.8-flash*

@@ -1046,7 +1046,7 @@
         "use": "v1"
       },
       "2": {
-        "net": "AIRGAP_SENSE",
+        "net": "PRIVACY_MUTE_N",
         "fn": "gpio",
         "use": "v1"
       },
@@ -1067,6 +1067,11 @@
       },
       "6": {
         "net": "CC_INT_N",
+        "fn": "gpio",
+        "use": "v1"
+      },
+      "7": {
+        "net": "PRIVACY_BLACKOUT_N",
         "fn": "gpio",
         "use": "v1"
       },

@@ -149,13 +149,12 @@ cell (§4).
 
 ### 2.3 Pack board — BQ27Z561 gauge (WCSP-12) and pack connector
 
-Source: SLUSCY0C Table 4-1, §6.3.2.6, §6.4.2.1, §7.2 (Fig. 7-1), §7.4.1–7.4.2. The SLUSCY0C
-datasheet does not give the I²C address; it is in the Technical Reference Manual, which is not in
-hand (§6). This is the reference topology the pack must follow, whoever builds the pack board.
+Source: SLUSCY0C Table 4-1, §6.3.2.6, §6.4.2.1, §7.2 (Fig. 7-1), §7.4.1–7.4.2; the -R2 Technical
+Reference Manual SLUUC54C (rev. March 2024) for the address (§10.2), commands and data flash. This is the reference topology the pack must follow, whoever builds the pack board.
 
 | Ball | Name | Net (pack board) | Passives / notes |
 | :-- | :-- | :-- | :-- |
-| A1 | INT | — | not on `J_PACK`; no connection (host polls). Output type not stated in SLUSCY0C |
+| A1 | INT | — | not on `J_PACK`; no connection. The host polls `InterruptStatus()` (0x6E), readable while sealed, which carries the same flags (SLUUC54C §6.1, §12.1.38); INT would only save a wake-up. On the -R2 it is open-drain by default (IO Config `INT_PUP` = 0, §6.4) |
 | A2 | PULS | — | not used, no connection |
 | A3 | SDA/HDQ | `J_PACK` SDA | never switch to HDQ: the change is irreversible (§6.3.4) |
 | B1 | TS | pack thermistor to VSS | 10 kΩ NTC (Fig. 7-1), the gauge's own; internal 18 kΩ pull-up (§6.3.2.6) |
@@ -185,8 +184,9 @@ hand (§6). This is the reference topology the pack must follow, whoever builds 
 | 5 | NTC | pack thermistor to `PACK−`, for the charger's TS (U1 pin 16) |
 | 6 | `NTC_GATE` | second pack thermistor to `PACK−`, for the harvester gate (§2.7.1); see open item 15 |
 
-Two pack thermistors reach the board because the charger's TS divider is biased from REGN,
-which exists only with VBUS, and the harvester charges without VBUS.
+Two pack thermistors reach the board because the charger's TS divider is biased from REGN, and
+REGN is off on battery alone (SLUSDV2C §7.3.3) unless firmware turns on OTG or the ADC's TS channel
+(§7.3.4.1); the harvester charges without VBUS and without firmware.
 
 ### 2.4 U4 — STUSB4500 USB-PD sink (QFN-24; decided, ADR-048)
 
@@ -226,7 +226,7 @@ sink-path PMOS: VBUS goes straight to the BQ25798, whose input range covers ever
 ### 2.5 U5 — TPS63900 always-on buck-boost (DSK, WSON-10)
 
 Source: SLVSET3D Table 5-1, §6.3, §7.3.6 (Table 7-2, Table 7-3), page-1 simplified schematic.
-Replaces the buck-only TPS62840 (ADR-048), so the rail holds 3.3 V to an empty pack.
+The rail holds 3.3 V to an empty pack (ADR-048).
 
 | Pin | Name | Net | Passives / notes |
 | :-- | :-- | :-- | :-- |
@@ -402,7 +402,16 @@ through `J_PACK` and shares its ground through `PACK−` (§1.2 item 2).
   (pin table); VIH_CE ≥ 1.3 V, VIL_CE ≤ 0.4 V (§6.5).
 - While the RP2350 is in reset its pad pull-down fights the 10 kΩ. CE stays high while
   V_AON × R_pd / (R_pd + 10 kΩ) ≥ 1.3 V, which needs R_pd ≥ 6.5 kΩ at a 3.3 V rail (regulated by
-  the buck-boost, §2.5). Verify against the RP2350 pad pull-down (datasheet not in hand).
+  the buck-boost, §2.5). **Verified:** the RP2350 pad pull-down is 36 kΩ minimum at IOVDD 3.3 V
+  (RP2350 datasheet, build 2026-01-10, Table 1683, §14.9.4), so CE sits at about 2.6 V or more. At
+  reset the pad output is high-impedance, its input disabled and its pull-down on (§9.3, Table 885).
+  Erratum RP2350-E9 (Appendix D) needs the input enabled, which it is not at reset, and acts as a
+  pull-up, so it cannot drag CE low.
+- **Pad isolation hazard (firmware rule).** The RP2350 latches each pad's output and pulls while its
+  isolation bit is set (§9.7): if the core powers down while driving `CHG_CE_N` low, the pad holds
+  it low and charging continues with no firmware watching. Firmware must release `CHG_CE_N` (let it
+  go high) before any RP2350 power-domain transition; EVT-0 step 5 checks it. A firmware rule is not
+  a hardware gate: open item 19.
 - **No ship FET.** VBAT_UVLOZ (the battery voltage at which I²C comes alive with no VBUS) is
   3.25–3.55 V with a ship FET and 2.50–2.71 V without (§6.5). With a ship FET the RP2350 could not
   reach the charger on a deeply discharged pack (`charger.ship_fet`; ADR-048 keeps this).
@@ -412,8 +421,10 @@ through `J_PACK` and shares its ground through `PACK−` (§1.2 item 2).
 
 ### 3.2 Register sequence (I²C 0x6B, SLUSDV2C §7.5)
 
-16-bit registers are written MSB first at the lower offset (Fig. 7-27 shows bits 15:8 first; confirm
-with the read-back in step 6). Read-modify-write every register that holds other fields.
+16-bit registers are assumed MSB first at the lower offset. SLUSDV2C does not state the byte order:
+§7.3.14.3 gives bit order within a byte, §7.3.14.7 sends data to Addr, Addr+1, and Fig. 7-27 draws
+bits 15:8 first without naming their address. **Bench check before step 5:** with PROG strapped for
+1s, REG01 resets to 0x01A4 (the 1s POR VREG); a 2-byte read from 0x01 must return 0x01 then 0xA4. Read-modify-write every register that holds other fields.
 
 | Step | Register | Field | Value | Why |
 | :-- | :-- | :-- | :-- | :-- |
@@ -424,7 +435,7 @@ with the read-back in step 6). Read-modify-write every register that holds other
 | 4 | §4 | ICHG, IPRECHG, ITERM, VSYSMIN, JEITA | cell values | TBD until the cell is chosen (§4) |
 | 5 | REG01 (0x01–0x02) | VREG_10:0 | VREG_10:0 = 0x1A4 | `battery.charge_limit_v` / 10 mV, offset 0 mV (Table 7-15). Bytes: 0x01, 0xA4 |
 | 6 | REG01 | VREG_10:0 | read back | firmware sets `charger_vreg_mv` from this read; `solardeck_charge_enable_allowed()` (firmware test 7) |
-| 6a | pack gauge (address §6) | charge-voltage parameter | read; must equal `battery.charge_limit_v` | ADR-048: refuse any pack built for another chemistry or limit; leave `CHG_CE_N` high and report. The parameter's command or data-flash name is in the TRM (not in hand, open item 16). Not "Design Voltage": SLUSCY0C §7.2.1's example sets that to 4000 mV, below the charge limit |
+| 6a | pack gauge 0x55, `ChargingVoltage()` (0x30/0x31) | charge voltage, mV | read; must equal `battery.charge_limit_v` | ADR-048: refuse any pack built for another chemistry or limit; leave `CHG_CE_N` high and report. `ChargingVoltage()` is the only charge-voltage value readable while the pack is SEALED (SLUUC54C §12.1.20; data flash is not, §8.3.1). It follows temperature (§9.5), so compare it only while the gauge reports the standard-temperature range, and require ≤ the limit in every range. Not "Design Voltage", a gauging parameter |
 | 7 | — | `CHG_CE_N` | drive low | only if step 6 equals step 5 and step 6a passed |
 | 8 | REG10, REG01 | WATCHDOG (primary), VREG | re-read on every `CHG_INT_N` pulse and periodically | WATCHDOG comes up enabled after any charger reset, so it is the reset detector (on Li-ion VREG's POR value equals the limit and cannot reveal a reset; firmware gate `charger_wdt_off`); if either changed, the charger was reset (POR, REG_RST or a watchdog that something re-enabled): stop charging at once by letting `CHG_CE_N` go high (stop driving it low), then restart at step 1 |
 
@@ -518,8 +529,8 @@ leaves no port for a PD sink.
 | :-- | :-- | :-- |
 | 0x28 | STUSB4500, ADDR1:0 = 00 | DS12499 §4.1 (0x28–0x2B) |
 | 0x40 | INA3221, A0 = GND | SBOS576C Table 7-1 |
-| 0x52 | RV-3028-class RTC (carrier, ADR-046) | **from memory — verify** against the RTC datasheet |
-| 0x55 | BQ27Z561 pack gauge, via `J_PACK` | **verify** in the BQ27Z561 TRM; SLUSCY0C does not state it |
+| 0x52 | RV-3028-C7 RTC (carrier, ADR-046) | RV-3028-C7 Application Manual Rev 1.4 §5.6 (fixed) |
+| 0x55 | BQ27Z561-R2 pack gauge, via `J_PACK` | SLUUC54C §10.2 (fixed) |
 | 0x6B | BQ25798 charger | SLUSDV2C §7.3.14.5 |
 
 No conflicts among these. Carrier devices listed in HARDWARE_SPEC §2.9 (TMP112 0x48/0x49, BMA400
@@ -552,6 +563,10 @@ prove is `HARDWARE_VERIFICATION_WORKFLOW.md`. Steps specific to this board:
 5. Host connected. Run §3.2 steps 0–7 including 6a; confirm the read-back; measure termination at
    `battery.charge_limit_v` on a cell simulator (supply plus load), then on the one real pack.
    Present a pack (or gauge) whose charge-voltage parameter differs: `CHG_CE_N` must stay high.
+5b. CE pad freeze (open item 19): with the host driving `CHG_CE_N` low and the charger charging a
+   cell simulator, put the RP2350 into each low-power state its firmware can use (and pull its
+   core supply on the Pico 2). Record whether `CHG_CE_N` stays low. Any state that holds it low is
+   forbidden while charging until a hardware gate exists.
 6. NTC: replace the pack NTC with a resistance decade at the T1/T5 values; confirm charge suspend at
    both (AGENTS §4.1) before leaving a real pack on charge. Repeat on `NTC_GATE` with VBUS absent:
    `HARV_EN` low outside the window, high inside; low with `NTC_GATE` open, shorted, and with the
@@ -586,8 +601,7 @@ Items closed by ADR-048 keep their numbers so references stay valid.
 3. **CE race with a flat pack** (§3.1). If step 4 shows CE low while switching, pull CE up from a
    rail that exists before the charger switches (REGN does, but RP2350 pad tolerance to it is
    unverified) or add a discrete gate. Changes `PIN_BUDGET` polarity only if a FET inverts it.
-4. **Gauge address.** Chemistry is closed (ADR-048: Li-ion, which SLUSCY0C covers). Still confirm
-   the gauge's I²C address in the TRM (§6).
+4. **Closed (ADR-049).** Gauge address 0x55, fixed (SLUUC54C §10.2); chemistry closed by ADR-048.
 5. **Rd rule vs a PD controller.** `USB_ROBUSTNESS.md` R1/R2 require discrete 5.1 kΩ ±1 % Rd; the
    STUSB4500's own Rd is ±10 % and a discrete Rd in parallel would halve it. Owner to restate R1.
 6. **STUSB4500 on an unpowered I²C bus.** It is powered only from VBUS; its behaviour with SCL/SDA
@@ -609,24 +623,41 @@ Items closed by ADR-048 keep their numbers so references stay valid.
     its frequency, compensation and current-limit parts then need the CM5 peak current.
 14. **INA3221 shunts** need each rail's maximum current (§2.9).
 15. **`J_PACK` sixth pin and gauge INT.** ADR-048 allows 5–6 pins. This package uses the sixth for
-    `NTC_GATE`, because the charger's TS bias exists only with VBUS (§2.3). The alternative is a
-    5-pin connector with the gate comparator on the pack board. Either way the gauge's INT has no
-    contact, so the host polls the gauge. Whether the V2 pack is keyed differently, so a
-    wrong-chemistry pack cannot mate (the harvester bypasses step 6a, §2.7.1), is also open. Owner
-    to confirm.
-16. **Pack charge-voltage parameter** (§3.2 step 6a). Which gauge command or data-flash value holds
-    the pack's charge voltage, and how it is written at pack programming, is in the TRM (not in hand).
+    `NTC_GATE`, because the charger's TS bias (REGN) is off on battery alone without firmware (§2.3).
+    The alternative is a 5-pin connector with the gate comparator on the pack board, which puts
+    harvester circuitry in every replaceable pack. The gauge's INT is not worth a contact: the host
+    polls `InterruptStatus()` for the same flags (§2.3). **Recommended (ADR-049): keep `NTC_GATE`
+    on pin 6.** Whether the V2 pack is keyed differently, so a wrong-chemistry pack cannot mate (the
+    harvester bypasses step 6a, §2.7.1), is also open. Owner to confirm.
+16. **Closed in method (ADR-049): pack charge voltage.** The host reads `ChargingVoltage()` (§3.2 step
+    6a). It is set at pack programming, unsealed, by the data-flash "Voltage" parameter of each
+    Advanced Charge Algorithm temperature subclass (SLUUC54C §9.5, Table 9-2). **TI's defaults are
+    4400 mV (low, standard and recovery ranges) and 4100 mV (high), above the Li-ion limit**, so every
+    pack must be programmed: standard ranges at `battery.charge_limit_v`, no range above it, then
+    sealed. Still open: SLUUC54C §12.8.51 says MAC 0x00B0 `ChargingVoltageOverride` writes these
+    values in SEALED mode, while Table 12-2 says it is not available sealed. If §12.8.51 is right, any
+    host can rewrite a sealed pack's limit; test it on the first programmed pack.
 17. **Pack protector part.** A Li-ion 1S protector that drives high-side FETs (§1.2 item 2, §4); no
     datasheet in hand, chosen with the cell.
 18. **Harvester gate parts.** Comparator U12 and switch U11 (§2.7.1) need datasheets in hand:
     comparator supply current, input range and hysteresis; switch off-state blocking in both
     directions.
+19. **CE pad frozen low (RP2350 pad isolation, §3.1).** If the RP2350 core powers down while it
+    drives `CHG_CE_N` low, the pad latches low (RP2350 datasheet §9.7) and the 10 kΩ pull-up never
+    acts, so the charger keeps charging with no firmware watching. The charger's own safety timer,
+    JEITA/TS cutoff and VREG still apply, and the pack protector is the backstop, but the hold-off
+    is defeated. Fixes, decide at carrier capture: (a) firmware rule: never enter an RP2350
+    power-down state while charging, and release CE first (§3.1); (b) hardware gate: drive CE through
+    a part that lets CE go high when a firmware heartbeat stops (for example a retriggerable one-shot
+    or external watchdog timer gating an open-drain pull-down on CE; part not chosen, no datasheet
+    in hand). (a) alone is a firmware promise; (b) closes it in hardware.
+    Bench: §7 step 5b.
 
 ### 8.1 Existing docs contradicted by the datasheets (not edited here)
 
 | Doc | Says | Datasheet says |
 | :-- | :-- | :-- |
-| HARDWARE_SPEC §2.3, BOM "Bezel Solar MPPT" | BQ25504 cold-starts at 330 mV, harvests to 100 mV | cold start 600 mV typ / 700 mV max; operates from 130 mV (SLUSAH0G §7.5, revision history) |
+| HARDWARE_SPEC §2.3, BOM "Bezel Solar MPPT" (both corrected, ADR-049) | BQ25504 cold-starts at 330 mV, harvests to 100 mV | cold start 600 mV typ / 700 mV max; operates from 130 mV (SLUSAH0G §7.5, revision history) |
 | HARDWARE_SPEC §2.3 | NTC NCP18XH103F03RB with β = 3950 K | B25/50 = 3380 K, B25/85 = 3434 K (Murata NCP18XH103F03RB) |
 | HARDWARE_SPEC §2.13 | TPS22918 discharges through 470 Ω | internal RPD is tens of ohms (SLVSD76C §6.5 RPD) |
 | ADR-035, HARDWARE_SPEC §2.3 | watchdog "fed or disabled" | expiry can restore the Li-ion POR VREG (SLUSDV2C §7.3.2): disable only |
@@ -643,7 +674,10 @@ BQ27Z561 "TI lists LiFePO4" row (chemistry is now Li-ion).
 | :-- | :-- | :-- |
 | BQ25798 | TI SLUSDV2C | May 2020, rev. June 2026 |
 | BQ29706 | TI SLUSBU9I (BQ2970 family) | rev. August 2024 (cited only for its low-side FET drive) |
-| BQ27Z561 | TI SLUSCY0C | rev. September 2025 (10-page datasheet; the TRM was not in hand) |
+| BQ27Z561 | TI SLUSCY0C | rev. September 2025 (10-page datasheet) |
+| BQ27Z561-R2 TRM | TI SLUUC54C | February 2020, rev. March 2024 (address, `ChargingVoltage()`, Advanced Charge Algorithm data flash) |
+| RP2350 | Raspberry Pi RP2350 datasheet | build 2026-01-10 (pads §9.3, §9.7, Table 1683; erratum E9) |
+| RV-3028-C7 | Micro Crystal Application Manual | Rev 1.4, November 2021 (§5.6 address) |
 | STUSB4500 | ST DS12499 | Rev 4, February 2020 (from a mirror; st.com refused the download) |
 | CH224K | WCH CH224 datasheet | V2.0 |
 | TPS63900 | TI SLVSET3D | March 2020, rev. October 2020 |

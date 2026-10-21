@@ -54,7 +54,7 @@ no wired schematic yet (AUDIT 6 X8).
 | MIPI 1 | not routed in V1 | CSI camera connector (DNP) and lens boss |
 | `PWR_BUT` | from RP2350 GPIO 12 (`CM5_PWR_BUT`, open-drain) and the power button path | — |
 | `nRPI_BOOT` | recovery pinhole (`usb.recovery_doors`) | — |
-| `WL_nDisable`, `BT_nDisable` | pulled low by the airgap switch (they can only be driven low) | — |
+| `WL_nDisable`, `BT_nDisable` | pulled low by the privacy switch in FULL BLACKOUT (they can only be driven low) | — |
 | `USB_OTG_ID` | driven by the port 1 CC controller's data role | — |
 | `GPIO_VREF` | 3.3 V | — |
 
@@ -125,11 +125,12 @@ pull resistor that holds the load off until firmware drives it.
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | EXP 0 | `GNSS_EN` | gpio | V1 |  | GNSS load switch |
 | EXP 1 | `PORT2_VBUS_EN` | gpio | V1 |  | USB-C port 2 VBUS load switch |
-| EXP 2 | `AIRGAP_SENSE` | gpio | V1 |  | airgap switch position (the cut itself is hardware) |
+| EXP 2 | `PRIVACY_MUTE_N` | gpio | V1 |  | privacy switch sense, low in MIC MUTE and FULL BLACKOUT (the cuts themselves are hardware, HARDWARE_SPEC §2.25) |
 | EXP 3 | `CHG_INT_N` | gpio | V1 |  | charger interrupt |
 | EXP 4 | `GAUGE_INT` | gpio | V1 |  | BQ27Z561-R2 alert |
 | EXP 5 | `IMU_INT` | gpio | V1 |  | BMA400 motion interrupt (wake on pick-up) |
 | EXP 6 | `CC_INT_N` | gpio | V1 |  | TUSB320 port 1 CC interrupt |
+| EXP 7 | `PRIVACY_BLACKOUT_N` | gpio | V1 |  | privacy switch sense, low in FULL BLACKOUT; with EXP 2 it encodes all three positions |
 | EXP 8 | `SENSOR_ALERT_N` | gpio | V1 |  | wired-OR TMP112 / INA3221 alerts |
 | EXP 9 | `LORA_NRESET` | gpio | V2 |  | SX1262 reset |
 | EXP 10 | `LORA_PWR_EN` | gpio | V2 |  | LoRa load switch |

@@ -47,8 +47,8 @@ SolarDeck is a sovereign, general-purpose open-hardware computing platform desig
 │ 8. NFC:       Deferred to V2 (ADR-034)                                      │
 │ 9. ANTENNAS:  passive GNSS (top edge); LoRa SMA boss plugged (V2, ADR-045)  │
 │ 10. SENSORS:  RV-3028-C7 RTC + BMI270/BMM350 9-DOF IMU + BMP390 Baro        │
-│ 11. AIRGAP SW: Physical Hardware RF Kill Switch (Zero EMF / 0.000 dBm Cutoff)│
-│ 12. VOICE:    2 MEMS Mics + Speaker (AEC ref) + Mute SW + Voice Button      │
+│ 11. PRIVACY SW: one 3-position slide: normal / mic mute / full blackout      │
+│ 12. VOICE:    2 MEMS Mics + Speaker (AEC ref) + Voice Button                │
 │ 13. BATTERY:  Li-ion 1S smart pack (ADR-048), capacity TBD (ADR-040)        │
 │ 14. EXPAND:   2x IP68 USB-C (Monitor Sink + Host Expand with USB-to-I2C)     │
 │ 15. CHASSIS:  SLS 3D-Printed PA12 Nylon + 85A TPU Armor Corners (~510g total)│

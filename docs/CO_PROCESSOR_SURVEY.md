@@ -40,12 +40,12 @@ dual-ISA line in the table is "which ISA you boot into").
 ## 3. Power envelope vs. battery (capacity TBD, ADR-040)
 
 `native-read` tier today sits at 4.5 mW; the floor is the cell's own shelf life, not the silicon. Days on
-one charge are TBD until the cell is chosen (ADR-040); re-derive the column from `battery_wh.lifepo4`.
+one charge are TBD until the cell is chosen (ADR-040); re-derive the column from `battery_wh.li_ion`.
 
 | Mode | Power | Days on one charge | Sobered note |
 | :--- | :---: | :---: | :--- |
 | **RP2350 reader tier** (incumbent) | 4.5 mW | TBD (ADR-040) | The real number, once the cell is chosen. |
-| RP2350 POWMAN deep sleep | ~0.033 mW | TBD (ADR-040) | Meaningless — beyond the cell's ~18 y self-discharge + 8 y first-wearout floor |
+| RP2350 POWMAN deep sleep | ~0.033 mW | TBD (ADR-040) | Meaningless — beyond the pack's self-discharge and first wear-out (`reliability.first_wearout_years`) |
 | ESP32-C6 deep sleep | ~0.023 mW | TBD (ADR-040) | Same caveat |
 | ESP32-P4 deep sleep | ~0.040 mW | TBD (ADR-040) | Same caveat |
 | ESP32-P4 light sleep | 1.3 mW | TBD (ADR-040) | The *honest* P4 advantage: it stays interactive longer |
@@ -54,8 +54,8 @@ one charge are TBD until the cell is chosen (ADR-040); re-derive the column from
 | LoRa repeater | 13.5 mW | TBD (ADR-040) | Not a V1 mode: on-board LoRa is V2 (ADR-044) |
 | R4 keepalive + LoRa beacon | 0.2 mW | TBD (ADR-040) | The deep-off floor; battery-bound, not power-bound. The LoRa beacon is V2 (ADR-044) |
 
-**The sobering edit:** every sub-mW cell turns into "years" — but the LiFePO4 has only ~18 y of useful
-shelf life and a hard 8 y first wear-out (`spec_values.reliability.first_wearout_years`). **No
+**The sobering edit:** every sub-mW cell turns into "years" — but the Li-ion pack wears out first
+(`spec_values.reliability.first_wearout_years`) and self-discharges long before "years" matter. **No
 co-processor choice extends battery life; only the power modes around it do.** The reader tier is not
 power-bound. This kills candidate #1 (a lower tier) with a clean YAGNI.
 

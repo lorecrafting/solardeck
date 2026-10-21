@@ -50,7 +50,7 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **Host VBUS Sw** | 1.5A Current-Limited USB Host Distribution Power Switch | Texas Instruments / Mouser | TPS2051BDBVR | $0.45 |
 | **Recovery Sw** | Single Sub-Miniature IP67 Pinhole Micro-Tactile Switch | C&K / Panasonic / LCSC | KMR2 / EVQ-P8 | $0.20 |
 | **Voice Button** | Hold-to-talk tactile switch: wakes the RP2350, which starts audio capture while the CM5 boots (ADR-036) | C&K / Panasonic / LCSC | KMR2 / EVQ-P8 | $0.20 |
-| **Bezel Solar MPPT**| Nano-Power Solar Boost Harvester IC (Cold-Start 330mV, 80% FOCV)| Texas Instruments / Mouser | BQ25504RGTR | $1.80 |
+| **Bezel Solar MPPT**| Nano-Power Solar Boost Harvester IC (cold start and MPPT per SLUSAH0G §7.5, docs/EVT0_POWER_BOARD.md §2.7)| Texas Instruments / Mouser | BQ25504RGTR | $1.80 |
 | **Frontlight Driver**| Dual-Channel Constant-Current Step-Up LED Driver (2048-step CCT)| Texas Instruments / Mouser | TPS61163YFFR | $0.65 |
 | **Battery PCM** | Pack-side Li-ion protector + back-to-back N-FET pair on the pack board, thresholds from the cell datasheet (ADR-035, ADR-048) | Texas Instruments / Mouser | BQ29706 + dual N-FET (TBD) | TBD |
 | **ESD Suppression** | Low-Capacitance TVS Diode Arrays for USB & Pogo Pins (x4) | Texas Instruments / Mouser | TPD4E05U06 (x4) + SMAJ5.0A | $0.80 |
