@@ -399,3 +399,83 @@ FPS / 30-60 FPS, B3 note). `verify_all.py` now asserts the `token_stream` block 
 `update_latency_ms` agrees with `refresh_modes.partial_rect_latency_ms` (a streaming update *is* one
 partial rectangle), and that `full_screen_video` names the monitor-sink path — closing the smoke test
 on SOFTWARE_SPEC §2.6.
+
+## ADR-028 — Debian stable is the base distribution; Alpine is a measured fallback, not a default (2026-10-21)
+
+**Trigger.** The spec left a pseudo-choice open: `SOFTWARE_SPEC.md` §1 said "Minimal Debian
+Bookworm (Raspberry Pi OS Lite) **or** Alpine Linux for sub-3-second boot times." Two bases with
+different libc, init, and package ecosystems cannot both be "the base" — every daemon build, CI
+image, and provisioning step would need to be dual-targeted forever.
+
+**Mechanism.** The deciding requirements are the device's own: 30-year lifespan, closed-source
+binary apps, and the AI/terminal software ecosystem. Debian stable moves glacially and has a
+committed LTS window; Alpine ships a musl userspace that breaks glibc binary builds (Obsidian,
+URH, most AI toolchains); Arch/NixOS/Fedora are rolling or non-LTS, which makes the owner the
+maintainer forever. Alpine's genuine edge is boot time — but with the S2idle tier the OS never
+cold-boots in normal use, so a sub-3-second cold boot is a rare first-boot/upgrade/crash path, not
+a power tier.
+
+**Decision.** **Debian stable (Raspberry Pi OS Lite base, trimmed) + a custom mainline LTS kernel +
+Sway/Cage Wayland** is the SolarDeck base. The kernel choice is distro-agnostic and stays
+"custom mainline ARM64 kernel tracking the newest LTS (6.6 today; the repo's `verify_all.py` Phase 8
+provisioning script must not pin an EOL kernel)". Alpine remains an engineered *fallback*, used only
+if a bench measurement shows the base genuinely loses a power tier or boot target that the
+co-processor cannot cover — not as the default, not without a written measurement attached.
+
+**Why a decision and not a fork.** The base is a deliberately commoditized floor. SolarDeck's owned
+value lives in the daemon seam (`eink-refreshd`, `telemetryd`, `solardeck-diag/heal/correlate`), the
+custom kernel config, and the co-processor. Every distro choice that splits that seam is a tax.
+
+**Enforced consequences.** `SOFTWARE_SPEC.md` §1 updated to name Debian stable as the base with
+Alpine listed as measured fallback only; a BANNED pattern stops any *rolling* distro (Arch/NixOS
+unstable/Fedora rawhide) from being stated as the base in non-historical prose.
+
+## ADR-029 — Sway and Cage under Wayland; Hyprland explicitly rejected (2026-10-21)
+
+**Trigger.** The spec already chose Wayland (`SOFTWARE_SPEC.md` §1: Sway tiling WM, Cage kiosk
+mode). The question was whether the modern dynamic-tiling compositor (Hyprland) should displace
+Sway, given its feature richness.
+
+**Mechanism.** Hyprland's flagship features are 60 fps animations, blur, transparency, and
+GPU-accelerated effects — every one of which is a *ghosting or flash event* on electrophoretic ink,
+the exact things `eink-refreshd` exists to suppress. It is also heavier (effects pipeline RAM/CPU),
+younger (breaking config changes between releases), and without the decade of i3-compatible
+parameter stability that 30-year maintainers need.
+
+**Decision.** Keep **Sway** (workstation) and **Cage** (single-app kiosk: reader, dashboard) as the
+only compositors. Hyprland is rejected by name. The one portable modern habit — hot-reloadable
+composable config — is available in sway and is adopted only if a real workflow demands it (YAGNI
+until then). X11 apps run through Xwayland; the specc'd app list is Wayland-native or terminal.
+
+**Enforced consequences.** BANNED pattern on the word `Hyprland` in non-historical prose; the
+compositor contract in `SOFTWARE_SPEC.md` §1 stays Sway/Cage.
+
+## ADR-030 — Two panel SKUs, one chassis; bonded panel stays bonded in V1 (2026-10-21)
+
+**Trigger.** The 30-year budget (§LONGEVITY_30Y row 8) concluded only monochrome capsules have a
+30-year claim; Kaleido colour dye ages under UV/heat/cycles. The README pitching session then asked
+whether "modular" means the user can simply swap the display.
+
+**Mechanism.** Kaleido 4 is a monochrome Carta-class layer with a glued colour filter array on top:
+same robust B/W capsules, vulnerable CFA dyes. The failure is graceful (colour desaturates toward
+sepia; black/white text keeps contrast), but it is real. The panel is currently a **bonded unit** in
+the maintenance schedule (`LONGEVITY_30Y.md` "As needed — Display module (bonded unit)") — VHB on
+glass is deliberate and is what makes IP67 and drop survival work. A user-swappable panel means a
+connectorized EPDC, alignment frame, and a service hatch that stays sealed across hundreds of
+open/close cycles — a genuine design change, not a freebie.
+
+**Decision.** Two SKUs share one chassis and one carrier board:
+* **Mono SKU (default, 30-year):** Carta 1200, 227 PPI.
+* **Colour SKU (option, decade-scale):** Kaleido 4, honest fade, lifespan `null`
+  (`spec_values.panel_sku.kaleido4_dye_lifespan_years = null`) until a factory datasheet figure
+  exists — no estimate dressed as a spec.
+
+V1 keeps the VHB-bonded panel as a **service-kit part** (module swap at the "As needed" service
+interval), not a user hot-swap. The *future* user-serviceable panel becomes a specified requirement
+with its cost attached: connectorized EPDC + IP67 service hatch, gasket as a P/N'd wear item
+(compatible with the ADR-021 gasket line). This is recorded as a design direction, not a committed
+V2 feature — the ADR pins the trade so nobody re-argues it silently.
+
+**Enforced consequences.** `spec_values.panel_sku` introduced (`mono_default_panel`, `kaleido4_*`);
+`check_docs_numbers.py` BANNED pattern forbids any concrete "N-year" lifespan for the Kaleido dye in
+non-historical prose while the figure is `null`.

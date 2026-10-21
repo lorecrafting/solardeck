@@ -47,6 +47,15 @@
     "bench_duration_min": 5,
     "full_screen_video": "via USB-C monitor sink (Pillar 8); colour motion unsupported on-panel"
   },
+  "panel_sku": {
+    "mono_default": "Carta 1200",
+    "mono_ppi": 227,
+    "colour_option": "Kaleido 4",
+    "colour_ppi": 150,
+    "kaleido4_dye_lifespan_years": null,
+    "v1_panel_mount": "bonded (VHB on glass, service-kit part)",
+    "future_service_hatch": "connectorized EPDC + IP67 hatch, gasket as P/N'd wear item"
+  },
   "pen_arbiter": {
     "pen_sample_rate_hz": 133,
     "target_pen_latency_ms": 20,

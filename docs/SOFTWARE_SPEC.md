@@ -22,8 +22,8 @@ SolarDeck avoids the high-latency abstraction layers of commercial Android table
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-* **Base Distribution:** Minimal Debian Bookworm (Raspberry Pi OS Lite) or Alpine Linux for sub-3-second boot times.
-* **Wayland Compositor:** **Sway** or **Cage** running natively without an X11 server overhead. 
+* **Base Distribution:** Minimal Debian Bookworm (Raspberry Pi OS Lite) trimmed for sub-3-second boot times. Alpine Linux is a *measured fallback only* (ADR-028) — used if a bench shows the base loses a power tier, never the default.
+* **Wayland Compositor:** **Sway** (workstation) or **Cage** (single-app kiosk) running natively without an X11 server overhead. Hyprland explicitly rejected (ADR-029). 
 * **Color Palette:** Custom high-contrast monochrome and 16-color E-ink CSS stylesheets (`solarized-eink`, `paper-dark`).
 
 ---

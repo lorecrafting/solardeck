@@ -46,6 +46,11 @@ BANNED = [
     (r"\\$388\\.85|\\$413\\.85", "core BOM total is $383.30-$408.30 (ADR-020)"),
     (r"SnapDeck Keyboard", "keyboard descoped to Phase 2; external USB-C/BT only"),
     (r"ready for fabrication", "placeholder artifacts are not a design sign-off"),
+    (r"Arch Linux as the base|NixOS as the base|Fedora Rawhide as the base",
+     "Debian stable is the base (ADR-028); rolling/non-LTS distros make the owner the maintainer"),
+    (r"\bHyprland\b(?!.*rejected)", "Sway/Cage are the compositors (ADR-029); Hyprland effects are ghost/flash events on e-ink"),
+    (r"\d+\s*-?\s*years?\s+(of\s+)?(dye|Kaleido).*\blifespan|kaleido.*\d+\s*years",
+     "Kaleido dye lifespan is null until a datasheet figure exists (ADR-030); never estimate it"),
 ]
 
 
