@@ -29,30 +29,30 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
 1. **The "Dual-Brain" Instant Handoff (<400ms Glass-to-Glass):**
    * *Never off, yet never dies:* Sips ~110 µW as a perpetual indoor solar desk clock and 300-day Zen reader on the RP2350 co-processor.
    * *Zero boot friction:* The millisecond you touch a key or pen, the Linux CM4 wakes from S2idle in **<300 milliseconds**, restoring your terminal, Neovim buffers, and Claude Code sessions on screen in **under 400ms total**.
-2. **The "Typewriter-on-Paper" Latency Engine (<20ms Keystroke, Inking & Haptics):**
+2. **Sunlight Sovereignty & Perpetual Indoor Life:**
+   * *The brighter the sun, the better it gets:* 10.3" Color E-Ink (Carta 1200 / Kaleido 4, 227 PPI monochrome / 114–150 PPI colour) with 0% glare and zero power to hold a static page. 24–32 hours of active terminal coding under direct noon sun with 0W backlight.
+   * *Perpetual Indoor Harvesting:* High-efficiency indoor a-Si micro-strip + TI BQ25504 nano-boost yields a **net positive power balance under 500 lux indoor room light**, allowing SolarDeck to live on a desk or shelf forever without ever plugging into a wall.
+3. **The Sovereign Voice Agent (Barge-In & Touch-to-Talk):**
+   * *Zero standby penalty:* A cascaded 3-tier wake (Knowles MEMS hardware VAD < 0.05 mW → RP2350 INT8 microWakeWord ~14 mW → CM4 only on "Hey Deck") gives **80+ days continuous listening standby** without waking the Linux brain.
+   * *True acoustic barge-in:* PipeWire loopback AEC subtracts SolarDeck's own voice in real time — you can speak over it mid-sentence and it stops and retargets instantly.
+   * *Touch-to-talk fallback:* A held-call PTT path bypasses the wake-word entirely for deterministic, full-duplex operator control (mic hot only while pressed).
+4. **The "Typewriter-on-Paper" Latency Engine (<20ms Keystroke, Inking & Haptics):**
    * *Zero perceptible lag:* Hardware-synchronized 1-bit Direct Update (DU) waveforms deliver crisp keystroke rendering in **18–20 milliseconds**, eliminating the sluggishness of traditional e-paper.
    * *Intelligent Anti-Ghosting (`eink-refreshd`):* Zero flashes during fast typing bursts; silently sweeps micro-ghosting during natural 1.2-second pauses in human thought.
    * *Sub-18ms Wacom EMR Inking:* Battery-free, 4096-level pressure pen laminated behind the display with zero optical distortion or parallax.
    * *Haptics:* Base build is a single TI DRV2605L + 8 mm LRA with per-keystroke waveform shaping. The spatial quad-corner PowerHap + BOS1901 array is a retained **DNP option** that concentrates sub-1 ms clicks under the touching finger; it is off the default BOM because four glass-bonded ceramics are the device's worst drop-fatigue site (ADR-020).
-3. **Sunlight Sovereignty & Perpetual Indoor Life:**
-   * *The brighter the sun, the better it gets:* 10.3" Color E-Ink (Carta 1200 / Kaleido 4, 227 PPI monochrome / 114–150 PPI colour) with 0% glare and zero power to hold a static page. 24–32 hours of active terminal coding under direct noon sun with 0W backlight.
-   * *Perpetual Indoor Harvesting:* High-efficiency indoor a-Si micro-strip + TI BQ25504 nano-boost yields a **net positive power balance under 500 lux indoor room light**, allowing SolarDeck to live on a desk or shelf forever without ever plugging into a wall.
-4. **The Sovereign Form-Morphology (Tactical 620g Slate, Desk Easel, & Modular Thumb Grips):**
-   * *Total Input Freedom:* Descoping a proprietary keyboard for V1 leaves the core tablet ultra-light (~620g) and slim (14.0mm), allowing developers to connect their favorite keyboard (ThinkPad, Corne, NuPhy, Keychron, Apple Magic Keyboard) via low-latency Bluetooth 5.0 or USB-C.
-   * *Universal Mechanical Mounting:* Standard **M2.5 threaded brass heat-set inserts + MagSafe magnetic anchor array** on the rear chassis enable instant clipping of 3D-printed handheld thumb keyboards (e.g. $25 BlackBerry Q20 clicky keyboard), camera tripods, or desk arms.
-   * *The Ultimate Desk Easel:* MagSafe magnetic array + M2.5 mounts snap effortlessly onto any standard magnetic desk stand, origami folio, or OEM tablet stand, propping the tablet in portrait to display 80+ lines of uninterrupted code while typing on a desktop keyboard.
 5. **Sovereign Field Hardening (Airgap, LoRa, & IP67 All-Weather):**
    * *Physical Hardware Airgap Switch:* Mechanically breaks power enable nets to LTE, LoRa, Wi-Fi/BT, GPS, and microphone to **0.000V** (zero EMF / 0.000 dBm).
    * *Autonomous Meshtastic Node:* Integrated Semtech SX1262 LoRa (868/915 MHz) permanently owned by RP2350 acts as an off-grid emergency mesh repeater for **80+ days**.
    * *Torrential Rain Water-Lock:* Cuts capacitive touch power during downpours, leaving the Wacom stylus and left-bezel 5-way tactical rocker 100% operational in pouring rain.
-6. **The Modular Upgrade Bridge (ARM-to-RISC-V Swappability, RAM, & 2TB NVMe):**
+6. **The Sovereign Form-Morphology (Tactical 620g Slate, Desk Easel, & Modular Thumb Grips):**
+   * *Total Input Freedom:* Descoping a proprietary keyboard for V1 leaves the core tablet ultra-light (~620g) and slim (14.0mm), allowing developers to connect their favorite keyboard (ThinkPad, Corne, NuPhy, Keychron, Apple Magic Keyboard) via low-latency Bluetooth 5.0 or USB-C.
+   * *Universal Mechanical Mounting:* Standard **M2.5 threaded brass heat-set inserts + MagSafe magnetic anchor array** on the rear chassis enable instant clipping of 3D-printed handheld thumb keyboards (e.g. $25 BlackBerry Q20 clicky keyboard), camera tripods, or desk arms.
+   * *The Ultimate Desk Easel:* MagSafe magnetic array + M2.5 mounts snap effortlessly onto any standard magnetic desk stand, origami folio, or OEM tablet stand, propping the tablet in portrait to display 80+ lines of uninterrupted code while typing on a desktop keyboard.
+7. **The Modular Upgrade Bridge (ARM-to-RISC-V Swappability, RAM, & 2TB NVMe):**
    * *Silicon-Agnostic CM4 Socket:* Uses standard dual Hirose DF40 connectors. ARM provides 100% instant software compatibility today; users can unclip the ARM CM4 and snap in a drop-in 64-bit RISC-V SOM (e.g. Milk-V Mars CM) tomorrow with zero chassis or PCB waste.
    * *Instant RAM Swaps:* Upgrade from 4GB to 8GB or next-gen 16GB simply by swapping the modular compute module in 30 seconds.
    * *Multi-Tiered Mass Storage:* 32GB onboard eMMC + 2TB MicroSDXC edge slot + high-speed M.2 2230/2242 PCIe NVMe SSD socket (up to 2TB @ 400+ MB/s) for massive offline LLM weights and Wikipedia datasets.
-7. **The Sovereign Voice Agent (Barge-In & Touch-to-Talk):**
-   * *Zero standby penalty:* A cascaded 3-tier wake (Knowles MEMS hardware VAD < 0.05 mW → RP2350 INT8 microWakeWord ~14 mW → CM4 only on "Hey Deck") gives **80+ days continuous listening standby** without waking the Linux brain.
-   * *True acoustic barge-in:* PipeWire loopback AEC subtracts SolarDeck's own voice in real time — you can speak over it mid-sentence and it stops and retargets instantly.
-   * *Touch-to-talk fallback:* A held-call PTT path bypasses the wake-word entirely for deterministic, full-duplex operator control (mic hot only while pressed).
 
 ---
 

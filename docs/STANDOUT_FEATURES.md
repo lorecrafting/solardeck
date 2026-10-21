@@ -60,7 +60,57 @@ SolarDeck destroys this friction. When resting on a desk or shelf, it operates a
 
 ---
 
-## Pillar 2: The "Typewriter-on-Paper" Latency Engine (<20ms Keystroke & Inking)
+## Pillar 2: "Sunlight Sovereignty" & Perpetual Indoor Life
+
+### The Vision
+Modern laptops fail the instant they step outdoors. In direct sunlight, a 500-nit MacBook screen completely washes out. To compensate, users crank brightness to maximum, turning the laptop into a 50W furnace that burns their thighs and drains the battery in 90 minutes.
+
+SolarDeck inverts this entirely: **The brighter the sun, the crisper, higher-contrast, and more vibrant the screen becomes.** And when sitting on a desk indoors, it sips micro-watts and stays charged indefinitely from ambient room light.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        SUNLIGHT SOVEREIGNTY MATRIX                          │
+├──────────────────────────────┬──────────────────────────────┬───────────────┤
+│ Operating Environment        │ Conventional Laptop (MacBook)│ SolarDeck     │
+├──────────────────────────────┼──────────────────────────────┼───────────────┤
+│ Direct Noon Sun (100,000 lux)│ Unreadable; heavy glare      │ Razor-sharp   │
+│ Screen Backlight Power       │ 12W–18W (100% max brightness)│ 0.000 Watts   │
+│ Thermal Behavior             │ Fans roar, CPU throttles     │ Silent, cool  │
+│ Active Battery Runtime       │ 1.5 to 2.5 hours             │ 24 to 32 hours│
+│ Eye Strain Index             │ High (60Hz RGB blue light)   │ Zero (Reflect)│
+└──────────────────────────────┴──────────────────────────────┴───────────────┘
+```
+
+### Perpetual Indoor Harvesting (The "Solar Calculator" Effect)
+* **The Physics:** By utilizing an indoor-tuned **Amorphous Silicon (a-Si)** micro-strip (PowerFilm Indoor Light / Panasonic Amorton) coupled to the **TI BQ25504** nano-power boost harvester:
+  * Indoor ambient office lighting (400–600 lux) generates **200 to 350 µW**.
+  * SolarDeck ambient desk clock / dashboard consumes **110 µW** (RP2350 sleep + 1-minute 1-bit partial time flip).
+  * **Net Energy Balance: POSITIVE (+100 to +240 µW surplus).**
+  * It sits on your desk, bookshelf, or kitchen counter, displaying time, weather barographs, tasks, and off-grid LoRa emergency traffic **forever, without ever being plugged into a wall outlet.**
+
+---
+
+## Pillar 3: The Sovereign Voice Agent (Barge-In & Touch-to-Talk)
+
+*Written 2026-10-20 19:37 UTC in the Pi harness by openrouter/deepseek/deepseek-v4-flash-0731*
+
+The voice channel is a first-class pillar, not a bolt-on: SolarDeck can hear you for **80+ days on standby**, you can **speak over it mid-sentence**, and you can always fall back to a deterministic **touch-to-talk** path. It exists so the operator can command the machine hands-free in the field, the workshop, the cockpit — without cradling a keyboard.
+
+### 1. The Cascaded 3-Tier Wake (Zero Standby Battery Penalty)
+Instead of keeping the 1.8W CM4 awake, listening runs on a **cascaded 3-tier filter**:
+  1. **Knowles MEMS hardware acoustic front-end** ($<0.05\text{ mW}$).
+  2. **RP2350 co-processor** running INT8 `microWakeWord` (~14 mW, delivering **80+ days continuous standby**).
+  3. **CM4 wakes in 250 ms** only when "Hey Deck" is spoken, evaluating **Resemblyzer speaker biometrics** (cosine similarity $\ge 0.78$) to reject bystanders before running `whisper.cpp`.
+
+### 2. True Acoustic Barge-In (Interruption)
+PipeWire loops back the MAX98357A speaker audio into SpeexDSP / WebRTC AEC3 Acoustic Echo Cancellation, subtracting SolarDeck's own voice from the microphones. The operator can speak over SolarDeck while it talks at full volume, and it **stops and retargets instantly** — no push-to-talk required for the barge-in path.
+
+### 3. Touch-to-Talk (Deterministic Fallback)
+A **held-call PTT path bypasses the wake-word entirely**: the mic is hot only while the touch target is held, giving deterministic, full-duplex operator control. This is the fallback when acoustic conditions or bystanders defeat the wake-word, and it never depends on wake latency.
+
+---
+
+## Pillar 4: The "Typewriter-on-Paper" Latency Engine (<20ms Keystroke & Inking)
 
 ### The Vision
 The single greatest reason developers abandon E-Ink displays for programming is **input lag and ghosting flashes**. If there is a 100ms–150ms delay between striking a key and seeing the character appear on screen, the human brain rejects the interface as sluggish and disconnected.
@@ -105,37 +155,28 @@ SolarDeck treats text entry like an **electric IBM Selectric typewriter striking
 
 ---
 
-## Pillar 3: "Sunlight Sovereignty" & Perpetual Indoor Life
+## Pillar 5: Sovereign Field Hardening (Airgap, LoRa, & IP67 All-Weather)
 
 ### The Vision
-Modern laptops fail the instant they step outdoors. In direct sunlight, a 500-nit MacBook screen completely washes out. To compensate, users crank brightness to maximum, turning the laptop into a 50W furnace that burns their thighs and drains the battery in 90 minutes.
+In an era of cloud-locked, fragile, spy-by-design hardware, SolarDeck is an **indestructible, sovereign survival instrument**. It works when the cellular network is down, when the power grid fails, in torrential rain, and under zero-trust operational security requirements.
 
-SolarDeck inverts this entirely: **The brighter the sun, the crisper, higher-contrast, and more vibrant the screen becomes.** And when sitting on a desk indoors, it sips micro-watts and stays charged indefinitely from ambient room light.
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                        SUNLIGHT SOVEREIGNTY MATRIX                          │
-├──────────────────────────────┬──────────────────────────────┬───────────────┤
-│ Operating Environment        │ Conventional Laptop (MacBook)│ SolarDeck     │
-├──────────────────────────────┼──────────────────────────────┼───────────────┤
-│ Direct Noon Sun (100,000 lux)│ Unreadable; heavy glare      │ Razor-sharp   │
-│ Screen Backlight Power       │ 12W–18W (100% max brightness)│ 0.000 Watts   │
-│ Thermal Behavior             │ Fans roar, CPU throttles     │ Silent, cool  │
-│ Active Battery Runtime       │ 1.5 to 2.5 hours             │ 24 to 32 hours│
-│ Eye Strain Index             │ High (60Hz RGB blue light)   │ Zero (Reflect)│
-└──────────────────────────────┴──────────────────────────────┴───────────────┘
-```
-
-### Perpetual Indoor Harvesting (The "Solar Calculator" Effect)
-* **The Physics:** By utilizing an indoor-tuned **Amorphous Silicon (a-Si)** micro-strip (PowerFilm Indoor Light / Panasonic Amorton) coupled to the **TI BQ25504** nano-power boost harvester:
-  * Indoor ambient office lighting (400–600 lux) generates **200 to 350 µW**.
-  * SolarDeck ambient desk clock / dashboard consumes **110 µW** (RP2350 sleep + 1-minute 1-bit partial time flip).
-  * **Net Energy Balance: POSITIVE (+100 to +240 µW surplus).**
-  * It sits on your desk, bookshelf, or kitchen counter, displaying time, weather barographs, tasks, and off-grid LoRa emergency traffic **forever, without ever being plugged into a wall outlet.**
+### The Three Hardening Anchors:
+1. **Physical Hardware Airgap Switch (0.000 dBm / Zero Phantom Bleed):**
+   * A recessed 2-position slide switch physically breaks the enable lines of all **TI TPS22918** power gates to ground.
+   * Completely severs power to the Quectel LTE modem, Semtech LoRa transceiver, Broadcom Wi-Fi/BT module, GPS engine, and MEMS microphone to **0.000V**.
+   * Digital lines are isolated via **TI TXU0104** buffers, eliminating parasitic back-powering through silicon clamping diodes.
+   * 100% immune to software baseband exploits; completely invisible to RF spectrum analyzers.
+2. **Autonomous Meshtastic Off-Grid Radio Node (80+ Days):**
+   * Built-in **Semtech SX1262 LoRa (868/915 MHz)** transceiver connected to a top-edge **IP67 bulkhead SMA female jack**.
+   * Permanently owned by the RP2350 co-processor over dedicated SPI.
+   * Acts as a continuous, autonomous emergency repeater node across off-grid mesh networks for **80+ days** on battery without ever waking the Linux SoC.
+3. **IP67 Enclosure & All-Weather "Water-Lock":**
+   * SLS 3D-printed PA12 nylon or CNC 6061 aluminum enclosure with continuous silicone perimeter gaskets and a GORE ePTFE hydrophobic pressure-equalization vent.
+   * **Torrential Rain "Water-Lock" Mode:** Capacitive touch screens go haywire when water droplets strike the surface. Flipping the water-lock switch cuts power to the Goodix capacitive touch overlay, while the **Wacom EMR digitizer and left-bezel 5-way tactical navigation rocker remain 100% immune to water**, enabling full terminal navigation in pouring rain.
 
 ---
 
-## Pillar 4: Universal Form-Morphology (Handheld Grip ⟷ Pure Slate ⟷ Desk Easel)
+## Pillar 6: Universal Form-Morphology (Handheld Grip ⟷ Pure Slate ⟷ Desk Easel)
 
 ### The Vision
 The computing industry has struggled with 2-in-1 form factors:
@@ -170,28 +211,7 @@ SolarDeck solves this by decoupling the core tablet from proprietary keyboards a
 
 ---
 
-## Pillar 5: Sovereign Field Hardening (Airgap, LoRa, & IP67 All-Weather)
-
-### The Vision
-In an era of cloud-locked, fragile, spy-by-design hardware, SolarDeck is an **indestructible, sovereign survival instrument**. It works when the cellular network is down, when the power grid fails, in torrential rain, and under zero-trust operational security requirements.
-
-### The Three Hardening Anchors:
-1. **Physical Hardware Airgap Switch (0.000 dBm / Zero Phantom Bleed):**
-   * A recessed 2-position slide switch physically breaks the enable lines of all **TI TPS22918** power gates to ground.
-   * Completely severs power to the Quectel LTE modem, Semtech LoRa transceiver, Broadcom Wi-Fi/BT module, GPS engine, and MEMS microphone to **0.000V**.
-   * Digital lines are isolated via **TI TXU0104** buffers, eliminating parasitic back-powering through silicon clamping diodes.
-   * 100% immune to software baseband exploits; completely invisible to RF spectrum analyzers.
-2. **Autonomous Meshtastic Off-Grid Radio Node (80+ Days):**
-   * Built-in **Semtech SX1262 LoRa (868/915 MHz)** transceiver connected to a top-edge **IP67 bulkhead SMA female jack**.
-   * Permanently owned by the RP2350 co-processor over dedicated SPI.
-   * Acts as a continuous, autonomous emergency repeater node across off-grid mesh networks for **80+ days** on battery without ever waking the Linux SoC.
-3. **IP67 Enclosure & All-Weather "Water-Lock":**
-   * SLS 3D-printed PA12 nylon or CNC 6061 aluminum enclosure with continuous silicone perimeter gaskets and a GORE ePTFE hydrophobic pressure-equalization vent.
-   * **Torrential Rain "Water-Lock" Mode:** Capacitive touch screens go haywire when water droplets strike the surface. Flipping the water-lock switch cuts power to the Goodix capacitive touch overlay, while the **Wacom EMR digitizer and left-bezel 5-way tactical navigation rocker remain 100% immune to water**, enabling full terminal navigation in pouring rain.
-
----
-
-## Pillar 6: The Modular Upgrade Bridge (ARM-to-RISC-V Swappability, RAM, & 2TB NVMe)
+## Pillar 7: The Modular Upgrade Bridge (ARM-to-RISC-V Swappability, RAM, & 2TB NVMe)
 
 ### The Vision: A Computer That Never Becomes E-Waste
 Consumer electronics are designed for planned obsolescence: when Apple or Lenovo releases a faster chip, your $1,500 laptop must be thrown in the trash. The RAM is soldered, the SSD is soldered, and the CPU is locked.
@@ -271,26 +291,6 @@ To make SolarDeck the ultimate sovereign archive workstation without adding a si
 
 ---
 
-## Pillar 7: The Sovereign Voice Agent (Barge-In & Touch-to-Talk)
-
-*Written 2026-10-20 19:37 UTC in the Pi harness by openrouter/deepseek/deepseek-v4-flash-0731*
-
-The voice channel is a first-class pillar, not a bolt-on: SolarDeck can hear you for **80+ days on standby**, you can **speak over it mid-sentence**, and you can always fall back to a deterministic **touch-to-talk** path. It exists so the operator can command the machine hands-free in the field, the workshop, the cockpit — without cradling a keyboard.
-
-### 1. The Cascaded 3-Tier Wake (Zero Standby Battery Penalty)
-Instead of keeping the 1.8W CM4 awake, listening runs on a **cascaded 3-tier filter**:
-  1. **Knowles MEMS hardware acoustic front-end** ($<0.05\text{ mW}$).
-  2. **RP2350 co-processor** running INT8 `microWakeWord` (~14 mW, delivering **80+ days continuous standby**).
-  3. **CM4 wakes in 250 ms** only when "Hey Deck" is spoken, evaluating **Resemblyzer speaker biometrics** (cosine similarity $\ge 0.78$) to reject bystanders before running `whisper.cpp`.
-
-### 2. True Acoustic Barge-In (Interruption)
-PipeWire loops back the MAX98357A speaker audio into SpeexDSP / WebRTC AEC3 Acoustic Echo Cancellation, subtracting SolarDeck's own voice from the microphones. The operator can speak over SolarDeck while it talks at full volume, and it **stops and retargets instantly** — no push-to-talk required for the barge-in path.
-
-### 3. Touch-to-Talk (Deterministic Fallback)
-A **held-call PTT path bypasses the wake-word entirely**: the mic is hot only while the touch target is held, giving deterministic, full-duplex operator control. This is the fallback when acoustic conditions or bystanders defeat the wake-word, and it never depends on wake latency.
-
----
-
 ## Pillar 8: Zero-Cost Convenience Combinations ($0.00 Added BOM)
 
 By orchestrating and cross-wiring the existing hardware components in innovative ways, SolarDeck delivers four extraordinary convenience features without adding a single cent to the Bill of Materials:
@@ -319,7 +319,7 @@ By orchestrating and cross-wiring the existing hardware components in innovative
 ### 5. Presence-Aware Power Scheduler (Attention-Gap Computing)
 * Combining the **Wacom EMR digitizer**, the **Knowles MEMS wake-word tier**, and the **IT8951 per-rectangle refresh scheduler** into one cognitive budget.
 * Hover-approaching stylus, grip-pressure, and keyboard events feed a *user-present* signal. The system runs refresh scrubbing, LoRa mailbox polling, telemetry bursts, and telemetryd relays **only in attention gaps** — never mid-stroke, never mid-paragraph.
-* **Result:** the perceived smoothness target of Pillar 2 is reached on the *existing* 30 ms partial-rectangle scheduler, and the sleep tier extends further — the device does its housekeeping when you are thinking, not when you are typing.
+* **Result:** the perceived smoothness target of Pillar 4 (the Typewriter-on-Paper latency engine) is reached on the *existing* 30 ms partial-rectangle scheduler, and the sleep tier extends further — the device does its housekeeping when you are thinking, not when you are typing.
 
 ### 6. RP2350-as-Secure-Element Voiceprint (Tamper-Resistant Identity)
 * The **RP2350 co-processor** (already the wake-word tier) becomes the trust boundary for the speaker-verification enrollment (ADR-026, `SOFTWARE_SPEC.md` §17.2).
@@ -447,7 +447,7 @@ Carrying a giant 6.7" glass smartphone alongside a 10.3" sovereign e-ink termina
 
 ## Pillar 11: Campervan E-Ink Dual-Screen Dock, Blackout Beacon & Field Digitizer
 
-*Written 2026-10-19 14:20 UTC in the Pi harness by antigravity/gemini-3.8-flash. Voice content moved to Pillar 7 (2026-10-20).*
+*Written 2026-10-19 14:20 UTC in the Pi harness by antigravity/gemini-3.8-flash. Voice content moved to Pillar 3 (2026-10-21).*
 
 ### 1. Giant E-Ink Secondary Monitor & Campervan Docking
 * **Native Micro-HDMI 4K Silicon Path:** CM4 routes `HDMI0` to a sealed Micro-HDMI port with TPD4E05U06 ESD protection.

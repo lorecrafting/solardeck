@@ -77,7 +77,7 @@ Video playback is **not** a V1 feature (ADR-005). The display is driven over a s
 * Below 20 °C the microcapsule fluid is viscous and sluggish; at 30–33 °C viscosity drops >40% and particles accelerate ~1.8x under identical drive pulses.
 * The PCBA carries a copper thermal plane from the CM4 shield to the display backplane, and `eink-refreshd` widens the DU pulse width below 15 °C rather than pretending the panel is fast.
 
-Local video remains usable: decode on the CM4, dither to 1-bit, accept ~6 fps, or keep the audio and drop the picture. Users who want a real video screen use USB-C monitor-sink mode (`STANDOUT_FEATURES.md` Pillar 7).
+Local video remains usable: decode on the CM4, dither to 1-bit, accept ~6 fps, or keep the audio and drop the picture. Users who want a real video screen use USB-C monitor-sink mode (`STANDOUT_FEATURES.md` Pillar 8).
 
 ## 3. Power Management & Deep Sleep (Suspend-to-RAM)
 
