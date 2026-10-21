@@ -1,6 +1,7 @@
 # REGULATORY.md — What Has to Be Certified Before This Ships
 
 Written 2026-10-20 12:05 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017
+Revised 2026-10-21 15:59 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
 
 Audit 3 found that no regulatory dimension existed anywhere in the repo. This file is that dimension.
 **Rule: no certificate row at `filed` or `granted` = no shipment.** A prototype may exist without these;
@@ -15,7 +16,7 @@ Statuses: `not started` → `scoped` → `tested` → `filed` → `granted`.
 | Cellular | **PTCRB / GCF** carrier conformance | EG25-G module | not started | TBD | Quectel's module certs can be **reused**; cite the module certificate numbers, don't re-test the radio |
 | Cellular | Carrier approval (per operator) | End product | not started | TBD | Needs IMEI allocation + a carrier contact |
 | Cellular | **SAR / MPE** | End product | not started | TBD | Modem antenna sits ~8 mm from the palm. MPE may suffice if conducted power is low, but this must be *assessed*, not assumed |
-| Wi-Fi / BT | Module cert reuse (CM4) + antenna rules | CM4 | not started | TBD | The CM4's modular grant covers the module; the **antenna** and the enclosure change the RF environment |
+| Wi-Fi / BT | Module cert reuse (CM5) + antenna rules | CM5 | not started | TBD | The CM5's modular grant (TBD — verify on CM5) covers the module; the **antenna** and the enclosure change the RF environment |
 | LoRa 915 MHz | **FCC Part 15.247** (DTS) or 15.231 | SX1262 + antenna | not started | TBD | 902–928 MHz, ≤ +30 dBm EIRP, 50 Ω matched, no external gain |
 | LoRa 868 MHz | **EN 300 220** + ERC/REC 70-03 | SX1262 + antenna | not started | TBD | 1 % duty cycle in most sub-bands; firmware must enforce it per region |
 | Sub-GHz (CC1101) | Same as above, per band | Hotpack 2 | not started | TBD | Hotpack carries its own antenna → its own filing |
@@ -33,7 +34,7 @@ Statuses: `not started` → `scoped` → `tested` → `filed` → `granted`.
 
 1. **Collect supplier RoHS/REACH declarations as you order.** Every supplier gives them at purchase;
    reconstructing them years later is a research project.
-2. **Reuse module certificates deliberately.** EG25-G and CM4 are already certified as modules. The
+2. **Reuse module certificates deliberately.** EG25-G is certified as a module; the CM5's modular grant is TBD — verify on CM5. The
    moment you add your own antenna or change the enclosure, you own the delta. Record which certificate
    covers which line item.
 3. **Write the per-region EIRP table before firmware.** Retrofitting a duty-cycle limiter into a shipped

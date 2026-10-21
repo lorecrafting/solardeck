@@ -22,9 +22,9 @@ int main(void) {
     stdio_init_all();
 
     // Configure GPIOs
-    gpio_init(PIN_TMUX_SEL_CM4_NRP);
-    gpio_set_dir(PIN_TMUX_SEL_CM4_NRP, GPIO_OUT);
-    gpio_put(PIN_TMUX_SEL_CM4_NRP, 0);
+    gpio_init(PIN_TMUX_SEL_CM5_NRP);
+    gpio_set_dir(PIN_TMUX_SEL_CM5_NRP, GPIO_OUT);
+    gpio_put(PIN_TMUX_SEL_CM5_NRP, 0);
 
     gpio_init(PIN_EN_5V_SYS);
     gpio_set_dir(PIN_EN_5V_SYS, GPIO_OUT);
@@ -53,8 +53,8 @@ int main(void) {
     solardeck_sm_init(&ctx, false);
 #endif
 
-    // Initial transition into CM4 active mode
-    solardeck_sm_transition(&ctx, SOLAR_STATE_CM4_ACTIVE);
+    // Initial transition into CM5 active mode
+    solardeck_sm_transition(&ctx, SOLAR_STATE_CM5_ACTIVE);
 
 #ifdef PICO_SDK_AVAILABLE
     while (1) {

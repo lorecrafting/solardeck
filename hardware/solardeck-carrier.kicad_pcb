@@ -113,7 +113,7 @@
     (effects (font (size 1.5 1.5) (thickness 0.25))))
 
   ;; Footprints Placed on Board
-  ;; Hirose DF40 CM4 Sockets (J1 at X=45.0 Y=40.0, J2 at X=45.0 Y=70.0)
+  ;; Hirose DF40 CM5 Sockets (J1 at X=45.0 Y=40.0, J2 at X=45.0 Y=70.0)
   (footprint "Connector_Hirose:Hirose_DF40C-100DS-0.4V_2x50_P0.40mm_Vertical" (layer "F.Cu")
     (at 45.0 40.0)
     (fp_text reference "J1" (at 0 -4.0) (layer "F.SilkS") (effects (font (size 1 1) (thickness 0.15))))

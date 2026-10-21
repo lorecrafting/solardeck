@@ -143,10 +143,10 @@ def generate_copper(layer_num, layer_name):
         # Route Display bus from U14 to J_EPDC
         lines.append(f"X{coord(95.0)}Y{coord(28.0)}D02*")
         lines.append(f"X{coord(125.0)}Y{coord(18.0)}D01*")
-        # Route CM4 PCIe to VL805
+        # Route CM5 PCIe to VL805
         lines.append(f"X{coord(55.0)}Y{coord(75.0)}D02*")
         lines.append(f"X{coord(95.0)}Y{coord(60.0)}D01*")
-        # Route I2C bus from CM4 to BQ25895
+        # Route I2C bus from CM5 to BQ25895
         lines.append(f"X{coord(55.0)}Y{coord(45.0)}D02*")
         lines.append(f"X{coord(25.0)}Y{coord(138.0)}D01*")
 

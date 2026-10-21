@@ -44,12 +44,18 @@ def main():
         errors.append(f"reliability model check failed: {r.stdout.strip() or r.stderr.strip()}")
 
     # 2. supply chain
-    if S["cm4_production_commitment_year"] >= 2026 + S["design_life_years"]:
-        errors.append("supply_chain no longer shows a shortfall; update AUDIT_4 and ADR-023 if that is real")
-    if S["design_life_years"] - (S["cm4_production_commitment_year"] - 2026) != S["cm4_shortfall_years"]:
-        errors.append("supply_chain.cm4_shortfall_years does not equal design_life - (2034 - 2026)")
-    if str(S["cm4_production_commitment_year"]) not in hw:
-        errors.append("HARDWARE_SPEC.md does not state the CM4 production commitment year")
+    year = S["cm5_production_commitment_year"]
+    if year is None:
+        # ADR-031: unknown until Raspberry Pi publishes it; the spec must say so rather than guess.
+        if S["cm5_shortfall_years"] is not None:
+            errors.append("supply_chain.cm5_shortfall_years must stay null while the commitment year is null")
+        if not re.search(r"CM5 production commitment[^\n]*(TBD|not yet published|null)", hw):
+            errors.append("HARDWARE_SPEC.md must state the CM5 production commitment is not yet published")
+    else:
+        if S["design_life_years"] - (year - 2026) != S["cm5_shortfall_years"]:
+            errors.append("supply_chain.cm5_shortfall_years does not equal design_life - (year - 2026)")
+        if str(year) not in hw:
+            errors.append("HARDWARE_SPEC.md does not state the CM5 production commitment year")
     if "7.7" not in hw or "Module Obsolescence Strategy" not in hw:
         errors.append("HARDWARE_SPEC.md §7.7 (module obsolescence) missing")
     for part in S["single_source_parts"]:
@@ -82,7 +88,7 @@ def main():
         print(f"   {len(errors)} reliability/supply/DFT failure(s)")
         return 1
     print(f"  MTBF {R['mtbf_years']} y vs first wear-out {R['first_wearout_years']} y; "
-          f"CM4 shortfall {S['cm4_shortfall_years']} y documented; {len(S['single_source_parts'])} single-source parts named.")
+          f"CM5 commitment {S['cm5_production_commitment_year'] or 'TBD'}; {len(S['single_source_parts'])} single-source parts named.")
     return 0
 
 

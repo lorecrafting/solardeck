@@ -1,6 +1,7 @@
 # SolarDeck Software Specification
 
 Written 2026-10-18 06:45 UTC in the Pi harness by antigravity/gemini-3.8-flash
+Revised 2026-10-21 15:55 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
 
 Software architecture, operating system configuration, custom E-ink waveform drivers, power management daemons, and application workflows.
 
@@ -30,21 +31,21 @@ SolarDeck avoids the high-latency abstraction layers of commercial Android table
 
 ## 2. High-Speed E-Ink Driver & Waveform Tuning
 
-Standard vendor e-ink drivers flash the screen for 400ms to eliminate ghosting. SolarDeck implements **Dynamic Adaptive Waveform Switching**:
+Standard vendor e-ink drivers flash the screen for 400ms to eliminate ghosting. SolarDeck implements **Dynamic Adaptive Waveform Switching**. Update times are TBD until the Kaleido 4 controller and its waveforms are published (ADR-032; `spec_values.refresh_modes`):
 
 ```
 MODE             UPDATE TIME   BIT DEPTH   USE CASE
 ─────────────────────────────────────────────────────────────────────────────
-1. Fast Typing   20 – 35 ms    1-bit B/W   Terminal typing, Claude Code CLI
-2. UI Motion     60 – 80 ms    2-bit Gray  Cursor movement, trackpad scroll
-3. Scribe Pen    < 20 ms       Direct FB   Wacom stylus handwriting overlay
-4. Regality Clear 300 ms       16-bit Gray Reading PDFs, medical diagrams
-5. Cinema Video  41.67 ms(24F) 1-bit/2-bit Fluid video playback, MPV, YouTube
+1. Fast Typing   TBD           1-bit B/W   Terminal typing, Claude Code CLI
+2. UI Motion     TBD           2-bit Gray  Cursor movement, trackpad scroll
+3. Scribe Pen    TBD           Direct FB   Wacom stylus handwriting overlay
+4. Regality Clear TBD          16-bit Gray Reading PDFs, medical diagrams
+5. Cinema Video  TBD           1-bit/2-bit Fluid video playback, MPV, YouTube
 ```
 
-### 2.1 The 20ms "Typing Waveform" (LUT Tuning)
-* In the IT8951 kernel driver (`/drivers/gpu/drm/tinydrm/`), we load a custom Look-Up Table (LUT) that issues a single 25ms electrical voltage pulse to turn pixels black without the intermediate erasing clear cycle.
-* Because the daemon only transfers the changed rectangle, a keystroke costs a single 1-bit partial refresh: **~20 ms per keystroke**, with no full-frame transfer in the loop.
+### 2.1 The "Typing Waveform" (LUT Tuning)
+* In the kernel driver for the Kaleido 4 display controller (TBD, ADR-032), we load a custom Look-Up Table (LUT) that issues a single short voltage pulse to turn pixels black without the intermediate erasing clear cycle; the pulse width is TBD until the Kaleido 4 waveforms are published.
+* Because the daemon only transfers the changed rectangle, a keystroke costs a single 1-bit partial refresh (`spec_values.refresh_modes.partial_rect_latency_ms`, TBD), with no full-frame transfer in the loop.
 
 ### 2.2 Intelligent Anti-Ghosting Daemon
 * A lightweight background daemon (`eink-refreshd`) monitors typing cadence:
@@ -56,9 +57,9 @@ MODE             UPDATE TIME   BIT DEPTH   USE CASE
   1. `solardeck-inkd` reads raw coordinates directly from `/dev/input/event*` (Wacom EMR 240 Hz stream) in non-blocking mode.
   2. A fast Bresenham line algorithm calculates the micro-line bounding box between sequential coordinates (e.g., a tiny 12×18 pixel rectangle).
   3. **Kernel SPI Bus Synchronization (Race Condition Elimination):**
-     * Direct userspace writes to `/dev/spidev0.0` while the kernel DRM driver (`tinydrm/it8951.c`) is actively flushing frames will interleave SPI transactions and crash the EPDC controller.
-     * To prevent bus collisions, `solardeck-inkd` submits damaged rectangles via a dedicated in-kernel character interface (`/dev/it8951_ink`) with an internal kernel mutex lock, OR commits partial damage updates through standard KMS atomic commits (`DRM_IOCTL_MODE_ATOMIC_COMMIT`).
-     * The kernel driver applies the single 12ms pulse using the IT8951's **1-bit Direct Update (DU)** waveform register (`IT8951_CMD_WRITE_PIXEL_AREA`).
+     * Direct userspace writes to the display controller's host bus (interface TBD, ADR-032) while the kernel DRM driver is actively flushing frames would interleave bus transactions and crash the controller.
+     * To prevent bus collisions, `solardeck-inkd` submits damaged rectangles via a dedicated in-kernel character interface with an internal kernel mutex lock, OR commits partial damage updates through standard KMS atomic commits (`DRM_IOCTL_MODE_ATOMIC_COMMIT`).
+     * The kernel driver applies the single pulse using the controller's **1-bit Direct Update (DU)**-class waveform (pulse width and register interface TBD, ADR-032).
   4. When the pen lifts for $>500\text{ ms}$, the daemon asynchronously delivers the complete vector stroke (`x, y, pressure, tilt, timestamp`) to the active document application (Xournal++, Obsidian, or Zathura) to commit the layer to disk, followed by a quiet anti-ghosting micro-clear.
 
 ### 2.4 Audio-First Conferencing (No Forward-Facing Camera in V1)
@@ -66,25 +67,25 @@ MODE             UPDATE TIME   BIT DEPTH   USE CASE
 No forward-facing camera exists in V1 (ADR-006): video calls look poor on e-paper, MIPI-CSI routing breaks IP67 sealing, and the top bezel earns more from solar harvesting. Conference mode is therefore built around audio plus inbound video:
 
 1. **Outbound:** 16 kHz beamformed mono audio (dual Knowles MEMS array, see `HARDWARE_SPEC.md` §2.7), encoded to Opus. No outbound video. Operators who need to be seen plug a UVC webcam into USB-C Port 2.
-2. **Inbound:** remote screen shares and slides render through the standard E-Ink pipeline as 1-bit or 4-level dithered greyscale. Inbound camera video is limited to the daemon's partial-refresh rate (~6 fps full-frame); it is framed for "see the other person's face", not for smoothness.
+2. **Inbound:** remote screen shares and slides render through the standard E-Ink pipeline as 1-bit or 4-level dithered greyscale. Inbound camera video is limited to the daemon's partial-refresh rate (full-frame rate `spec_values.refresh_modes.full_frame_1bit_fps`, TBD); it is framed for "see the other person's face", not for smoothness.
 3. **Airgap-compatible:** the whole path works with radios cut to 0.000V when the call is looped back over USB-C Ethernet.
 
 ### 2.5 Thermal Viscosity Management (no video engine in V1)
 
-Video playback is **not** a V1 feature (ADR-005). The display is driven over a single 32 MHz SPI link to the IT8951, which caps a full-frame refresh at ~6 fps; a "cinema" mode would be a promise the transport cannot keep. What survives from the original section is the thermal half, which is real and measurable on the panel:
+Video playback is **not** a V1 feature (ADR-005). The transport to the Kaleido 4 display controller (TBD, ADR-032) and its full-frame refresh rate (`spec_values.refresh_modes.full_frame_1bit_fps`) are unknown until E Ink's datasheet; a "cinema" mode would be a promise nobody can yet check, and `colour_motion_supported` stays `false`. What survives from the original section is the thermal half, which is real and measurable on the panel:
 
 * Electrophoretic particle mobility is inversely proportional to fluid viscosity: mu ∝ 1/eta(T).
 * Below 20 °C the microcapsule fluid is viscous and sluggish; at 30–33 °C viscosity drops >40% and particles accelerate ~1.8x under identical drive pulses.
-* The PCBA carries a copper thermal plane from the CM4 shield to the display backplane, and `eink-refreshd` widens the DU pulse width below 15 °C rather than pretending the panel is fast.
+* The PCBA carries a copper thermal plane from the CM5 shield to the display backplane, and `eink-refreshd` widens the DU pulse width below 15 °C rather than pretending the panel is fast.
 
-Local video remains usable: decode on the CM4, dither to 1-bit, accept ~6 fps, or keep the audio and drop the picture. Users who want a real video screen use USB-C monitor-sink mode (`STANDOUT_FEATURES.md` Pillar 8).
+Local video remains usable: decode on the CM5, dither to 1-bit, accept the full-frame rate (`refresh_modes.full_frame_1bit_fps`, TBD), or keep the audio and drop the picture. Users who want a real video screen use USB-C monitor-sink mode (`STANDOUT_FEATURES.md` Pillar 8).
 
 ### 2.6 The Streaming-Text Guarantee (watching an LLM work)
 
 "Watching an LLM" is **not** video — it is a moving cursor appending tokens while everything above stays static. That is e-ink's home turf: a one-line-high dirty rectangle at the cursor, re-rendered by the §2.4 scheduler in DUA mode while the frozen page above costs zero power to hold. This section makes that experience a *measured guarantee*, not an fps aspiration.
 
 * **The guarantee (numbers in `spec_values.token_stream`):** ≥120 wpm token streaming renders with ≤30 ms per-update latency, **zero flashes**, and post-burst ghost residue below the `ghost_residue_threshold_db` gate — verified by `eink-refreshd --bench stream` over the full `bench_duration_min` window.
-* **Why 120 wpm and not a frame rate:** an fps figure for a full-screen redraw would be a promise the transport cannot keep (~6 fps ceiling, §2.5). Streaming text is the *product* use case, it maps onto per-rectangle physics, and it is measurable on the bench — which is exactly the repo's claim discipline (`spec_values.refresh_modes` keeps full-frame fps, and colour motion stays `false`).
+* **Why 120 wpm and not a frame rate:** an fps figure for a full-screen redraw would be a promise nobody can yet check (full-frame rate TBD, §2.5). Streaming text is the *product* use case, it maps onto per-rectangle physics, and it is measurable on the bench — which is exactly the repo's claim discipline (`spec_values.refresh_modes` keeps full-frame fps, and colour motion stays `false`).
 * **What is asserted in CI:** `verify_all.py` checks the `token_stream` block exists, that `update_latency_ms == refresh_modes.partial_rect_latency_ms` (a streaming update is just one partial rectangle at the guaranteed cadence), and that `full_screen_video` is a string naming the monitor-sink path — so a silent "video engine" drift fails the build.
 * **Motion content stays off-panel:** full-screen video is via USB-C monitor-sink (`STANDOUT_FEATURES.md` Pillar 8); a cropped talking-head region at 1-bit is a tolerated mode, not a guarantee. The scheduler keeps stating `colour_motion_supported: false` rather than approximating it.
 
@@ -92,20 +93,20 @@ Local video remains usable: decode on the CM4, dither to 1-bit, accept ~6 fps, o
 
 ### 3.1 Fast Sleep / Instant Wake Pipeline
 * **Suspend-to-RAM (S2idle):**
-  * When sleep is triggered, Linux freezes userspace tasks, flushes file caches, cuts peripheral power switches (TPS22918), and drops the LPDDR4 memory controller into Self-Refresh mode.
+  * When sleep is triggered, Linux freezes userspace tasks, flushes file caches, cuts peripheral power switches (TPS22918), and drops the LPDDR4X memory controller into Self-Refresh mode.
   * Power draw drops to **15 mW**.
 * **Instant Wake (0.3 Seconds):**
-  * Touching any key or tapping the touch bar sends a hardware interrupt from the RP2350 to GPIO 17 on the CM4.
-  * The CM4 restores CPU clock lines and resumes execution directly from RAM in **under 300 milliseconds**. All open terminal windows and Claude sessions remain intact.
+  * Touching any key or tapping the touch bar sends a hardware interrupt from the RP2350 to GPIO 17 on the CM5 (RP1 pin mapping TBD — verify on CM5).
+  * The CM5 restores CPU clock lines and resumes execution directly from RAM in **under 300 milliseconds**. All open terminal windows and Claude sessions remain intact (AUDIT 6 X4).
 
 ### 3.2 The Ambient LifeOps Mode (RP2350 Firmware)
-While the main CM4 is powered completely off (0.000W), the **RP2350 co-processor** runs bare-metal C / Pico-SDK firmware:
+While the main CM5 is powered completely off (0.000W), the **RP2350 co-processor** runs bare-metal C / Pico-SDK firmware:
 1. **Sub-30ms Zen Reader & Framebuffer Pre-Caching:**
-   * Utilizes the onboard **8MB QSPI PSRAM** to double-buffer full 1872×1404 8-bit page images.
-   * When reading books, the CM4 pre-renders pages into PSRAM and sleeps. The RP2350 handles page-turn taps and side-bezel touch gestures autonomously, updating the IT8951 in <30ms while the CM4 remains dead (**~4.5 mW total power; 300+ days battery life**).
+   * Utilizes the onboard **8MB QSPI PSRAM** to double-buffer pre-rendered page images (page geometry TBD, ADR-032; `spec_values.reader.page_*`).
+   * When reading books, the CM5 pre-renders pages into PSRAM and sleeps. The RP2350 handles page-turn taps and side-bezel touch gestures autonomously, updating the Kaleido 4 display controller (TBD, ADR-032) (flip time `spec_values.reader.page_flip_ms`, TBD) while the CM5 remains dead (**~4.5 mW total power; 300+ days battery life**).
 2. **Standalone 24/7 Meshtastic LoRa Mesh Repeater:**
    * The RP2350 communicates directly with the Semtech SX1262 LoRa transceiver over SPI.
-   * Listens for encrypted mesh packets, inspects routing headers, and hops packets across off-grid networks autonomously at **12–15 mW**, transforming SolarDeck into an 80+ day continuous tactical repeater. If a direct message addresses the tablet, the RP2350 asserts `GPIO 17` to wake the CM4 and sound an alert.
+   * Listens for encrypted mesh packets, inspects routing headers, and hops packets across off-grid networks autonomously at **12–15 mW**, transforming SolarDeck into an 80+ day continuous tactical repeater. If a direct message addresses the tablet, the RP2350 asserts `GPIO 17` to wake the CM5 and sound an alert.
 3. **1-Second TCXO Clock Tick & Weather Barograph:**
    * Receives a 1Hz square-wave hardware interrupt (`INT/SQW`) from the high-precision DS3231 TCXO RTC.
    * Updates time digits and samples the Bosch BMP390 barometer and TMP112 thermals every 60 seconds into a rolling 7-day circular buffer in PSRAM.
@@ -147,7 +148,7 @@ The background daemon `solardeck-telemetryd` logs all physical metrics into a co
 3. **`thermal_zones` Table (6 zones — `spec_values.telemetry.thermal_zones`):**
    `timestamp`, `battery_c`, `display_backplane_c`, `soc_die_c`, `modem_c`, `charger_rail_c`, `audio_c`
 4. **`module_health` Table (8 module health registers — `spec_values.telemetry.module_health_registers`):**
-   `timestamp`, `module` (cm4|lte|esim|lora|panel|audio|battery|solar), `state` (ok|waning|fault), `value`, `unit`
+   `timestamp`, `module` (cm5|lte|esim|lora|panel|audio|battery|solar), `state` (ok|waning|fault), `value`, `unit`
 5. **`rf_metrics` Table:**
    `timestamp`, `lte_rsrp`, `lte_sinr`, `lte_rrc_state`, `lora_rssi`, `lora_snr`, `lora_airtime_pct`, `wifi_rssi`, `gnss_cn0`, `gnss_ttff`
 5. **`environment_motion` Table:**
@@ -159,7 +160,7 @@ The full schema is the LLM's read surface: Tier 1/2 AI feedback (below) and the 
 
 #### 3.3.2 The Three AI Feedback Tiers
 1. **Tier 1: Immediate Autonomous Hardware Adaptation (< 100ms response):**
-   * **Waveform Temperature Tuning:** Reads the display backplane TMP112 sensor and writes directly to the IT8951 `TEMP_REG`. The EPDC switches waveform LUTs in real time, preventing slow ghosting in cold weather and bleeding in hot sunlight.
+   * **Waveform Temperature Tuning:** Reads the display backplane TMP112 sensor and writes it to the temperature input of the Kaleido 4 display controller (TBD, ADR-032). The controller switches waveform LUTs in real time, preventing slow ghosting in cold weather and bleeding in hot sunlight.
    * **Ambient Lux Scaling:** When the solar strip ambient lux reads $>10,000\text{ lux}$ (direct sunlight), the front-light is locked to 0% and E-ink contrast curves are maximized.
    * **Dead-Socket Power Cycle:** If the RF rail ammeter registers continuous active transmission power ($>1.2\text{W}$) for >45 seconds without network throughput, the daemon automatically pulses the modem's TPS22918 load switch to reset the baseband.
 2. **Tier 2: Runtime System Profile Self-Tuning (`solardeck-optimize`):**
@@ -172,7 +173,7 @@ The full schema is the LLM's read surface: Tier 1/2 AI feedback (below) and the 
 3. **Tier 3: Long-Term Hardware Evolution Analysis (Rev 1 $\to$ Rev 2 Redesign Recommendations):**
    * Rather than attempting speculative, error-prone automated PCB trace rerouting via scripts, SolarDeck leverages machine-readable SQLite telemetry to generate rigorous, human-reviewed engineering recommendations for Rev 2:
      * **Capacitor & Regulator Right-Sizing:** If 6 months of peak inrush logs demonstrate the Quectel LTE modem never pulls more than 1.6A in the field, the oversized 470µF tantalum capacitor is flagged for replacement with compact ceramic capacitors in Rev 2, saving board area and BOM cost.
-     * **Thermal Gradient Analysis:** If thermal logs record sustained gradients between the CM4 CPU and battery pouch during long Claude Code compile sessions, the toolchain generates specific mechanical and layout guidance (e.g., thermal pad thickness adjustments, copper pour relief) for the hardware team.
+     * **Thermal Gradient Analysis:** If thermal logs record sustained gradients between the CM5 CPU and battery pouch during long Claude Code compile sessions, the toolchain generates specific mechanical and layout guidance (e.g., thermal pad thickness adjustments, copper pour relief) for the hardware team.
      * **Hardware YAGNI Pruning:** If telemetry reveals an auxiliary expansion rail or sensor was active $<0.01\%$ of the time over hundreds of field hours, it is flagged for deletion in Rev 2, shedding weight, cost, and complexity.
 4. **Second-Opinion Parity Check (the concert-drift guard, no extra silicon):**
    * Internal cross-validation catches *divergent* sensors — but a loop of sensors aging together (same flex-ribbon, same thermal zone) stays *internally consistent* while drifting as a group. That concert drift is invisible to any on-board comparison because every witness agrees.
@@ -194,10 +195,10 @@ The [[SolarDeck|device]] does not have one sleep mode: it has a ladder, and the 
 
 #### 3.3.4 The Resume-to-App Contract (any task, not just mail)
 
-The sub-one-second promise is app-agnostic: the target is *the thing the user taps*, not a specific app. This is expressed as a small, opt-in contract that both the RP2350 (instant frame) and the CM4 resume path (priority ordering) consume, so none of the ladder claims depend on a mail app existing.
+The sub-one-second promise is app-agnostic: the target is *the thing the user taps*, not a specific app. This is expressed as a small, opt-in contract that both the RP2350 (instant frame) and the CM5 resume path (priority ordering) consume, so none of the ladder claims depend on a mail app existing.
 
 * **Before sleep**, `solardeck-telemetryd` asks each registered app for a *cacheable snapshot*: a small manifest `{app_id, frame_uri, snapshot_uri, restore_priority}` where `frame_uri` is a pre-rendered static frame (list view, unread counts, feed excerpt, last chat snippet) and `snapshot_uri` points at the data needed to restore live interactivity. Apps that cannot snapshot (GPU-heavy/terminal-only) simply omit `frame_uri` — they get the fast-restore path but no preview. Stored under `/var/lib/solardeck/resume/` (`spec_values.resume_to_app.manifest_dir`).
-* **On tap**, the RP2350 (which owns the panel) renders the manifest's `frame_uri` locally — a hardware frame swap, no Linux involved — and passes the tap to the CM4 as a *resume-to-app* message. The resume path orders its restore by `restore_priority`, so the tapped app's runtime and its ambient daemons return first; the rest of the desktop gets restored lazily behind it. The panel swap and the resume run concurrently, so perceived context is ~instant while the machine warms.
+* **On tap**, the RP2350 (which owns the panel) renders the manifest's `frame_uri` locally — a hardware frame swap, no Linux involved — and passes the tap to the CM5 as a *resume-to-app* message. The resume path orders its restore by `restore_priority`, so the tapped app's runtime and its ambient daemons return first; the rest of the desktop gets restored lazily behind it. The panel swap and the resume run concurrently, so perceived context is ~instant while the machine warms.
 * **Cacheable tasks win fully; non-cacheable tasks win the fast path:** inbox/messages/feed/chat/notes/Claude-session excerpts land in under ~1 s (frame swap, then live refresh); a full terminal or video session is resume-time (≈1–1.5 s on NVMe with a trimmed image) with no static preview, because a meaningless frozen frame is worse than none.
 * `spec_values.resume_to_app.*` holds the contract's numbers; the Phase-4 hook asserts every manifest is valid JSON with the three required fields and that `frame_uri` when present points at an existing preview of the tapped app (no dead icons).
 
@@ -211,7 +212,7 @@ The sub-one-second promise is app-agnostic: the target is *the thing the user ta
 
 * **Terminal Coding:** Runs `claude` CLI natively in Alacritty / Foot terminal with tmux session persistence.
 * **Voice Speech-to-Text (STT):**
-  * **Offline Mode:** Uses `whisper.cpp` (Quantized `tiny.en` or `base.en` model) running locally on the Cortex-A72 cores using NEON SIMD instructions (transcription latency < 1.2 seconds).
+  * **Offline Mode:** Uses `whisper.cpp` (Quantized `tiny.en` or `base.en` model) running locally on the Cortex-A76 cores using NEON SIMD instructions (transcription latency < 1.2 seconds).
   * **Cloud Mode:** Streams 16kHz audio from the I2S MEMS microphones directly to the Anthropic voice/audio API over 4G LTE.
 * **Local Offline AI Copilot:**
   * Integrates with locally installed small language models (via `llama.cpp` using 4-bit quantization) for completely air-gapped technical and code querying.
@@ -261,8 +262,8 @@ When connected via USB-C to a host laptop (Mac, Windows, or Linux), SolarDeck ac
 │   │                                                    │
 │   └─► `eink-refreshd` Bounding-Box Waveform Renderer   │
 │         • Detects damaged text rects                   │
-│         • Converts to 20ms 1-bit fast-typing LUT       │
-│         • Flushes to IT8951 without 60Hz flicker       │
+│         • Converts to 1-bit fast-typing LUT            │
+│         • Flushes to EPD ctrl without 60Hz flicker     │
 └────────────────────────────────────────────────────────┘
 ```
 
@@ -289,8 +290,8 @@ SolarDeck's programmable RGB Notification Beacon ("Signal Halo") and Standby Pie
 │                                                          `solardeck-beacond`│
 │                                                                    │        │
 │              ┌─────────────────────────────────────────────────────┴─┐      │
-│              ▼ (When Linux CM4 is Active)                            ▼      │
-│     Direct IPC to RP2350 via UART/SPI               (When Linux CM4 Suspends)
+│              ▼ (When Linux CM5 is Active)                            ▼      │
+│     Direct IPC to RP2350 via UART/SPI               (When Linux CM5 Suspends)
 │     • Custom color profiles & patterns              Autonomous RP2350 Engine
 │     • Gamma-corrected PWM curves (<0.2 mA)          • LoRa Mesh: Pulse Green
 │     • SMT Piezo Chime Tones (75 dB)                 • Solar: Breathing Amber
@@ -310,7 +311,7 @@ SolarDeck's programmable RGB Notification Beacon ("Signal Halo") and Standby Pie
   * Automatically maps urgent mentions to custom LED breathing pulses (e.g., Slack $\to$ Ruby, Discord $\to$ Amethyst Purple, GitHub $\to$ Cyan).
 
 ### 8.2 Deep-Sleep Autonomous Co-Processor Operation
-* When the CM4 enters S2idle or full power-down (0.000W), the RP2350 firmware autonomously manages the beacon:
+* When the CM5 enters S2idle (AUDIT 6 X4) or full power-down (0.000W), the RP2350 firmware autonomously manages the beacon:
   * **Incoming LoRa Mesh Packets:** RP2350 detects packet on SX1262 SPI $\to$ plays a subtle 2-tone chime on the SMT micro-piezo buzzer $\to$ pulses the emerald green LED at 0.5 Hz for 15 seconds.
   * **Rapid Barometric Drops (Storm Alert):** BMP390 detects pressure drop $> 3\text{ hPa / 3 hr}$ $\to$ strobes ruby red warning and sounds a weather alert tone.
   * **Ambient Nightstand Beacon:** When ambient solar lux reads $< 0.5\text{ lux}$ (pitch black) and device is resting on a nightstand or desk, pulses an ultra-faint warm white locator glow (2% duty cycle, $< 15\text{ µA}$) so you can effortlessly find the tablet in the dark.
@@ -396,7 +397,7 @@ To prevent filesystem corruption from unexpected battery depletion, field discon
   1. Hooks `/dev/input/event*` (Goodix GT911) at `SCHED_FIFO` priority 85.
   2. On `EV_KEY`/`BTN_TOUCH` with absolute $(X, Y)$:
      * **LRA base build:** selects one of the DRV2605L ROM effects by gesture class (tap, hold, scrub, boundary) and dispatches an I2C `RTP`/`library` trigger within **< 0.6 ms**. Waveform shaping per keystroke is preserved; localization is not (one actuator, one frame).
-     * **Piezo option:** maps the touch to the four corner actuators $A_1..A_4$ at $(0,0)$, $(1872,0)$, $(0,1404)$, $(1872,1404)$, weights by $w_i \propto 1/d_i^\alpha$, fires a 1.2 ms 140 Vpp primary pulse at the nearest corner and a 180° inverted damping pulse at the far corners over dual BOS1901 SPI in **< 0.4 ms**.
+     * **Piezo option:** maps the touch to the four corner actuators $A_1..A_4$ at $(0,0)$, $(W,0)$, $(0,H)$, $(W,H)$ (panel $W \times H$ TBD, ADR-032), weights by $w_i \propto 1/d_i^\alpha$, fires a 1.2 ms 140 Vpp primary pulse at the nearest corner and a 180° inverted damping pulse at the far corners over dual BOS1901 SPI in **< 0.4 ms**.
 * **Power Gating:**
   * LRA: DRV2605L standby $I_Q < 10\ \mu\text{A}$; actuator is a serviceable part.
   * Piezo option: CapDrive recovers >80% of pulse energy (net ~18 mW/click); drivers drop to $I_Q < 0.1\ \mu\text{A}$ when `ID_SENSE` shows a docked keyboard.
@@ -414,13 +415,13 @@ Electrophoretic fluid viscosity varies significantly with temperature. Running f
 ├────────────────────┬──────────────┬──────────────┬──────────────────────────┤
 │ Temperature Band   │ Backplane °C │ Active LUT   │ Waveform Strategy        │
 ├────────────────────┼──────────────┼──────────────┼──────────────────────────┤
-│ 1. Cold Sub-Zero   │ T < 5°C      │ `LUT_COLD`   │ • 45ms DU pulse duration │
+│ 1. Cold Sub-Zero   │ T < 5°C      │ `LUT_COLD`   │ • DU pulse TBD (ADR-032) │
 │                    │              │              │ • Pulse width × 1.35     │
 │                    │              │              │ • Full GC16 every 15 keys│
 ├────────────────────┼──────────────┼──────────────┼──────────────────────────┤
-│ 2. Normal Ambience │ 5°C ≤ T ≤ 35°C│ `LUT_NORMAL` │ • 20ms fast-typing DU    │
-│                    │              │              │ • 60ms A2 smooth motion  │
-│                    │              │              │ • 200ms GC16 crisp color │
+│ 2. Normal Ambience │ 5°C ≤ T ≤ 35°C│ `LUT_NORMAL` │ • fast-typing DU: TBD    │
+│                    │              │              │ • A2 smooth motion: TBD  │
+│                    │              │              │ • GC16 crisp colour: TBD │
 ├────────────────────┼──────────────┼──────────────┼──────────────────────────┤
 │ 3. High Desert Heat│ 35°C < T ≤ 50°C│ `LUT_HOT`   │ • Drive voltage −10%     │
 │                    │              │              │ • Shortened settle time  │
@@ -463,7 +464,7 @@ Secures device data against physical chassis compromise, laboratory probing, or 
   * When `solardeck-vault --arm` is engaged, opening the CNC backplate trips the switch.
   * In $<100\text{ ns}$, RP2350 hardware TrustZone routine executes atomic memory zeroization:
     * Volatile session decryption tokens in retention SRAM are erased to all-zeros.
-    * Pulls CM4 reset line low and halts all bus communication.
+    * Pulls CM5 reset line low and halts all bus communication.
 * **Routine Battery Maintenance & Tamper Recovery:**
   * Master partition encryption keys are derived from RP2350 hardware-locked OTP with TrustZone protection combined with a user passphrase.
   * If the device powers down completely or the battery is removed for servicing, volatile session tokens are cleared, but the device is **not bricked**. Upon re-powering, entering the correct passphrase or BIP-39 mnemonic restores the session tokens.
@@ -544,7 +545,7 @@ Enables SolarDeck to act as an instantaneous, driverless 10.3" sunlight-readable
 * **USB Composite Gadget Pipeline:** Leverages Linux kernel `libcomposite` configfs to expose a high-speed USB Video Class (UVC) capture endpoint or CDC-NCM Ethernet gadget.
 * **Low-Latency Rendering:**
   * When plugged into a laptop, `solardeck-sinkd` accepts video frames via Weylus, Deskreen, or Moonlight.
-  * Extracted bounding boxes are converted to 1-bit or 2-bit blue-noise dithered bitmaps on the VideoCore VI GPU and pushed to the IT8951 EPDC over 32 MHz SPI (~6 fps full-frame, faster for small rectangles).
+  * Extracted bounding boxes are converted to 1-bit or 2-bit blue-noise dithered bitmaps on the CM5 GPU and pushed to the Kaleido 4 display controller (TBD, ADR-032) (full-frame rate `spec_values.refresh_modes.full_frame_1bit_fps`, TBD; faster for small rectangles).
 * **Host Power Ingestion:** Simultaneously draws charging power from the host laptop via the CH224K USB-PD sink controller, keeping SolarDeck charged indefinitely during long outdoor work sessions.
 
 ---
@@ -588,14 +589,14 @@ When clipping a pocket phone (Clicks Communicator) over the lower portion of the
 ACTION="${1:---toggle}"
 
 if [[ "$ACTION" == "--dock" ]]; then
-    # Occlude bottom 400 pixels (1872x1404 -> 1872x1004 active viewport)
+    # Occlude bottom 400 pixels (panel resolution TBD, ADR-032)
     swaymsg "gaps bottom 400"
     # Set occluded lower region to pure static black/white (0.000W holding power)
-    notify-send -t 1500 "SolarDeck" "Cyberdeck Chin-Dock Engaged: 1872x1004 Viewport"
+    notify-send -t 1500 "SolarDeck" "Cyberdeck Chin-Dock Engaged: bottom 400 px reserved"
 elif [[ "$ACTION" == "--undock" ]]; then
-    # Restore full 10.3" 1872x1404 canvas
+    # Restore full 10.3" canvas
     swaymsg "gaps bottom 0"
-    notify-send -t 1500 "SolarDeck" "Full 10.3\" Canvas Restored: 1872x1404"
+    notify-send -t 1500 "SolarDeck" "Full 10.3\" Canvas Restored"
 fi
 ```
 
@@ -639,7 +640,7 @@ The `solardeck-voiced` daemon orchestrates hands-free and push-to-talk voice int
 ```
                                       VOICE PIPELINE
 ┌──────────────────────────┐      ┌──────────────────────────┐      ┌──────────────────────────┐
-│   Knowles MEMS Array     │ PDM  │    RP2350 Co-Processor   │ GPIO │   Raspberry Pi CM4       │
+│   Knowles MEMS Array     │ PDM  │    RP2350 Co-Processor   │ GPIO │   Raspberry Pi CM5       │
 │  (Hardware VAD <0.05mW)  ├─────►│  (microWakeWord ~14mW)   ├─────►│  (S2idle Wake: 250ms)    │
 └──────────────────────────┘      └──────────────────────────┘      └────────────┬─────────────┘
                                                                                  │
@@ -664,18 +665,18 @@ The `solardeck-voiced` daemon orchestrates hands-free and push-to-talk voice int
 * **The Result:** Even when the speaker is playing at full volume, the operator can speak *"Stop"* or *"Never mind, check battery instead"*, instantly halting speech output and executing the new directive.
 
 ### 17.2 Voice Biometrics Enrollment & Rejection (co-processor-resident)
-* **Enrollment:** The operator runs `solardeck-voice-enroll`, speaking 3 sample sentences. A 256-d d-vector embedding is extracted via Resemblyzer and **flashed to RP2350 non-volatile storage** — never kept as a writable Linux file (ADR-026). The CM4 holds no reference copy, so a root-compromised Linux brain cannot swap or re-threshold the enrolled voiceprint; it can only ask the co-processor for a verdict.
-* **Verification (sleep-tier, 14 mW):** The live sample's 256-d embedding is streamed to the RP2350, which computes the cosine similarity and returns an `owner` / `not-owner` verdict over the existing CM4↔RP2350 interface. Because verification runs in the same co-processor tier as the wake-word (14 mW), rejected speech is discarded *before* the CM4 wakes — no wake occurs at all for bystander or radio chatter.
+* **Enrollment:** The operator runs `solardeck-voice-enroll`, speaking 3 sample sentences. A 256-d d-vector embedding is extracted via Resemblyzer and **flashed to RP2350 non-volatile storage** — never kept as a writable Linux file (ADR-026). The CM5 holds no reference copy, so a root-compromised Linux brain cannot swap or re-threshold the enrolled voiceprint; it can only ask the co-processor for a verdict.
+* **Verification (sleep-tier, 14 mW):** The live sample's 256-d embedding is streamed to the RP2350, which computes the cosine similarity and returns an `owner` / `not-owner` verdict over the existing CM5↔RP2350 interface. Because verification runs in the same co-processor tier as the wake-word (14 mW), rejected speech is discarded *before* the CM5 wakes — no wake occurs at all for bystander or radio chatter.
 * **Cosine verification (reference math, computed co-processor-side):**
   ```python
-  # flashed to RP2350; verdict returned to the CM4
+  # flashed to RP2350; verdict returned to the CM5
   import numpy as np
 
   def is_owner(sample_emb, owner_emb, threshold=0.78):
       cos_sim = np.dot(sample_emb, owner_emb) / (np.linalg.norm(sample_emb) * np.linalg.norm(owner_emb))
       return cos_sim >= threshold
   ```
-* **Bystander Immunity:** Radio chatter, bystanders, or synthetic speech with similarity $<0.78$ are discarded; CM4 returns to S2idle without executing commands.
+* **Bystander Immunity:** Radio chatter, bystanders, or synthetic speech with similarity $<0.78$ are discarded; CM5 returns to S2idle (AUDIT 6 X4) without executing commands.
 * **Authorization tiering (identity ≠ authorization):** voice identity alone never authorizes signing, wipe, or destructive ops. Level-2 liveness (challenge phrase: "say the four digits on screen") and level-3 physical possession (NFC tap) gate `solardeck-vaultd` operations. Recorded-replay and recorded-owner audio fail liveness; live cloning is the named residual threat (see ADR-026).
 
 ### 17.3 Self-Improvement & System Modification by Voice
@@ -774,7 +775,7 @@ The `solardeck-diag` diagnostic specification defines an integrated Built-In Sel
 When invoked via CLI or local agent tool call (`solardeck-diag --json`), the engine performs an atomic sweep across eight hardware inspection domains:
 
 1. **Power Domain & Rail Current Telemetry (TI INA3221 & BQ25895):**
-   * Reads high-side voltage and current across Rail 1 (CM4 Core), Rail 2 (EPDC Display), and Rail 3 (Modem/Radios).
+   * Reads high-side voltage and current across Rail 1 (CM5 Core), Rail 2 (EPDC Display), and Rail 3 (Modem/Radios).
    * Flags current anomalies: Rail 3 idle draw $>1\text{ mA}$ in sleep (phantom leakage), or Rail 1 current $>2.8\text{ A}$ (thermal/power saturation).
    * Reads BQ27441 battery health: pack voltage (3.2V nominal LiFePO4), state of charge (SoC %), internal cell impedance ($R_{\text{cell}} \le 45\text{ m}\Omega$), and cycle count.
    * Reads BQ25895 charge registers: fault flags (thermal shutdown, watchdog timer expiration, input overvoltage).
@@ -782,9 +783,9 @@ When invoked via CLI or local agent tool call (`solardeck-diag --json`), the eng
    * Pings the RP2350 over SPI/UART with a 64-byte random challenge; verifies CRC-8 return checksum in $<10\text{ms}$.
    * Queries 8MB PSRAM memory test pattern registers and checks DS3231/RV-3028 RTC synchronization drift ($|\Delta t| < 500\text{ms}$).
    * Reads 12-bit ADC raw voltages from the top-bezel IXYS micro-solar strip and supercapacitor rail.
-3. **Display & Waveform Controller Domain (ITE IT8951 EPDC):**
-   * Reads Device Info Register: validates panel geometry ($1872 \times 1404$), engine firmware version, and Look-Up Table (LUT) integrity.
-   * Polls `HRDY` (Host Ready) pin state; checks for stuck busy flags indicating unseated FPC ribbon cables or frozen pigment microcapsules.
+3. **Display & Waveform Controller Domain (Kaleido 4 display controller, TBD, ADR-032):**
+   * Reads the controller's device info: validates panel geometry (against `spec_values.panel_sku.resolution_px`, TBD), engine firmware version, and Look-Up Table (LUT) integrity.
+   * Polls the controller's ready/busy line (signal TBD, ADR-032); checks for stuck busy flags indicating unseated FPC ribbon cables or frozen pigment microcapsules.
    * Reads panel temperature from backplane TMP112 sensor ($0^\circ\text{C}$ to $+50^\circ\text{C}$ safe operating window).
 4. **I2C Sensor Fabric Domain (Bus 1 & Bus 2):**
    * Sweeps I2C addresses `0x00` through `0x7F` at 400 kHz:
@@ -837,7 +838,7 @@ When invoked via CLI or local agent tool call (`solardeck-diag --json`), the eng
     },
     "display": {
       "status": "PASS",
-      "epdc_model": "IT8951",
+      "epdc_model": "TBD (ADR-032)",
       "temp_c": 32.4,
       "panel_ready": true
     },
@@ -902,7 +903,7 @@ Extends §21.4. All numbers live in `spec_values.self_heal.*`; no new silicon �
 1. **Corrosion Burn-Off Pulse (`solardeck-heal --burnish <rail>`):** Connector corrosion is the dominant field-failure mode of handheld electronics; oxide films on contact pairs are *reducible* by a controlled reverse-current soak, the same physics as relay burnishing. Sequence: rail confirmed idle (rail current $\approx 0$ via INA3221, §21.1.1), battery temp inside window, then a `spec_values.self_heal.burnish_current_ma` mA reverse pulse for `spec_values.self_heal.burnish_duration_ms` ms across the suspect contact pair, driven by the RP2350 through the rail's existing load-switch gate. Post-pulse: re-measure rail ESR/sag; log pre/post so the LLM can trend whether oxide is actually clearing. **Claim status: `modelled`** (relay-burnishing literature, not yet bench-measured for these contacts) — burns nothing because it is current-limited and temperature-gated.
 2. **LoRa Cold-Restart (`solardeck-heal --powercycle lora`):** Extends the existing modem power-cycle to the SX1262 rail: if LoRa RSSI sits below the mesh baseline for N consecutive polls while PLL stays locked (cold-cornered transceiver, not a dead antenna), assert the LoRa TPS22918 gate to 0.000V for 500ms and RSSI-after must recover.
 3. **Thermal-Gradient Charge Reduction (automatic, no CLI):** If the $T_{\text{battery}}$ (TMP112 #1) vs $T_{\text{display}}$ (TMP112 #2) gradient exceeds the modelled threshold while charging, the RP2350 writes a reduced charge-current register to the BQ25895 directly — treating an overheating pouch as a *curable* state, not just a logged one. Reverts when the gradient closes.
-4. **Watchdog Chain-of-Custody Reporting (extends §10.4):** When the 5-second bootloader watchdog trips and the golden-bank revert fires, the event *must* be written to telemetry as a first-class row (`module_health: cm4 state=fault value=bank_b_reverted`) with the hash of the failed image — so the watchdog becomes a *healing loop that explains itself*, never a silent reboot-until-brick.
+4. **Watchdog Chain-of-Custody Reporting (extends §10.4):** When the 5-second bootloader watchdog trips and the golden-bank revert fires, the event *must* be written to telemetry as a first-class row (`module_health: cm5 state=fault value=bank_b_reverted`) with the hash of the failed image — so the watchdog becomes a *healing loop that explains itself*, never a silent reboot-until-brick.
 5. **Generic Rail Gutter (`solardeck-heal --gutter <rail>`):** Generalizes the Port-2 trip-reset: any TPS22918-gated rail (LTE, Wi-Fi, audio, expansion) that trips its malfunction indication can be guttered (isolated at 0.000V) while the rest of the board keeps running — the board degrades gracefully to a partial system instead of bricking on one flaky contact.
 
 ---
@@ -914,8 +915,8 @@ Extends §21.4. All numbers live in `spec_values.self_heal.*`; no new silicon �
 The `solardeck-inkd` service bridges the ultra-low-power RP2350 co-processor inking engine (§2.23 in Hardware Spec) with the Linux desktop environment:
 
 ### 22.1 S2idle Inking Ingestion Workflow
-1. **Sleep-State Drawing:** While CM4 Linux is suspended in S2idle, the RP2350 captures all Wacom stylus strokes directly at 200 Hz, renders them on the IT8951 EPDC with sub-15ms latency at 4.5 mW, and appends stroke packet tuples `(t_ms, x, y, pressure)` into its 8MB PSRAM circular buffer.
-2. **Wake Notification:** When the user presses the Power key, the RP2350 pulls the `HOST_WAKE` GPIO pin high, resuming the CM4 Linux kernel in $<300\text{ ms}$.
+1. **Sleep-State Drawing:** While CM5 Linux is suspended in S2idle (AUDIT 6 X4), the RP2350 captures all Wacom stylus strokes directly at 200 Hz, renders them on the Kaleido 4 display controller (TBD, ADR-032) with sub-15ms latency at 4.5 mW, and appends stroke packet tuples `(t_ms, x, y, pressure)` into its 8MB PSRAM circular buffer.
+2. **Wake Notification:** When the user presses the Power key, the RP2350 pulls the `HOST_WAKE` GPIO pin high, resuming the CM5 Linux kernel in $<300\text{ ms}$ (AUDIT 6 X4).
 3. **Bulk Vector Ingestion:** `solardeck-inkd` initiates a high-speed SPI DMA transaction with the RP2350, draining up to 100,000 cached vector points in $<40\text{ ms}$.
 4. **SVG Serialization:** The daemon generates a standard W3C Scalable Vector Graphics (`.svg`) file and places it into `~/Notes/InstantInk/YYYY-MM-DD_HH-MM-SS.svg`.
 5. **Background OCR & Markdown Transcoding:**
@@ -980,7 +981,7 @@ Eliminates the "black screen of death" failure mode on field devices by exploiti
 
 ### 25.2 Indelible E-Ink Placard Generation
 * The RP2350 blits a high-density **Version 10 (57×57) QR Code** and high-contrast diagnostic summary directly onto the 10.3" screen:
-  `[KERNEL PANIC: NULL POINTER DEREFERENCE in module it8951_drm.ko at 0xffff8000084a123c]`
+  `[KERNEL PANIC: NULL POINTER DEREFERENCE in module epdc_drm.ko at 0xffff8000084a123c]`
 * The RP2350 disconnects all power rails to protect the battery from over-discharge.
 * **Zero-Power Survival:** The complete diagnostic crash report remains frozen on the E-Ink display indefinitely with **0.000W consumption**.
 * **Smartphone Instant Triage:** Any field technician or companion smartphone camera can scan the frozen screen to immediately view the stack trace, faulting register, and battery state without requiring a debug probe, serial dongle, or PCBA teardown.
@@ -1002,7 +1003,7 @@ Provides sovereign, zero-satellite geolocation in environments where GNSS signal
 # Execute one-shot passive BSSID location fix:
 solardeck-ghostnavd --oneshot --json
 ```
-1. **Zero-Emission Sniffing:** Puts the Broadcom BCM43455 Wi-Fi into passive monitor mode (`wlan0mon`) and queries Quectel LTE neighbor cells via `AT+QENG="neighbourcell"` over USB UART. Operates with **0.000W RF transmit power** (completely undetectable over the air).
+1. **Zero-Emission Sniffing:** Puts the CM5 on-module Wi-Fi (chip and monitor-mode support TBD — verify on CM5) into passive monitor mode (`wlan0mon`) and queries Quectel LTE neighbor cells via `AT+QENG="neighbourcell"` over USB UART. Operates with **0.000W RF transmit power** (completely undetectable over the air).
 2. **Weighted Centroid Multilateration:** Extracts visible BSSID MAC addresses and RSSI signal levels ($P_{\text{rx}}$ in dBm). Queries the local SQLite table for known emitter coordinates $(x_i, y_i)$.
 3. **Accuracy & Fix Time:** Computes a signal-weighted spatial centroid $\vec{p}_{\text{est}} = \frac{\sum w_i \vec{p}_i}{\sum w_i}$ where $w_i = 10^{(P_i / 20)}$. Yields a **10–25 meter positioning fix in $<50\text{ milliseconds}$** without an internet connection or GPS satellite lock.
 
@@ -1015,7 +1016,7 @@ solardeck-ghostnavd --oneshot --json
 A passive tactical near-field signal countermeasure tool designed to detect unauthorized surveillance bugs, hidden Bluetooth tracking tags (Apple AirTag, Tile, Chipolo), and approaching drone command links:
 
 ### 27.1 Multi-Band Passive Energy Sweep
-* Commands the **Semtech SX1262 LoRa transceiver** and **BCM43455 Wi-Fi/Bluetooth** in pure receive-only energy detection mode (`RxSweep`):
+* Commands the **Semtech SX1262 LoRa transceiver** and the **CM5 on-module Wi-Fi/Bluetooth** (receive-only sweep support TBD — verify on CM5) in pure receive-only energy detection mode (`RxSweep`):
   * **Sub-GHz Bands (433 MHz, 868 MHz, 915 MHz):** Detects analog wireless microphones, covert LoRa beacons, and long-range drone telemetry links (ExpressLRS, Crossfire).
   * **2.4 GHz ISM Band:** Sniffs BLE advertising bursts (Apple Find My 100ms chirp bursts, rolling public keys) and Wi-Fi video downlinks.
 
@@ -1055,7 +1056,7 @@ solardeck-soundbridged --rx --out received_key.pub
 Leverages the high-precision Bosch BMP390 barometer (10 cm vertical resolution, $<4\text{ }\mu\text{A}$ draw) to provide autonomous meteorological and terrain hazard forecasting:
 
 ### 29.1 Sleep-State Barometric Trend Logging
-* The RP2350 co-processor samples ambient atmospheric pressure every 30 seconds while the CM4 Linux kernel is in S2idle sleep.
+* The RP2350 co-processor samples ambient atmospheric pressure every 30 seconds while the CM5 Linux kernel is in S2idle sleep (AUDIT 6 X4).
 * Maintains a 1,440-sample circular buffer in low-power SRAM covering a rolling 12-hour window.
 
 ### 29.2 Flash Flood & Severe Squall Alert Engine
@@ -1073,9 +1074,9 @@ Leverages the high-precision Bosch BMP390 barometer (10 cm vertical resolution, 
 Provides sovereign document protection and leak tracing against shoulder-surfing cameras and unauthorized photographs:
 
 ### 30.1 Blue-Noise LSB Modulation
-* The Broadcom VideoCore VI GPU dithering shader (`dither.glsl`) modulates the least significant bit (1 LSB) of the blue-noise spatial threshold matrix.
+* The CM5 GPU dithering shader (`dither.glsl`) modulates the least significant bit (1 LSB) of the blue-noise spatial threshold matrix.
 * To the human eye, rendered text, PDFs, and code look completely indistinguishable from standard high-contrast 1-bit or 4-bit E-Ink pixels.
-* **Cryptographic Payload:** Invisibly embeds a 256-bit payload encoding `SHA256(Device_UUID || Timestamp || User_GPG_Fingerprint)` redundantly tiled across the $1872 \times 1404$ framebuffer.
+* **Cryptographic Payload:** Invisibly embeds a 256-bit payload encoding `SHA256(Device_UUID || Timestamp || User_GPG_Fingerprint)` redundantly tiled across the full framebuffer (resolution TBD, ADR-032).
 
 ### 30.2 Photographic Provenance Extraction
 ```bash
@@ -1337,7 +1338,7 @@ resonant bursts; the EPD drive pulses 15–20 V at frame rate. Shielding cannot 
 has to reach the stylus through the panel, and a ground plane above the grid kills the pen outright.
 The only remedy is time-multiplexing, which this daemon owns:
 
-* **Owns both clocks.** Holds the IT8951/TCON drive gate and the digitizer sample gate, never both.
+* **Owns both clocks.** Holds the display controller/TCON drive gate and the digitizer sample gate, never both.
 * **Pen priority when a stroke is in flight:** sampling at the rate in
   `spec_values.pen_arbiter.pen_sample_rate_hz`; refresh is allowed only inside inter-sample gaps.
 * **Refresh priority when the framebuffer changes:** pen samples are decimated, then re-filled from
@@ -1356,8 +1357,10 @@ measured with the arbiter running. Pen-on-top adds ~0.2 mm of stack; see ADR-018
 
 *Written 2026-10-20 in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017*
 
-The panel already exposes a waveform ladder (IT8951: `DU`, `A2`, `GL16`, `GLR16`, `GLD16`, `GC16`,
-`INIT`). "Fast refresh" on shipping e-note devices is **not** a faster panel — it is a policy that picks
+E-paper controllers expose a waveform ladder (the IT8951 bench stand-in, ADR-025: `DU`, `A2`, `GL16`,
+`GLR16`, `GLD16`, `GC16`, `INIT`; the Kaleido 4 controller's mode set is TBD, ADR-032). The mode names
+below are policy classes mapped onto whatever ladder that controller exposes. "Fast refresh" on
+shipping e-note devices is **not** a faster panel — it is a policy that picks
 the cheapest mode per dirty rectangle and pays the ghost debt promptly. This scheduler is that policy:
 
 * **Dirty-rect tracking.** The compositor reports damaged regions; only those are transferred and
@@ -1411,33 +1414,34 @@ Client eMMC/NVMe retains data for roughly a year unpowered at 30 °C — a devic
 
 ## 55. Zero-Kernel Reader Tier & Pre-Rendered Library (`solardeck-readerd`)
 
-A reading mode that needs no Linux at all: the RP2350 drives the IT8951 directly from PSRAM
-double-buffer while the CM4 is unpowered, so books display at **0.000 W** between page turns and the
-whole tier sits at `spec_values.reader.native_read_mw` (~4.5 mW). Reading is not "the CM4 asleep" — it
-is the CM4 absent, exactly like the Zen modes in §3.2.
+A reading mode that needs no Linux at all: the RP2350 drives the Kaleido 4 display controller (TBD, ADR-032) directly
+from PSRAM double-buffer while the CM5 is unpowered, so books display at **0.000 W** between page turns and the
+whole tier sits at `spec_values.reader.native_read_mw` (~4.5 mW). Reading is not "the CM5 asleep" — it
+is the CM5 absent, exactly like the Zen modes in §3.2.
 
 **Frame format matters (CO_PROCESSOR_SURVEY.md §5):** mono book frames are pre-rendered **1-bit
-dithered** (`spec_values.reader.page_bytes_1bit` = 328,536 B), so the 8 MB PSRAM cache holds **12
-pages double-buffered** (`double_buffer_pages_1bit`) or **25 single-buffered**
-(`single_buffer_pages_1bit`) — the same silicon that naively fits only two 8-bit frames. 8-bit frames
+dithered** (`spec_values.reader.page_bytes_1bit`), so the PSRAM cache holds many more pages
+double-buffered (`double_buffer_pages_1bit`) or single-buffered (`single_buffer_pages_1bit`) than
+8-bit frames would allow. Every page-size and page-count key is TBD until the Kaleido 4 resolution is
+published (ADR-032). 8-bit frames
 (reserved for Kaleido colour/photo pages) stay `page_bytes_8bit`. The page-format keys are asserted
 against page geometry and cache size in `check_docs_numbers.py`, so a panel or PSRAM change cannot
 silently invalidate the cache model.
 
 ### 55.1 The pre-rendered page-flip engine
-* **What lives where:** the CM4 renders pages *before* the reader session starts and transfers them to
+* **What lives where:** the CM5 renders pages *before* the reader session starts and transfers them to
   the RP2350's PSRAM (`spec_values.reader.page_cache_psram_mb` MB). E-Ink is bistable: a rendered page
   displays forever at 0.000 W. Page turns are flips of pre-rendered frames (`spec_values.reader.page_flip_ms`,
-  ~30 ms, §3.2.1).
+  TBD, §3.2.1).
 * **Why "pre-digest":** the RP2350 (Cortex-M33, no filesystem, no mmap, no PDF codec) cannot decode a
   PDF. PDF rendering is a Linux job and stays one. The RP2350 flips pages; it never renders them.
 * **Bookmarks are metadata, not pages:** the RP2350 stores a bookmark ledger (book, page, timestamp) in
   its own flash — a few bytes per entry, thousands of books fit. "Bookmark this, open the other PDF" is
-  a ledger operation that needs no CM4 wake *if* the other book's pages are already cached.
+  a ledger operation that needs no CM5 wake *if* the other book's pages are already cached.
 
 ### 55.2 Expanding the library: wake-and-nap, not on-chip decode
-* **The default path is a momentary CM4 wake.** "Open [other book]" → RP2350 checks the ledger; on a
-  cache miss it wakes the CM4 (0.3 s S2idle resume, §3.1), which renders the requested window, hands it
+* **The default path is a momentary CM5 wake.** "Open [other book]" → RP2350 checks the ledger; on a
+  cache miss it wakes the CM5 (0.3 s S2idle resume, §3.1 (AUDIT 6 X4)), which renders the requested window, hands it
   over (0.5 s handoff, MVP_ARCHITECTURE §6 STEP 2), and naps again. Energy of one swap:
   `spec_values.reader.swap_energy_wh` (0.005 Wh of short rendering) — about 1% of a day's indoor strip
   harvest. Book swaps are cheap; do not build infrastructure to avoid them.
@@ -1445,7 +1449,7 @@ silently invalidate the cache model.
   layer once. A bitmap-font reflow on the RP2350 can then lay out plain text directly into PSRAM frames,
   letting *text reflow* (variable font size, re-justify) work without Linux. Status `aspirational`:
   it duplicates layout fidelity for a minority case; the wake-and-nap path already covers it.
-* **What never happens in the reader tier:** annotation. Pen input runs the Pillar-2 arbiter on the CM4.
+* **What never happens in the reader tier:** annotation. Pen input runs the Pillar-2 arbiter on the CM5.
   A pen gesture is the most natural wake gesture the device has — treat it as one.
 
 ### 55.3 Automatic power-down and its cost
@@ -1454,12 +1458,12 @@ silently invalidate the cache model.
   path; reader mode is the same handoff with a book window instead of a dashboard.
 * **Yes, powering down costs a little power.** Suspending to RAM flushes caches and cuts peripheral
   rails (TPS22918) — a burst of a few seconds, then a 15 mW S2idle floor. The reader tier then takes
-  over and the CM4 rail drops to 0.000 W for the duration of the reading session; the transition burst
+  over and the CM5 rail drops to 0.000 W for the duration of the reading session; the transition burst
   is amortised, not repeated.
-* **The honest floor:** 15 mW S2idle keeps RAM alive (instant wake, sessions intact); full 0.000 W
-  means losing sessions. Reader mode gets 0.000 W CM4 *because* the session is a finished render — the
+* **The honest floor:** 15 mW S2idle keeps RAM alive (instant wake, sessions intact) (AUDIT 6 X4); full 0.000 W
+  means losing sessions. Reader mode gets 0.000 W CM5 *because* the session is a finished render — the
   library is a cache, and the article is already on the page.
 
-**Acceptance check:** a synthetic handoff — CM4 renders a 3-page window, RP2350 flips pages from PSRAM
-with the CM4 rail off, ledger add/read round-trips, and a cache-miss wakes the CM4 exactly once per
+**Acceptance check:** a synthetic handoff — CM5 renders a 3-page window, RP2350 flips pages from PSRAM
+with the CM5 rail off, ledger add/read round-trips, and a cache-miss wakes the CM5 exactly once per
 book swap.

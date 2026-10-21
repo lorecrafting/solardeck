@@ -5,7 +5,7 @@ Item,Designator,Quantity,Manufacturer,Manufacturer Part Number (MPN),Description
 4,U4,1,Texas Instruments,TPS63020DSJR,"High Efficiency Buck-Boost 3.8V Modem Rail",VSON-14-1EP_3x4mm,Seeed Sourced (SMT),LCSC C124208 / TI direct
 5,U5,1,Texas Instruments,BQ25504RGTR,"Ultra Low Power Boost Charger with MPPT",VQFN-16-1EP_3x3mm,Seeed Sourced (SMT),LCSC C116743 / TI direct
 6,SW1,1,C&K / Littelfuse,JS102011SAQN,"SPDT Slide Switch (LiFePO4 / Li-ion Chem Sel)",SW_SPDT_SMD,Seeed Sourced (SMT),LCSC C231787
-7,"J1,J2",2,Hirose,DF40C-100DS-0.4V,"CM4 High-Density Board-to-Board 100-pin Socket",Hirose_DF40C_100P,Seeed Sourced (SMT),LCSC C2887688 / Hirose
+7,"J1,J2",2,Hirose,DF40C-100DS-0.4V,"CM5 High-Density Board-to-Board 100-pin Socket",Hirose_DF40C_100P,Seeed Sourced (SMT),LCSC C2887688 / Hirose
 8,U8,1,Raspberry Pi,RP2350B,"Dual Cortex-M33 / Hazard3 RISC-V Co-Processor",QFN-80-1EP_10x10mm,Seeed Sourced (SMT),Seeed OPL / Raspberry Pi
 9,U9,1,APMemory,APS6404L-3SQR-SN,"8MB QSPI Pseudo-SRAM Framebuffer Buffer",SOIC-8_3.9x4.9mm,Seeed Sourced (SMT),LCSC C3013854
 10,U10,1,Winbond,W25Q128JVS,"16MB QSPI NOR Flash Dual-Bank Bootloader",SOIC-8_5.23mm,Seeed Sourced (SMT),LCSC C97521
@@ -18,7 +18,7 @@ Item,Designator,Quantity,Manufacturer,Manufacturer Part Number (MPN),Description
 17,J_MODEM,1,Quectel / JAE,M.2-Key-B-3042,"M.2 Key-B 3042 LTE Modem Socket",M.2_3042,Seeed Sourced (SMT),LCSC C2842105
 18,U18,1,STMicroelectronics,ST4SIM-200M,"Industrial eUICC Micro-eSIM (Slot 2)",DFN-8-1EP_5x6mm,Seeed Sourced (SMT),LCSC C2891244
 19,J_SIM,1,Molex / Amphenol,Nano-SIM-PushPush,"Weather-Sealed Nano-SIM Push-Push Socket (Slot 1)",Nano-SIM,Seeed Sourced (SMT),LCSC C2841990
-20,MOD1,1,Raspberry Pi,CM4104000,"Raspberry Pi Compute Module 4 (4GB RAM, WiFi, Lite)",CM4_Module,Seeed Sourced (Box-Build),"Seeed Official RPi Distributor stock"
+20,MOD1,1,Raspberry Pi,CM5116064,"Raspberry Pi Compute Module 5 (16GB RAM, 64GB eMMC, Wi-Fi/BT) - ADR-031",CM5_Module,Seeed Sourced (Box-Build),"Seeed Official RPi Distributor stock"
 21,DISP1,1,E Ink / DKE / Good Display,ED103TC4-WACOM,"10.3"" Color E-Ink Kaleido 4 Panel with Laminated Wacom EMR Digitizer & IT8951 EPDC",10.3_KALEIDO4_KIT,Seeed Sourced (Box-Build),"Sourced via Guangdong DKE / Good Display (or Kaleido 3 fallback)"
 22,MOD2,1,Quectel,EG25GGB-M52-SGNS,"Quectel EG25-G Worldwide LTE Cat-4 / GNSS M.2 Card",M.2_3042,Seeed Sourced (Box-Build),"Quectel China Authorized Stock"
 23,BATT1,1,Great Power / EVE,LiFePO4-8000mAh-3.2V,"8000mAh 3.2V LiFePO4 Pouch Cell with 10k NTC & JST",Pouch_Cell,Seeed Sourced (Box-Build),"Guangdong local battery manufacturer"

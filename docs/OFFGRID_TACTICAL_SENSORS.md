@@ -1,6 +1,7 @@
 # SolarDeck Off-Grid, Campervan & Tactical Sensor Expansion Specification
 
 Written 2026-10-19 12:12 UTC in the Pi harness by antigravity/gemini-3.8-flash
+Revised 2026-10-21 15:59 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
 
 Detailed architectural specification for campervan energy bus integration, enhanced sensor navigation (RTK, celestial plate-solving, 9-DOF IMU), grid-down doomsday survival hardware, frontlight optical engineering, and offline AI knowledgebase traversal.
 
@@ -8,7 +9,7 @@ Detailed architectural specification for campervan energy bus integration, enhan
 
 ## 1. Campervan & Mobile Living Energy Integration
 
-SolarDeck's dual-brain architecture (CM4 Linux + RP2350 microcontroller) and connectivity options (BLE 5.0, USB-C Host, RS-485, CAN Bus) allow it to serve as a sovereign, zero-power campervan monitoring console and electrical diagnostics hub:
+SolarDeck's dual-brain architecture (CM5 Linux + RP2350 microcontroller) and connectivity options (BLE 5.0, USB-C Host, RS-485, CAN Bus) allow it to serve as a sovereign, zero-power campervan monitoring console and electrical diagnostics hub:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -29,7 +30,7 @@ SolarDeck's dual-brain architecture (CM4 Linux + RP2350 microcontroller) and con
 
 ### 1.1 Victron Energy Passive BLE Sniffing
 * **Mechanism:** Victron SmartSolar MPPTs, Orion-Tr Smart DC-DC chargers, and SmartShunts continuously transmit non-connectable BLE advertising beacons containing real-time telemetry (Battery Voltage, Amps, Watts, State of Charge, Yield).
-* **Zero-Pairing Integration:** SolarDeck's CM4 captures these packets passively using `bleak` or a native C/Rust daemon (`solardeck-victron-ble`). No Bluetooth pairing, PIN codes, or handshakes are required. Telemetry is committed to `/var/log/solardeck/telemetry.db` every 1 to 5 seconds.
+* **Zero-Pairing Integration:** SolarDeck's CM5 captures these packets passively using `bleak` or a native C/Rust daemon (`solardeck-victron-ble`). No Bluetooth pairing, PIN codes, or handshakes are required. Telemetry is committed to `/var/log/solardeck/telemetry.db` every 1 to 5 seconds.
 * **Wired Fallback (VE.Direct):** For metal campervan enclosures where 2.4 GHz RF is blocked, USB-C Port 2 accepts an isolated FTDI cable to read the native VE.Direct 19200-baud ASCII telemetry stream.
 
 ### 1.2 DIY LiFePO4 Battery Pack Management (JBD / Daly BMS)
@@ -193,10 +194,10 @@ SolarDeck runs a local, airgapped **Retrieval-Augmented Generation (RAG)** pipel
 │ 3. CONTEXT ASSEMBLY:                                                        │
 │    • Combines user query + extracted reference passages + strict grounding │
 │                         │                                                   │
-│                         ▼ (4.5 – 6.0 tokens/sec via ARM NEON SIMD)          │
-│ 4. LOCAL SYNTHESIS (llama.cpp on CM4 Quad Cortex-A72):                      │
+│                         ▼ (tokens/sec TBD — verify on CM5)                  │
+│ 4. LOCAL SYNTHESIS (llama.cpp on CM5 Quad Cortex-A76):                      │
 │    • Model: Qwen 2.5 3B Instruct or Llama 3.2 3B (Q4_K_M Quantization)     │
-│    • Memory: 2.2 GB RAM footprint (leaves >5GB free on 8GB CM4)             │
+│    • Memory: 2.2 GB RAM footprint (rest of the 16GB CM5 stays free)         │
 │    • Synthesizes concise, actionable, numbered field steps                  │
 │                         │                                                   │
 │                         ▼                                                   │
@@ -206,37 +207,35 @@ SolarDeck runs a local, airgapped **Retrieval-Augmented Generation (RAG)** pipel
 ```
 
 ### 5.1 Storage & Retrieval Performance
-* **Index Storage:** The 100GB+ Kiwix `.zim` files reside on the **M.2 2230/2242 PCIe NVMe SSD** (wired to the CM4's PCIe Gen 2 x1 bus at 400+ MB/s).
+* **Index Storage:** The 100GB+ Kiwix `.zim` files reside on the **M.2 2230/2242 PCIe NVMe SSD** (wired to the CM5's PCIe Gen 2 x1 bus at 400+ MB/s).
 * **Search Speed:** Pre-computed Xapian / SQLite full-text indices resolve multi-keyword queries in **under 45 milliseconds**.
 
-### 5.2 Local LLM Resource Footprint (CM4 8GB LPDDR4)
+### 5.2 Local LLM Resource Footprint (CM5 16GB)
 * **Engine:** `llama.cpp` compiled with native ARMv8 NEON SIMD optimizations.
 * **Model Selection:** **Qwen 2.5 3B Instruct** or **Llama 3.2 3B** (Q4_K_M quantization).
   * Model Weight Size: ~2.0 GB.
   * Active Inference RAM: ~2.4 GB (including 4K KV cache).
-  * System Free Memory: > 5.0 GB remaining for Linux, Wayland, and user tasks.
-  * Inference Throughput: **4.5 to 6.0 tokens per second**.
+  * System Free Memory: the rest of the CM5's 16 GB for Linux, Wayland, and user tasks.
+  * Inference Throughput: TBD — verify on CM5.
   * Battery Consumption: ~3.2W during 20 seconds of generation = **~0.018 Wh per query** (< 0.06% of the 32 Wh pack).
 * **Zero-Hallucination Grounding:** The prompt template strictly constrains the model to cite only the retrieved excerpts. If an answer is not present in the local manuals, the model explicitly acknowledges the absence rather than guessing.
 
 ---
 
-## 6. GPU Architecture & Silicon Capabilities (Broadcom VideoCore VI)
+## 6. GPU Architecture & Silicon Capabilities (CM5 / BCM2712)
 
 *Appended 2026-10-19 12:20 UTC in the Pi harness by antigravity/gemini-3.8-flash*
 
-The Raspberry Pi CM4 integrates a dedicated **Broadcom VideoCore VI (V3D 4.2 @ 500 MHz)** 3D graphics and compute engine with open-source Linux kernel and userspace driver stacks:
+The Raspberry Pi CM5's BCM2712 integrates a 3D graphics and compute GPU with open-source Linux kernel and userspace driver stacks; its generation, clock, API levels and video-codec blocks are TBD — verify on CM5:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                 BROADCOM VIDEOCORE VI GPU SILICON PIPELINE                  │
+│                     CM5 (BCM2712) GPU SILICON PIPELINE                      │
 ├───────────────────────┬─────────────────────────────────────────────────────┤
-│ Graphics Standards    │ • OpenGL ES 3.1 & Vulkan 1.2 (Mesa v3d / v3dv)      │
+│ Graphics Standards    │ • Mesa v3d / v3dv; API levels TBD — verify on CM5   │
 │                       │ • Hardware direct DRM/KMS scanout with zero tearing │
 ├───────────────────────┼─────────────────────────────────────────────────────┤
-│ Dedicated Video ASIC  │ • 4Kp60 H.265 (HEVC) hardware video decoder         │
-│                       │ • 1080p60 H.264 hardware video decoder              │
-│                       │ • 1080p30 H.264 hardware video encoder (<2% CPU)    │
+│ Dedicated Video ASIC  │ • Decode / encode blocks TBD — verify on CM5        │
 ├───────────────────────┼─────────────────────────────────────────────────────┤
 │ SolarDeck Workloads   │ • Real-time GLSL Blue-Noise Dithering (<2.0ms frame)│
 │                       │ • Vulkan compute acceleration for local AI / STT    │
@@ -246,12 +245,12 @@ The Raspberry Pi CM4 integrates a dedicated **Broadcom VideoCore VI (V3D 4.2 @ 5
 
 1. **Hardware-Accelerated Temporal Blue-Noise Dithering (`dither.glsl`):**
    * Electrophoretic displays physically cannot switch 24-bit RGB or 256-level greyscale at video rates.
-   * A custom GLSL fragment shader running on the VideoCore VI GPU dynamically maps 24-bit frames into 1-bit binary or 2-bit (4-level) dithered bitmaps in **under 2.0 milliseconds**, creating smooth optical gradients with near-zero CPU load.
+   * A custom GLSL fragment shader running on the CM5 GPU dynamically maps 24-bit frames into 1-bit binary or 2-bit (4-level) dithered bitmaps in **under 2.0 milliseconds**, creating smooth optical gradients with near-zero CPU load.
 2. **Vulkan Matrix Compute Acceleration (`llama.cpp` & `whisper.cpp`):**
-   * Leveraging Mesa's native `v3dv` Vulkan driver, matrix multiplications and token embedding lookups can be partially offloaded from the Cortex-A72 cores to the GPU shaders, improving local STT transcription latency and conserving battery.
+   * Leveraging Mesa's native `v3dv` Vulkan driver, matrix multiplications and token embedding lookups can be partially offloaded from the Cortex-A76 cores to the GPU shaders, improving local STT transcription latency and conserving battery.
 3. **Hardware Camera ISP & Outgoing Video Encoding:**
    * Incoming raw Bayer frames from the 12MP Sony IMX708 sensor pass through the Broadcom hardware Image Signal Processor (ISP) for lens shading correction, auto-white-balance, and hardware demosaicing.
-   * Outgoing video feeds are encoded into H.264 1080p30 directly in silicon, enabling tactical streaming or reconnaissance recording without taxing the CPU cores.
+   * Outgoing video encoding for tactical streaming or reconnaissance recording: hardware encoder support TBD — verify on CM5.
 
 ---
 
@@ -266,8 +265,8 @@ To achieve true physical reliability, zero-leakage battery efficiency, and foolp
 │                 CORE TABLET vs. MODULAR USB-C HOTPACK ARCHITECTURE          │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 1. THE CORE TABLET (Self-Contained Daily Driver & Survival Terminal)        │
-│    • Brains: Broadcom CM4 (Linux) + RP2350B Co-Processor (12mW Supervisor)  │
-│    • Display: 10.3" Kaleido 4 / Carta 1200 + Laminated Wacom EMR Digitizer  │
+│    • Brains: Broadcom CM5 (Linux) + RP2350B Co-Processor (12mW Supervisor)  │
+│    • Display: 10.3" Kaleido 4 + Laminated Wacom EMR Digitizer               │
 │    • Primary Mesh: Semtech SX1262 LoRa (Meshtastic 24/7 on RP2350 SPI)      │
 │    • Security & Auth: 13.56 MHz NFC (ST25R3916 for YubiKey FIDO2 & Tap-Pair)│
 │    • Inertial & Weather: 9-DOF IMU (BMI270/BMM350) + Bosch BMP390 Barometer │
@@ -295,7 +294,7 @@ To achieve true physical reliability, zero-leakage battery efficiency, and foolp
 ### 8.1 Why We Descope the Flipper Zero Clone (Use the Real Flipper Zero)
 * **The Trap:** Designing a custom backpack with a CC1101 Sub-GHz chip, 125 kHz RFID coil, and IR remote replicates hardware that already exists.
 * **The Ponytail Reality:** The **Flipper Zero** is already a mature, battery-powered $169 multi-tool with extensive community firmware (Unleashed, Momentum).
-* **The Integration:** Users mount their existing Flipper Zero directly to SolarDeck’s rear M2.5 inserts or MagSafe ring, connecting via a 10cm right-angle USB-C cable or Bluetooth 5.0. SolarDeck’s CM4 Linux runs `qflipper-cli` and `flipperzero-protobuf`, exposing full control on the 10.3" sunlight-readable screen without adding custom silicon.
+* **The Integration:** Users mount their existing Flipper Zero directly to SolarDeck’s rear M2.5 inserts or MagSafe ring, connecting via a 10cm right-angle USB-C cable or Bluetooth 5.0. SolarDeck’s CM5 Linux runs `qflipper-cli` and `flipperzero-protobuf`, exposing full control on the 10.3" sunlight-readable screen without adding custom silicon.
 
 ---
 
@@ -382,7 +381,7 @@ To achieve true physical reliability, zero-leakage battery efficiency, and foolp
 * **Silicon Architecture:**
   1. **Long-Wave Infrared (LWIR) Thermal Core:** Miniature **InfiRay Tiny1-C / P2 Pro** uncooled vanadium oxide (VOx) microbolometer (256 × 192 resolution, 12 µm pixel pitch, 25 Hz frame rate, spectral band 8–14 µm, NETD $<40\text{ mK}$).
   2. **Mounting & Interface:** Snaps to upper chassis MagSafe magnetic ring; connects via 5cm right-angle jumper to USB-C Port 2. Total weight: **15 grams**.
-  3. **Display & GPU Acceleration:** Broadcom VideoCore VI hardware-accelerates 25 FPS thermal matrix interpolation and applies custom 16-shade e-ink blue-noise dithering (`dither.glsl`) or false-color palettes in $<2\text{ms}$.
+  3. **Display & GPU Acceleration:** The CM5 GPU (TBD — verify on CM5) accelerates 25 FPS thermal matrix interpolation and applies custom 16-shade e-ink blue-noise dithering (`dither.glsl`) or false-color palettes in $<2\text{ms}$.
   4. **Tactical Covertness:** Emits **0.000 lux** of visible light; allows passive thermal reconnaissance in complete darkness with the e-ink frontlight turned off.
 
 ---

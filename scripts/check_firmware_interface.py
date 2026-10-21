@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Phase 15: the CM4 <-> RP2350 contract cannot drift.
+Phase 15: the CM5 <-> RP2350 contract cannot drift.
 
 Written 2026-10-20 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017
 
@@ -11,7 +11,7 @@ bidirectional, so neither can silently gain a register the other does not know a
   2. every SD_CMD_/SD_EVENT_/SD_ACK_/SD_STATE_ constant used by the doc exists in the header
   3. the wire test compiles and passes natively (the layout asserts are compile-time; CRC is not)
 
-A one-directional check would let a developer add a register to the header and ship firmware the CM4
+A one-directional check would let a developer add a register to the header and ship firmware the CM5
 driver never reads -- which is the exact class of bug this file exists to prevent.
 """
 import os

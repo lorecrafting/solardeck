@@ -16,7 +16,7 @@ Regenerate: `python3 scripts/gen_status.py`. CI Phase 12 fails if this page is s
 | `TBD` | Unknown, and we refuse to guess. |
 
 `specified` is the honest default for this repo: 62 BOM lines, 40 captured in schematics, 0 board nets.
-Read `docs/AUDIT_2026-10-20.md` before treating any row here as a purchase decision.
+Read `docs/AUDIT_6_2026-10-21.md` before treating any row here as a purchase decision.
 
 ## Totals
 
@@ -31,7 +31,7 @@ Read `docs/AUDIT_2026-10-20.md` before treating any row here as a purchase decis
 
 ## Product pillars
 
-What the product is judged on (`README.md` §2).
+What the product is judged on (`README.md`, “Product pillars”).
 
 | ID | Feature | Status |
 | :--- | :--- | :--- |
@@ -45,7 +45,7 @@ What the product is judged on (`README.md` §2).
 
 ## Engineering pillars
 
-The architectural bets that make the pillars possible (`README.md` §4).
+The architectural bets that make the pillars possible (`README.md`, “Engineering pillars”).
 
 | ID | Feature | Status |
 | :--- | :--- | :--- |

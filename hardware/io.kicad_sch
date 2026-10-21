@@ -123,7 +123,7 @@
   (hierarchical_label "VDD_5V_SYS" (shape input) (at 50.8 78.74 0) (uuid "67000004-0006-0002-0000-000000000001"))
   (hierarchical_label "VDD_3V8_MODEM" (shape input) (at 152.4 76.2 0) (uuid "67000004-0006-0003-0000-000000000001"))
 
-  ;; PCIe Upstream from CM4
+  ;; PCIe Upstream from CM5
   (hierarchical_label "PCIE_TX_P" (shape input) (at 50.8 88.9 0) (uuid "67000004-0006-0004-0000-000000000001"))
   (hierarchical_label "PCIE_TX_N" (shape input) (at 50.8 91.44 0) (uuid "67000004-0006-0005-0000-000000000001"))
   (hierarchical_label "PCIE_RX_P" (shape output) (at 50.8 93.98 0) (uuid "67000004-0006-0006-0000-000000000001"))
@@ -133,8 +133,8 @@
   (hierarchical_label "PCIE_CLKREQ_L" (shape bidirectional) (at 50.8 104.14 0) (uuid "67000004-0006-0010-0000-000000000001"))
 
   ;; USB-C Native Port 1
-  (hierarchical_label "CM4_USB_DP" (shape bidirectional) (at 50.8 114.3 0) (uuid "67000004-0006-0011-0000-000000000001"))
-  (hierarchical_label "CM4_USB_DM" (shape bidirectional) (at 50.8 116.84 0) (uuid "67000004-0006-0012-0000-000000000001"))
+  (hierarchical_label "CM5_USB_DP" (shape bidirectional) (at 50.8 114.3 0) (uuid "67000004-0006-0011-0000-000000000001"))
+  (hierarchical_label "CM5_USB_DM" (shape bidirectional) (at 50.8 116.84 0) (uuid "67000004-0006-0012-0000-000000000001"))
   ;; U26: TUSB320RWBR (USB-C Configuration Channel Dual-Role DRP Controller)
   (symbol (lib_id "SolarDeck_IO:TUSB320RWBR") (at 140.0 60.0 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)

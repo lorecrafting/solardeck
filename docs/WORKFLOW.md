@@ -158,7 +158,7 @@ becomes debt the moment a number appears without its source.
 
 ## 6. Agent procedure (humans: same, minus the trailers)
 
-1. **Read**, in this order: `docs/README.md` → `docs/AUDIT_2026-10-20.md` → the spec section you touch →
+1. **Read**, in this order: `docs/README.md` → `docs/AUDIT_6_2026-10-21.md` → the spec section you touch →
    `docs/90-history/decisions.md` ADRs that mention it. Do not edit before you have read the audit;
    half the traps are already documented there.
 2. **Classify** the change (C1–C5, §2) and say so in one line.
@@ -197,7 +197,7 @@ becomes debt the moment a number appears without its source.
 
 - **Commits:** `Co-Authored-By: <model> <noreply@anthropic.com>` and
   `Harness: pi (<provider>/<model>, session <8-char id>)` via `git commit --trailer`.
-- **Documents/records:** `Written <YYYY-MM-DD HH:MM> UTC in the Pi harness by <provider>/<model>` in the
+- **Documents/records:** `Written <YYYY-MM-DD HH:MM> UTC in <harness, e.g. the Pi harness or Claude Code> by <provider>/<model>` in the
   header or at the start of the appended section.
 - **Tracker comments:** `[Pi · <provider>/<model> · session <id>]`.
 - Subagents inherit these rules; pass them in the prompt.

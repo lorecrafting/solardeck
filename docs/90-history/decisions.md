@@ -479,3 +479,94 @@ V2 feature — the ADR pins the trade so nobody re-argues it silently.
 **Enforced consequences.** `spec_values.panel_sku` introduced (`mono_default_panel`, `kaleido4_*`);
 `check_docs_numbers.py` BANNED pattern forbids any concrete "N-year" lifespan for the Kaleido dye in
 non-historical prose while the figure is `null`.
+
+---
+
+## ADR-031 — The CM5 is the compute standard; CM4 text is propagation debt (2026-10-21)
+
+Written 2026-10-21 16:40 UTC in Claude Code by anthropic/claude-opus-5-5. Records the owner's decision
+("we are standardizing everything on CM5 not cm4") that `spec_values.cm5` (commit `19a789c`) already
+assumed but cited as a non-existent ADR-032.
+
+**Trigger.** `spec_values.cm5` moved V1 to CM5116064 with no decision record, while README, AGENTS,
+the specs, the DTS, the schematic and the firmware comments still describe a CM4 (AUDIT 6 H23).
+
+**Decision.** Every SolarDeck build uses the **Raspberry Pi CM5, CM5116064 / SC1608** (16 GB RAM,
+64 GB eMMC, on-module Wi-Fi/BT). There is no CM4 variant. Values live in `spec_values.cm5`.
+
+**Because.** 16 GB keeps the local 1–3B model resident in RAM; the wireless variant removes a USB
+Wi-Fi peripheral; it stays in the same socketed DF40 module family (ADR-023), so the modularity
+thesis holds.
+
+**Delta.** Compute line priced at `spec_values.cm5.price_usd` (BOM rows still carry the CM4 price —
+Phase 14 totals must be re-derived when the BOM row changes). More heat under load than CM4 (spreader
+and power governor are required, AUDIT 6 H20). The device-tree overlay must be rewritten: on CM5,
+GPIO, SPI and I2S sit behind the RP1 I/O controller, so the CM4 overlay does not port unchanged.
+
+**Still assumes.** (1) The CM5 does **not** fix the sleep pillar: its datasheet lists only off,
+shutdown (DRAM lost) and ~2 W idle, the same structure as CM4 (AUDIT 6 X4). The sleep ladder must be
+built around the RP2350 owning the ambient modes and Linux resuming from off/hibernate. (2) The CM5
+end-of-production year is unknown (`supply_chain.cm5_production_commitment_year: null`) until Raspberry
+Pi publishes it. (3) Whether the carrier still needs a separate USB 3 host controller (VL805) depends
+on the CM5's native USB pin-out — verify against the CM5 datasheet before the schematic is captured.
+
+**Enforced consequences.** `spec_values` citations point here; `soc` corrected to BCM2712 (CM5
+datasheet). Remaining CM4 references outside `90-history/` and `AUDIT_*` are stale text to be swept,
+not a competing design.
+
+---
+
+## ADR-032 — Kaleido 4 is the only panel; V1 waits for its release (2026-10-21)
+
+Written 2026-10-21 16:50 UTC in Claude Code by anthropic/claude-opus-5-5. Records the owner's decision
+("let's standardize around Kaleido 4, we will wait for the release"). **Supersedes ADR-030's two-SKU
+split**: there is no mono Carta default.
+
+**Trigger.** ADR-030 made mono Carta the default and Kaleido 4 an option. AUDIT 6 found that neither
+the named mono panel's outline (X5) nor its resolution matched the repo, and that Kaleido 4 is the
+colour product the owner wants to ship.
+
+**Decision.** SolarDeck has one display: the **E Ink Kaleido 4** 10.3" colour panel. Schedule waits for
+a buyable panel and a published datasheet rather than shipping an interim panel.
+
+**Because.** One panel means one chassis, one waveform set and one software pipeline to qualify;
+colour is the product.
+
+**Delta.** Every panel fact is unknown until E Ink publishes a 10.3" Kaleido 4 datasheet and drawing:
+resolution, PPI, module outline and thickness, controller/TCON and its host interface, waveform
+timings, price, and dye lifespan. Each stays `null` in `spec_values.panel_sku` (WORKFLOW §5). The
+chassis cannot be closed until the drawing exists (AUDIT 6 X5 folds into this). The IT8951 cannot
+drive Kaleido 4 (ADR-025), so the carrier's display path, the TMUX1575 hand-over and the RP2350
+reader tier must be re-checked against whatever controller E Ink pairs with it.
+
+**Still assumes.** (1) The Kaleido 3 / Carta + IT8951 module stays the **bench stand-in** for the
+refresh pipeline (ADR-025); its results are tagged `measured <date> (Kaleido 3)` and never promoted to
+Kaleido 4 numbers. (2) The 30-year display claim was built on monochrome capsules (ADR-030); with a
+colour-only product, the display row of `LONGEVITY_30Y.md` must quote the dye lifespan as `null`.
+(3) `spec_values.ppi` (227) and the prose quoting it describe the stand-in panel and go `null` in the
+same sweep that moves every doc to Kaleido 4.
+
+**Unlocks.** E Ink 10.3" Kaleido 4 datasheet + mechanical drawing → fill `panel_sku`, re-derive the
+chassis, choose the controller, then capture the display sheet.
+
+---
+
+## ADR-033 — The soldered eSIM stays, and it must be a consumer (SGP.22) eUICC (2026-10-21)
+
+Written 2026-10-21 17:20 UTC in Claude Code by anthropic/claude-opus-5-5. Records the owner's decision
+("please keep the esim") after AUDIT 6 H15 and the follow-up recommendation to drop it from V1.
+
+**Trigger.** AUDIT 6 H15: the specified ST4SIM-200M is an M2M eUICC (GSMA SGP.02), so the promised
+user QR-code activation through `lpac` (an SGP.22 client) cannot work with it.
+
+**Decision.** V1 keeps a soldered MFF2 eSIM alongside the nano-SIM tray. The part must be a
+**consumer eUICC (GSMA SGP.22)** so an owner can download any carrier's profile by QR code. The
+ST4SIM-200M is rejected for that reason; the replacement part number is TBD until a datasheet
+confirming SGP.22 support (and an MFF2 package) is in hand.
+
+**Because.** The owner wants carrier choice without a physical card; that only exists with SGP.22.
+
+**Delta.** BOM line keeps its slot; part and price become TBD. Dual-SIM switching and `lpac` stay in
+the software spec.
+
+**Still assumes.** The chosen modem exposes the logical channels (`AT+CCHO`/`AT+CGLA`) `lpac` needs.

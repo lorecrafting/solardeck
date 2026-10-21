@@ -31,7 +31,7 @@ def read(p):
 
 
 def bom_rows():
-    """(name, low, high) for every priced line item before the Total row."""
+    """(name, low, high, is_tbd) for every line item before the Total row."""
     rows = []
     for line in read(BOM).split("\n"):
         if "Total Core BOM" in line:
@@ -40,10 +40,13 @@ def bom_rows():
             continue
         prices = re.findall(r"\$([0-9]+\.[0-9]{2})", line)
         if not prices:
+            # ADR-032: an unpriced part is still a line item; it adds 0 and makes the total a floor.
+            if re.search(r"\|\s*TBD\s*\|\s*$", line):
+                rows.append((line.split("|")[1].strip().strip("*"), 0.0, 0.0, True))
             continue
         lo = float(prices[0])
         hi = float(prices[-1])
-        rows.append((line.split("|")[1].strip().strip("*"), lo, hi))
+        rows.append((line.split("|")[1].strip().strip("*"), lo, hi, False))
     return rows
 
 
@@ -61,6 +64,9 @@ def check_bom(err):
 
     text = read(BOM)
     total_line = next((l for l in text.split("\n") if "Total Core BOM" in l), "")
+    tbd = [r[0] for r in rows if r[3]]
+    if tbd and "TBD" not in total_line:
+        err(f"Total Core BOM row must say the total excludes TBD rows: {', '.join(tbd)}")
     for want in (f"${lo:.2f}", f"${hi:.2f}"):
         if want not in total_line:
             err(f"Total Core BOM row does not contain {want} (rows sum to {lo:.2f}-{hi:.2f})")

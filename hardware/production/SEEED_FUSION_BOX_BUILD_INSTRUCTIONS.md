@@ -5,6 +5,8 @@
 **Destination:** Honolulu, Hawaii, USA (via DHL Express / FedEx Priority)  
 **Date:** 2026-10-19  
 
+Revised 2026-10-21 16:03 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
+
 ---
 
 ## 1. Scope of Work
@@ -12,7 +14,7 @@
 Seeed Studio is requested to execute a complete **Turnkey Box-Build Assembly** comprising:
 1. **6-Layer PCB Fabrication:** Manufacture the carrier board from `solardeck_gerbers.zip`.
 2. **Turnkey SMT Assembly:** Source and solder all SMT components (Items 1–19 in `seeed_fusion_bom.csv`) using pick-and-place centroid data in `solardeck_cpl.csv`.
-3. **Turnkey Module Sourcing (Box-Build):** Source the 5 module items (Raspberry Pi CM4, 10.3" E-Ink Display Kit, Quectel EG25-G, 8000mAh LiFePO4 battery, and SLS PA12 3D-printed enclosure).
+3. **Turnkey Module Sourcing (Box-Build):** Source the 5 module items (Raspberry Pi CM5, 10.3" E-Ink Display Kit, Quectel EG25-G, 8000mAh LiFePO4 battery, and SLS PA12 3D-printed enclosure).
 4. **Final Mechanical & Electrical Integration (Box-Build):** Hand-assemble all modules into the chassis.
 5. **Factory Functional Test:** Power on the unit, confirm charging, and verify E-Ink display initialization.
 6. **Air Freight Logistics:** Package as UN3481 equipment and ship directly to Honolulu, Hawaii.
@@ -42,13 +44,13 @@ Refer to `hardware/production/seeed_fusion_bom.csv` for exact manufacturer part 
 ### SMT On-Board Components (Items 1–19)
 * All PMICs (TI BQ25895, TPS62840, TPS61088, TPS63020, BQ25504).
 * RP2350B co-processor, APS6404L PSRAM, W25Q128 Flash, DS3231 RTC.
-* Hirose DF40C-100DS-0.4V CM4 dual sockets (J1, J2).
-* TMUX1575PWR display bus multiplexer & FH12-40S-0.5SH FPC connector.
-* VL805-Q6 PCIe USB Host, M.2 Key-M (NVMe), M.2 Key-B (Modem), ST4SIM eSIM, and Nano-SIM slot.
+* Hirose DF40C-100DS-0.4V CM5 dual sockets (J1, J2).
+* TMUX1575YCJR (DSBGA-16, ×2) display bus multiplexer (the production CSV still lists a non-existent PWR/TSSOP part — AUDIT 6 §5) & display FPC connector (TBD with the Kaleido 4, ADR-032).
+* VL805-Q6 PCIe USB Host, M.2 Key-M (NVMe), M.2 Key-B (Modem), MFF2 eSIM — consumer SGP.22 eUICC (part TBD, ADR-033) — and Nano-SIM slot.
 
 ### Box-Build Sourced Modules (Items 20–24)
-1. **Compute Module (Item 20):** Raspberry Pi CM4 (Model `CM4104000`: 4GB RAM, WiFi, Lite).
-2. **Display Assembly (Item 21):** 10.3" Color E-Ink **Kaleido 4** Panel with Laminated **Wacom EMR Digitizer** (Model `ED103TC4-WACOM` or DKE / Good Display / Waveshare equivalent, 1872×1404, 40,000+ colors + IT8951 controller board + 40-pin FPC cable; Kaleido 3 fallback if Kaleido 4 lead time > 3 weeks).
+1. **Compute Module (Item 20):** Raspberry Pi CM5 (Model `CM5116064`: 16GB RAM, 64GB eMMC, Wi-Fi/BT — ADR-031).
+2. **Display Assembly (Item 21):** 10.3" Color E-Ink **Kaleido 4** Panel with Laminated **Wacom EMR Digitizer** (E Ink sole source; part number, resolution and FPC TBD on release, ADR-032) + the Kaleido 4 display controller (TBD, ADR-032). No substitute panel: V1 waits for Kaleido 4 (ADR-032).
 3. **Cellular Modem (Item 22):** Quectel EG25-G (M.2 Key-B form factor, LTE Cat-4 Worldwide + GNSS).
 4. **Battery Pack (Item 23):** 3.2V Nominal 8,000–10,000 mAh LiFePO4 pouch cell with 10k NTC thermistor and JST-PH 2.0 connector.
 5. **Chassis Shell (Item 24):** 3D printed in **SLS PA12 Nylon (Black)** via Seeed Fusion 3D printing service using `solardeck_chassis.stl`.
@@ -60,9 +62,9 @@ Refer to `hardware/production/seeed_fusion_bom.csv` for exact manufacturer part 
 1. **Install Heat-Set Inserts:**  
    Heat-press 4x M2.5 × 4.0 mm brass threaded inserts into the internal mounting bosses of the SLS PA12 chassis shell.
 2. **Mate Compute Module:**  
-   Align the Raspberry Pi CM4 onto Hirose sockets J1 and J2. Press firmly until both 100-pin connectors audibly snap into full engagement.
+   Align the Raspberry Pi CM5 onto Hirose sockets J1 and J2. Press firmly until both 100-pin connectors audibly snap into full engagement.
 3. **Connect Display FPC:**  
-   Insert the 40-pin ribbon cable from the 10.3" E-Ink panel into connector `J_EPDC` on the carrier board; lock the flip-actuator.
+   Insert the ribbon cable from the 10.3" Kaleido 4 panel into connector `J_EPDC` on the carrier board; lock the flip-actuator.
 4. **Mount Carrier Board:**  
    Lower the assembled carrier board into the chassis cavity. Secure with 4x M2.5 × 6.0 mm Torx screws into the heat-set inserts.
 5. **Install M.2 Cellular Modem:**  
@@ -82,8 +84,8 @@ Before packing, the Seeed quality technician must perform this 3-minute check:
    Connect a 20W USB-C PD power supply.  
    * **Pass:** Board power LEDs illuminate (`3V3_AON` and `5V_SYS` active). BQ25895 charge indicator turns on. Cell charges toward 3.65V cutoff.
 2. **Boot & Display Initialization Test:**  
-   Insert factory test MicroSD card containing the SolarDeck hardware test image.  
-   * **Pass:** Within 5 seconds, the 10.3" E-Ink display initiates a waveform clear and renders the high-contrast factory diagnostic splash screen (showing CPU OK, RAM 4GB OK, RP2350 OK).
+   Boot the SolarDeck hardware test image from the CM5 eMMC (flashed over USB with `rpiboot`/usbboot — TBD, verify CM5 procedure).  
+   * **Pass:** Within 5 seconds, the 10.3" E-Ink display initiates a waveform clear and renders the high-contrast factory diagnostic splash screen (showing CPU OK, RAM 16GB OK, RP2350 OK).
 3. **Current Draw Verification:**  
    * Active idle power: $\le 3.5\text{ W}$.
    * Display update peak: $\le 5.5\text{ W}$.

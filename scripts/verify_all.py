@@ -15,7 +15,7 @@ Every doc that mentions a phase count is checked against docs/spec_values.json b
   Phase  6: SMT PCBA & centroid package integrity
   Phase  7: Seeed Studio Fusion turnkey assets
   Phase  8: OS provisioning script (setup_solardeck_os.sh --test)
-  Phase  9: Documentation presence, attribution and link integrity
+  Phase  9: Documentation presence and attribution (links are checked in Phase 10)
   Phase 10: Single source of truth (docs/spec_values.json) consistency
   Phase 11: BOM <-> netlist <-> CPL coverage
   Phase 12: Status catalogue (docs/STATUS.md generated and current)
@@ -26,7 +26,7 @@ Every doc that mentions a phase count is checked against docs/spec_values.json b
 
 NOTE: a green run means "the artifacts are internally consistent". It does NOT mean the design is
 fabricable -- the schematic is still a partial capture and the production bundles are placeholders.
-See docs/AUDIT_2026-10-20.md.
+See docs/AUDIT_6_2026-10-21.md.
 """
 
 import os
@@ -114,7 +114,7 @@ def verify_kicad_cli():
 
 def verify_docs_present():
     t0 = time.time()
-    print(f"▶ {Colors.BOLD}Phase 9: Documentation presence, attribution & link integrity...{Colors.END} ", end="", flush=True)
+    print(f"▶ {Colors.BOLD}Phase 9: Documentation presence & attribution (links: Phase 10)...{Colors.END} ", end="", flush=True)
     try:
         assert os.path.isfile("README.md"), "missing README.md"
         docs = []
@@ -124,7 +124,8 @@ def verify_docs_present():
         for path in docs:
             assert os.path.getsize(path) > 1000, f"{path} too small (<1KB)"
             text = open(path, encoding="utf-8", errors="ignore").read()
-            assert "Pi harness" in text, f"{path} missing Pi harness attribution line"
+            assert re.search(r"Written \d{4}-\d{2}-\d{2}( \d{2}:\d{2})? UTC in .+ by \S+/", text), \
+                f"{path} missing 'Written <date> [HH:MM] UTC in <harness> by <provider>/<model>' line"
     except AssertionError as e:
         print(f"{Colors.RED}[FAIL]{Colors.END} ({e})")
         return False
@@ -179,7 +180,7 @@ PHASES = [
     ("Seeed Studio Fusion turnkey assets", verify_seeed_turnkey),
     ("OS provisioning script",
      lambda: run_step("Phase 8: OS provisioning (setup_solardeck_os.sh --test)", ["bash", "tools/provision/setup_solardeck_os.sh", "--test"])),
-    ("Documentation presence, attribution & links", verify_docs_present),
+    ("Documentation presence & attribution", verify_docs_present),
     ("Single source of truth consistency",
      lambda: run_step("Phase 10: single source of truth (spec_values.json)", [sys.executable, "scripts/check_docs_numbers.py"])),
     ("BOM <-> netlist <-> CPL coverage",
@@ -190,7 +191,7 @@ PHASES = [
      lambda: run_step("Phase 13: longevity constraints (docs/LONGEVITY_30Y.md)", [sys.executable, "scripts/check_longevity.py"])),
     ("Derived numbers: BOM total and energy budget",
      lambda: run_step("Phase 14: derived numbers (BOM + power)", [sys.executable, "scripts/check_cost_and_power.py"])),
-    ("CM4 <-> RP2350 interface contract",
+    ("CM5 <-> RP2350 interface contract",
      lambda: run_step("Phase 15: firmware interface contract", [sys.executable, "scripts/check_firmware_interface.py"])),
     ("Reliability model + obsolescence + DFT",
      lambda: run_step("Phase 16: reliability, obsolescence, design-for-test", [sys.executable, "scripts/check_reliability_and_supply.py"])),
@@ -238,7 +239,7 @@ def main():
         print(f"{Colors.BOLD}{Colors.GREEN}  ✅ ALL {len(PHASES)} PHASES PASSED IN {total_time:.1f}ms{Colors.END}")
         print(f"{Colors.BOLD}{Colors.YELLOW}  Artifacts are internally consistent -- NOT a design sign-off.{Colors.END}")
         print(f"{Colors.BOLD}{Colors.YELLOW}  Schematic is a partial capture; production bundles are placeholders.{Colors.END}")
-        print(f"{Colors.BOLD}{Colors.YELLOW}  See docs/AUDIT_2026-10-20.md before ordering anything.{Colors.END}")
+        print(f"{Colors.BOLD}{Colors.YELLOW}  See docs/AUDIT_6_2026-10-21.md before ordering anything.{Colors.END}")
         print(f"{Colors.BOLD}{'=' * 72}{Colors.END}\n")
         return 0
     print(f"{Colors.BOLD}{Colors.RED}  ❌ {len(failures)} OF {len(PHASES)} PHASE(S) FAILED!{Colors.END}")

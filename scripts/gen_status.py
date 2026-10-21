@@ -33,8 +33,8 @@ SW = os.path.join(ROOT, "docs", "SOFTWARE_SPEC.md")
 
 STATUSES = ("measured", "modelled", "specified", "aspirational", "TBD")
 GROUPS = [
-    ("product_pillars", "Product pillars", "What the product is judged on (`README.md` §2)."),
-    ("engineering_pillars", "Engineering pillars", "The architectural bets that make the pillars possible (`README.md` §4)."),
+    ("product_pillars", "Product pillars", "What the product is judged on (`README.md`, “Product pillars”)."),
+    ("engineering_pillars", "Engineering pillars", "The architectural bets that make the pillars possible (`README.md`, “Engineering pillars”)."),
     ("daemons", "Daemons", "Host software specified in `SOFTWARE_SPEC.md`. Evidence is derived from `src/daemons/`."),
     ("hotpacks", "USB-C Hotpacks", "Field expansion modules (`OFFGRID_TACTICAL_SENSORS.md` §8)."),
     ("accessories", "Accessories", "Sold separately; not required for the core tablet."),
@@ -131,7 +131,7 @@ def render():
         "",
         f"`specified` is the honest default for this repo: {SPEC['core_bom_line_items']} BOM lines, "
         f"{SPEC['schematic_coverage_baseline']} captured in schematics, 0 board nets.",
-        "Read `docs/AUDIT_2026-10-20.md` before treating any row here as a purchase decision.",
+        "Read `docs/AUDIT_6_2026-10-21.md` before treating any row here as a purchase decision.",
         "",
     ]
     total = sum(len(FEATURES[k]) for k, _, _ in GROUPS)

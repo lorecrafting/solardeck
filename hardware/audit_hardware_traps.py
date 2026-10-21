@@ -73,13 +73,13 @@ def audit_hardware_traps():
 
     # Trap 2: Display Back-Powering (Phantom Powering into Sleep SoC)
     print("\n[Rule 2] Checking Galvanic Display Bus Isolation (TMUX1575)...")
-    cm4_spi_nets = ["CM4_SPI_MOSI", "CM4_SPI_MISO", "CM4_SPI_SCK", "CM4_SPI_CS"]
+    cm5_spi_nets = ["CM5_SPI_MOSI", "CM5_SPI_MISO", "CM5_SPI_SCK", "CM5_SPI_CS"]
     rp_spi_nets  = ["RP_SPI_MOSI", "RP_SPI_MISO", "RP_SPI_SCK", "RP_SPI_CS"]
     epdc_out_nets = ["EPDC_SPI_MOSI", "EPDC_SPI_MISO", "EPDC_SPI_SCK", "EPDC_SPI_CS"]
 
-    # Verify CM4 SPI nets only touch J2 and U14 (TMUX), NEVER directly touch J_EPDC
+    # Verify CM5 SPI nets only touch J2 and U14 (TMUX), NEVER directly touch J_EPDC
     direct_leak = False
-    for net_name in cm4_spi_nets:
+    for net_name in cm5_spi_nets:
         nodes = nets.get(net_name, [])
         refs = [r for r, p in nodes]
         assert "U14" in refs, f"{net_name} must route through U14 TMUX1575"
@@ -89,7 +89,7 @@ def audit_hardware_traps():
             traps_found += 1
 
     if not direct_leak:
-        print("  ✓ Passed: CM4 display lines are 100% galvanically isolated by TMUX1575.")
+        print("  ✓ Passed: CM5 display lines are 100% galvanically isolated by TMUX1575.")
 
     # Trap 3: Power Domain Short-Circuits & Collisions
     print("\n[Rule 3] Checking Power Domain Separation & Independent Rails...")
@@ -110,8 +110,8 @@ def audit_hardware_traps():
     wake_refs = [r for r, p in wake_net]
     pwrfail_refs = [r for r, p in pwrfail_net]
 
-    assert "U8" in wake_refs and "J2" in wake_refs, "GPIO17_WAKE must bridge RP2350 (U8) and CM4 (J2)"
-    assert "U8" in pwrfail_refs and "J2" in pwrfail_refs, "GPIO16_PWRFAIL must bridge RP2350 (U8) and CM4 (J2)"
+    assert "U8" in wake_refs and "J2" in wake_refs, "GPIO17_WAKE must bridge RP2350 (U8) and CM5 (J2)"
+    assert "U8" in pwrfail_refs and "J2" in pwrfail_refs, "GPIO16_PWRFAIL must bridge RP2350 (U8) and CM5 (J2)"
     print("  ✓ Passed: <300ms S2idle wake (GPIO17) & <150ms emergency powerfail (GPIO16) paths verified.")
 
     # Trap 5: LiFePO4 Chemistry Hardware Interlock (SW1)
