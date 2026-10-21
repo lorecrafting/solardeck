@@ -179,8 +179,10 @@ waits on the items below.
 1. **Kaleido 4 (E Ink).** Announced without public sizes, resolution or a sampling programme; a 10.3″
    version is not yet confirmed. A sales inquiry went to E Ink on 2026-10-21. Panel figures stay `null`
    until the datasheet exists (ADR-032), and the case outline waits on its drawing.
-2. **The pen layer.** Wacom works with OEMs under NDA; Hanvon Ugee sells custom EMR modules to
-   businesses. We'll ask for quotes once the panel size is confirmed.
+2. **The pen layer (ADR-050).** No EMR quote has been requested. Once a 10.3″ Kaleido 4 is confirmed,
+   a neutral inquiry (sensor size, controller interface, Linux, samples and volume pricing; no panel,
+   compute or schedule details) goes to several vendors at once: Wacom's OEM channel, Hanvon Ugee and
+   at least one more.
 3. **The battery pack (ADR-049).** EEMB's quote, samples and pack-level UN38.3 / IEC 62133 reports for
    the 1S2P pack; the battery bay is re-cut from their pack drawing.
 4. **Bench numbers.** Linux wake time, wake-word power, heat and charging behaviour come from a dev-kit
