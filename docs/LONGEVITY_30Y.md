@@ -1,6 +1,7 @@
 # LONGEVITY_30Y.md — A Tablet That Still Works in 2056
 
 Written 2026-10-20 06:10 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017
+Revised 2026-10-21 15:59 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
 
 Second audit round, scoped to one question: **what breaks over 30 years, and is the current design
 built to survive it?** The existing audit asked "is the documentation true". This one asks "will the
@@ -24,17 +25,17 @@ design does, and the required change. **"Gap" means the design as written does n
 | 3 | **Battery calendar fade** | LiFePO4 ≈2 %/yr at 25 °C, 4–6 %/yr at 40 °C → 40–60 % loss over 30 years | 3.45 V float clamp, Poron swelling relief (§7.4, 0.80 mm), 10 000-cycle target; **retention method unspecified**, cell not a user part | ❌ **Gap** — mechanical clamp + service hatch; plan on 50 % capacity at year 30 |
 | 4 | **Elastomer compression set** | VMQ takes a set; a TPU bumper is impact protection, not a seal | Perimeter 1.5 mm hollow-core silicone gasket, "compressed 30 %" (§4), **no gasket line item in the BOM**, no service interval | ⚠ **Gap** — P/N the gasket as a wear item at 27 % compression (`spec_values.longevity`) |
 | 5 | **Adhesive creep / yellowing** | VHB and LOCA migrate and yellow; taped cells are the classic 10-year failure | VHB 5952 used for **glass** (correct: no plastic film, §4.0); battery retention relies on cavity fit only | ⚠ **Gap** — VHB on glass is fine; a taped or untethered cell is not |
-| 6 | **NAND retention** | Client SSD unpowered retention ≈1 year at 30 °C; eMMC similar | 32 GB eMMC + 2 TB NVMe, no scrub, no archive warning | ❌ **Gap** — quarterly powered scrub; state plainly that the NVMe is not an archive |
+| 6 | **NAND retention** | Client SSD unpowered retention ≈1 year at 30 °C; eMMC similar | 64 GB eMMC + 2 TB NVMe, no scrub, no archive warning | ❌ **Gap** — quarterly powered scrub; state plainly that the NVMe is not an archive |
 | 7 | **RTC backup cell** | Lithium coin cells leak; rechargeables lose capacity | DS3231 + Seiko MS621FE rechargeable (in BOM), **no documented replacement interval** | ⚠ **Gap** — a 10-year service item, not a redesign |
-| 8 | **Display aging** | Charge trapping in capsules; Kaleido colour-filter dye fades under UV | 395 nm UV cut-off in the LOCA (§7.5.3), acid-etched glass, no glued film | ✅ **Handled** for monocapsules — Kaleido dye still ages; keep mono as the 30-year SKU (ADR-030) |
+| 8 | **Display aging** | Charge trapping in capsules; Kaleido colour-filter dye fades under UV | 395 nm UV cut-off in the LOCA (§7.5.3), acid-etched glass, no glued film | ❓ **Unknown** — the only panel is the Kaleido 4 (ADR-032); its colour-filter dye lifespan is `null` (`spec_values.panel_sku.kaleido4_dye_lifespan_years`) until E Ink publishes it |
 | 9 | **Connector cycles** | USB-C rated ~10 k cycles; daily charging for 30 years ≈ 11 k | IP68 mid-mount receptacles, 4 through-hole stake tabs, >50 N, **10 000 cycles** | ⚠ **Gap** — raise to ≥20 k cycles and state strain relief |
 | 10 | **Fastener/insert creep** | Brass inserts in PA12 creep; over-torque strips the thread | 12 × M2.5 into knurled brass inserts, 500 teardowns, **0.45 N·m**, no threadlocker, screw types uncounted | ⚠ **Gap** — lock the torque in one place, add low-strength threadlocker, cap screw types |
 | 11 | **Internal humidity** | Sealed volume still outgasses; condensation on cold-soak | Sensirion SHT40 dew-point telemetry (§7.4.6), GORE vent, rechargeable desiccant pocket (§4.6) | ✅ **Handled** — the best-specified row in the set |
 | 12 | **Software rot** | Toolchains, signing keys, and CA certs do not live 30 years | Offline-first, no cloud dependency, source in repo; **no archival build container, no key custody, no cert expiry audit** | ❌ **Gap** — archival container + printed key shares |
 
 Four hard gaps (2, 3, 6, 12) reduce real 30-year survival; five soft ones (4, 5, 7, 9, 10) are
-paperwork plus one BOM line. Row 1, 8 and 11 are already better specified than most commercial
-tablets ever are — do not touch them.None of this is exotic: it is all materials, process, and service paperwork, which is exactly why a
+paperwork plus one BOM line. Rows 1 and 11 are already better specified than most commercial
+tablets ever are — do not touch them. Row 8 stays open until the Kaleido 4 datasheet (ADR-032).None of this is exotic: it is all materials, process, and service paperwork, which is exactly why a
 schematic/netlist audit could not see it.
 
 ---
@@ -114,13 +115,12 @@ Only two are needed. Humidity, dew point and temperature logging already exist i
 | :--- | :--- | :--- |
 | **4× TDK PowerHap 0904H014V060 + 2× BOS1901** → demoted to DNP option (ADR-020) | Adhesive-mounted ceramic actuators crack, and four of them are four failure points. The base build uses the single TI DRV2605L + 8 mm LRA footprint that already existed as the DNP fallback. | **−$5.55**, −4 failure modes |
 | **Always-on thermal viscosity assist** | Heating the panel accelerates dye fade and the battery's calendar aging. Keep it as opt-in burst mode only. | −$0, −aging |
-| **Kaleido colour as the default SKU** | Three pigment fields + a colour filter that fades. Mono Carta 1200 is the 30-year display: fewer layers, no dye, 227 PPI. Colour becomes the optional variant. | −$30…50 |
 | **"2 TB NVMe as cold storage"** | It is a working drive, not an archive. Sell the vault microSD + printed/paper archive as the archival path; keep NVMe for LLM weights. | −$0, −false claim |
 | **IP67-with-TPU-bumpers claim** | Replace with "IP67 with the specified gasket; bumpers are impact only". | −$0, −over-claim |
 | **1.0 F supercapacitor zombie mode as a headline** | Supercaps age ~10 years and their ESR doubles. Keep as an accessory capability, not a pillar. | −$0, −claim |
 
-Net: **−$5.55 of BOM is certain** and four failure modes leave with it. The colour-SKU and NVMe lines are
-positioning changes, not cost savings; the SKU delta is only real once a mono panel price exists.
+Net: **−$5.55 of BOM is certain** and four failure modes leave with it. The NVMe line is a
+positioning change, not a cost saving.
 
 ---
 
@@ -178,5 +178,5 @@ RH/dew-point telemetry. What is missing is the **process layer** — corner bond
 gate, a mechanically retained cell, a gasket line item, a NAND scrub, and an archival build — plus one
 false comfort: a "cold storage" NVMe that is not an archive.
 
-Close the four hard gaps in §1, delete two BOM lines of piezo, make mono the default SKU, and this
+Close the four hard gaps in §1, delete two BOM lines of piezo, get a dye lifespan for the Kaleido 4 (ADR-032), and this
 moves from "specified" to "plausibly a 30-year object". Nothing on that list needs a new IC.

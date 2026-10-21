@@ -37,13 +37,13 @@ BANNED = [
     (r"\b35\s*Wh\b", "use the per-chemistry Wh figures (spec_values.battery_wh)"),
     (r"\b50-item\b", "INDEX is generated; do not state a row count"),
     (r"\b4-layer\b(?!.*ADR)", "carrier PCB is 6-layer"),
-    (r"7-Phase|7 Phase", "verification has 9 phases (spec_values.verification_phases)"),
+    (r"7-Phase|7 Phase", "phase count lives in spec_values.verification_phases"),
     (r"12\.55\s*mm", "stackup is now bounded by spec_values.chassis_cavity_depth_mm"),
     (r"etc/solardeck/owner_voice\.npy|owner_voice\.npy",
      "enrollment is RP2350-flash-resident (spec_values.voice.enrollment_resident, ADR-026); a Linux file was the pre-ADR-026 design"),
-    (r"227x165x9\\.8|227\\s*×\\s*165\\s*×\\s*9\\.8|227\\.0\\s*×\\s*165\\.0", "chassis is 232 x 170 x 14.0 (B4)"),
+    (r"227x165x9\.8|227\s*×\s*165\s*×\s*9\.8|227\.0\s*×\s*165\.0", "chassis is 232 x 170 x 14.0 (B4)"),
     (r"10,000 insertion cycles", "USB-C rating raised to >=20,000 cycles (longevity.usb_c_rated_cycles)"),
-    (r"\\$388\\.85|\\$413\\.85", "core BOM total is $383.30-$408.30 (ADR-020)"),
+    (r"\$388\.85|\$413\.85", "stale core BOM total; the derived total lives in spec_values.bom_total_low/high (Phase 14)"),
     (r"SnapDeck Keyboard", "keyboard descoped to Phase 2; external USB-C/BT only"),
     (r"ready for fabrication", "placeholder artifacts are not a design sign-off"),
     (r"Arch Linux as the base|NixOS as the base|Fedora Rawhide as the base",
@@ -68,9 +68,17 @@ def docs():
 
 def check_geometry(err):
     w, d, h = SPEC["chassis_mm"]
+    cw, cd, ch = SPEC["battery_cell_mm"]
+    if not (cw < w and cd < d):
+        err(f"geometry: battery cell {cw}x{cd}mm exceeds chassis {w}x{d}mm")
+    if not (h >= SPEC["chassis_cavity_depth_mm"] + 0.8):
+        err(f"geometry: chassis {h}mm leaves <0.8mm wall around a {SPEC['chassis_cavity_depth_mm']}mm cavity")
+    if SPEC["panel_module_outline_mm"] is None:
+        print("  UNVERIFIED: panel outline, active area, stack depth and reader geometry are null until "
+              "the Kaleido 4 datasheet (ADR-032); panel-fit and page-cache checks skipped.")
+        return
     pw, pd = SPEC["panel_module_outline_mm"]
     aw, ad = SPEC["display_active_mm"]
-    cw, cd, ch = SPEC["battery_cell_mm"]
     if not (w >= pw + 2.0):
         err(f"geometry: chassis {w}mm cannot hold panel module {pw}mm + 2 x 1mm wall")
     if not (d >= pd + 2.0):
@@ -81,10 +89,6 @@ def check_geometry(err):
     if stack > SPEC["chassis_cavity_depth_mm"]:
         err(f"geometry: display stack {SPEC['display_stack_mm']} + cell {ch} = {stack:.1f}mm "
             f"> cavity {SPEC['chassis_cavity_depth_mm']}mm")
-    if not (h >= SPEC["chassis_cavity_depth_mm"] + 0.8):
-        err(f"geometry: chassis {h}mm leaves <0.8mm wall around a {SPEC['chassis_cavity_depth_mm']}mm cavity")
-    if not (cw < w and cd < d):
-        err(f"geometry: battery cell {cw}x{cd}mm exceeds chassis {w}x{d}mm")
     # reader frame math (CO_PROCESSOR_SURVEY.md §5): 1-bit counts are derived from page geometry
     # and the PSRAM size — guard them so a geometry change cannot silently invalidate the cache model.
     r = SPEC["reader"]
@@ -101,6 +105,9 @@ def check_geometry(err):
 
 def check_numbers(path, text, err):
     for m in re.finditer(r"(\d{2,3})\s*PPI", text):
+        if SPEC["ppi"] is None:
+            err(f"{path}: '{m.group(0)}' -- panel PPI is null until the Kaleido 4 datasheet (ADR-032)")
+            continue
         win = (text[m.end():m.end() + 12] + text[max(0, m.start() - 20):m.start()]).lower()
         if "colo" in win:
             continue  # Kaleido sub-pixel colour figure, not the monochrome panel pitch

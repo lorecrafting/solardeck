@@ -2,6 +2,8 @@
 
 Written 2026-10-20 22:10 UTC in the Pi harness by openrouter/deepseek/deepseek-v4-flash-0731
 
+Revised 2026-10-21 16:01 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
+
 Purpose: classify every `BOM_COST_ESTIMATE.md` line as **snap-in (user-serviceable)** or
 **soldered (factory-welded)** so the SolarDeck quote (`HANDOFF_TO_FABLE.md`) is structured around a
 user-assemblable "Deck-Builder" top layer — and to make that modularity serve the project's
@@ -16,8 +18,8 @@ failing or degrading, and where power is going*. Companion to
 | Layer | Technology | What it carries |
 | :--- | :--- | :--- |
 | **Substrate (carrier PCB)** | Factory-soldered SMT: power rails, bus mux, charge tree, air-gap gates | The safety-critical, density-crazy, thin-slab part — cannot be Lego |
-| **Sockets/studs** | M.2, MFF2, SMA, standoff posts, FPC latches | The *user-assemblable* interface — Lego studs |
-| **Modules** | CM4, LTE, eSIM, antennas, panel, RP2350 dev brick | The expensive, swappable, diagnosable top layer |
+| **Sockets/studs** | M.2, SMA, standoff posts, FPC latches | The *user-assemblable* interface — Lego studs |
+| **Modules** | CM5, LTE, antennas, panel, RP2350 dev brick | The expensive, swappable, diagnosable top layer |
 
 Rule: if it is dense (<0.5 mm pin pitch), carries the always-on rail, or is a safety gate → welded.
 If it has a human-scale interface (screw, latch, twist-on) → snap.
@@ -30,11 +32,10 @@ If it has a human-scale interface (screw, latch, twist-on) → snap.
 
 | Part | Interface | Diagnosable? (see §4) |
 | :--- | :--- | :--- |
-| CM4 (8 GB) | 2× standoff screws + board-to-board connector | ✅ identity + current sense on its rail |
+| CM5 (CM5116064, ADR-031) | 2× standoff screws + DF40 board-to-board connectors | ✅ identity + current sense on its rail |
 | EG25-G LTE + MIMO antennas | M.2 Key-B slot + 2× SMA | ✅ AT diagnostics + GNSS fix telemetry |
-| ST4SIM eSIM | MFF2 socket | ✅ managed via `lpac` (AT+CCHO/CGLA) |
 | SX1262 LoRa + whip | Castellated pad *or* socket + SMA | ✅ RSSI/SNR telemetry |
-| Panel (K3/Carta) + EMR | FPC latch (40/50-pin) | 🟨 physical latch, delicate; health via refresh-ACK latency |
+| Kaleido 4 panel + EMR (ADR-032) | FPC latch (pin count TBD, ADR-032) | 🟨 physical latch, delicate; health via refresh-ACK latency |
 | Speaker / dual MEMS / piezo | Fly-wires + micro connectors | ✅ audio-loop self-test |
 | Battery pack | Screw-down terminals + strap | ✅ charge/discharge curve fit (see §4) |
 | Solar strip | Adhesive + JST | ✅ mA from strip telemetry |
@@ -54,7 +55,8 @@ If it has a human-scale interface (screw, latch, twist-on) → snap.
 | TPS22918 load-switch gates | **Safety + sleep-floor hard requirements** (air-gap cut, <25 mW floor, G6/G12) — a connector here is a failure point in the one rail that must never fail |
 | TMUX1575 bus mux pair | Display-bus isolation; a loose contact = glitch mid-refresh |
 | VL805 / ASM1042A / USB2514B hub | BGA-class package — not hand-solderable, not snap-pable |
-| ST4SIM is snap; but **battery terminals + cells** | The cells' welded tabs are a fire-safety joint — never a snap |
+| eSIM — consumer SGP.22 eUICC (part TBD, ADR-033) | Soldered MFF2 package (ADR-033); still managed via `lpac` (AT+CCHO/CGLA) |
+| **Battery terminals + cells** | The cells' welded tabs are a fire-safety joint — never a snap |
 | Camera (IMX708) | Flush optical alignment — factory |
 
 ---
@@ -64,10 +66,10 @@ If it has a human-scale interface (screw, latch, twist-on) → snap.
 When structuring the Seeed/JLCPCB request, ask for the carrier to be *born with these studs*:
 
 1. **M.2 Key-B slot** (LTE) + **SMA stub mounts ×3** (LTE main/div + LoRa) + **U.FL** (Wi-Fi/GNSS)
-2. **MFF2 eSIM socket** (click-in, `lpac`-manageable)
+2. **MFF2 eSIM land pattern** (soldered, not socketed — consumer SGP.22 eUICC, part TBD, ADR-033; `lpac`-manageable)
 3. **40-pin FPC latch** for the panel (already specced)
-4. **Standoff post inserts ×2** for CM4; **CG-adjacent posts** for the RP2350 PGA brick (PGA2350 is 64-pin 25.4 mm — a pinned socket for it is feasible if the quote allows a 2.54 mm-pitch castellation)
-5. **Per-rail current-sense nodes** — the *diagnosis* requirement, not just assembly: a µA-grade sense point (sense resistor + ADC feed to RP2350) on each TPS22918-gated load rail (LTE, Wi-Fi, audio) and on the CM4 rail. See §4.
+4. **Standoff post inserts ×2** for CM5; **CG-adjacent posts** for the RP2350 PGA brick (PGA2350 is 64-pin 25.4 mm — a pinned socket for it is feasible if the quote allows a 2.54 mm-pitch castellation)
+5. **Per-rail current-sense nodes** — the *diagnosis* requirement, not just assembly: a µA-grade sense point (sense resistor + ADC feed to RP2350) on each TPS22918-gated load rail (LTE, Wi-Fi, audio) and on the CM5 rail. See §4.
 6. **JTAG/UART breakout** (TP_SWD_CLK/TP_SWD_DIO/TP_UART_* already exist in `HARDWARE_SPEC.md:635` — keep them in the quote as the diagnosis ports)
 
 ---
@@ -87,7 +89,7 @@ power constrictions" you described. The modular top layer makes each reading *is
 | **E-ink panel wear** | Partial-refresh ACK latency creep + ghosting rate | "Refresh latency +38 ms over 90 days → panel pigment wear or waveform drift; re-run DC-balance calibration" |
 | **RF degradation** | SX1262 RSSI/SNR, EG25-G signal stats | "LoRa RSSI floor −15 dB vs mesh baseline → antenna SMA loose or cable fatigue; check the twist-on joint first" |
 | **Thermal / airflow** | On-board NTC per zone | "Charger zone runs 8 °C over profile → BQ heat-spread degradation, recommend service" |
-| **Register-level** | CM4 SMART, eMMC wear counters (already in telemetry) | "eMMC at 61% endurance → plan recapture within the 30-year budget (`longevity`) precedence" |
+| **Register-level** | CM5 SMART, eMMC wear counters (already in telemetry) | "eMMC at 61% endurance → plan recapture within the 30-year budget (`longevity`) precedence" |
 
 **Swap-test isolation** is the modular dividend: when the LLM names a suspect module, the
 remediation is *user-safe* — pop the M.2/SMA/PGA unit, bench-test it, replace. In a fully-welded
@@ -105,13 +107,13 @@ are quote-line items, not afterthoughts.
 Keep it boring — one small recurring pattern per module:
 
 ```
-Module ↔ RP2350/CM4      Module emits:
+Module ↔ RP2350/CM5      Module emits:
   UART/SPI health line   status register (ok/waning/fault) + one numeric
   rail sense (µA)        actual vs spec_values budget
   self-test hook         ("squawk now", returns ok/latency)
 ```
 
-- CM4: SMART + eMMC wear + rail sense
+- CM5: SMART + eMMC wear + rail sense
 - LTE: AT+CSQ, GNSS fix, rail sense
 - LoRa: RSSI/SNR, rail sense
 - Panel: per-refresh ACK latency (already needed for G1), ghosting counter
@@ -129,6 +131,6 @@ self-diagnosis loop requested.
 - The power/charge/safety spine stays factory-soldered (Section 2, Soldered) — never user-welded.
 - Bench order is unchanged: `DEV_KIT_BENCH.md` Tranche 1 first; module-instrumentation findings
   from the bench feed the §3 socket list *before* the PCB quote, so the quote already includes the
-  M.2/MFF2/SMA/pin-grid studs and the rail-sense nodes. Do not quote sockets before the bench.
+  M.2/SMA/pin-grid studs and the rail-sense nodes. Do not quote sockets before the bench.
 - `docs/verify_all.py` enforces doc↔`spec_values.json` consistency; new keys only after bench
   data earns them (`measured <date>` per `WORKFLOW.md`).

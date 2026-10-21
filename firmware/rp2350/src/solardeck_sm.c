@@ -10,7 +10,7 @@ void solardeck_sm_init(solardeck_ctx_t *ctx, bool chem_sel_pin) {
 
     ctx->current_state = SOLAR_STATE_COLD_BOOT;
     ctx->is_lifepo4 = !chem_sel_pin; // Low = LiFePO4 (safe default)
-    ctx->tmux_cm4_selected = false;
+    ctx->tmux_cm5_selected = false;
     ctx->sys_5v_enabled = false;
     ctx->wake_pin_asserted = false;
     ctx->pwrfail_pin_asserted = false;
@@ -24,33 +24,33 @@ void solardeck_sm_transition(solardeck_ctx_t *ctx, solardeck_state_t next_state)
     if (!ctx) return;
 
     switch (next_state) {
-        case SOLAR_STATE_CM4_ACTIVE:
+        case SOLAR_STATE_CM5_ACTIVE:
             ctx->sys_5v_enabled = true;
-            ctx->tmux_cm4_selected = true; // CM4 drives EPDC
-            ctx->current_state = SOLAR_STATE_CM4_ACTIVE;
+            ctx->tmux_cm5_selected = true; // CM5 drives EPDC
+            ctx->current_state = SOLAR_STATE_CM5_ACTIVE;
             break;
 
         case SOLAR_STATE_ZEN_READER:
-            ctx->sys_5v_enabled = false;   // CM4 unpowered
-            ctx->tmux_cm4_selected = false; // RP2350 drives EPDC from 8MB PSRAM
+            ctx->sys_5v_enabled = false;   // CM5 unpowered
+            ctx->tmux_cm5_selected = false; // RP2350 drives EPDC from 8MB PSRAM
             ctx->current_state = SOLAR_STATE_ZEN_READER;
             break;
 
         case SOLAR_STATE_S2IDLE_SLEEP:
-            // CM4 in low-power DRAM retention; 5V remains enabled or low-power quiescent
+            // CM5 in low-power DRAM retention; 5V remains enabled or low-power quiescent
             ctx->current_state = SOLAR_STATE_S2IDLE_SLEEP;
             break;
 
         case SOLAR_STATE_LOW_BATT_ALARM:
-            ctx->pwrfail_pin_asserted = true; // Signal CM4 emergency sync
-            ctx->tmux_cm4_selected = false;
+            ctx->pwrfail_pin_asserted = true; // Signal CM5 emergency sync
+            ctx->tmux_cm5_selected = false;
             ctx->current_state = SOLAR_STATE_LOW_BATT_ALARM;
             break;
 
         case SOLAR_STATE_COLD_BOOT:
         default:
             ctx->sys_5v_enabled = false;
-            ctx->tmux_cm4_selected = false;
+            ctx->tmux_cm5_selected = false;
             ctx->current_state = SOLAR_STATE_COLD_BOOT;
             break;
     }
@@ -76,11 +76,11 @@ bool solardeck_trigger_s2idle_wake(solardeck_ctx_t *ctx) {
     // Assert GPIO17 wake pulse
     ctx->wake_pin_asserted = true;
 
-    // Transition to CM4 active: enable 5V rail and switch TMUX to CM4
-    solardeck_sm_transition(ctx, SOLAR_STATE_CM4_ACTIVE);
+    // Transition to CM5 active: enable 5V rail and switch TMUX to CM5
+    solardeck_sm_transition(ctx, SOLAR_STATE_CM5_ACTIVE);
 
     // Simulate / record hardware wake time in microseconds (<300,000 us = <300ms spec)
-    ctx->last_wake_elapsed_us = 42000; // Typically 42ms for GPIO trigger to CM4 kernel resume
+    ctx->last_wake_elapsed_us = 42000; // Typically 42ms for GPIO trigger to CM5 kernel resume
     ctx->wake_pin_asserted = false;    // Pulse de-asserted
 
     return true;

@@ -25,8 +25,8 @@ SPEC = json.load(open(os.path.join(ROOT, "docs", "spec_values.json")))
 
 # (category, placements, FIT each, why)
 MODEL = [
-    ("CM4 module (SoC + DRAM + eMMC)", 1, 120, "1.8 GHz SoC at 55 degC junction"),
-    ("Display module (EPDC + panel + frontlight)", 1, 60, "IT8951 + LED string"),
+    ("CM5 module (SoC + DRAM + eMMC)", 1, 120, "2.4 GHz SoC at 55 degC junction"),
+    ("Display module (EPDC + panel + frontlight)", 1, 60, "Kaleido 4 + controller (TBD) + LED string"),
     ("NVMe SSD", 1, 50, "controller + NAND"),
     ("Cellular modem module (EG25-G)", 1, 45, "module-level"),
     ("LoRa module (SX1262)", 1, 25, "PA + TCXO"),

@@ -2,6 +2,8 @@
 
 Written 2026-10-19 08:45 UTC in the Pi harness by antigravity/gemini-3.8-flash
 
+Revised 2026-10-21 16:03 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
+
 ---
 
 ## 1. Overview & Objective
@@ -19,7 +21,7 @@ To prevent costly silicon destruction, "painted-into-a-corner" dead-ends, and mu
 │   • Simulates transient 2A LTE bursts, battery sag, and MPPT slew rates.    │
 │                                                                             │
 │ Stage 3: Virtual Firmware & Silicon Co-Simulation (Renode & QEMU)          │
-│   • Runs RP2350 bare-metal C in Renode; boots CM4 Linux 6.6 LTS in QEMU.    │
+│   • Runs RP2350 bare-metal C in Renode; boots CM5 Linux 6.6 LTS in QEMU.    │
 │                                                                             │
 │ Stage 4: 3D Mechanical Envelope & Collision Analysis (OpenSCAD / STEP)      │
 │   • Checks Z-stackup clearances, port alignment, and cable bend radii.      │
@@ -37,9 +39,9 @@ Before routing copper or ordering parts, the netlist is validated by `hardware/a
 
 | Trap # | Trap Name | Physics / Failure Mode | SolarDeck Hardware Safeguard | Automated Audit Rule |
 | :--- | :--- | :--- | :--- | :--- |
-| **01** | **Phantom Back-Powering** | Unpowered CM4 CPU receives 3.3V GPIO leakage via display bus, destroying internal ESD diodes. | **TI TMUX1575** SPDT switch with fail-safe $I_{\text{off}}$ circuit isolation. | Check display nets pass through TMUX isolation when CM4 is 0V. |
+| **01** | **Phantom Back-Powering** | Unpowered CM5 CPU receives 3.3V GPIO leakage via display bus, destroying internal ESD diodes. | **TI TMUX1575** SPDT switch with fail-safe $I_{\text{off}}$ circuit isolation. | Check display nets pass through TMUX isolation when CM5 is 0V. |
 | **02** | **Floating Open-Drain Bus** | I2C SDA/SCL lines float without pull-up resistors, causing bus hangs. | Dedicated 4.7 kΩ pull-ups to `VDD_3V3_AON`. | Verify pull-up resistance paths exist on all open-drain nets. |
-| **03** | **LTE Burst Brown-Out** | 4G modem draws 2.0A in 577µs bursts, sagging rail and resetting CPU. | Dedicated **TPS63020** buck-boost with 47µF low-ESR ceramic + 220µF tantalum buffer. | Verify modem 3.8V rail is isolated from CM4 core rail. |
+| **03** | **LTE Burst Brown-Out** | 4G modem draws 2.0A in 577µs bursts, sagging rail and resetting CPU. | Dedicated **TPS63020** buck-boost with 47µF low-ESR ceramic + 220µF tantalum buffer. | Verify modem 3.8V rail is isolated from CM5 core rail. |
 | **04** | **LiFePO4 Over-Voltage** | Applying standard 4.2V Li-ion charge voltage causes thermal runaway in 3.2V LiFePO4 cells. | Hardware **SW1 CHEM_SEL** pin tied to BQ25895 register lock (3.65V cap). | Verify CHEM_SEL net routes to RP2350 supervisor pin. |
 | **05** | **Power Rail Collision** | Accidentally tying 5.0V system rail to a 3.3V logic line. | Distinct power net naming (`VDD_5V_SYS`, `VDD_3V3_AON`, `VDD_3V8_MODEM`). | Assert 0 ohm shorts do not exist between separate voltage codes. |
 | **06** | **Floating Reset Pins** | Active-low RESET lines float and trigger random spurious resets. | Hardware 10 kΩ pull-ups to appropriate local rail. | Check all active-low `#RESET` pins have pull-ups or active drivers. |
@@ -76,7 +78,7 @@ Test firmware logic on desktop before flashing target silicon:
        │
        ├─── Renode Virtual Board (RP2350 Cortex-M33) ─────────────> Emulated I2C/SPI Bus & Inter-Brain UART
        │
-       └─── QEMU ARM64 (Linux 6.6 LTS CM4) ───────────────────────> Mainline Kernel, Sway, & inkd Daemon
+       └─── QEMU ARM64 (Linux 6.6 LTS CM5) ───────────────────────> Mainline Kernel, Sway, & inkd Daemon
 ```
 
 ### 4.1 Native Host Assert-Based Tests
@@ -93,7 +95,7 @@ gcc -Wall -Wextra -I src/daemons/eink-refreshd src/daemons/eink-refreshd/refresh
 SolarDeck uses Renode scripts (`.resc`) to model:
 * Dual-core Cortex-M33 RP2350 target.
 * Virtual BQ25895 I2C peripheral reporting battery millivolts.
-* Virtual IT8951 SPI peripheral receiving display packets.
+* Virtual IT8951 SPI peripheral receiving display packets (bench stand-in model, ADR-025; the Kaleido 4 controller is TBD, ADR-032).
 * GPIO wake triggers simulated via Renode monitor commands.
 
 ---
@@ -106,7 +108,7 @@ To ensure internal electronics mate with the unibody chassis without mechanical 
    * Export `solardeck_chassis.step` from OpenSCAD.
 2. **Clearance Rules:**
    * **Component-to-Chassis Roof Clearance:** $\ge 0.8\text{ mm}$ (except thermal interface pads).
-   * **Thermal Interface Contact:** CM4 SoC pedestal must compress thermal pad by exactly $0.3\text{ mm} \pm 0.1\text{ mm}$.
+   * **Thermal Interface Contact:** CM5 SoC pedestal must compress thermal pad by exactly $0.3\text{ mm} \pm 0.1\text{ mm}$.
    * **Display FPC Bend Radius:** $\ge 1.5\text{ mm}$ minimum curvature radius to prevent conductor fatigue.
    * **Battery Pouch Swell Allowance:** $\ge 0.8\text{ mm}$ Z-clearance above LiFePO4 pouch cell to accommodate normal 3,000-cycle pouch swelling.
 3. **Automated Verification:**

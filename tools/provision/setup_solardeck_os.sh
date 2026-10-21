@@ -4,8 +4,8 @@
 # Written 2026-10-19 UTC in the Pi harness by antigravity/gemini-3.8-flash
 #
 # Automatically provisions a clean Raspberry Pi OS Lite (64-bit) image:
-#   1. Compiles and installs solardeck-cm4.dtbo to /boot/firmware/overlays/
-#   2. Enables dtoverlay=solardeck-cm4 in /boot/firmware/config.txt
+#   1. Compiles and installs solardeck-cm5.dtbo to /boot/firmware/overlays/
+#   2. Enables dtoverlay=solardeck-cm5 in /boot/firmware/config.txt
 #   3. Builds and installs eink-refreshd cadence daemon
 #   4. Builds and installs solardeck-telemetryd bridge daemon
 #   5. Configures systemd background services
@@ -35,7 +35,7 @@ if [[ "${1:-}" == "--test" || "${1:-}" == "--dry-run" ]]; then
     echo -e "${BLUE}=== SolarDeck Provisioning Script Self-Test ===${NC}"
     
     # Check source files exist
-    test -f "${REPO_ROOT}/src/dts/solardeck-cm4.dts" || { echo "Missing DTS file"; exit 1; }
+    test -f "${REPO_ROOT}/src/dts/solardeck-cm5.dts" || { echo "Missing DTS file"; exit 1; }
     test -f "${REPO_ROOT}/src/daemons/eink-refreshd/refreshd.c" || { echo "Missing refreshd.c"; exit 1; }
     test -f "${REPO_ROOT}/src/daemons/solardeck-telemetryd/telemetryd.c" || { echo "Missing telemetryd.c"; exit 1; }
     test -f "${REPO_ROOT}/config/sway/config" || { echo "Missing sway config"; exit 1; }
@@ -64,33 +64,33 @@ echo -e "${BLUE}  SolarDeck V1 OS Provisioning Engine (Target User: ${TARGET_USE
 echo -e "${BLUE}========================================================================${NC}"
 
 # 1. Device Tree Overlay Compilation
-log_info "Step 1: Compiling Device Tree Overlay (solardeck-cm4.dts)..."
+log_info "Step 1: Compiling Device Tree Overlay (solardeck-cm5.dts)..."
 BOOT_DIR="/boot/firmware"
 if [[ ! -d "${BOOT_DIR}" ]]; then
     BOOT_DIR="/boot"
 fi
 
 if command -v dtc >/dev/null 2>&1; then
-    dtc -@ -I dts -O dtb -o "${BOOT_DIR}/overlays/solardeck-cm4.dtbo" "${REPO_ROOT}/src/dts/solardeck-cm4.dts"
-    log_ok "Installed solardeck-cm4.dtbo to ${BOOT_DIR}/overlays/"
+    dtc -@ -I dts -O dtb -o "${BOOT_DIR}/overlays/solardeck-cm5.dtbo" "${REPO_ROOT}/src/dts/solardeck-cm5.dts"
+    log_ok "Installed solardeck-cm5.dtbo to ${BOOT_DIR}/overlays/"
 else
     log_warn "dtc not found; installing device-tree-compiler..."
     apt-get update -y && apt-get install -y device-tree-compiler
-    dtc -@ -I dts -O dtb -o "${BOOT_DIR}/overlays/solardeck-cm4.dtbo" "${REPO_ROOT}/src/dts/solardeck-cm4.dts"
-    log_ok "Installed solardeck-cm4.dtbo"
+    dtc -@ -I dts -O dtb -o "${BOOT_DIR}/overlays/solardeck-cm5.dtbo" "${REPO_ROOT}/src/dts/solardeck-cm5.dts"
+    log_ok "Installed solardeck-cm5.dtbo"
 fi
 
 CONFIG_TXT="${BOOT_DIR}/config.txt"
-if ! grep -q "dtoverlay=solardeck-cm4" "${CONFIG_TXT}"; then
+if ! grep -q "dtoverlay=solardeck-cm5" "${CONFIG_TXT}"; then
     echo "" >> "${CONFIG_TXT}"
     echo "# SolarDeck Hardware Carrier Board Overlay" >> "${CONFIG_TXT}"
-    echo "dtoverlay=solardeck-cm4" >> "${CONFIG_TXT}"
+    echo "dtoverlay=solardeck-cm5" >> "${CONFIG_TXT}"
     echo "dtparam=i2c_arm=on" >> "${CONFIG_TXT}"
     echo "dtparam=spi=on" >> "${CONFIG_TXT}"
     echo "dtparam=i2s=on" >> "${CONFIG_TXT}"
-    log_ok "Added dtoverlay=solardeck-cm4 to ${CONFIG_TXT}"
+    log_ok "Added dtoverlay=solardeck-cm5 to ${CONFIG_TXT}"
 else
-    log_ok "dtoverlay=solardeck-cm4 already present in ${CONFIG_TXT}"
+    log_ok "dtoverlay=solardeck-cm5 already present in ${CONFIG_TXT}"
 fi
 
 # 2. Build and Install Daemons
@@ -184,5 +184,5 @@ fi
 
 echo -e "\n${GREEN}========================================================================${NC}"
 echo -e "${GREEN}  🎉 SolarDeck OS Provisioning Complete!                                ${NC}"
-echo -e "${GREEN}  Reboot the system to initialize the solardeck-cm4 overlay.           ${NC}"
+echo -e "${GREEN}  Reboot the system to initialize the solardeck-cm5 overlay.           ${NC}"
 echo -e "${GREEN}========================================================================${NC}"

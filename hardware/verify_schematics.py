@@ -74,7 +74,7 @@ def verify_kicad_project():
         "VDD_3V8_MODEM",
         "GPIO17_WAKE",
         "GPIO16_PWRFAIL",
-        "TMUX_SEL_CM4_NRP",
+        "TMUX_SEL_CM5_NRP",
         "EPDC_SPI_MOSI",
         "EPDC_SPI_SCK",
         "PCIE_TX_P",

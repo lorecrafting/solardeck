@@ -1,10 +1,16 @@
 // SPDX-License-Identifier: GPL-2.0-or-later OR MIT
 /*
- * Device Tree Overlay for SolarDeck Carrier Board on Raspberry Pi CM4
+ * Device Tree Overlay for SolarDeck Carrier Board on Raspberry Pi CM5
  * Written 2026-10-19 UTC in the Pi harness by antigravity/gemini-3.8-flash
+ * Revised 2026-10-21 UTC in Claude Code by anthropic/claude-opus-5-5 (ADR-031, ADR-032)
+ *
+ * NOT YET VALID FOR CM5. This overlay was written for the CM4 (BCM2711). On the CM5, GPIO, SPI, I2C
+ * and I2S are provided by the RP1 I/O controller, so the brcm,pins pinctrl below and the target
+ * labels must be ported to the CM5/RP1 base tree before it is compiled. Known defects to fix in the
+ * same pass: AUDIT 6 H11 (audio clock master, SD_MODE on PCM_CLK, charger node binding).
+ * The display controller node is deliberately absent: the Kaleido 4 controller is TBD (ADR-032).
  *
  * Configures:
- *  - ITE IT8951 E-Ink EPDC on SPI0 (32 MHz, HRDY, RESET)
  *  - TI BQ25895 5A LiFePO4 PMIC on I2C1 (0x6A)
  *  - TI INA3221 3-Channel System Power Ammeter on I2C1 (0x40)
  *  - Wacom EMR Digitizer on I2C1 (0x09)
@@ -17,7 +23,7 @@
 /plugin/;
 
 / {
-    compatible = "brcm,bcm2711", "raspberrypi,4-compute-module";
+    compatible = "brcm,bcm2712";
 
     /* Fragment 0: GPIO Pin Assignments */
     fragment@0 {
@@ -25,30 +31,13 @@
         __overlay__ {
             solardeck_gpios: solardeck_gpio_pins {
                 brcm,pins = <17 22 23 24 27>;
-                brcm,function = <0 0 1 1 0>; /* 17:in (wake), 22:in (airgap), 23:out (pwr), 24:out (rf), 27:in (it8951 hrdy) */
+                brcm,function = <0 0 1 1 0>; /* 17:in (wake), 22:in (airgap), 23:out (pwr), 24:out (rf), 27:in (display ready, TBD) */
                 brcm,pull = <2 2 0 0 2>;     /* Pull-ups on inputs */
             };
         };
     };
 
-    /* Fragment 1: ITE IT8951 EPDC Display Controller on SPI0 */
-    fragment@1 {
-        target = <&spi0>;
-        __overlay__ {
-            status = "okay";
-            #address-cells = <1>;
-            #size-cells = <0>;
-
-            it8951: it8951@0 {
-                compatible = "ite,it8951";
-                reg = <0>;
-                spi-max-frequency = <32000000>;
-                reset-gpios = <&gpio 25 1>;    /* GPIO 25: Active-low reset */
-                hrdy-gpios = <&gpio 27 0>;     /* GPIO 27: Active-high ready */
-                status = "okay";
-            };
-        };
-    };
+    /* Fragment 1: display controller on SPI0 -- TBD with the Kaleido 4 datasheet (ADR-032). */
 
     /* Fragment 2: I2C1 Peripherals (PMIC, Fuel Gauge, Ammeter, Digitizer) */
     fragment@2 {

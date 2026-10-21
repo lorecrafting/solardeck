@@ -6,7 +6,7 @@ Written 2026-10-20 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-fl
 All dimensions come from docs/spec_values.json. Nothing here restates a number, so the CAD and the
 spec cannot drift apart; scripts/check_docs_numbers.py checks the prose against the same file.
 The old version asserted hardcoded literals, which is why it could not see the 14.0 vs 9.8 mm and
-panel-vs-chassis conflicts (see docs/AUDIT_2026-10-20.md B4).
+panel-vs-chassis conflicts (see docs/AUDIT_2026-10-20.md B4; the panel itself is null until the Kaleido 4 datasheet, ADR-032).
 """
 
 import json
@@ -36,23 +36,26 @@ def verify_enclosure():
     assert const(content, "CHASSIS_DEPTH") == h, f"SCAD depth != spec {h}mm"
     print(f"  - Outer envelope matches spec: {w} x {d} x {h} mm")
 
-    pw, pd = SPEC["panel_module_outline_mm"]
-    aw, ad = SPEC["display_active_mm"]
-    assert w >= pw + 2.0, f"chassis {w}mm cannot hold panel module {pw}mm + 2mm wall"
-    assert d >= pd + 2.0, f"chassis {d}mm cannot hold panel module {pd}mm + 2mm wall"
-    assert const(content, "DISPLAY_ACTIVE_W") >= aw, "aperture narrower than the active area"
-    assert const(content, "DISPLAY_ACTIVE_H") >= ad, "aperture shorter than the active area"
-    print(f"  - Panel module {pw} x {pd}mm fits with >=1mm wall; aperture clears {aw} x {ad}mm active area")
-
     cw, cd, ch = SPEC["battery_cell_mm"]
-    stack = SPEC["display_stack_mm"] + SPEC["pcb_thickness_mm"] + ch
-    assert stack <= SPEC["chassis_cavity_depth_mm"], \
-        f"battery branch {stack:.2f}mm exceeds cavity {SPEC['chassis_cavity_depth_mm']}mm"
+    if SPEC["panel_module_outline_mm"] is None:
+        print("  - UNVERIFIED: Kaleido 4 outline, active area and stack depth are null (ADR-032); "
+              "panel fit, aperture and battery-branch depth not checked")
+    else:
+        pw, pd = SPEC["panel_module_outline_mm"]
+        aw, ad = SPEC["display_active_mm"]
+        assert w >= pw + 2.0, f"chassis {w}mm cannot hold panel module {pw}mm + 2mm wall"
+        assert d >= pd + 2.0, f"chassis {d}mm cannot hold panel module {pd}mm + 2mm wall"
+        assert const(content, "DISPLAY_ACTIVE_W") >= aw, "aperture narrower than the active area"
+        assert const(content, "DISPLAY_ACTIVE_H") >= ad, "aperture shorter than the active area"
+        print(f"  - Panel module {pw} x {pd}mm fits with >=1mm wall; aperture clears {aw} x {ad}mm active area")
+        stack = SPEC["display_stack_mm"] + SPEC["pcb_thickness_mm"] + ch
+        assert stack <= SPEC["chassis_cavity_depth_mm"], \
+            f"battery branch {stack:.2f}mm exceeds cavity {SPEC['chassis_cavity_depth_mm']}mm"
+        print(f"  - Battery branch {stack:.2f}mm fits the {SPEC['chassis_cavity_depth_mm']}mm cavity")
     assert h >= SPEC["chassis_cavity_depth_mm"] + SPEC["rear_wall_mm"], \
         f"chassis {h}mm leaves no rear wall behind a {SPEC['chassis_cavity_depth_mm']}mm cavity"
     assert cw < w and cd < d, f"cell {cw}x{cd}mm exceeds chassis {w}x{d}mm"
-    print(f"  - Battery branch {stack:.2f}mm fits the {SPEC['chassis_cavity_depth_mm']}mm cavity; "
-          f"cell {cw} x {cd} x {ch}mm inside {w} x {d}mm")
+    print(f"  - Cell {cw} x {cd} x {ch}mm inside {w} x {d}mm")
 
     assert "m2_service_hatch_with_vault" in content, "service hatch module missing"
     assert re.search(r'MICROSD_W\s*=\s*15\.0;', content), "MicroSD width must be 15.0mm"

@@ -2,6 +2,8 @@
 
 *Written 2026-10-19 16:45 UTC in the Pi harness by antigravity/gemini-3.8-flash*
 
+Revised 2026-10-21 16:01 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
+
 This step-by-step technical punch list guides the hardware engineer or field operator from unboxing the DHL Express package from Seeed Studio Fusion in Honolulu to running an authorized terminal session in pure sunlight.
 
 ---
@@ -17,7 +19,7 @@ This step-by-step technical punch list guides the hardware engineer or field ope
 ### Visual Inspection Steps
 1. **Packaging Verification:** Inspect the anti-static shielded bubble bag for transit punctures or crushed corners. Confirm Seeed QC pass sticker.
 2. **Hirose 100-Pin Sockets (`J1`, `J2`):** Inspect the dual 0.4mm pitch DF40 connectors under 10x magnification. Ensure zero bent pins, solder bridges, or flux residue.
-3. **EPDC FPC Connector (`J_EPDC`):** Verify the 40-pin 0.5mm pitch flip-lock actuator is undamaged and moves freely.
+3. **EPDC FPC Connector (`J_EPDC`):** Verify the flip-lock actuator (pin count and pitch TBD with the Kaleido 4 panel, ADR-032) is undamaged and moves freely.
 4. **Solder Joint Inspection:** Inspect the QFN-80 package of the RP2350B, the TI BQ25895 buck charger, and the TI TMUX1575 bus switch for solder bridging or tombstoned 0402 passives.
 5. **Cold-Storage Vault & SIM:** Verify the gasketed hatch fits flush and the 3x friction-fit MicroSD slots retain cards securely.
 
@@ -25,7 +27,7 @@ This step-by-step technical punch list guides the hardware engineer or field ope
 
 ## 2. Cold Resistance Sanity Checks (Zero Power Applied)
 
-**Rule:** NEVER connect a battery or USB-C power cable until every major power rail passes the cold resistance check. Solder whiskers across low-impedance rails can instantly destroy the CM4 or RP2350.
+**Rule:** NEVER connect a battery or USB-C power cable until every major power rail passes the cold resistance check. Solder whiskers across low-impedance rails can instantly destroy the CM5 or RP2350.
 
 Connect the DMM negative lead to a chassis ground pad (`TP_GND`) and measure resistance in Ohms ($\Omega$):
 
@@ -39,7 +41,7 @@ Connect the DMM negative lead to a chassis ground pad (`TP_GND`) and measure res
 │ `TP_SYS_3V3`    │ Main 3.3V    │ > 5 kΩ           │ 12 kΩ – 25 kΩ           │
 │ `TP_ALWAYS_3V3` │ AON 3.3V     │ > 20 kΩ          │ 40 kΩ – 80 kΩ           │
 │ `TP_VBUS_5V`    │ USB-C 5V     │ > 50 kΩ          │ > 200 kΩ                │
-│ `TP_VCORE_1V1`  │ CM4 Core     │ > 400 Ω          │ 600 Ω – 1.2 kΩ          │
+│ `TP_VCORE_1V1`  │ CM5 Core     │ > 400 Ω          │ 600 Ω – 1.2 kΩ          │
 │ `TP_SOLAR_IN`   │ Solar Anode  │ > 100 kΩ         │ > 500 kΩ (Reverse diode)│
 └─────────────────┴──────────────┴──────────────────┴─────────────────────────┘
 ```
@@ -50,7 +52,7 @@ Connect the DMM negative lead to a chassis ground pad (`TP_GND`) and measure res
 
 ## 3. Co-Processor Bring-Up & Firmware Flashing
 
-Before inserting the CM4, initialize the RP2350B co-processor to confirm power sequencing:
+Before inserting the CM5, initialize the RP2350B co-processor to confirm power sequencing:
 
 1. **Bench Power Configuration:** Set an adjustable bench power supply to **3.30V with current limit clamped to 50 mA**. Connect to battery terminal `J_BAT`.
 2. **Current Draw Verification:**
@@ -80,21 +82,20 @@ Before inserting the CM4, initialize the RP2350B co-processor to confirm power s
 
 ## 4. Compute Module & E-Ink Display Integration
 
-1. **Mount Compute Module 4:**
+1. **Mount Compute Module 5 (CM5116064, ADR-031):**
    * Disconnect all power.
-   * Align the Raspberry Pi CM4 over Hirose sockets `J1` and `J2`.
+   * Align the Raspberry Pi CM5 over Hirose DF40 sockets `J1` and `J2`.
    * Press down evenly on both ends until both connectors click firmly into place.
-   * Install the anodized aluminum CM4 retention bracket with 4x M2.0 screws.
+   * Install the anodized aluminum CM5 retention bracket with 4x M2.0 screws.
 2. **Connect E-Ink Panel & Wacom Digitizer:**
-   * Insert the 40-pin FPC ribbon cable from the 10.3" Kaleido panel into `J_EPDC`. Lock the flip actuator.
+   * Insert the FPC ribbon cable from the 10.3" Kaleido 4 panel into `J_EPDC`. Lock the flip actuator.
    * Connect the 8-pin Wacom EMR digitizer ribbon into `J_WACOM`.
-3. **Insert MicroSD / NVMe Storage:**
-   * Flash Raspberry Pi OS Lite (64-bit) to a high-end SanDisk Extreme Pro MicroSD card.
+3. **Flash the CM5 eMMC:**
+   * Flash Raspberry Pi OS Lite (64-bit) to the CM5's on-module eMMC over USB with `rpiboot`/usbboot (TBD — verify CM5 procedure).
    * Run the provisioning engine:
      ```bash
      sudo ./tools/provision/setup_solardeck_os.sh
      ```
-   * Slide the MicroSD card into the primary friction-fit slot in the M.2 hatch.
 
 ---
 
@@ -105,7 +106,7 @@ Before inserting the CM4, initialize the RP2350B co-processor to confirm power s
    * Connect a USB-PD 20W charger to USB-C Port 1. Confirm the TI BQ25895 amber charge LED illuminates.
 2. **Cold Boot Execution:**
    * Press the physical Power button on the top edge for 1.5 seconds.
-   * The RP2350 co-processor will assert `CM4_GLOBAL_EN` and cycle the IT8951 reset net.
+   * The RP2350 co-processor will enable the CM5 (enable net TBD — verify on CM5) and cycle the reset net of the Kaleido 4 display controller (TBD, ADR-032).
    * The 10.3" E-Ink panel will execute an initial global white clearing flash.
    * **In <400 milliseconds**, the Linux console login will appear on the high-contrast paper screen.
 3. **Execute Automated Built-In Self-Test (BIST):**
@@ -116,7 +117,7 @@ Before inserting the CM4, initialize the RP2350B co-processor to confirm power s
    * **Acceptance Gate:** All 8 domains must report `"status": "PASS"`:
      - `power`: Battery voltage, cell impedance, solar harvesting ADC.
      - `coprocessor`: Firmware version, PSRAM integrity, RTC sync.
-     - `display`: IT8951 communication, temperature LUT matching.
+     - `display`: Kaleido 4 display controller (TBD, ADR-032) communication, temperature LUT matching.
      - `i2c_bus`: All 7 core sensors responding (`0x60`, `0x44`, `0x12`, `0x68`, `0x5D`, `0x40`, `0x6B`).
      - `environmental`: SHT40 internal humidity $<30\%$ (desiccant active).
      - `audio`: Dual Knowles MEMS mics and MAX98357A speaker functional.
@@ -127,8 +128,10 @@ Before inserting the CM4, initialize the RP2350B co-processor to confirm power s
 
 ### 5b. S2idle Gate (the 15 mW / 0.3 s pillar rests on this)
 
-The 300-day desk clock and the 0.3 s instant wake both assume the CM4 can actually enter `s2idle`.
-On BCM2711 this is board-firmware and kernel-version dependent, and nothing in CI measures it.
+The 300-day desk clock and the 0.3 s instant wake both assume the CM5 can actually enter `s2idle`.
+The CM5 (BCM2712) has no RAM-retaining low-power state (ADR-031, AUDIT 6 X4); whether `s2idle`
+reaches the gate below is board-firmware and kernel-version dependent (TBD — verify on CM5), and
+nothing in CI measures it.
 Run this gate before accepting the power claims:
 
 ```bash

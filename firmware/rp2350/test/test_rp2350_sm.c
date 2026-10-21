@@ -17,19 +17,19 @@ int main(void) {
     assert(ctx.current_state == SOLAR_STATE_COLD_BOOT);
     assert(ctx.is_lifepo4 == true);
     assert(ctx.sys_5v_enabled == false);
-    assert(ctx.tmux_cm4_selected == false);
+    assert(ctx.tmux_cm5_selected == false);
 
-    // 2. Transition to CM4 Active Mode
-    solardeck_sm_transition(&ctx, SOLAR_STATE_CM4_ACTIVE);
-    assert(ctx.current_state == SOLAR_STATE_CM4_ACTIVE);
+    // 2. Transition to CM5 Active Mode
+    solardeck_sm_transition(&ctx, SOLAR_STATE_CM5_ACTIVE);
+    assert(ctx.current_state == SOLAR_STATE_CM5_ACTIVE);
     assert(ctx.sys_5v_enabled == true);
-    assert(ctx.tmux_cm4_selected == true);
+    assert(ctx.tmux_cm5_selected == true);
 
-    // 3. Transition to Zen Reader Mode (4.5mW reading, CM4 off)
+    // 3. Transition to Zen Reader Mode (4.5mW reading, CM5 off)
     solardeck_sm_transition(&ctx, SOLAR_STATE_ZEN_READER);
     assert(ctx.current_state == SOLAR_STATE_ZEN_READER);
     assert(ctx.sys_5v_enabled == false);
-    assert(ctx.tmux_cm4_selected == false);
+    assert(ctx.tmux_cm5_selected == false);
 
     // 4. Test S2idle Wake Trigger (<300ms spec)
     // Put into S2idle
@@ -38,9 +38,9 @@ int main(void) {
 
     bool woke = solardeck_trigger_s2idle_wake(&ctx);
     assert(woke == true);
-    assert(ctx.current_state == SOLAR_STATE_CM4_ACTIVE);
+    assert(ctx.current_state == SOLAR_STATE_CM5_ACTIVE);
     assert(ctx.sys_5v_enabled == true);
-    assert(ctx.tmux_cm4_selected == true);
+    assert(ctx.tmux_cm5_selected == true);
     assert(ctx.last_wake_elapsed_us < 300000); // Must be strictly < 300ms (300,000 us)
     printf("  ✓ S2idle wake trigger verified (elapsed: %u us < 300,000 us)\n", ctx.last_wake_elapsed_us);
 
@@ -58,7 +58,7 @@ int main(void) {
     assert(alarm == true);
     assert(ctx.current_state == SOLAR_STATE_LOW_BATT_ALARM);
     assert(ctx.pwrfail_pin_asserted == true);
-    assert(ctx.tmux_cm4_selected == false);
+    assert(ctx.tmux_cm5_selected == false);
     printf("  ✓ LiFePO4 safety cutoff & powerfail alarm verified (<150ms response)\n");
 
     printf("✓ All RP2350 State Machine self-tests passed successfully!\n");

@@ -2,14 +2,16 @@
 
 *Written 2026-10-19 17:00 UTC in the Pi harness by antigravity/gemini-3.8-flash*
 
+Revised 2026-10-21 16:03 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
+
 This quick-reference guide enables instant, 3-minute submission of SolarDeck V1 to PCBWay for a parallel turnkey PCBA and Box-Build quotation.
 
 ---
 
 ## 1. Why Getting a Parallel PCBWay Quote is Recommended
 
-1. **Competitive Pricing Leverage:** Benchmarking PCBWay against Seeed Studio Fusion eliminates supplier markups on high-value components (e.g. 10.3" E-Ink kit, CM4, Quectel LTE modem).
-2. **Component Sourcing Reach:** PCBWay has deep supply-chain integration with Huaqiangbei spot markets and LCSC, often securing specialized parts (like the 10.3" Kaleido panel or ST4SIM eSIM) with zero minimum order quantities.
+1. **Competitive Pricing Leverage:** Benchmarking PCBWay against Seeed Studio Fusion eliminates supplier markups on high-value components (e.g. 10.3" E-Ink kit, CM5, Quectel LTE modem).
+2. **Component Sourcing Reach:** PCBWay has deep supply-chain integration with Huaqiangbei spot markets and LCSC, often securing specialized parts (like the 10.3" Kaleido 4 panel once released, or the consumer SGP.22 eUICC eSIM — part TBD, ADR-033) with zero minimum order quantities.
 3. **Chassis Machining Strengths:** While Seeed excels at SLS PA12 3D printing, PCBWay is an industry leader in rapid **CNC 6061-T6 Aluminum Milling with Type III Hard Anodizing** for rugged unibody prototypes.
 
 ---
@@ -53,8 +55,8 @@ In the order comments / RFQ special instructions box, paste the following note:
 Please quote full turnkey box-build sourcing and assembly for SolarDeck V1:
 1. SMT Assembly of carrier board from uploaded Gerbers, BOM, and CPL.
 2. Sourcing of 5 modular items:
-   - Compute: Raspberry Pi CM4 (Model CM4104000: 4GB RAM, WiFi, Lite)
-   - Display: 10.3" Color E-Ink Kaleido 4/3 Kit with Wacom EMR (Model ED103TC4-WACOM or DKE/Good Display equivalent + IT8951 controller)
+   - Compute: Raspberry Pi CM5 (Model CM5116064: 16GB RAM, 64GB eMMC, Wi-Fi/BT — ADR-031)
+   - Display: 10.3" Color E-Ink Kaleido 4 panel with Wacom EMR (E Ink part number TBD on release) + Kaleido 4 display controller (TBD, ADR-032)
    - Modem: Quectel EG25-G M.2 Key-B LTE Cat-4
    - Battery: 3.2V 8,000–10,000 mAh LiFePO4 pouch cell with 10k NTC thermistor (JST-PH 2.0)
    - Enclosure: CNC 6061-T6 Aluminum (or SLS PA12 Black) from attached solardeck_chassis.stl

@@ -2,6 +2,8 @@
 
 Written 2026-10-20 13:55 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017
 
+Revised 2026-10-21 16:03 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
+
 Four internal audit rounds are done. Further internal reading has near-zero yield; the open questions
 are judgement calls that need an outside opinion. This is the brief for that review.
 
@@ -30,9 +32,10 @@ an expensive reviewer can do.
 ## The five questions, in priority order
 
 ### Q1 — Is the 30-year claim defensible, or is this a 10-year device?
-Facts: Raspberry Pi commits to CM4 production until ~January 2034. The design claims 30 years (to 2056).
-Mitigation adopted: socketed module, published pinout contract, CM5 escape footprint, three spare
-modules (~$180).
+Facts: the compute is the CM5 (ADR-031); Raspberry Pi has not published its end-of-production year
+(`supply_chain.cm5_production_commitment_year` is `null`). The design claims 30 years (to 2056).
+Mitigation adopted: socketed DF40 module, published pinout contract, three spare modules (cost at
+`spec_values.cm5.price_usd` each).
 **Attack:** is that mitigation credible, or is the honest product a 10-year device with a 30-year
 maintenance story? What would you need to see to believe the longer claim? Is a socketed module with a
 successor-module escape hatch ever actually exercised by real products, or does it always die at the
@@ -47,7 +50,7 @@ catalogue was written by someone who likes features.
 ### Q3 — What is the shortest path to three measured numbers?
 The pillars (`<400 ms` glass-to-glass, typewriter latency, S2idle `<25 mW`) have no measurements and no
 test points. **Attack:** design the cheapest dev-kit experiment that produces those three numbers
-without a full carrier spin. Which can be measured on the display eval board alone? Which need the CM4
+without a full carrier spin. Which can be measured on the display eval board alone? Which need the CM5
 and the panel in the same rig? Is a two-board lash-up acceptable for a pillar claim?
 
 ### Q4 — Battery, UN38.3, and shipping

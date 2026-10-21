@@ -2,11 +2,13 @@
 
 Written 2026-10-20 05:10 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017
 
+Revised 2026-10-21 16:03 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
+
 **Read `docs/WORKFLOW.md` before your first change.** It is the operating procedure: claim tags,
 change classes, the intent→ledger lifecycle, the 13 non-negotiables from the audit, and the
 definition of done. This file is the map and the hard rules; that file is the method.
 
-Start here, in order: `docs/README.md` → `docs/AUDIT_2026-10-20.md` → the spec you touch →
+Start here, in order: `docs/README.md` → `docs/AUDIT_6_2026-10-21.md` (latest; earlier audits are historical) → the spec you touch →
 `docs/WORKFLOW.md`.
 
 ---
@@ -18,13 +20,13 @@ running mainline bare-metal Linux. Open hardware; CERN-OHL-S-2.0 + MIT, see `LIC
 
 | Subsystem | Design | Spec |
 | :--- | :--- | :--- |
-| **Dual-brain compute** | Raspberry Pi CM4 (quad A72, 4/8 GB, 32 GB eMMC) running Linux; RP2350B co-processor at 10 µA sleep / 4.5 mW reader mode handling RTC, ADC solar sampling, PSRAM frame cache and S2idle wake. Bus isolation via a pair of TI TMUX1575 4-channel switches (two devices = 8 channels). | `docs/MVP_ARCHITECTURE.md` |
-| **Display** | 10.3" Kaleido 3 / Kaleido 4 (colour) or Carta 1200 (mono), 1872×1404, driven by an IT8951 EPDC. Frame rates are per-rectangle, not per-screen; colour motion is unsupported. All figures: `spec_values.refresh_modes`. On-top Wacom EMR variants require the pen/refresh arbiter. | `docs/HARDWARE_SPEC.md` §2.2, `docs/SOFTWARE_SPEC.md` §51–52 |
+| **Dual-brain compute** | Raspberry Pi CM5, CM5116064 only (BCM2712 quad Cortex-A76, 16 GB RAM, 64 GB eMMC, on-module Wi-Fi/BT; ADR-031) running Linux; RP2350B co-processor at 10 µA sleep / 4.5 mW reader mode handling RTC, ADC solar sampling, PSRAM frame cache and S2idle wake. Bus isolation via a pair of TI TMUX1575 4-channel switches (two devices = 8 channels). | `docs/MVP_ARCHITECTURE.md` |
+| **Display** | 10.3" E Ink Kaleido 4 (colour), the only panel (ADR-032). Resolution, PPI, outline and display controller are TBD until E Ink's datasheet (`spec_values.panel_sku`). The IT8951 cannot drive Kaleido 4; IT8951 + Kaleido 3/Carta is only the bench stand-in for the refresh software (ADR-025). Frame rates are per-rectangle, not per-screen; colour motion is unsupported. All figures: `spec_values.refresh_modes`. On-top Wacom EMR variants require the pen/refresh arbiter. | `docs/HARDWARE_SPEC.md` §2.2, `docs/SOFTWARE_SPEC.md` §51–52 |
 | **Power** | LiFePO4 26–32 Wh, BQ25895 charger + USB-PD sink, 0.15 W solar bezel strip (larger harvest is an accessory), TPS62840 always-on rail, TPS22918 peripheral load switches | `docs/HARDWARE_SPEC.md` §3 |
 | **Comms** | M.2 Key-B LTE (EG25-G), SX1262 LoRa on the RP2350, USB-C only (the pogo bus is descoped) | `docs/HARDWARE_SPEC.md` §2.5 |
 | **Ergonomics** | External USB-C/BT keyboard only — no keyboard firmware in this repo (ADR-001). Rear M2.5 inserts + MagSafe anchor array for grips, tripods, easel arms. | `docs/MECHANICAL_FIT_AND_ENCLOSURE_WORKFLOW.md` |
 
-Fabrication status is **not** implied by a green CI run. See `docs/AUDIT_2026-10-20.md`.
+Fabrication status is **not** implied by a green CI run. See `docs/AUDIT_6_2026-10-21.md`.
 
 ---
 
@@ -42,7 +44,8 @@ Fabrication status is **not** implied by a green CI run. See `docs/AUDIT_2026-10
 │   ├── README.md              # Reading order + claim-status vocabulary (start here)
 │   ├── WORKFLOW.md            # THE METHOD: tags, classes, lifecycle, done criteria
 │   ├── spec_values.json       # Single source of truth for every quantitative claim
-│   ├── AUDIT_2026-10-20.md    # What is measured/modelled/aspirational, and what is broken
+│   ├── AUDIT_6_2026-10-21.md  # Latest audit: what is measured/modelled/aspirational, and what is broken
+│   ├── AUDIT_2026-10-20.md    # Earlier audit (historical)
 │   ├── INDEX.md               # Generated cross-reference table
 │   ├── MVP_ARCHITECTURE.md    # Dual-brain split, power tiers, state transitions
 │   ├── HARDWARE_SPEC.md       # Carrier board, buses, pinouts, RF, power
@@ -123,7 +126,7 @@ attribution before you call the task done.
 
 - **Commits:** `Co-Authored-By: <model display name> <noreply@anthropic.com>` and
   `Harness: pi (<provider>/<model>, session <8-char id>)`, added with `git commit --trailer`.
-- **Documents/records:** `Written <YYYY-MM-DD HH:MM> UTC in the Pi harness by <provider>/<model>` in the
+- **Documents/records:** `Written <YYYY-MM-DD HH:MM> UTC in <harness, e.g. the Pi harness or Claude Code> by <provider>/<model>` in the
   header or at the start of the appended section.
 - **Tracker comments:** `[Pi · <provider>/<model> · session <id>]`.
 - Subagents and reviewers you launch inherit these rules — put them in the prompt.

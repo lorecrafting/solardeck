@@ -1,14 +1,14 @@
 /**
  * Written 2026-10-20 12:30 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017
  *
- * SolarDeck CM4 <-> RP2350 interface register map. THIS FILE IS THE CONTRACT.
+ * SolarDeck CM5 <-> RP2350 interface register map. THIS FILE IS THE CONTRACT.
  *
  * Audit 3 found that firmware/ and the Linux daemons had no interface definition, so neither side
  * could be built or tested against the other. This header is the single source of truth: the offsets
  * below are the wire format, and `scripts/check_firmware_interface.py` (CI Phase 15) fails if
  * docs/FIRMWARE_INTERFACE.md drifts from these names.
  *
- * Transport: CM4 is SPI master, RP2350 is SPI slave. One transfer = one 64-byte frame, little-endian,
+ * Transport: CM5 is SPI master, RP2350 is SPI slave. One transfer = one 64-byte frame, little-endian,
  * fixed offsets, no variable-length fields. The frame is idempotent to read; writes are commands only.
  *
  * The struct at the bottom is the same bytes as the register map, so firmware can memcpy it and the
@@ -32,14 +32,14 @@ extern "C" {
 #define SD_MAGIC1             'D'
 
 /* ---- Register offsets (bytes from frame start) --------------------------------------- */
-/* Identity, read-only. A CM4 driver that reads the wrong magic must refuse to bind. */
+/* Identity, read-only. A CM5 driver that reads the wrong magic must refuse to bind. */
 #define REG_ID_MAGIC0         0x00  /* 'S' */
 #define REG_ID_MAGIC1         0x01  /* 'D' */
 #define REG_ID_PROTO          0x02  /* SD_PROTO_VERSION */
 #define REG_ID_FW_MAJOR       0x03
 #define REG_ID_FW_MINOR       0x04
 
-/* Live state, read-only from the CM4 side. */
+/* Live state, read-only from the CM5 side. */
 #define REG_STATE             0x05  /* solardeck_state_t */
 #define REG_FLAGS             0x06  /* SD_FLAG_* bitfield */
 #define REG_VBAT_MV           0x08  /* uint16, battery voltage */
@@ -52,12 +52,12 @@ extern "C" {
 /* Latency measurement: the number the <400 ms glass-to-glass pillar is judged on. */
 #define REG_LAST_WAKE_US      0x10  /* uint32 */
 
-/* Command window, write-only from the CM4 side, read back as the last accepted command. */
+/* Command window, write-only from the CM5 side, read back as the last accepted command. */
 #define REG_CMD               0x14  /* SD_CMD_* */
 #define REG_CMD_ARG           0x15  /* uint8, command-specific */
 #define REG_CMD_ACK           0x16  /* SD_ACK_*, RP2350 sets after applying */
 
-/* Events raised by the RP2350, write-1-to-clear by the CM4. */
+/* Events raised by the RP2350, write-1-to-clear by the CM5. */
 #define REG_EVENTS            0x18  /* SD_EVENT_* bitfield */
 #define REG_LORA_RX_LEN       0x1A  /* uint8, bytes queued in the LoRa RX ring */
 #define REG_LORA_RX_HEAD      0x1B  /* uint8, ring head index */
@@ -71,12 +71,12 @@ extern "C" {
 
 /* ---- Enumerations -------------------------------------------------------------------- */
 #define SD_STATE_COLD_BOOT    0
-#define SD_STATE_CM4_ACTIVE   1
+#define SD_STATE_CM5_ACTIVE   1
 #define SD_STATE_ZEN_READER   2
 #define SD_STATE_S2IDLE       3
 #define SD_STATE_LOW_BATT     4
 
-#define SD_FLAG_CM4_SELECTED  (1u << 0)
+#define SD_FLAG_CM5_SELECTED  (1u << 0)
 #define SD_FLAG_5V_ENABLED    (1u << 1)
 #define SD_FLAG_PWRFAIL       (1u << 2)
 #define SD_FLAG_LIFEPO4       (1u << 3)
@@ -91,10 +91,10 @@ extern "C" {
 #define SD_WAKE_PWRFAIL       5
 
 #define SD_CMD_NOP            0
-#define SD_CMD_SLEEP_CM4      1   /* RP2350 takes the EPDC bus, CM4 may power down */
-#define SD_CMD_WAKE_CM4       2   /* assert GPIO17, expect S2idle exit */
-#define SD_CMD_RELEASE_EPDC   3   /* hand the bus back to the CM4 */
-#define SD_CMD_PWRFAIL_ACK    4   /* CM4 finished its <150 ms flush */
+#define SD_CMD_SLEEP_CM5      1   /* RP2350 takes the EPDC bus, CM5 may power down */
+#define SD_CMD_WAKE_CM5       2   /* assert GPIO17, expect S2idle exit */
+#define SD_CMD_RELEASE_EPDC   3   /* hand the bus back to the CM5 */
+#define SD_CMD_PWRFAIL_ACK    4   /* CM5 finished its <150 ms flush */
 #define SD_CMD_BLACKOUT       5   /* cut mics + RF + camera, hardware already latched */
 
 #define SD_ACK_IDLE           0
@@ -107,7 +107,7 @@ extern "C" {
 #define SD_EVENT_LORA_RX      (1u << 3)
 #define SD_EVENT_TAMPER       (1u << 4)
 
-#define SD_OWNER_CM4          0
+#define SD_OWNER_CM5          0
 #define SD_OWNER_RP2350       1
 
 /* ---- Wire layout --------------------------------------------------------------------- */

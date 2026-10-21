@@ -14,17 +14,17 @@ extern "C" {
 #endif
 
 // Hardware Pin Definitions
-#define PIN_TMUX_SEL_CM4_NRP    13   // High: CM4 controls EPDC; Low: RP2350 controls EPDC
+#define PIN_TMUX_SEL_CM5_NRP    13   // High: CM5 controls EPDC; Low: RP2350 controls EPDC
 #define PIN_EN_5V_SYS           14   // TPS61088 5V System Boost Enable
-#define PIN_GPIO17_WAKE         15   // CM4 S2idle Wake Trigger (<300ms)
-#define PIN_GPIO16_PWRFAIL      16   // CM4 Emergency Powerfail Flush (<150ms)
+#define PIN_GPIO17_WAKE         15   // CM5 S2idle Wake Trigger (<300ms)
+#define PIN_GPIO16_PWRFAIL      16   // CM5 Emergency Powerfail Flush (<150ms)
 #define PIN_CHEM_SEL            18   // Hardware Chem Sel (Low: LiFePO4 3.65V, High: Li-ion 4.2V)
 #define PIN_SOLAR_ADC           26   // ADC Channel 0 for Solar Panel Voc/Vmpp
 
 // System States
 typedef enum {
     SOLAR_STATE_COLD_BOOT = 0,
-    SOLAR_STATE_CM4_ACTIVE,
+    SOLAR_STATE_CM5_ACTIVE,
     SOLAR_STATE_ZEN_READER,
     SOLAR_STATE_S2IDLE_SLEEP,
     SOLAR_STATE_LOW_BATT_ALARM
@@ -33,7 +33,7 @@ typedef enum {
 // State Machine Context
 typedef struct {
     solardeck_state_t current_state;
-    bool tmux_cm4_selected;    // true = CM4, false = RP2350
+    bool tmux_cm5_selected;    // true = CM5, false = RP2350
     bool sys_5v_enabled;       // true = TPS61088 active
     bool wake_pin_asserted;    // GPIO17 state
     bool pwrfail_pin_asserted; // GPIO16 state

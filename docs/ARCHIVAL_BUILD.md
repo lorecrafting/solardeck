@@ -2,6 +2,8 @@
 
 Written 2026-10-20 11:40 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017
 
+Revised 2026-10-21 16:03 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
+
 ## The question: why "impossible to reconstruct in 2046"?
 
 Not dramatic language — a specific, already-happened failure mode.
@@ -29,7 +31,7 @@ ordinary experience of trying to build a 1995 package today, where the *only* th
 copy somebody happened to snapshot, with its compiler, in one tarball.
 
 The second-order failure is worse than the first: the hardware also ages out. In 2046 there is no
-guaranteed source for a CM4, an IT8951, or a Kaleido panel. So the 30-year plan cannot be "rebuild the
+guaranteed source for a CM5, a Kaleido 4 display controller, or a Kaleido 4 panel. So the 30-year plan cannot be "rebuild the
 same thing". It has to be **"re-implement against a frozen spec, on whatever silicon exists then"** —
 which means the *specification and the build recipe* are the durable artifact, and the binaries are
 disposable.

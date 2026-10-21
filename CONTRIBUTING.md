@@ -21,7 +21,7 @@ python3 scripts/verify_all.py     # 16 phases, ~2.5s. Must be green before you p
 
 1. `docs/README.md` — what the project claims and the claim-status vocabulary
    (`measured <date>` / `datasheet` / `modelled` / `aspirational` — an unlabelled number is a defect)
-2. `docs/AUDIT_2026-10-20.md` — what is measured, modelled, or aspirational today, and what is broken
+2. `docs/AUDIT_6_2026-10-21.md` — the latest audit: the repo checked against the datasheets, and what is broken
 3. `docs/WORKFLOW.md` — tags, change classes (C1–C5), the intent→ledger lifecycle, definition of done
 4. `AGENTS.md` — the map and the hard rules
 
@@ -64,7 +64,7 @@ restates numbers.
 
 The CI summary prints which phases you gate. A green run means *internally consistent* — never
 design-approved. Fabrication status is not implied by green CI; see
-`docs/AUDIT_2026-10-20.md`.
+`docs/AUDIT_6_2026-10-21.md`.
 
 ## Good first issues
 

@@ -6,31 +6,33 @@ Written 2026-10-20 04:13 UTC in the Pi harness by openrouter/deepseek/deepseek-v
 
 | # | Document | Why |
 | :-- | :--- | :--- |
-| 0 | `../README.md` | What the product is, in 5 minutes |
-| 0.5 | `WORKFLOW.md` | **The method.** Claim tags, change classes, lifecycle, non-negotiables, done criteria. Read before your first change. |
-| 1a | `AUDIT_2026-10-20_3.md` | **Cost, energy and regulatory truth.** The BOM does not sum; the solar budget is 3-4x optimistic; nothing is certified. Read with 1. |
-| 1b | `LONGEVITY_30Y.md` | 30-year failure budget, maintenance schedule, drop physics |
-| 1 | `AUDIT_4_2026-10-20.md` | **Latest.** Buildability, supply, reliability, coverage — and the 2034 problem. Read this before the older audit. |
-| 1b | `AUDIT_2026-10-20.md` | **What is actually built versus what is written.** 10 blockers, 20 contradictions, the fix plan. Read before trusting anything else. |
-| 2 | `MVP_ARCHITECTURE.md` | Dual-brain split, power tiers, state transitions |
-| 3 | `HARDWARE_SPEC.md` | Carrier board, buses, pinouts, RF, power |
-| 4 | `SOFTWARE_SPEC.md` | Kernel, E-Ink pipeline, power profiles, daemons |
-| 5 | `MECHANICAL_FIT_AND_ENCLOSURE_WORKFLOW.md` | XY/Z budgets, tolerances, the actual enclosure |
-| 6a | `REGULATORY.md` | Certification matrix — **no certificate, no ship** |
-| 6b | `FIRMWARE_INTERFACE.md` | The CM4 <-> RP2350 register contract (header is canonical) |
-| 6c | `USB_ROBUSTNESS.md` | Every USB-C failure mode and the rules that close them (gate G11) |
-| 6d | `ARCHIVAL_BUILD.md` | Toolchain survival, offline reproducible build |
-| 6 | `HARDWARE_VERIFICATION_WORKFLOW.md` | What each verification phase proves, and what it does not |
-| 7 | `BOM_COST_ESTIMATE.md` | $387.40-$414.40 across 62 line items, supplier sourcing |
-| 7b | `LONGEVITY_30Y.md` | The 30-year failure budget, service kit, maintenance schedule, gates G7-G10 |
-| 7c | `FMEA.md` | Failure family → countermeasure → detector → actuator → gate matrix. Read when adding a sensor or a repair hatch |
-| 8 | `OFFGRID_TACTICAL_SENSORS.md` | Field/maritime/foraging sensing, 7 Hotpacks, daemon catalog |
-| 9 | `STANDOUT_FEATURES.md` | The 7 product pillars and 7 feature chapters |
-| 10 | `FIRST_BOOT_CHECKLIST.md` | Bench bring-up and acceptance gates |
-| 11 | `INDEX.md` | Cross-reference table: claim → file § |
-| 12 | `90-history/decisions.md` | Why things were dropped. ADR-001…ADR-016. |
-| 12b | `REVIEW_PACKET.md` | What to ask an external reviewer, and in what order |
-| 13 | `HANDOFF_TO_FABLE.md` | Reviewer checklist before any purchase |
+| 0 | `../README.md` | What the product is and where it stands, in 5 minutes |
+| 1 | `AUDIT_6_2026-10-21.md` | **Latest audit — the repo checked against the datasheets.** Blockers (charger, sleep, panel fit, cell, no wired schematic) and the decisions they need. Read before trusting any number. |
+| 2 | `WORKFLOW.md` | **The method.** Claim tags, change classes, lifecycle, non-negotiables, done criteria. Read before your first change. |
+| 3 | `STATUS.md` | Generated status of every pillar, gate and feature |
+| 4 | `MVP_ARCHITECTURE.md` | Dual-brain split, power tiers, state transitions |
+| 5 | `HARDWARE_SPEC.md` | Carrier board, buses, pinouts, RF, power |
+| 6 | `SOFTWARE_SPEC.md` | Kernel, E-Ink pipeline, power profiles, daemons |
+| 7 | `FIRMWARE_INTERFACE.md` | The CM5 <-> RP2350 register contract (header is canonical) |
+| 8 | `MECHANICAL_FIT_AND_ENCLOSURE_WORKFLOW.md` | XY/Z budgets, tolerances, the enclosure |
+| 9 | `BOM_COST_ESTIMATE.md` | $576.05-$578.05 across 62 line items, before the TBD Kaleido 4 panel, controller and eSIM; a floor — AUDIT 6 H22 |
+| 10 | `REGULATORY.md` | Certification matrix — **no certificate, no ship** |
+| 11 | `USB_ROBUSTNESS.md` | Every USB-C failure mode and the rules that close them (gate G11) |
+| 12 | `LONGEVITY_30Y.md` | 30-year failure budget, service kit, maintenance schedule, gates G7-G10 |
+| 13 | `FMEA.md` | Failure family → countermeasure → detector → actuator → gate |
+| 14 | `HARDWARE_VERIFICATION_WORKFLOW.md` | What each verification phase proves, and what it does not |
+| 15 | `DEV_KIT_BENCH.md` | The bench that turns `modelled` numbers into `measured` ones — the next step |
+| 16 | `FIRST_BOOT_CHECKLIST.md` | Bench bring-up and acceptance gates |
+| 17 | `CO_PROCESSOR_SURVEY.md` | Why RP2350, and the reader frame format |
+| 18 | `ARCHIVAL_BUILD.md` | Toolchain survival, offline reproducible build |
+| 19 | `STANDOUT_FEATURES.md` | The product pillars in full |
+| 20 | `OFFGRID_TACTICAL_SENSORS.md` | Field/maritime/foraging sensing, Hotpacks, daemon catalog |
+| 21 | `DECK_BUILDER_LAYOUT.md` | Who can build what: snap-in vs soldered vs fab |
+| 22 | `REVIEW_PACKET.md` | What to ask an external reviewer, and in what order |
+| 23 | `90-history/decisions.md` | Why things were chosen or dropped (the ADR log) |
+| — | `INDEX.md` | Cross-reference table: claim → file § (hand-maintained; stale — AUDIT 6 §4) |
+| — | `HANDOFF_TO_FABLE.md` | Reviewer checklist, frozen at 2026-10-19 (stale — AUDIT 6 §4) |
+| — | `AUDIT_2026-10-20.md`, `AUDIT_2026-10-20_3.md`, `AUDIT_4_2026-10-20.md`, `AUDIT_5_2026-10-20.md` | Earlier audits (repo checked against itself). Historical; AUDIT 6 §5 corrects three of their verdicts. |
 
 ## The status vocabulary
 
@@ -50,11 +52,11 @@ Every claim is one of these. Anything unlabelled is **aspirational**.
 2. **Delete superseded text.** Move the reasoning into `90-history/decisions.md` as an ADR. Never
    leave a "descoped" note next to the full spec of the descoped thing.
 3. Generated content (BOM tables, phase lists, production bundles) is generated, not authored.
-4. `python3 scripts/verify_all.py` before every push (16 phases, ~1.2 s).
+4. `python3 scripts/verify_all.py` before every push (16 phases, a few seconds).
 
 ## Deliberately not split (yet)
 
-`HARDWARE_SPEC.md` (1,427 lines) and `SOFTWARE_SPEC.md` (1,333 lines) are monolithic on purpose.
+`HARDWARE_SPEC.md` and `SOFTWARE_SPEC.md` (each ~1,500 lines) are monolithic on purpose.
 Roughly 200 cross-references in this repo cite them as `docs/HARDWARE_SPEC.md §2.5`, so a physical
 split would silently break every one of them. The proposed per-subsystem split and the rules for doing
 it safely are in `AUDIT_2026-10-20.md` §4. Add per-file tables of contents now; split when the

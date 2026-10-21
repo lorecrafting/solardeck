@@ -1,6 +1,7 @@
 # Co-Processor Options Survey & PSRAM Read-Mode Dig
 
 Written 2026-10-21 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-0731
+Revised 2026-10-21 15:59 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
 
 Status: **investigation record** — no design change committed by this document alone. Open question:
 does the max-tier (ESP32-P4) or a bigger PSRAM on the RP2350 enter V1? See `docs/90-history/decisions.md`
@@ -61,43 +62,45 @@ power-bound. This kills candidate #1 (a lower tier) with a clean YAGNI.
 | :--- | :--- | :--- | :--- |
 | **Ultra-low** (R4 keepalive, 0.2 mW today) | ESP32-C6 7 µA | Goes 0.2 mW → 0.023 mW | **YAGNI — already battery-bound at 6667 days.** Extra chip, extra SPI bus, extra security surface, zero user-visible gain. |
 | **Mid** (reader + wake-word, incumbent) | RP2350 | Reader 296 days; wake-word 95 days | **Keep.** POWMAN 10 µA deep sleep + native PSRAM is the right center. |
-| **Max** (snappier reader, richer zero-kernel tier) | ESP32-P4 (400 MHz, 16–32 MB in-package PSRAM, MIPI, H.264) | 4× clocks; 2–4× PSRAM; hardware display IFs | **Tempting, but the MIPI path can't drive our IT8951/SPI panel.** P4's display muscle is for DSI/CSI panels; ours is a staid SPI EPDC. Paying for a MIPI pipeline that talks to a non-MIPI panel is the classic over-build. |
+| **Max** (snappier reader, richer zero-kernel tier) | ESP32-P4 (400 MHz, 16–32 MB in-package PSRAM, MIPI, H.264) | 4× clocks; 2–4× PSRAM; hardware display IFs | **Tempting, but unproven against our panel.** P4's display muscle is for DSI/CSI panels; the host interface of the Kaleido 4 display controller (TBD, ADR-032) is unknown. Paying for a MIPI pipeline before that is known is the classic over-build. |
 
 **Honest verdict: do not add a third co-processor.** The real ceiling in the reader tier is PSRAM
 *size and frame format*, and both are solvable on the incumbent RP2350 — see §5. If a "snappier
-reader" is ever needed beyond that, re-open the P4 with the MIPI-panel question, not before.
+reader" is ever needed beyond that, re-open the P4 once the Kaleido 4 controller's host interface is known (ADR-032), not before.
 
 ## 5. PSRAM read-mode dig: the actual lever is 16 MB → better, and 1-bit frames → *free*
 
-The reader holds **two 8-bit frames** (1872 × 1404 × 8 bpp ≈ 2.63 MB each) in 8 MB today. Two findings
-reset the calculus:
+The reader holds 8-bit frames (`page_width_px` × `page_height_px` × 1 B each) in 8 MB of PSRAM. Page
+geometry is TBD (ADR-032): it comes from the Kaleido 4 resolution. Two findings reset the calculus:
 
 1. **The RP2350 QMI (QSPI Memory Interface) addresses up to 16 MB per chip-select, 32 MB total** across
    its two CS lines. The 8 MB `APS6404L` is not the chip's ceiling — it's the *part*'s ceiling:
    SOIC-8 QSPI PSRAM tops out at 8 MB (64 Mbit) today; 16/32 MB PSRAM parts exist only as Octal-SPI
    (APS6408H-class) in 24-ball BGA, which the RP2350 QMI does not speak. **A 16 MB QSPI SOIC-8 part
    does not exist on the market yet.**
-2. **Frame format is the free lever.** `page_bytes_8bit` is 2,628,288 B (1872 × 1404); a 1-bit dithered
-   frame is **328,536 B** (exactly ÷8). The same 8 MB that today double-buffers **2** pages can hold
-   **25 single-buffered or 12 double-buffered 1-bit pages** with zero BOM change. For a book (mono
+2. **Frame format is the free lever.** `page_bytes_8bit` = width × height B; a 1-bit dithered frame is
+   exactly ÷8 of that. The same 8 MB therefore holds 8× as many 1-bit pages as 8-bit pages, with zero
+   BOM change. The page counts (`single_buffer_pages_1bit` = ⌊8 MB ÷ `page_bytes_1bit`⌋,
+   `double_buffer_pages_1bit` = half that) are TBD (ADR-032) until the Kaleido 4 resolution is published. For a book (mono
    text on E-Ink), 1-bit + dithering is the correct visual encoding anyway — Kaleido colour pages stay
    8-bit.
 
-Consequences (all `spec_values.reader` keys, to be committed with the ADR):
-* Add `page_bytes_1bit` (328 536), `double_buffer_pages_1bit` (12), `single_buffer_pages_1bit` (25).
+Consequences (all `spec_values.reader` keys):
+* `page_bytes_1bit`, `double_buffer_pages_1bit`, `single_buffer_pages_1bit` exist and stay `null` until the
+  Kaleido 4 resolution is published (ADR-032); derive them with the method above.
 * `page_cache_psram_mb` stays 8 MB — the *size* is right; the *usage* was 8× wasteful.
-* The `aspirational` text-reflow path (§55.2) becomes free-er: 12 pages of a reflowed bitmap layout
-  can live in cache instead of 2.
+* The `aspirational` text-reflow path (§55.2) becomes free-er: 8× as many pages of a reflowed bitmap
+  layout can live in cache.
 * Future 16 MB path (only if a QSPI 16 MB part appears): re-derive the table, no architecture change —
   the RP2350 already addresses it.
 
 ## 6. What this means for V1 (draft for ADR)
 
 1. Keep the single RP2350 co-processor. No lower tier (YAGNI), no P4 max tier (MIPI-mismatch).
-2. Reader tier switches pre-rendered frames to 1-bit dithered for mono books (12 pages double-buffered
-   in the same 8 MB); 8-bit reserved for colour/photo pages.
-3. Record `page_bytes_1bit` and page counts in `spec_values.json` with the ADR so the checker locks
-   the numbers to the doc.
+2. Reader tier switches pre-rendered frames to 1-bit dithered for mono books (8× the 8-bit page count
+   in the same 8 MB; counts TBD, ADR-032); 8-bit reserved for colour/photo pages.
+3. Fill `page_bytes_1bit` and the page counts in `spec_values.json` once the Kaleido 4 resolution is
+   published (ADR-032), so the checker locks the numbers to the doc.
 4. Re-open the P4 question only when the panel changes, the QSPI 16 MB part appears, or a zero-kernel
    audio/video tier is wanted.
 

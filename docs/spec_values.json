@@ -1,21 +1,15 @@
 {
   "_comment": "Single source of truth for every quantitative claim repeated across docs. Change a number HERE, then run scripts/check_docs_numbers.py to find the docs that still disagree. Written 2026-10-20 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017",
-  "ppi": 227,
-  "display_active_mm": [
-    209.66,
-    157.25
-  ],
-  "panel_module_outline_mm": [
-    227.7,
-    165.8
-  ],
+  "ppi": null,
+  "display_active_mm": null,
+  "panel_module_outline_mm": null,
   "chassis_mm": [
     232.0,
     170.0,
     14.0
   ],
   "chassis_cavity_depth_mm": 12.5,
-  "display_stack_mm": 2.85,
+  "display_stack_mm": null,
   "battery_cell_mm": [
     142.0,
     90.0,
@@ -30,28 +24,33 @@
     "bezel_ibc_optional": 1.24,
     "solar_armor_optional": 7.13
   },
-  "epdc_spi_mhz": 32,
+  "epdc_spi_mhz": null,
   "refresh_modes": {
-    "full_frame_1bit_fps": 6,
-    "partial_rect_latency_ms": 30,
-    "small_rect_fps_equivalent": 25,
-    "colour_full_refresh_s": 1.5,
+    "full_frame_1bit_fps": null,
+    "partial_rect_latency_ms": null,
+    "small_rect_fps_equivalent": null,
+    "colour_full_refresh_s": null,
     "colour_motion_supported": false,
     "kaleido4_fps": null
   },
   "token_stream": {
     "guaranteed_wpm": 120,
-    "update_latency_ms": 30,
+    "update_latency_ms": null,
     "zero_flash": true,
     "ghost_residue_threshold_db": 8,
     "bench_duration_min": 5,
     "full_screen_video": "via USB-C monitor sink (Pillar 8); colour motion unsupported on-panel"
   },
   "panel_sku": {
-    "mono_default": "Carta 1200",
-    "mono_ppi": 227,
-    "colour_option": "Kaleido 4",
-    "colour_ppi": 150,
+    "_comment": "ADR-032: Kaleido 4 is the only panel; every fact below is null until E Ink publishes the 10.3\" datasheet and drawing. The IT8951 + Kaleido 3/Carta module is a bench stand-in only (ADR-025).",
+    "standard": "Kaleido 4",
+    "resolution_px": null,
+    "ppi": null,
+    "colour_ppi": null,
+    "module_outline_mm": null,
+    "controller": null,
+    "availability": "awaiting E Ink release",
+    "bench_stand_in": "Kaleido 3 / Carta + IT8951 module (ADR-025)",
     "kaleido4_dye_lifespan_years": null,
     "v1_panel_mount": "bonded (VHB on glass, service-kit part)",
     "future_service_hatch": "connectorized EPDC + IP67 hatch, gasket as P/N'd wear item"
@@ -586,19 +585,17 @@
     "unpowered_months": 12,
     "drop_orientations": 26
   },
-  "bom_total_low": 387.4,
-  "bom_total_high": 414.4,
-  "bom_total_low_4gb": 367.4,
-  "bom_total_high_4gb": 394.4,
+  "bom_total_low": 576.05,
+  "bom_total_high": 578.05,
   "cm5": {
-    "_comment": "CM5 pivot (ADR-032, 2026): V1 moves from CM4 8 GB/32 GB eMMC to CM5 16 GB/64 GB eMMC wireless (CM5116064 / SC1608). 16 GB DRAM is the LLM-resident assumption: the 1-3B local model tier runs in RAM without swap/heritage modes. eMMC 64 GB holds the base image, reader cache, and full offline corpus. Wireless variant carries the Wi-Fi/BT that CM4 needed a USB dongle for — one less peripheral spine. Price basis stays the quoted $375 CM5116064; totals row unchanged because compute module was already the single largest line.",
+    "_comment": "CM5 pivot (ADR-031, 2026): V1 moves from CM4 8 GB/32 GB eMMC to CM5 16 GB/64 GB eMMC wireless (CM5116064 / SC1608). 16 GB DRAM is the LLM-resident assumption: the 1-3B local model tier runs in RAM without swap/heritage modes. eMMC 64 GB holds the base image, reader cache, and full offline corpus. Wireless variant carries the Wi-Fi/BT that CM4 needed a USB dongle for — one less peripheral spine. The BOM compute row is priced at price_usd; Phase 14 totals were re-derived on 2026-10-21.",
     "sku": "CM5116064",
     "manufacturer_pn": "SC1608",
     "ram_gb": 16,
     "emmc_gb": 64,
     "wireless": true,
     "price_usd": 375,
-    "soc": "BCM2718 quad Cortex-A76 @ 2.0/2.4 GHz",
+    "soc": "BCM2712 quad Cortex-A76 @ 2.0/2.4 GHz",
     "llm_resident": true
   },
   "power": {
@@ -636,27 +633,24 @@
     "basis": "Telcordia SR-332 class FIT at 40 C, placement counts estimated from HARDWARE_SPEC (netlist has 24 of 61 lines)"
   },
   "supply_chain": {
-    "cm4_production_commitment_year": 2034,
     "design_life_years": 30,
-    "cm4_shortfall_years": 22,
     "cm5_production_commitment_year": null,
     "cm5_shortfall_years": null,
-    "_cm5_comment": "CM5 end-of-production commitment not yet published by Raspberry Pi (ADR-032 will lock the number the day a source confirms it; then re-derive cm5_shortfall_years = design_life_years - (year - 2026)).",
+    "_cm5_comment": "CM5 end-of-production commitment not yet published by Raspberry Pi (ADR-031 will lock the number the day a source confirms it; then re-derive cm5_shortfall_years = design_life_years - (year - 2026)).",
     "single_source_parts": [
-      "IT8951 (ITE, no second source)",
       "Kaleido 4 panel (E Ink, sole source)",
+      "Kaleido 4 display controller (TBD, ADR-032)",
       "CM5 (Raspberry Pi)",
       "RP2350 (Raspberry Pi)"
     ],
     "active_confirmed": [
-      "IT8951",
       "BQ25895",
       "CM5"
     ],
     "strategy": "socketed module + published carrier pinout + 3 spare modules at build time"
   },
   "voice": {
-    "_comment": "SOFTWARE_SPEC §17.2 (ADR-026): enrollment is co-processor-resident so a root-compromised Linux brain cannot swap the voiceprint. CM5 pivot (ADR-032): 16 GB DRAM means the LLM runs resident on-device, so voice verification gating boots a local model, not a cloud round-trip.",
+    "_comment": "SOFTWARE_SPEC §17.2 (ADR-026): enrollment is co-processor-resident so a root-compromised Linux brain cannot swap the voiceprint. CM5 pivot (ADR-031): 16 GB DRAM means the LLM runs resident on-device, so voice verification gating boots a local model, not a cloud round-trip.",
     "enrollment_resident": "rp2350-flash",
     "enroll_sample_sentences": 3,
     "d_vector_dims": 256,
@@ -665,17 +659,17 @@
     "verification_before_cm4_wake": true
   },
   "reader": {
-    "_comment": "SOFTWARE_SPEC §55 Zero-Kernel Reader Tier: pre-rendered page-flip engine; the RP2350 flips, it never renders PDFs.",
+    "_comment": "SOFTWARE_SPEC §55 Zero-Kernel Reader Tier: pre-rendered page-flip engine; the RP2350 flips, it never renders PDFs. Page geometry and flip time are null until the Kaleido 4 datasheet (ADR-032).",
     "native_read_mw": 4.5,
     "page_cache_psram_mb": 8,
-    "page_width_px": 1872,
-    "page_height_px": 1404,
-    "page_bytes_8bit": 2628288,
-    "double_buffer_pages_8bit": 2,
-    "page_bytes_1bit": 328536,
-    "double_buffer_pages_1bit": 12,
-    "single_buffer_pages_1bit": 25,
-    "page_flip_ms": 30,
+    "page_width_px": null,
+    "page_height_px": null,
+    "page_bytes_8bit": null,
+    "double_buffer_pages_8bit": null,
+    "page_bytes_1bit": null,
+    "double_buffer_pages_1bit": null,
+    "single_buffer_pages_1bit": null,
+    "page_flip_ms": null,
     "bookmark_ledger_flash_kb": 32,
     "swap_wake_s": 0.3,
     "handoff_s": 0.5,
@@ -727,5 +721,6 @@
     "charge_gradient_delta_c": "T_battery - T_display threshold, modelled",
     "powercycle_hold_ms": 500,
     "baseband_retry_polls": "N consecutive LoRa RSSI polls below baseline, modelled"
-  }
+  },
+  "_comment_adr032": "ADR-032: ppi, display_active_mm, panel_module_outline_mm, display_stack_mm, epdc_spi_mhz, refresh timings and reader page geometry are null until E Ink publishes the 10.3\" Kaleido 4 datasheet. Gates skip them loudly; they never fall back to stand-in values."
 }

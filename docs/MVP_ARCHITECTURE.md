@@ -1,6 +1,7 @@
 # SolarDeck MVP & Modular System Architecture
 
 Written 2026-10-18 17:35 UTC in the Pi harness by antigravity/gemini-3.8-flash
+Revised 2026-10-21 15:59 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
 
 ---
 
@@ -9,7 +10,7 @@ Written 2026-10-18 17:35 UTC in the Pi harness by antigravity/gemini-3.8-flash
 SolarDeck is a sovereign, general-purpose open-hardware computing platform designed for AI-assisted development, field reading/writing, and off-grid communication. The architecture cleanly separates the core platform from specialized add-on modules:
 
 1. **The Core MVP Tablet (Standalone Survival Terminal & Daily Driver):**
-   * Bare-metal Linux coding & computing platform (Raspberry Pi CM4)
+   * Bare-metal Linux coding & computing platform (Raspberry Pi CM5)
    * Sunlight-readable 10.3" e-paper reader and Wacom EMR digitizer slate
    * Built-in Worldwide 4G/LTE (Quectel EG25-G) with soldered onboard MFF2 **eSIM (eUICC)** and physical Nano-SIM
    * **Built-in Primary Off-Grid LoRa Mesh:** Semtech SX1262 LoRa (868/915 MHz) wired directly to RP2350 SPI for 80+ day low-power Meshtastic repeating & zero-watt E-Ink pager mode
@@ -35,12 +36,12 @@ SolarDeck is a sovereign, general-purpose open-hardware computing platform desig
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                       SOLARDECK MVP (THE CORE TABLET)                       │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 1. BRAIN:     Raspberry Pi CM4 (8GB RAM, 32GB eMMC, Wi-Fi/BT)               │
+│ 1. BRAIN:     Raspberry Pi CM5 CM5116064 (16GB RAM, 64GB eMMC, Wi-Fi/BT)    │
 │ 2. CO-PROC:   RP2350B (Cortex-M33/RISC-V) + 8MB PSRAM (300-Day Zen Reader)  │
-│ 3. DISPLAY BUS: IT8951 EPDC over SPI @32MHz + 2x TMUX1575 (RP2350 fallback) │
-│ 4. SCREEN:    10.3" E-Ink (Carta 1200 / Kaleido 3 / Kaleido 4, 227 PPI) + EMR│
+│ 3. DISPLAY BUS: K4 display controller (TBD, ADR-032) + 2x TMUX1575          │
+│ 4. SCREEN:    10.3" E Ink Kaleido 4 (resolution/PPI TBD, ADR-032) + EMR     │
 │ 5. CAMERA:    12MP Sony IMX708 PDAF Macro Rear (Multimodal Claude Code / OCR)│
-│ 6. CELLULAR:  M.2 Quectel EG25-G LTE + Onboard Soldered MFF2 eSIM (ST4SIM)  │
+│ 6. CELLULAR:  M.2 Quectel EG25-G LTE + MFF2 eSIM (SGP.22 eUICC, part TBD)   │
 │ 7. MESH/GNSS: Built-In Semtech SX1262 LoRa (Meshtastic) + Qualcomm GNSS     │
 │ 8. NFC:       Built-In ST25R3916 13.56 MHz (YubiKey FIDO2 / LUKS / P2P Pair)│
 │ 9. ANTENNAS:  Top-Edge IP67 SMA (LoRa) + Internal Taoglas FXUB63 MIMO (LTE) │
@@ -86,18 +87,18 @@ To achieve maximum field battery life without an excessively heavy device:
 * **Tier 0: Dormant Standby (< 0.1 mW):** **10+ Years** shelf life.
 * **Tier 1: Zen Reader Mode (RP2350 Driven @ ~4.5 mW):** **300+ DAYS (10 Months)** of daily book reading on a single charge with 30ms page turns.
 * **Tier 2: Perpetual LoRa Mesh Repeater (RP2350 @ 12–15 mW):** **80+ DAYS (2.6 Months)** of continuous off-grid packet hopping without waking Linux.
-* **Tier 3: Paper-Feel Scribe Slate (CM4 1-Core @ ~0.60W):** **58 Hours** continuous active writing (460+ hours study mode with S2idle).
+* **Tier 3: Paper-Feel Scribe Slate (CM5 1-Core @ ~0.60W):** **58 Hours** continuous active writing (460+ hours study mode with S2idle).
 * **Tier 4: Adaptive Mixed Workstation (Web/Discord/Claude @ ~1.40W avg):** **25 Hours** continuous screen-on time (3 to 6 real-world days).
 * **Tier 5: Audio-First Conferencing (Mic array + Opus + inbound dither @ ~1.30W):** **27 Hours** of continuous calls (no outbound video; USB-C UVC webcam optional via Port 2).
 * **Tier 5b: High-Motion Screen Work (GPU dithering + repeated partial refresh @ ~1.6W–2.2W):** **16 to 20 Hours** (images, maps, rapid pagination; not video — see ADR-005).
-* **Tier 6: AI Compile Turbo (CM4 Quad 1.8GHz @ ~3.2W):** **10 to 11 Hours** continuous parallel compiling and cellular connection.
+* **Tier 6: AI Compile Turbo (CM5 Quad @ ~3.2W):** **10 to 11 Hours** continuous parallel compiling and cellular connection.
 
 ### Battery Longevity: High-Motion vs. Static & 10–15 Year Cell Lifespan
-* **During High-Motion Screen Work (images, maps, rapid pagination):** GPU blue-noise dithering, NEON differencing, and repeated 32 MHz full-frame transfers draw **1.6W to 2.2W**, giving **16 to 20 hours**. There is no video-playback tier: the SPI link to the IT8951 tops out near 6 fps, so V1 does not promise cinema (ADR-005).
+* **During High-Motion Screen Work (images, maps, rapid pagination):** GPU blue-noise dithering, NEON differencing, and repeated full-frame transfers draw **1.6W to 2.2W**, giving **16 to 20 hours**. There is no video-playback tier: the panel link and its frame rate depend on the Kaleido 4 display controller (TBD, ADR-032), so V1 does not promise cinema (ADR-005).
 * **When Idle or Static** (Writing, Coding, Reading, Ambient Clock):**
   * **0.000W Bi-Stable Physics:** Unlike OLED or LCD screens that draw 1.5W–3.0W just keeping pixels backlit, E-Ink uses **0.000 Watts** to display a static page. Once particles move into position, they remain physically locked in place indefinitely without electrical power.
-  * **Interactive Terminal & Coding:** In Neovim and Claude Code CLI, the screen only consumes power during 15–20ms partial update pulses when keys are pressed. Total system draw drops to **~1.1W–1.4W**, extending battery runtime to **24 to 32 hours** of active typing.
-  * **Zen Reading Mode:** With the CM4 unpowered and the RP2350 flipping pages in 30ms, battery runtime extends to **300+ days (10 months)** on a single charge.
+  * **Interactive Terminal & Coding:** In Neovim and Claude Code CLI, the screen only consumes power during partial update pulses (timing TBD, ADR-032) when keys are pressed. Total system draw drops to **~1.1W–1.4W**, extending battery runtime to **24 to 32 hours** of active typing.
+  * **Zen Reading Mode:** With the CM5 unpowered and the RP2350 flipping pages in 30ms, battery runtime extends to **300+ days (10 months)** on a single charge.
   * **Ambient Desk Clock & Weather Station:** The top-bezel 0.15W micro-solar strip generates more power than the 4.5 mW idle load, delivering **infinite off-grid operational lifespan** without ever connecting to a wall charger.
   * **Chemical Cycle Life (10–15 Years):** Standard consumer Li-ion batteries degrade after 500 charge cycles (~2 years). In contrast, SolarDeck's LiFePO4 chemistry provides **3,000 to 5,000+ full cycles**. Because non-video workflows require charging only once every few days or weeks, the physical battery pack lasts **10 to 15+ years** before reaching 80% health.
 
@@ -108,7 +109,7 @@ To achieve maximum field battery life without an excessively heavy device:
 ### 3.1 Cellular Modem, Dual-SIM & NFC Architecture
 * **Modem:** M.2 Key-B 3042 socket with **Quectel EG25-G** (30+ global LTE bands, worldwide carrier certifications).
 * **Dual-SIM Architecture:**
-  1. **Onboard Soldered MFF2 eSIM:** STMicroelectronics **ST4SIM-200M** or Infineon **SLM97** soldered down in an industrial **MFF2 DFN-8 (5×6mm)** package. Managed natively by **`lpac`** (open-source C Local Profile Assistant) via `ModemManager`. Activation QR codes are downloaded directly from consumer SM-DP+ servers using standard AT channel commands (`AT+CCHO`/`AT+CGLA`).
+  1. **Onboard Soldered MFF2 eSIM:** A **consumer SGP.22 eUICC (part TBD, ADR-033)** soldered down in an industrial **MFF2 DFN-8 (5×6mm)** package. Managed natively by **`lpac`** (open-source C Local Profile Assistant) via `ModemManager`. Activation QR codes are downloaded directly from consumer SM-DP+ servers using standard AT channel commands (`AT+CCHO`/`AT+CGLA`).
   2. **External Physical Nano-SIM Tray:** IP67 weather-sealed push-push Nano-SIM slot on chassis edge for local prepaid, international traveler, or burner SIM cards.
   3. **Seamless Linux Slot Toggle:** Switch between physical SIM and digital eSIM via `mmcli -m 0 --set-primary-sim-slot=1/2`.
 * **13.56 MHz NFC & Smartcard Architecture:**
@@ -129,7 +130,7 @@ To achieve maximum field battery life without an excessively heavy device:
    * **Main (TX/RX):** Optional second top-edge SMA jack for high-gain field whips (Taoglas `TG.30` Apex) or internal flexible PCB.
    * **Diversity (RX Only):** Internal **Taoglas `FXUB63`** ultra-wideband flexible PCB antenna (698–3000 MHz) adhered to inner chassis wall, delivering 2×2 spatial diversity for maximum download throughput.
 3. **Wi-Fi 5 & Bluetooth 5.0:**
-   * Internal **Molex `1461530100`** balanced dual-band (2.4/5.8 GHz) dipole FPC connected to CM4 U.FL port. Balanced dipole tuning prevents hand-grip detuning.
+   * Internal **Molex `1461530100`** balanced dual-band (2.4/5.8 GHz) dipole FPC connected to the CM5 antenna connector (TBD — verify on CM5). Balanced dipole tuning prevents hand-grip detuning.
 4. **RF Windowing (Physics Constraint):**
    * In PA12 SLS Nylon, RF radiates freely through the chassis.
    * In CNC 6061 Aluminum, the top 25mm bezel is a modular PA12/Delrin "RF Window" cap to prevent Faraday cage attenuation.
@@ -143,12 +144,12 @@ To achieve maximum field battery life without an excessively heavy device:
 │                       7-TIER ANTI-BRICKING PROTECTION                       │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 1. Broadcom ROM `rpiboot` Mode:                                             │
-│    • Grounding `nRPIBOOT` forces CM4 into USB boot mode.                    │
-│    • Internal 32GB eMMC mounts as a USB drive on a host laptop via USB-C.   │
+│    • Grounding `nRPIBOOT` forces CM5 into USB boot mode.                    │
+│    • Internal 64GB eMMC mounts as a USB drive on a host laptop via USB-C.   │
 │    • Triggered without opening case via external magnetic reed switch.      │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 2. Microcontroller UART Console Bridge:                                     │
-│    • CM4 UART0 (GPIO 14/15) routes to RP2350 UART.                          │
+│    • CM5 UART0 (GPIO 14/15, TBD — verify on CM5) routes to RP2350 UART.     │
 │    • RP2350 exposes a USB CDC serial port (`/dev/ttyACM0`) over USB-C.      │
 │    • Stream early kernel dmesg / panic logs even if screen is dead.         │
 ├─────────────────────────────────────────────────────────────────────────────┤
@@ -162,10 +163,10 @@ To achieve maximum field battery life without an excessively heavy device:
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 5. Hardware Power Override:                                                 │
 │    • 10-second power button hold physically bypasses software load switches,│
-│      forcing clean 5V/3.3V power rails to CM4.                              │
+│      forcing clean 5V/3.3V power rails to CM5.                              │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 6. Display Bus Multiplexer & Bias Guard (TMUX1575):                         │
-│    • Physical isolation of CM4 lines in sleep; discharges VCOM/gate rails   │
+│    • Physical isolation of CM5 lines in sleep; discharges VCOM/gate rails   │
 │      if host crashes mid-refresh, preventing pigment burn-in.               │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 7. Autonomous PMIC Safety:                                                  │
@@ -193,30 +194,30 @@ To enable clean voice interaction with Claude Code and dictation:
 ## 6. Dual-Brain Direct Drive & Low-Power Sipping Pipeline
 
 ```
-[STEP 1: BROWSE ON FULL LINUX (CM4)]
-• User wakes CM4 (0.3s S2idle resume).
+[STEP 1: BROWSE ON FULL LINUX (CM5)]
+• User wakes CM5 (0.3s S2idle resume) (AUDIT 6 X4).
 • Full Linux manages Calibre, KOReader, or terminal workspace.
 • User selects book or activates ambient dashboard.
                               │
                               ▼
 [STEP 2: 0.5-SECOND HANDOFF & ISOLATION]
 • Linux renders page buffers to shared storage.
-• CM4 signals RP2350 via I2C: "Taking over display".
-• CM4 toggles TMUX1575 SELECT line to RP2350 and cuts CM4 power (0.000 mW).
-• TMUX1575 completely isolates all 6 CM4 lines, preventing leakage into unpowered SoC.
+• CM5 signals RP2350 via I2C: "Taking over display".
+• CM5 toggles TMUX1575 SELECT line to RP2350 and cuts CM5 power (0.000 mW).
+• TMUX1575 completely isolates all 6 CM5 lines, preventing leakage into unpowered SoC.
                               │
                               ▼
 [STEP 3: AUTONOMOUS RP2350 SIPPING MODE]
-• RP2350 pushes pages/digits over SPI to IT8951 from 8MB PSRAM double-buffer.
+• RP2350 pushes pages/digits to the Kaleido 4 display controller (TBD, ADR-032) from 8MB PSRAM double-buffer.
 • Between updates, RP2350 deep-sleeps at 10 µA.
-• IT8951 sleeps at ~0.1 mW. Total system draw: ~4.5 mW.
+• Display controller sleep power TBD (ADR-032). Total system draw: ~4.5 mW.
 • Battery runtime: 300+ DAYS on single charge!
                               │
                               ▼
 [STEP 4: RESUME FULL LINUX]
 • Tap key, touch screen, or double-tap IMU.
-• RP2350 asserts GPIO 17 wake line to CM4.
-• TMUX1575 switches bus back to CM4. Linux resumes in 0.3 seconds.
+• RP2350 asserts GPIO 17 wake line to CM5.
+• TMUX1575 switches bus back to CM5. Linux resumes in 0.3 seconds (AUDIT 6 X4).
 ```
 
 ---
@@ -239,7 +240,7 @@ For V1, descoping the proprietary SnapDeck keyboard eliminates $25,000+ in custo
 │ POSTURE 2: PROPPED-UP WORKSTATION (LANDSCAPE)                               │
 │ • MagSafe / OEM stand props tablet upright at 65°–75° on desk.              │
 │ • Keyboard sits detached on the desk in front of the screen.                │
-│ • Sway expands display to full 1872 × 1404 pixels over BLE 5.0.             │
+│ • Sway expands display to full panel resolution (TBD, ADR-032).             │
 │ • Use Case: Traditional laptop workstation at a coffee shop or desk.        │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ POSTURE 3: VERTICAL CODER WORKSTATION (PORTRAIT)                            │
