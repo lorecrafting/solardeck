@@ -81,7 +81,7 @@ def verify_kicad_cli():
     if not subprocess.run("command -v kicad-cli", shell=True, stdout=subprocess.DEVNULL).returncode == 0:
         strict = os.environ.get("CI") or os.environ.get("SOLARDECK_STRICT")
         msg = ("kicad-cli not installed -- ERC/DRC NOT RUN"
-               " (CI installs it; install locally to check before pushing)")
+               " (no hosted CI, ADR-046; install KiCad locally to run them)")
         if strict:
             print(f"{Colors.RED}[FAIL]{Colors.END} {msg}")
             return False
