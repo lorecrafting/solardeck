@@ -5,7 +5,7 @@ Written 2026-10-18 17:31 UTC in the Pi harness by antigravity/gemini-3.8-flash
 Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
 Revised 2026-10-21 17:52 UTC in Claude Code by anthropic/claude-opus-5-5 (owner decisions, ADR-046).
 Revised 2026-10-21 19:46 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion smart pack, ADR-048).
-Revised 2026-10-21 21:30 UTC in Claude Code by anthropic/claude-opus-5-5 (10 TBD rows priced, part picks, port roles, ADR-049).
+Revised 2026-10-21 20:42 UTC in Claude Code by anthropic/claude-opus-5-5 (10 TBD rows priced, part picks, port roles, ADR-049).
 
 Comprehensive bill of materials, component part numbers, verified suppliers, and turnkey manufacturing cost projections for the core tablet and the modular RF backpack. The SnapDeck keyboard is an optional Phase 2 accessory (§2), not part of the V1 BOM.
 

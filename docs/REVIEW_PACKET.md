@@ -10,13 +10,17 @@ Revised 2026-10-21 18:51 UTC in Claude Code by anthropic/claude-opus-5-5 (checkp
 
 Revised 2026-10-21 19:45 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion smart pack, ADR-048).
 
+Revised 2026-10-21 20:42 UTC in Claude Code by anthropic/claude-opus-5-5 (pre-bench close-out and freeze, ADR-049).
+
 Five internal audit rounds are done, the last against the datasheets (AUDIT 6). Further internal reading has near-zero yield; the open questions
 are judgement calls that need an outside opinion. This is the brief for that review.
 
 State of the repo at this checkpoint (2026-10-21): every verification phase green, run locally before
 every push (no hosted CI, ADR-046); **nothing measured** (`docs/STATUS.md`); the schematic is an unwired
 placeholder; every CM5/RP2350 pin is budgeted and checked (`docs/PIN_BUDGET.md`); no fabrication files;
-software frozen until hardware exists; the reliability model (`spec_values.reliability`) puts random
+software frozen until hardware exists; every EVT-0 part picked from a datasheet and every BOM row priced
+except the panel, its controller and the battery pack (ADR-049); the repo is frozen until bench parts, E Ink
+and the EMR quote arrive; the reliability model (`spec_values.reliability`) puts random
 failure far beyond the first hard wear-out.
 
 ---
@@ -25,7 +29,7 @@ failure far beyond the first hard wear-out.
 
 1. `docs/AUDIT_6_2026-10-21.md` — the repo checked against the datasheets; blockers and decisions.
 2. `docs/STATUS.md` — the honest evidence page. Note `measured: 0`.
-3. `docs/90-history/decisions.md` — ADR-001…047. **This is the highest-signal document in the repo**:
+3. `docs/90-history/decisions.md` — ADR-001…049. **This is the highest-signal document in the repo**:
    it records decisions reversed by evidence, the V1 scope cut (ADR-034, ADR-044) and the pin budget (ADR-045).
 4. `docs/LONGEVITY_30Y.md` §1b — the reliability arithmetic.
 5. `docs/FIRMWARE_INTERFACE.md` + `firmware/rp2350/include/solardeck_regs.h` — the only artifact that
@@ -63,12 +67,12 @@ without a full carrier spin. Which can be measured on the display eval board alo
 and the panel in the same rig? Is a two-board lash-up acceptable for a pillar claim?
 
 ### Q4 — Battery, UN38.3, and shipping
-1S Li-ion in a user-replaceable smart pack (ADR-048): cell + protector + pack-side gauge, keyed
-connector, screws, no adhesive; capacity TBD until measured on the bench (pack: `battery_wh.li_ion`) (ADR-040). The LiFePO4
-shortlist (2026-10-21: EEMB LP7568130F, LP70103122F) fell below ADR-040's expectation and without
-verified UN38.3 reports, which triggered ADR-048; LiFePO4 is V2. No Li-ion cell is chosen yet, so
-`battery_wh.li_ion` stays null. UN38.3 is the longest-lead gate in the programme (~$8–15 k,
-6–10 weeks) and has no owner; a spare pack sold on its own needs it too.
+1S Li-ion in a user-replaceable smart pack (ADR-048): two EEMB LP7545135 cells in parallel (1S2P,
+`battery_wh.li_ion`), BQ298216 high-side protector, fuse and pack-side BQ27Z561-R2 gauge, keyed
+Hirose DF63 connector, screws, no adhesive (ADR-049). EEMB claims UN38.3 and IEC 62133 for the cell
+but publishes no report; pack-level reports are requested. LiFePO4 is V2. UN38.3 is the longest-lead
+gate in the programme (~$8–15 k, 6–10 weeks) and has no owner; a spare pack sold on its own needs it
+too. TI's gauge ships with a 4.4 V charge-voltage default, so pack programming is a safety step.
 **Attack:** does the chosen pack pass UN38.3 and IEC 62133-2, and does the screw-retained pack meet
 the EU Battery Regulation's user-replaceability requirement (applicability to confirm)? Which test
 house, which schedule, and what does a failed UN38.3 cost?

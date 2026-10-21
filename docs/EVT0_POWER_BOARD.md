@@ -2,7 +2,7 @@
 
 Written 2026-10-21 19:12 UTC in Claude Code by anthropic/claude-opus-5-5 (EVT-0 power board, ADR-043).
 Revised 2026-10-21 19:42 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion smart pack, ADR-048).
-Revised 2026-10-21 21:20 UTC in Claude Code by anthropic/claude-opus-5-5 (part picks, cell and verified datasheet facts, ADR-049).
+Revised 2026-10-21 20:42 UTC in Claude Code by anthropic/claude-opus-5-5 (part picks, cell and verified datasheet facts, ADR-049).
 
 **Status: capture spec only. No schematic, layout or netlist exists for this board.** Every pin
 assignment below comes from a datasheet that was open when it was written (Appendix A lists them
