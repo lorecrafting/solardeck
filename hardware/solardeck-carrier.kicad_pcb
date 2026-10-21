@@ -197,10 +197,10 @@
   )
 
   ;; Display Section: TMUX1575 (U14), IT8951 40-pin FPC (J_EPDC), Palm Gate (U15)
-  (footprint "Package_SO:TSSOP-24_4.4x7.8mm_P0.65mm" (layer "F.Cu")
+  (footprint "DSBGA-16 (dims per TI datasheet; see ADR-004)" (layer "F.Cu")
     (at 85.0 25.0)
     (fp_text reference "U14" (at 0 -4.5) (layer "F.SilkS") (effects (font (size 1 1) (thickness 0.15))))
-    (fp_text value "TMUX1575PWR" (at 0 4.5) (layer "F.Fab") (effects (font (size 1 1) (thickness 0.15))))
+    (fp_text value "TMUX1575YCJR" (at 0 4.5) (layer "F.Fab") (effects (font (size 1 1) (thickness 0.15))))
     (pad "1" smd rect (at -2.8 -3.575) (size 1.4 0.4) (layers "F.Cu" "F.Paste" "F.Mask"))
   )
   (footprint "Connector_FFC-FPC:Hirose_FH12-40S-0.5SH_1x40-1MP_P0.50mm_Horizontal" (layer "F.Cu")

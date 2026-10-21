@@ -24,6 +24,26 @@ def parse_netlist_nets(netlist_text):
 
     return nets
 
+def parse_netlist_comps(netlist_text):
+    """
+    Parses the (comp ...) section (ref/value/footprint) so audits can scan part
+    VALUES, not just net names -- a banned PN like TMUX1575PWR was hiding in a
+    value while rule 8 only looked at names.
+    Returns { ref: {value, footprint} }.
+    """
+    comps = {}
+    chunks = netlist_text.split('(comp (ref ')
+    for chunk in chunks[1:]:
+        ref_match = re.match(r'"([^"]+)"', chunk)
+        value_match = re.search(r'\(value\s+"([^"]+)"\)', chunk)
+        fp_match = re.search(r'\(footprint\s+"([^"]+)"\)', chunk)
+        if ref_match:
+            comps[ref_match.group(1)] = {
+                "value": value_match.group(1) if value_match else "",
+                "footprint": fp_match.group(1) if fp_match else "",
+            }
+    return comps
+
 def audit_hardware_traps():
     hw_dir = os.path.dirname(os.path.abspath(__file__))
     net_path = os.path.join(hw_dir, "solardeck-carrier.net")
@@ -121,8 +141,10 @@ def audit_hardware_traps():
         assert "J_SIM" in s_refs, f"{name} missing Nano-SIM (J_SIM) node"
     print("  ✓ Passed: Dual-SIM lines correctly multiplexed between Quectel modem, ST4SIM eSIM, and Nano-SIM.")
 
-    # Trap 8: Banned/descoped nets must not re-enter the electrical layer (longevity + ADR guards)
-    print("\n[Rule 8] Checking Banned/Descoped Nets are Absent (ADR-004/006/008/020/024)...")
+    # Trap 8: Banned/descoped nets must not re-enter the electrical layer (longevity + ADR guards).
+    # Scans BOTH net names AND component values: the TMUX1575PWR trap hid in a comp value while
+    # the rule only read net names, so the ban was silently dead code (B2 said DSBGA-YCJ only).
+    print("\n[Rule 8] Checking Banned/Descoped Nets + Component Values are Absent (ADR-004/006/008/020/024)...")
     banned_nets = [
         (r"POGO", "rear pogo bus descoped, USB-C only (ADR-006)"),
         (r"SNAP", "SnapDeck keyboard is Phase 2, not a V1 board net (ADR-020)"),
@@ -130,13 +152,19 @@ def audit_hardware_traps():
         (r"24.?FPS|FPS_24", "video-rate claim removed; 32MHz SPI gives ~6 fps 1-bit (ADR-018, B3)"),
         (r"TMUX1575PWR", "TMUX1575 has no PWR package; DSBGA YCJ only (B2)"),
     ]
-    banned_hits = [f"{name} ({why})" for name in nets
-                   for pat, why in banned_nets if re.search(pat, name)]
+    comps = parse_netlist_comps(net_content)
+    haystack = {}
+    for name in nets:
+        haystack[f"net:{name}"] = name
+    for ref, meta in comps.items():
+        haystack[f"comp:{ref}"] = f"{meta['value']} {meta['footprint']}"
+    banned_hits = [f"{label} ({why})" for label, text in haystack.items()
+                   for pat, why in banned_nets if re.search(pat, text)]
     if banned_hits:
-        print(f"  ❌ TRAP DETECTED: descoped nets present: {banned_hits}")
+        print(f"  ❌ TRAP DETECTED: descoped content present: {banned_hits}")
         traps_found += 1
     else:
-        print("  ✓ Passed: no descoped/banned nets in the netlist (all ADR-004/006/008/020 closures hold).")
+        print("  ✓ Passed: no descoped/banned nets or component values (all ADR-004/006/008/020 closures hold).")
 
     print("\n===================================================================")
     if traps_found == 0:

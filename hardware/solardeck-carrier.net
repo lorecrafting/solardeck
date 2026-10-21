@@ -145,8 +145,8 @@
       (sheetpath (names "/Compute_DualBrain/") (tstamps "/67000000-0002-0000-0000-000000000001/"))
       (tstamps "67000002-0006-0000-0000-000000000001"))
     (comp (ref "U14")
-      (value "TMUX1575PWR")
-      (footprint "Package_SO:TSSOP-24_4.4x7.8mm_P0.65mm")
+      (value "TMUX1575YCJR")
+      (footprint "DSBGA-16 (dims per TI datasheet; see ADR-004)")
       (datasheet "https://www.ti.com/lit/ds/symlink/tmux1575.pdf")
       (fields
         (field (name "Manufacturer") "Texas Instruments")

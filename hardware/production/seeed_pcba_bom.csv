@@ -11,7 +11,7 @@ U8,RP2350B,1,https://www.raspberrypi.com/products/rp2350/
 U9,APS6404L-3SQR-SN,1,https://www.lcsc.com/product-detail/RAM_APMemory-APS6404L-3SQR-SN_C3013854.html
 U10,W25Q128JVSIQ,1,https://www.digikey.com/en/products/detail/winbond-electronics/W25Q128JVSIQ/7349286
 U11,DS3231MZ+,1,https://www.lcsc.com/product-detail/Real-Time-Clocks-RTC_Analog-Devices-Maxim-Integrated-DS3231MZ_C141208.html
-U14,TMUX1575PWR,1,https://www.digikey.com/en/products/detail/texas-instruments/TMUX1575PWR/10291942
+U14,TMUX1575YCJR,1,https://www.digikey.com/en/products/detail/texas-instruments/TMUX1575YCJR/10291942
 J_EPDC,FH12-40S-0.5SH(55),1,https://www.digikey.com/en/products/detail/hirose-electric-co-ltd/FH12-40S-0-5SH-55/1110543
 U15,SN74LVC1G08DBVR,1,https://www.lcsc.com/product-detail/Logic-Gates_Texas-Instruments-SN74LVC1G08DBVR_C79893.html
 U16,VL805-Q6,1,https://www.lcsc.com/product-detail/USB-ICs_VIA-Tech-VL805-Q6_C463124.html

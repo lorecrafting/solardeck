@@ -13,15 +13,15 @@
     (comment 2 "TMUX1575 8-Ch SPDT + IT8951 EPDC + Wacom EMR + GT911 Blanking Gate")
   )
 
-  ;; U14: Texas Instruments TMUX1575PWR 8-Channel SPDT High-Speed Bus Switch
-  (symbol (lib_id "SolarDeck_Display:TMUX1575PWR") (at 127.0 101.6 0) (unit 1)
+  ;; U14: Texas Instruments TMUX1575YCJR, 4-channel 2:1 SPDT display bus mux (two devices = 8 channels)
+  (symbol (lib_id "SolarDeck_Display:TMUX1575YCJR") (at 127.0 101.6 0) (unit 1)
     (in_bom yes) (on_board yes) (dnp no)
     (uuid "67000003-0001-0000-0000-000000000001")
     (property "Reference" "U14" (at 127.0 58.42 0) (effects (font (size 1.27 1.27))))
-    (property "Value" "TMUX1575PWR" (at 127.0 60.96 0) (effects (font (size 1.27 1.27))))
-    (property "Footprint" "Package_SO:TSSOP-24_4.4x7.8mm_P0.65mm" (at 127.0 101.6 0) (effects (font (size 1.27 1.27)) hide))
+    (property "Value" "TMUX1575YCJR" (at 127.0 60.96 0) (effects (font (size 1.27 1.27))))
+    (property "Footprint" "DSBGA-16 (dims per TI datasheet; see ADR-004)" (at 127.0 101.6 0) (effects (font (size 1.27 1.27)) hide))
     (property "Datasheet" "https://www.ti.com/lit/ds/symlink/tmux1575.pdf" (at 127.0 101.6 0) (effects (font (size 1.27 1.27)) hide))
-    (property "Description" "8-Channel 2:1 SPDT Switch with Powered-off Protection (I_off < 10nA)" (at 127.0 101.6 0) (effects (font (size 1.27 1.27)) hide))
+    (property "Description" "4-Channel 2:1 SPDT Switch with Powered-off Protection (I_off < 10nA); two devices for 8 channels" (at 127.0 101.6 0) (effects (font (size 1.27 1.27)) hide))
     ;; Control & Power
     (pin "1" (uuid "67000003-0001-0001-0000-000000000001")) ; SEL (0 = Bank B0 CM4, 1 = Bank B1 RP2350)
     (pin "2" (uuid "67000003-0001-0002-0000-000000000001")) ; EN_L (Active LOW enable tied to GND)

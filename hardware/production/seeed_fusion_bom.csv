@@ -10,7 +10,7 @@ Item,Designator,Quantity,Manufacturer,Manufacturer Part Number (MPN),Description
 9,U9,1,APMemory,APS6404L-3SQR-SN,"8MB QSPI Pseudo-SRAM Framebuffer Buffer",SOIC-8_3.9x4.9mm,Seeed Sourced (SMT),LCSC C3013854
 10,U10,1,Winbond,W25Q128JVS,"16MB QSPI NOR Flash Dual-Bank Bootloader",SOIC-8_5.23mm,Seeed Sourced (SMT),LCSC C97521
 11,U11,1,Analog Devices / Maxim,DS3231MZ+,"High-Precision TCXO RTC with I2C",SOIC-8_3.9x4.9mm,Seeed Sourced (SMT),LCSC C141208
-12,U14,1,Texas Instruments,TMUX1575PWR,"4-Channel 2:1 SPDT Display Bus Mux with I_off (2 devices = 8 channels)",TSSOP-24_4.4x7.8mm,Seeed Sourced (SMT),LCSC C2841662 / TI direct
+12,U14,1,Texas Instruments,TMUX1575YCJR,"4-Channel 2:1 SPDT Display Bus Mux with I_off (2 devices = 8 channels)",DSBGA-16,Seeed Sourced (SMT),LCSC C2841662 / TI direct
 13,J_EPDC,1,Hirose / ITE,FH12-40S-0.5SH,"40-Pin 0.5mm Pitch FPC Connector for IT8951",FH12-40S-0.5SH,Seeed Sourced (SMT),LCSC C262657
 14,U15,1,Texas Instruments,SN74LVC1G08DBVR,"Single 2-Input Positive AND Gate (Palm Rejection)",SOT-23-5,Seeed Sourced (SMT),LCSC C79893
 15,U16,1,VIA Technologies,VL805-Q6,"PCIe Gen 2 to 4-Port USB 3.0 / 2.0 Host Controller",QFN-68-1EP_8x8mm,Seeed Sourced (SMT),LCSC C463124

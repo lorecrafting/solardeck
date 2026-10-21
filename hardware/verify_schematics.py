@@ -55,7 +55,7 @@ def verify_kicad_project():
         ("U9", "APS6404L-3SQR-SN"),
         ("U10", "W25Q128JVS"),
         ("U11", "DS3231MZ+"),
-        ("U14", "TMUX1575PWR"),
+        ("U14", "TMUX1575YCJR"),
         ("J_EPDC", "IT8951_FPC40"),
         ("U16", "VL805-Q6"),
         ("J_NVME", "M.2_Key-M_2242"),
