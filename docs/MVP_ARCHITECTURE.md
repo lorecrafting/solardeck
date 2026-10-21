@@ -150,7 +150,7 @@ V1 connectivity is Wi-Fi/BT on the CM5 plus phone tethering (ADR-034).
 │ 7. Autonomous Charger Safety (ADR-035):                                     │
 │    • TI BQ25798 charging is held off by its enable pin until the RP2350     │
 │      has written the LiFePO4 VREG (POR defaults are a Li-ion voltage).      │
-│    • The charger watchdog is fed or disabled only after VREG is written.    │
+│    • The charger watchdog is disabled before VREG is written (ADR-047).     │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 

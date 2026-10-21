@@ -6,21 +6,25 @@ Revised 2026-10-21 16:03 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / 
 
 Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
 
-Four internal audit rounds are done. Further internal reading has near-zero yield; the open questions
+Revised 2026-10-21 18:51 UTC in Claude Code by anthropic/claude-opus-5-5 (checkpoint after ADR-044–046; Q6 added).
+
+Five internal audit rounds are done, the last against the datasheets (AUDIT 6). Further internal reading has near-zero yield; the open questions
 are judgement calls that need an outside opinion. This is the brief for that review.
 
-State of the repo when this was written: **16 verification phases green in ~1.6 s**, 74 catalogued
-features with **0 measured**, 61 BOM line items with 24 captured in schematics, and a reliability model
-saying MTBF ≈ 114 years against a first hard wear-out at 8 years.
+State of the repo at this checkpoint (2026-10-21): every verification phase green, run locally before
+every push (no hosted CI, ADR-046); **nothing measured** (`docs/STATUS.md`); the schematic is an unwired
+placeholder; every CM5/RP2350 pin is budgeted and checked (`docs/PIN_BUDGET.md`); no fabrication files;
+software frozen until hardware exists; the reliability model (`spec_values.reliability`) puts random
+failure far beyond the first hard wear-out.
 
 ---
 
 ## Read this first (20 minutes, in order)
 
-1. `docs/AUDIT_4_2026-10-20.md` — the current state and the three showstoppers.
+1. `docs/AUDIT_6_2026-10-21.md` — the repo checked against the datasheets; blockers and decisions.
 2. `docs/STATUS.md` — the honest evidence page. Note `measured: 0`.
-3. `docs/90-history/decisions.md` — ADR-001…024. **This is the highest-signal document in the repo**:
-   it records two decisions reversed by evidence and three parts descoped for reliability.
+3. `docs/90-history/decisions.md` — ADR-001…047. **This is the highest-signal document in the repo**:
+   it records decisions reversed by evidence, the V1 scope cut (ADR-034, ADR-044) and the pin budget (ADR-045).
 4. `docs/LONGEVITY_30Y.md` §1b — the reliability arithmetic.
 5. `docs/FIRMWARE_INTERFACE.md` + `firmware/rp2350/include/solardeck_regs.h` — the only artifact that
    proves a firmware behaviour.
@@ -31,7 +35,7 @@ an expensive reviewer can do.
 
 ---
 
-## The five questions, in priority order
+## The six questions, in priority order
 
 ### Q1 — Is the 30-year claim defensible, or is this a 10-year device?
 Facts: the compute is the CM5 (ADR-031); Raspberry Pi has not published its end-of-production year
@@ -45,6 +49,7 @@ first silicon change?
 
 ### Q2 — Which daemons should never be built?
 41 daemons are specified, 2 exist, and a 30-year device with 41 daemons is a maintenance liability.
+Software is frozen until hardware exists (ADR-046), so this is the moment to cut the list, not build it.
 **Attack:** pick the cut. Which 8–10 earn their place for a survival/tactical/field user, and which are
 speculative? Use `docs/STATUS.md` and `docs/OFFGRID_TACTICAL_SENSORS.md` §8. Be brutal; the current
 catalogue was written by someone who likes features.
@@ -56,7 +61,11 @@ without a full carrier spin. Which can be measured on the display eval board alo
 and the panel in the same rig? Is a two-board lash-up acceptable for a pillar claim?
 
 ### Q4 — Battery, UN38.3, and shipping
-LiFePO4 pouch, capacity TBD until the cell is chosen (ADR-040), adhesive-free mechanical retention now. UN38.3 is the longest-lead gate in the
+LiFePO4 pouch, capacity TBD until the cell is chosen (ADR-040), adhesive-free mechanical retention now.
+Shortlist (2026-10-21): the best datasheet-backed cell in today's `battery_cell_mm` envelope is the
+EEMB LP7568130F, below ADR-040's expectation; the EEMB LP70103122F reaches it only with a wider,
+shorter bay. Capacities come from their datasheets; `battery_wh.lifepo4` stays null until the owner
+picks. Neither has a verified UN38.3 report. UN38.3 is the longest-lead gate in the
 programme (~$8–15 k, 6–10 weeks) and has no owner.
 **Attack:** does the chosen cell survive UN38.3, and is a pouch the right form factor for a 30-year
 serviceable device? Which test house, which schedule, and what does a failed UN38.3 cost?
@@ -67,6 +76,17 @@ ceramics at the highest-strain point of a corner drop are the worst fatigue site
 localized haptics.
 **Attack:** was that the right trade for a field device used with gloves, in sunlight, often one-handed?
 If localized haptics matter, is there a non-fatiguing way to get them?
+
+### Q6 — Which display controller, and does a 10.3″ Kaleido 4 exist?
+Facts (2026-10-21): E Ink announced Kaleido 4 on 2026-10-15 without public sizes, resolution or a
+sampling programme; the only announced device (Hanvon M10C II, China, December) uses E Ink's T2000
+timing controller, for which no small-company sampling route was found. The IT8951 drives mono Carta
+only. An open FPGA controller (Modos Glider / Caster) already drives Kaleido 3. The CM5 has no built-in
+e-paper controller. EMR: Wacom is OEM/NDA-only (W9013 over I²C is proven on mainline Linux); Hanvon
+Ugee sells custom EMR modules to businesses. An E Ink sales inquiry was sent 2026-10-21.
+**Attack:** should V1 commit to the T2000 route (needs E Ink), an open FPGA controller (needs Kaleido 4
+waveforms), or keep 10.3″ only if E Ink confirms it — and what is the fallback if Kaleido 4 is not
+offered at 10.3″?
 
 ---
 
@@ -83,7 +103,7 @@ If localized haptics matter, is there a non-fatiguing way to get them?
 | Redundancy | Rejected on arithmetic; spares instead (ADR-024) |
 
 Known-open, already documented, no opinion needed: thermal model, ergonomics
-(one vs two hands), schematic capture 24→61, `tools/archival/` container, RMA/spares/warranty model.
+(one vs two hands), schematic capture (placeholder, 40 of 52 parts, no wires), `tools/archival/` container, RMA/spares/warranty model.
 
 ---
 

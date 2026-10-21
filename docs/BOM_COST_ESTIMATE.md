@@ -25,7 +25,7 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **Battery** | LiFePO4 1S pouch cell, chosen from a buyable datasheet (ADR-040) | TBD | TBD | TBD |
 | **Power IC** | LiFePO4-capable buck-boost charger, VREG 3.0–18.8 V, OTG capped at 2 A (ADR-035) | Texas Instruments / Mouser | BQ25798 | TBD |
 | **USB-PD Sink Ctrl**| Standalone USB-PD 20W Fast Charge Sink Controller (9V/12V Contract)| WCH / STMicroelectronics / LCSC | CH224K / STUSB4500 | $0.45 |
-| **AON 3.3V Supply**| 60 nA IQ Synchronous Buck-Boost Converter (Perpetual 3.3V Rail) | Texas Instruments / Mouser | TPS62840DLYR | $0.85 |
+| **AON 3.3V Supply**| 60 nA IQ synchronous buck (always-on rail; cannot hold 3.3 V from LiFePO4, ADR-047 open item) | Texas Instruments / Mouser | TPS62840DLCR | $0.85 |
 | **5V Boost Conv**| 3.5A Synchronous Boost Converter (Main CM5/USB Supply) | Texas Instruments / Mouser | TPS61088RHLR | $1.20 |
 | **Micro-Solar** | Top-Bezel Monocrystalline Trickle Strip (~0.15W Peak, 50-120mW Real)| IXYS / DigiKey / Mouser | SM141K06L / PowerFilm | $3.50 |
 | **Power Gates** | Ultra-Low Leakage Load Switches (Airgap Cut + Port 2 VBUS) | Texas Instruments / LCSC | TPS22918DBVR (x2) | $0.80 |

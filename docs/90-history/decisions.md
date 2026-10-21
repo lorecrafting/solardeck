@@ -844,3 +844,37 @@ software right now since we don't have any hardware".
 
 **Costs.** Three more TBD BOM rows (privacy switch, RTC, flash) until quoted. Without hosted CI, a
 contributor who skips the hook can push red; the hook is the only gate.
+
+---
+
+## ADR-047 — What the EVT-0 datasheet pass changed (2026-10-21)
+
+Written 2026-10-21 19:19 UTC in Claude Code by anthropic/claude-opus-5-5. Source: `docs/EVT0_POWER_BOARD.md`,
+built pin by pin from the datasheets (ADR-043 step 2).
+
+**Decided (correctness, not preference).**
+- **The BQ25798 watchdog is disabled, never fed** (amends ADR-035's "fed or disabled"). On expiry the
+  charger returns to default mode and VREG to its Li-ion POR value (datasheet §7.3.2, §7.4.1).
+- **After any charger reset, firmware first stops charging** (lets `CHG_CE_N` go high), then re-runs the
+  VREG sequence. Until firmware notices, the BQ29706-class protector's overvoltage trip is the hardware
+  backstop.
+- **No ship FET on the charger**: with one, I²C stays off below about 3.3–3.55 V, which is where a
+  LiFePO4 cell sits (`charger.ship_fet`).
+- The always-on regulator's part number is TPS62840DLCR (the BOM's DLYR does not exist).
+
+**Open, for the owner or for capture (not decided here).**
+- **The always-on "3.3 V" rail cannot be 3.3 V from a LiFePO4 cell.** The TPS62840 is buck-only, so on
+  the cell's plateau it runs in dropout and the rail follows the battery. Either pick a low-quiescent
+  buck-boost, or run the always-on domain at a lower voltage (RP2350 I/O allows it) and re-check every
+  part on that rail.
+- **The solar harvester can charge a frozen cell.** The BQ25504 path has no temperature gate and bypasses
+  the charger's CE gate. A fix is needed before EVT-0 is built (AGENTS §4.1).
+- **USB-PD sink: STUSB4500 recommended** over CH224K (every requestable voltage is inside the
+  charger's input range; defined behaviour at 0 V; status over I²C). Owner to confirm.
+- **The 5 V boost (TPS61088) needs re-selection:** its datasheet and product page are unavailable.
+- **The gauge topology as drafted cannot be captured:** with low-side protector FETs its sense sign
+  inverts and its ground separates from the I²C ground when the protector opens.
+- **The protector's OVP must sit below the charger's POR VREG** for the backstop above to hold; a
+  Li-ion BQ297xx variant would not.
+- The gauge's I²C address and the RTC's address need verification; the gauge datasheet names
+  Li-ion/Li-polymer, so LiFePO4 support needs TI confirmation or chemistry characterisation (ADR-040).

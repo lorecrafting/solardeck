@@ -8,6 +8,8 @@ Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 sco
 
 Revised 2026-10-21 17:22 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, ADR-044/045).
 
+Revised 2026-10-21 19:12 UTC in Claude Code by anthropic/claude-opus-5-5 (EVT-0 power board, ADR-043).
+
 Purpose: buy the minimum bench hardware that proves the three make-or-break gate claims (G1, G2,
 G12) and the LiFePO4 charge path (ADR-035) as **measured** values, before any PCB fabrication money is spent. This is the physical
 companion to `HARDWARE_VERIFICATION_WORKFLOW.md` — that file owns the *method*, this file owns
@@ -134,3 +136,17 @@ single cell from a US-side vendor, not a pack.
 
 **Bottom line:** yes, buy Tranche 1 all at once (landed total TBD, §2); defer Tranche 2 until the
 gates pass; do not hand-solder anything until a DFM-for-hand pass makes it sensible.
+
+---
+
+## 6. After the bench: EVT-0, the power-only board (ADR-043 step 2)
+
+The bench proves the charge path on an evaluation board; EVT-0 proves it on our own power tree
+(charger, protector, gauge, PD sink, rails, harvester, load switches) with a Pico 2 on a header as the
+co-processor. The capture package, the charger hold-off register sequence and the board-specific
+bring-up order are in [`EVT0_POWER_BOARD.md`](EVT0_POWER_BOARD.md) (§3 and §7); this file does not
+repeat them. EVT-0 reuses this bench's instruments: the µA-resolution DMM (§4) for the battery-side
+floor, the real LiFePO4 cell for termination, and the Pico 2 as the host. It cannot start until
+the open items in its §8 that block capture are decided: AON rail source and its regulation (the
+TPS62840 cannot make 3.3 V from LiFePO4), CE behaviour with a flat cell, PD sink and port roles, the
+harvester's missing temperature gate, and the gauge's sense polarity and ground (ADR-047).

@@ -732,7 +732,19 @@
     "vreg_min_v": 3.0,
     "vreg_max_v": 18.8,
     "vreg_step_mv": 10,
-    "source": "datasheet: TI BQ25798 VREG_RANGE (ADR-035)"
+    "watchdog": "disabled",
+    "ship_fet": false,
+    "source": "datasheet: TI BQ25798 VREG_RANGE (ADR-035)",
+    "_comment_evt0": "datasheet SLUSDV2C. watchdog: expiry returns the charger to default mode and §7.3.2 says VREG returns to the 1s POR value, so it is disabled (REG10 WATCHDOG=0), never fed. ship_fet: VBAT_UVLOZ with a ship FET is 3.25-3.55 V (§6.5), above most of the LiFePO4 plateau, so SDRV gets its 1 nF and no FET. docs/EVT0_POWER_BOARD.md §3."
+  },
+  "harvester": {
+    "part": "BQ25504",
+    "vbias_v": 1.25,
+    "threshold_accuracy_pct": 5,
+    "rov1_mohm": 5.49,
+    "rov2_mohm": 4.53,
+    "vbat_ov_v": 3.42,
+    "source": "datasheet: TI BQ25504 SLUSAH0G VBIAS and VBAT_ACCURACY (§7.5), Eq. 3; vbat_ov_v is modelled from rov1/rov2. The harvester charges the cell without the CE gate, so Phase 14 asserts vbat_ov_v x (1 + accuracy) <= battery.charge_limit_v."
   },
   "power_bank": {
     "otg_max_a": 2.0,

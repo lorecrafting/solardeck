@@ -114,6 +114,18 @@ def check_charger(err):
     m = re.search(r"#define\s+SD_CHARGE_LIMIT_MV\s+(\d+)", hdr)
     if not m or int(m.group(1)) != limit_mv:
         err(f"firmware SD_CHARGE_LIMIT_MV ({m.group(1) if m else 'missing'}) != battery.charge_limit_v ({limit_mv} mV)")
+    # EVT-0 (docs/EVT0_POWER_BOARD.md §3.2): the VREG register code the RP2350 writes must follow the limit.
+    m = re.search(r"VREG_10:0 = 0x([0-9A-Fa-f]+)", read(os.path.join(ROOT, "docs", "EVT0_POWER_BOARD.md")))
+    if not m or int(m.group(1), 16) * c["vreg_step_mv"] != limit_mv:
+        err(f"EVT0_POWER_BOARD VREG code ({m.group(0) if m else 'missing'}) != {limit_mv} mV / {c['vreg_step_mv']} mV")
+    # The BQ25504 charges the cell without the CE gate: its OV threshold (Eq. 3) at worst-case accuracy
+    # must stay at or below the charge limit.
+    h = SPEC["harvester"]
+    ov = 1.5 * h["vbias_v"] * (1 + h["rov2_mohm"] / h["rov1_mohm"])
+    if abs(ov - h["vbat_ov_v"]) > 0.01:
+        err(f"harvester.vbat_ov_v {h['vbat_ov_v']} V != {ov:.3f} V from rov1/rov2 (BQ25504 Eq. 3)")
+    if ov * (1 + h["threshold_accuracy_pct"] / 100) > b["charge_limit_v"]:
+        err(f"harvester VBAT_OV {ov:.3f} V +{h['threshold_accuracy_pct']}% exceeds the {b['charge_limit_v']} V charge limit")
     alarm_mv = round(b["low_alarm_v"] * 1000)
     m = re.search(r"#define\s+SD_LOW_BATT_ALARM_MV\s+(\d+)", hdr)
     if not m or int(m.group(1)) != alarm_mv:

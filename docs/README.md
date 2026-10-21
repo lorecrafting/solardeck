@@ -25,6 +25,7 @@ Revised 2026-10-21 17:52 UTC in Claude Code by anthropic/claude-opus-5-5 (owner 
 | 14 | `HARDWARE_VERIFICATION_WORKFLOW.md` | What each verification phase proves, and what it does not |
 | 15 | `DEV_KIT_BENCH.md` | The bench that turns `modelled` numbers into `measured` ones — the next step |
 | 16 | `FIRST_BOOT_CHECKLIST.md` | Bench bring-up and acceptance gates |
+| 16b | `EVT0_POWER_BOARD.md` | EVT-0 power-only board (ADR-043): pin-level capture tables, the charger hold-off register sequence, cell-dependent TBDs, PD-sink choice, open items |
 | 17 | `CO_PROCESSOR_SURVEY.md` | Why RP2350, and the reader frame format |
 | 18 | `ARCHIVAL_BUILD.md` | Toolchain survival, offline reproducible build |
 | 19 | `STANDOUT_FEATURES.md` | The product pillars in full |
