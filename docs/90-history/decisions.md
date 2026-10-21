@@ -920,3 +920,75 @@ also left the always-on rail in dropout and the gauge without a listed chemistry
 margin than LiFePO4: the protector, fuse, JEITA charging and pack NTC are mandatory, not optional.
 The EU Battery Regulation's user-replaceability requirement for portable batteries is a further reason
 for the pack design; its exact applicability is to be confirmed (REGULATORY).
+
+---
+
+## ADR-049 — Pre-bench close-out: cell, EVT-0 parts, port roles, privacy switch, no batteryless mode (2026-10-21)
+
+Written 2026-10-21 20:42 UTC in Claude Code by anthropic/claude-opus-5-5. Owner: "finish everything
+that can be done before the bench test"; owner picks on 2026-10-21: EEMB 1S2P pack, port 1 sink /
+port 2 source, keep `NTC_GATE` on `J_PACK` pin 6, no KiCad capture yet. Sources are cited in
+`docs/EVT0_POWER_BOARD.md` §2 and Appendix A; prices in `docs/BOM_COST_ESTIMATE.md` (DigiKey/Mouser,
+2026-10-21, qty 1, before tariffs).
+
+**Trigger.** ADR-048 left the cell, five EVT-0 parts, three datasheet facts and ten BOM prices open,
+plus contradictions in the privacy switch, the solar "zombie mode" and the USB-C port roles.
+
+**Decisions.**
+- **Cell (owner):** two EEMB LP7545135 cells in parallel as a 1S2P smart pack built by EEMB
+  (`battery.cell_*`, `battery_wh.li_ion`, `battery_cell_mm`, datasheet). No candidate had a public
+  UN38.3 or IEC 62133 report; EEMB's are claimed only, so the RFQ asks for pack-level reports. The
+  pair is about 1 mm wider than the old 90 mm bay, and the tab fold plus pack board need length the
+  old 142 mm bay lacks: the bay is re-cut from EEMB's pack drawing. The single-cell alternative
+  (FPbattery 8574133) fit the bay but is 1C, preliminary and uncertified.
+- **Pack load (modelled):** the CM5 datasheet publishes no maximum draw, only a 2.5 A design figure
+  (App. B.3) and a 5 A PD ceiling (§1). The 5 V rail is budgeted at the CM5 design figure plus the
+  port 2 limit (`pack.rail_5v_a`); `pack.peak_a` is that load at `battery.low_alarm_v`. Phase 14
+  checks the cells (with `pack.discharge_margin`), the connector and the protector OVP against it.
+- **EVT-0 parts:** TPS61022 5 V boost (true output disconnect, closes open item 10; the TPS61088
+  is dropped); BQ298216 high-side protector + CSD83325L FETs; the pack fuse stays open (below); TLV7042 + TPS22916CN harvester gate (the LM66100 cannot
+  gate: active-low CE against VIN and body-diode conduction when off); Hirose DF63 6-pin pack
+  connector; NXP PCAL6416A GPIO expander at 0x20/0x21.
+- **Datasheet facts:** gauge 0x55 and RTC 0x52 confirmed. The pack check reads `ChargingVoltage()`,
+  the only charge-voltage value readable while sealed; **TI's data-flash default is 4400 mV**, so
+  every pack is programmed to the limit before sealing. The RP2350 pad pull-down (36 kΩ min) keeps
+  CE high in reset. The BQ25798 16-bit byte order is not stated in the datasheet: a bench read of
+  REG01's reset value confirms it before the first VREG write.
+- **CE pad freeze (new open item 19):** RP2350 pad isolation can latch `CHG_CE_N` low if the core
+  powers down while charging. Firmware rule now, hardware gate decided at carrier capture, bench
+  step 5b.
+- **USB-C roles (owner):** port 1 is the only power input (STUSB4500) and the CM5's USB device /
+  re-flash port; port 2 is host and the only power output (TUSB320 strapped source-only, TPS2051B,
+  `usb.port2_current_limit_a`). The BQ25798 OTG mode and the LM66100 OR-ing pair are dropped;
+  `power_bank.otg_max_a` is replaced by `power_bank.port`. Supersedes ADR-035's OTG cap.
+- **Privacy switch:** one switch everywhere (the separate "airgap switch" text is gone). No sealed
+  on-on-on part exists, so it is the E-Switch 600DP3S2M4R (2-pole on-off-on): centre = MIC MUTE,
+  an open switch fails to MIC MUTE, and both poles switch logic nets that drive hardware gates. Two
+  sense lines on the expander (EXP 2 `PRIVACY_MUTE`, EXP 7 `PRIVACY_BLACKOUT_N`) encode the three
+  positions; one line could not.
+- **No batteryless mode:** the "zombie mode" supercapacitor boot and the zero-battery SOS are
+  withdrawn. No supercapacitor is in the BOM, the harvester's temperature gate reads the pack NTC
+  and fails off without a pack, and the gate's rail is down with a tripped pack and no VBUS. The SOS
+  placard now fires at the low-battery alarm. HARDWARE_SPEC's BQ25504 cold-start figures now cite
+  the datasheet.
+- **`J_PACK` pin 6 (owner):** stays `NTC_GATE`; the host polls the gauge's `InterruptStatus()`.
+- **Not done:** KiCad capture of EVT-0 (owner: not now; the capture spec is the input when the
+  board is ordered). The placeholder schematic and production CSVs still list superseded parts
+  (`hardware/production/NOT_FOR_FAB.md`); the first real capture replaces them (ADR-034).
+
+- **Found in review, left open (EVT-0 open item 20):** the pack current path does not yet agree on
+  one limit. Phase 14 checks the modelled load at the alarm voltage only; below it the same load
+  exceeds the 8 A FETs and connector, the protector's OCD (13–15 A) and any Nano2 fuse (≥ 20 A) would
+  not stop a 9–13 A fault, and the TPS61022 falls short near 3.0 V. The fuse is therefore unpriced.
+  The privacy switch's FULL BLACKOUT depends on pole B making contact; a failed pole B reads as
+  MIC MUTE (HARDWARE_SPEC §2.25).
+- **Phase 10** now fails on a backticked spec key that does not exist, and on the stale 510 g mass
+  and 142 × 90 envelope.
+
+**Delta.** BOM: 53 rows, 3 TBD (panel, controller, battery pack); total in `bom_total_low/high`.
+Stock risks: TPS63900, TPS61022 and RV-3028-C7 had no distributor stock on 2026-10-21 (Mouser
+expects the RTC in April 2027).
+
+**Still assumes.** EEMB builds the pack and supplies pack-level UN38.3; TI confirms the BQ2980 and
+BQ27Z561 can share one sense resistor; the TPS61022's output at the bottom of the pack's range is
+enough for `pack.rail_5v_a` (EVT-0 step 8).

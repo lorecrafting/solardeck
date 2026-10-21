@@ -11,13 +11,14 @@
   "chassis_cavity_depth_mm": 12.5,
   "display_stack_mm": null,
   "battery_cell_mm": [
-    142.0,
-    90.0,
-    8.5
+    137.0,
+    91.0,
+    7.8
   ],
+  "_comment_battery_cell_mm": "datasheet (ADR-049): the 1S2P cell pair, maximum dimensions L x W x T from EEMB LP7545135 spec §3: L1 137.0 incl. seal, 2 x W 45.5, T 7.8 max. Tabs (10 +/- 1 mm) fold back and the pack board sits at the tab end; the bay length for both is TBD from EEMB's pack drawing (RFQ). No swelling allowance is stated.",
   "battery_wh": {
-    "li_ion": null,
-    "_comment": "ADR-040/048: null until a buyable, certified cell's datasheet exists."
+    "li_ion": 33.3,
+    "_comment": "datasheet (ADR-049): EEMB LP7545135 spec ZJQM-RD-SPC-H1734 (2020-11-17) §2, 4500 mAh nominal (4300 min) at 3.7 V nominal, two cells in parallel (1S2P): 2 x 4.5 Ah x 3.7 V. Phase 14 re-derives it from battery.cell_*."
   },
   "solar_w": {
     "bezel_strip": 0.15,
@@ -64,7 +65,7 @@
   "standout_pillars": 7,
   "engineering_pillars": 9,
   "verification_phases": 16,
-  "core_bom_line_items": 52,
+  "core_bom_line_items": 53,
   "schematic_coverage_baseline": 40,
   "pcb_thickness_mm": 1.0,
   "rear_wall_mm": 1.5,
@@ -585,8 +586,8 @@
     "unpowered_months": 12,
     "drop_orientations": 26
   },
-  "bom_total_low": 477.8,
-  "bom_total_high": 479.8,
+  "bom_total_low": 524.76,
+  "bom_total_high": 526.76,
   "cm5": {
     "_comment": "CM5 pivot (ADR-031, 2026): V1 moves from CM4 8 GB/32 GB eMMC to CM5 16 GB/64 GB eMMC wireless (CM5116064 / SC1608). 16 GB DRAM is the LLM-resident assumption: the 1-3B local model tier runs in RAM without swap/heritage modes. eMMC 64 GB holds the base image, reader cache, and full offline corpus. Wireless variant carries the Wi-Fi/BT that CM4 needed a USB dongle for — one less peripheral spine. The BOM compute row is priced at price_usd; Phase 14 totals were re-derived on 2026-10-21.",
     "sku": "CM5116064",
@@ -596,7 +597,10 @@
     "wireless": true,
     "price_usd": 375,
     "soc": "BCM2712 quad Cortex-A76 @ 2.0/2.4 GHz",
-    "llm_resident": true
+    "llm_resident": true,
+    "supply_design_a": 2.5,
+    "supply_max_a": 5.0,
+    "_comment_supply": "datasheet: CM5 datasheet Release 3 (build 2026-06-08) App. B.3 'should accommodate 5 V at up to 2.5 A' (supply_design_a); §1 USB PD 'up to 5 A at 5 V', a system ceiling that includes downstream USB (supply_max_a). No maximum CM5 draw is published (Table 9 gives typicals only)."
   },
   "power": {
     "insolation_kwh_m2_day": 4.28,
@@ -610,7 +614,7 @@
     "rd_independent_per_cc_pin": true,
     "rd_present_at_0v": true,
     "cc_max_capacitance_pf": 0,
-    "port1_role": "DRP",
+    "port1_role": "sink",
     "port2_role": "host",
     "port2_current_limit_a": 1.5,
     "no_data_lines_diagnostic_s": 3,
@@ -619,7 +623,8 @@
       "uart_swd_header",
       "microsd_image"
     ],
-    "hotpacks_must_include_rd_pair": true
+    "hotpacks_must_include_rd_pair": true,
+    "_comment_roles": "ADR-049: port 1 is the only power input (STUSB4500 PD sink, dead-battery Rd) and the CM5's USB device / nRPI_BOOT port; port 2 is the host port and the only power output (5 V boost through the TPS2051B at port2_current_limit_a), with the TUSB320 as its source-only CC controller. The BQ25798's OTG mode is not used."
   },
   "reliability": {
     "fit_total": 935,
@@ -725,8 +730,34 @@
     "chemistry": "Li-ion",
     "charge_limit_v": 4.2,
     "low_alarm_v": 3.4,
-    "pack": "replaceable smart pack: cell + protector + pack-side BQ27Z561 gauge, keyed connector (pack+, pack-, SDA, SCL, NTC); no adhesive (ADR-048)",
-    "_comment": "ADR-048: one chemistry per hardware revision, no selector. charge_limit_v is the standard Li-ion 4.20 V (AGENTS §4.1 ceiling). low_alarm_v (modelled): the RP2350 raises power-fail here so Linux can flush before the pack protector trips. Firmware refuses to charge a pack whose gauge reports a different design charge voltage."
+    "pack": "replaceable smart pack: two cells in parallel + pack-side BQ298216 protector, CSD83325L FETs, fuse and BQ27Z561-R2 gauge; keyed 6-pin connector (pack+, pack-, SDA, SCL, NTC, NTC_GATE); no adhesive (ADR-048, ADR-049)",
+    "_comment": "ADR-048: one chemistry per hardware revision, no selector. charge_limit_v is the standard Li-ion 4.20 V (AGENTS §4.1 ceiling). low_alarm_v (modelled): the RP2350 raises power-fail here so Linux can flush before the pack protector trips. Firmware refuses to charge a pack whose gauge reports a different design charge voltage.",
+    "cell": "EEMB LP7545135",
+    "cells_parallel": 2,
+    "cell_capacity_mah": 4500,
+    "cell_nominal_v": 3.7,
+    "cell_max_discharge_a": 9.0,
+    "cell_max_charge_a": 4.5,
+    "cell_charge_temp_c": [
+      0,
+      45
+    ],
+    "cell_source": "datasheet: EEMB LP7545135 spec ZJQM-RD-SPC-H1734, 2020-11-17, §2-3: 2C continuous discharge, 1C charge (0.3C from 0 to 20 °C), charge 0-45 °C. UN38.3 / IEC 62133 claimed on eemb.com only; pack-level reports requested (ADR-049)."
+  },
+  "pack": {
+    "boost": "TPS61022",
+    "boost_efficiency": 0.85,
+    "rail_5v_a": 4.0,
+    "peak_a": 6.92,
+    "discharge_margin": 1.5,
+    "protector": "BQ298216",
+    "protector_ovp_v": 4.3,
+    "protector_ovp_acc_mv": 25,
+    "protector_uvp_v": 2.5,
+    "connector": "Hirose DF63, 6 positions, 3.96 mm",
+    "connector_contact_a": 8.0,
+    "fuse": "Littelfuse 456 Nano2 family considered; rating and part open (EVT-0 open item 20)",
+    "_comment": "ADR-049. boost_efficiency (modelled assumption). rail_5v_a (modelled) = cm5.supply_design_a + usb.port2_current_limit_a, the 5 V rail's worst case. peak_a (modelled) = rail_5v_a x 5 V / (boost_efficiency x battery.low_alarm_v): pack current at full 5 V load at the alarm voltage. discharge_margin (design rule): the cells' continuous rating must exceed peak_a by this factor. protector_* (datasheet): TI SLUSCS3L Rev L §4, BQ298216 OVP 4.300 V +/-25 mV, UVP 2.500 V. connector_contact_a (datasheet): Hirose DF63 catalog 5/2025 p.4, 8 A at 18 AWG, 6 positions. Phase 14 checks all four relations. LIMITS (EVT-0 open item 20): peak_a is evaluated at battery.low_alarm_v; below it, down to protector_uvp_v, the same load draws more, so firmware must shed port 2 and shut the CM5 down at the alarm. rail_5v_a omits the display supply. connector_contact_a is the 18 AWG rating."
   },
   "charger": {
     "part": "BQ25798",
@@ -736,7 +767,8 @@
     "watchdog": "disabled",
     "ship_fet": false,
     "source": "datasheet: TI BQ25798 VREG_RANGE (ADR-035)",
-    "_comment_evt0": "datasheet SLUSDV2C. watchdog: expiry returns the charger to default mode and §7.3.2 says VREG returns to the 1s POR value, so it is disabled (REG10 WATCHDOG=0), never fed. ship_fet: VBAT_UVLOZ with a ship FET is 3.25-3.55 V (§6.5), which would block I²C on a deeply discharged pack, so SDRV gets its 1 nF and no FET (ADR-048 keeps this). docs/EVT0_POWER_BOARD.md §3."
+    "_comment_evt0": "datasheet SLUSDV2C. watchdog: expiry returns the charger to default mode and §7.3.2 says VREG returns to the 1s POR value, so it is disabled (REG10 WATCHDOG=0), never fed. ship_fet: VBAT_UVLOZ with a ship FET is 3.25-3.55 V (§6.5), which would block I²C on a deeply discharged pack, so SDRV gets its 1 nF and no FET (ADR-048 keeps this). docs/EVT0_POWER_BOARD.md §3. vreg_acc_max_pct: VREG_ACC at 4.2 V is -0.45/+0.95 % (§6.5); the pack protector's minimum OVP must clear it (Phase 14).",
+    "vreg_acc_max_pct": 0.95
   },
   "harvester": {
     "part": "BQ25504",
@@ -750,8 +782,8 @@
     "resistor_tol_pct": 1
   },
   "power_bank": {
-    "otg_max_a": 2.0,
-    "_comment": "ADR-035 cap; aspirational until measured with the protector in circuit."
+    "port": 2,
+    "_comment": "ADR-049 (supersedes ADR-035's OTG cap): the power bank is USB-C port 2 at usb.port2_current_limit_a, fed from the 5 V boost through the TPS2051B. The BQ25798 OTG mode is not used, because port 1 is sink-only."
   },
   "gnss": {
     "part": "u-blox MAX-M10S",
@@ -1046,7 +1078,7 @@
         "use": "v1"
       },
       "2": {
-        "net": "AIRGAP_SENSE",
+        "net": "PRIVACY_MUTE",
         "fn": "gpio",
         "use": "v1"
       },
@@ -1067,6 +1099,11 @@
       },
       "6": {
         "net": "CC_INT_N",
+        "fn": "gpio",
+        "use": "v1"
+      },
+      "7": {
+        "net": "PRIVACY_BLACKOUT_N",
         "fn": "gpio",
         "use": "v1"
       },

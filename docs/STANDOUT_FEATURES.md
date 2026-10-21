@@ -174,7 +174,7 @@ In an era of cloud-locked, fragile, spy-by-design hardware, SolarDeck is an **in
 Consumer electronics are designed for planned obsolescence: when Apple or Lenovo releases a faster chip, your $1,500 laptop must be thrown in the trash. The RAM is soldered, the SSD is soldered, and the CPU is locked.
 
 SolarDeck is designed with **Generational Modular Longevity**:
-* The expensive components—the **10.3" Color E-Ink glass**, the **Wacom EMR digitizer**, the **precision CNC/SLS enclosure**, and the **carrier motherboard**—are built to last a decade. The battery is the exception: a user-replaceable Li-ion smart pack (capacity TBD until the cell is chosen, ADR-040), swapped as a service part (ADR-048).
+* The expensive components—the **10.3" Color E-Ink glass**, the **Wacom EMR digitizer**, the **precision CNC/SLS enclosure**, and the **carrier motherboard**—are built to last a decade. The battery is the exception: a user-replaceable Li-ion smart pack (capacity `battery_wh.li_ion`, ADR-049), swapped as a service part (ADR-048).
 * The compute brain, RAM, and mass storage are **100% modular and field-upgradable in under 60 seconds with two screws**.
 
 ```
@@ -270,8 +270,8 @@ An on-screen **held-call PTT target** behaves like the voice button when Linux i
 
 By orchestrating and cross-wiring the existing hardware components in innovative ways, SolarDeck delivers four extraordinary convenience features without adding a single cent to the Bill of Materials:
 
-### 1. The Survival Powerbank (Reverse OTG, ADR-035)
-* Utilizing the OTG boost mode of the **TI BQ25798** charger, SolarDeck sources USB power backwards through USB-C Port 1 or 2 to charge external smartphones, flashlights, or radios, capped at `power_bank.otg_max_a` (2 A).
+### 1. The Survival Powerbank (USB-C Port 2, ADR-049)
+* SolarDeck sources 5 V from USB-C Port 2 through its current-limited switch to charge external smartphones, flashlights, or radios, capped at `usb.port2_current_limit_a`.
 * **Linux Stays 100% Asleep (0.000W):** The RP2350 co-processor manages power delivery and displays a live, crisp battery percentage and output wattage on the E-Ink screen. Never carry a separate powerbank again.
 
 ### 2. The Solar Micro-Strip as a Free Ambient Light Sensor ($0.00 Cost)
@@ -414,9 +414,8 @@ Carrying a giant 6.7" glass smartphone alongside a 10.3" sovereign e-ink termina
 * **The 25.3" / 13.3" E-Ink Advantage:** Unlike LCD/OLED monitors that burn 15W–25W continuous backlight power, external E-Ink monitors (Dasung Paperlike 253, Boox Mira Pro 25.3" 3200×1800) consume **0.000W holding power on static text**.
 * **Wayland Multi-Head Orchestration:** `solardeck-dockd` automatically binds high-density workspaces 1–8 to the big monitor, pins van telemetry (Victron battery, water tanks, Meshtastic chat) to the 10.3" internal screen, and locks Wacom stylus input strictly to the internal display.
 
-### 2. Blackout Supercapacitor Emergency SOS Beacon
-* **The Zero-Battery Bootstrap:** When the battery pack is flat (protector open) or missing, an onboard **1.0F 3.3V supercapacitor** fed by the front micro-solar strip charges in 12–15 minutes under direct sunlight.
-* **150ms Cold Burst:** RP2350 cold-boots, grabs last-known GNSS (MAX-M10S) coordinates from RTC NVRAM, burns an indelible distress placard onto the 10.3" screen. The distress message remains legible forever with **0.000W battery consumption**. The radio SOS burst is V2 (ADR-044).
+### 2. Low-Battery Emergency SOS Placard
+* **Before the pack runs out:** at the power-fail alarm (`battery.low_alarm_v`) the RP2350 draws a distress placard with the last GNSS (MAX-M10S) fix and the time; the bistable panel keeps it visible with no power. It does not boot from solar with a flat or missing pack (ADR-049). The radio SOS burst is V2 (ADR-044).
 
 ### 3. Zero-Hardware Wacom Field Caliper & CAD Digitizer
 * **10mm Hover Tracking:** The Wacom EMR digitizer senses the stylus tip up to 10 mm above the glass with **0.1 mm precision**, allowing contact-free measurement of delicate physical specimens without touching the screen.
@@ -461,11 +460,11 @@ Engineered specifically to defeat forensic extraction kiosks (Cellebrite UFED, M
 
 ---
 
-## Pillar 13: Perpetual Solar Zen Ecosystem & Immortal Batteryless Mode
+## Pillar 13: Solar Zen Ecosystem (ambient modes on the co-processor)
 
 *Written 2026-10-19 15:50 UTC in the Pi harness by antigravity/gemini-3.8-flash*
 
-Transforming SolarDeck from an active computer into an immortal, zero-battery ambient station and off-grid mind gym powered purely by ambient sunlight:
+SolarDeck as a low-power ambient station and off-grid mind gym running on the RP2350 from the pack, which the bezel strip tops up outdoors (ADR-041; there is no batteryless mode, ADR-049):
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -488,13 +487,13 @@ Transforming SolarDeck from an active computer into an immortal, zero-battery am
 │ 5. Daily Stoic &    │ 10,000 Text Curated   │ Auto-refreshes at solar dawn; │
 │    Tao Te Ching     │ Offline Typography    │ zero battery drain all day.   │
 ├─────────────────────┼───────────────────────┼───────────────────────────────┤
-│ 6. Immortal Solar   │ Dual-Bezel IBC Panel  │ Direct solar cold-boot via    │
-│    "Zombie Mode"    │ (1.24W) + 1.0F Supercap│ 1.0F supercap (Zero battery). │
+│ 6. Solar top-up     │ Dual-Bezel IBC Panel  │ Optional accessory; tops up   │
+│    accessory        │ (1.24W, §2.28)        │ the pack outdoors only.       │
 └─────────────────────┴───────────────────────┴───────────────────────────────┘
 ```
 
 1. **Full-Width Dual-Bezel IBC Solar Array:** SunPower Maxeon Gen 7 back-contact monocrystalline strips ($51.6\text{ cm}^2$ total area across top and bottom bezels) generate **1.24W peak in direct sunlight** and **120 mW to 240 mW in indirect shade**—an **8× to 20× surplus** over the 4.5 mW to 15 mW required for RP2350 operation.
-2. **Batteryless Direct Solar Cold-Boot ("Zombie Mode"):** Even with the battery pack missing or flat (protector open), sunlight charges the onboard 1.0F supercapacitor in **under 25 seconds**, cold-booting the RP2350 into the Zen Solar Suite indefinitely.
+2. **No batteryless mode (ADR-049):** solar reaches only the pack, through its hardware temperature gate, so it never boots the device with a flat or missing pack.
 3. **Mind Games & Intellectual Entertainment:** Infinite E-Ink chess, Infocom interactive fiction (*Zork*), procedural daily Sudoku/Wordle, and stoic philosophy oracles run completely offline with **zero battery drain** between user actions.
 4. **Perpetual Solar Mesh Relay:** V2 (ADR-044): needs the deferred on-board LoRa radio.
 5. **Snap-On MagSafe 7.1W "Solar Armor" Backplate & 2.5m Remote Shade Tether (`SOLAR-ARMOR-V1`):**

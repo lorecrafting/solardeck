@@ -110,7 +110,7 @@ Before inserting the CM5, initialize the RP2350B co-processor to confirm power s
 ## 5. First Boot & Verification Run
 
 1. **Power Application:**
-   * Connect the Li-ion smart pack (capacity TBD until the cell is chosen, ADR-040) to `J_BAT` through its keyed connector (ADR-048).
+   * Connect the Li-ion smart pack (capacity `battery_wh.li_ion`, ADR-049) to `J_BAT` through its keyed connector (ADR-048).
    * Confirm the RP2350 reads the pack gauge's design charge voltage over the pack connector's SDA/SCL before any charge is enabled, and that a pack (or gauge-programmed test pack) reporting a different design voltage is refused: charging stays off (ADR-048).
    * Connect a USB-PD 20W charger to USB-C Port 1. Confirm charging stays **off** until the RP2350 has written the BQ25798 VREG to `battery.charge_limit_v` (charger enable pin held off, ADR-035); only then does the amber charge LED illuminate. Read VREG back over I²C before leaving the pack on charge.
    * Verify the solar harvester's hardware temperature gate: with the pack NTC driven outside the charge-temperature window (heat or cool the NTC, or substitute a resistor), the harvester's output must switch off with no firmware involved (`harvester.temperature_gate`, AGENTS §4.1).

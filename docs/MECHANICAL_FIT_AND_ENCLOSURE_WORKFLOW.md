@@ -104,18 +104,18 @@ Two vertical branches share the cavity. The limit is the **battery branch**, not
 ├─────────────────────────────────────────────────────────┼───────────┤
 │ 1-4. Display glass stack (as above)                      │    TBD    │
 │ 5. Main Carrier PCB (6-layer ENIG)                       │  1.20 mm  │
-│ 6. Li-ion smart pack, envelope 142 x 90 x 8.5mm (Wh TBD) │  8.50 mm  │
+│ 6. Li-ion smart pack, 1S2P cells `battery_cell_mm`        │ cell T    │
 │    Branch B total (cavity requirement)                   │    TBD    │
 ├─────────────────────────────────────────────────────────┼───────────┤
 │ 7. Rear Unibody Enclosure Wall (CNC 6061-T6 / PA12)      │  1.50 mm  │
 ├─────────────────────────────────────────────────────────┼───────────┤
-│ TOTAL OVERALL THICKNESS (stack TBD+1.20+8.50+1.50 + tol) │ 14.00 mm  │
+│ TOTAL OVERALL THICKNESS (stack TBD + PCB + cell + wall)   │ 14.00 mm  │
 └─────────────────────────────────────────────────────────┴───────────┘
 ```
 
-The CM5 sits *beside* the cell, not on top of it: a 142 x 90 mm pouch occupies the lower-left of the cavity and the CM5 + DF40 stack occupies the upper-right, sharing the same display stack above them. The cavity is 12.5 mm; whether the battery branch clears it is TBD until the Kaleido 4 stack thickness is known (ADR-032), and the CM5 module height is TBD — verify on CM5.
+The CM5 sits *beside* the cell, not on top of it: the 1S2P cell pair (`battery_cell_mm`) occupies the lower-left of the cavity and the CM5 + DF40 stack occupies the upper-right, sharing the same display stack above them. The cavity is 12.5 mm; whether the battery branch clears it is TBD until the Kaleido 4 stack thickness is known (ADR-032), and the CM5 module height is TBD — verify on CM5.
 
-**Why not thinner:** the 8.5 mm cell envelope is a placeholder; pack capacity is TBD until the cell is chosen (ADR-040). The envelope must also hold the pack board (protector, gauge), the keyed pack connector and a pull tab, with screw access for user replacement and no adhesive (ADR-048). `docs/90-history/decisions.md` ADR-009 records the thickness trade; its capacity figures are re-derived from the chosen cell's datasheet, and a thinner variant stays a deferred SKU, not a free change.
+**Why not thinner:** the cells are chosen (ADR-049, `battery_cell_mm`, `battery_wh.li_ion`). The pair is wider than the old 90 mm bay and the pack board's length is TBD from EEMB's pack drawing, so the bay outline is re-cut when that drawing arrives. The envelope must also hold the pack board (protector, gauge), the keyed pack connector and a pull tab, with screw access for user replacement and no adhesive (ADR-048). `docs/90-history/decisions.md` ADR-009 records the thickness trade; its capacity figures are re-derived from the chosen cell's datasheet, and a thinner variant stays a deferred SKU, not a free change.
 
 ### 4.3 FPC Ribbon Bend Radius & Relief Slot
 * The ribbon cable must bend $180^\circ$ around the internal midframe to reach the carrier PCB ZIF connector on the reverse side.

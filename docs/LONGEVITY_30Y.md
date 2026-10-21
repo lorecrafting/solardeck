@@ -121,7 +121,7 @@ Only two are needed. Humidity, dew point and temperature logging already exist i
 | **Always-on thermal viscosity assist** | Heating the panel accelerates dye fade and the battery's calendar aging. Keep it as opt-in burst mode only. | −$0, −aging |
 | **"2 TB NVMe as cold storage"** | It is a working drive, not an archive. Sell the vault microSD + printed/paper archive as the archival path; keep NVMe for LLM weights. | −$0, −false claim |
 | **IP67-with-TPU-bumpers claim** | Replace with "IP54 (V1 target), IP67 (V2 target) with the specified gasket; bumpers are impact only" (ADR-039). | −$0, −over-claim |
-| **1.0 F supercapacitor zombie mode as a headline** | Supercaps age ~10 years and their ESR doubles. Keep as an accessory capability, not a pillar. | −$0, −claim |
+| **1.0 F supercapacitor zombie mode** | Supercaps age ~10 years and their ESR doubles; withdrawn entirely by ADR-049 (the harvester's temperature gate is off without a pack). | −$0, −claim |
 
 Net: **−$5.55 of BOM is certain** and four failure modes leave with it. The NVMe line is a
 positioning change, not a cost saving.

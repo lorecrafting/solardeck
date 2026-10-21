@@ -149,7 +149,7 @@ Numbers live in [`docs/spec_values.json`](docs/spec_values.json); this table nam
 | Voice | Two MEMS mics owned by the co-processor, speaker, hold-to-talk button, mute switch — ADR-036, ADR-046 |
 | Haptics | DRV2605L + frame-mounted LRA, plus typewriter sound — ADR-037 |
 | Battery | 1S Li-ion in a user-replaceable smart pack (protection + gauge in the pack); capacity claimed only from a real datasheet — ADR-048 (`battery`, `battery_wh`) |
-| Charging & power | BQ25798 charger, STUSB4500 USB-C PD sink, buck-boost always-on rail, power bank capped at 2 A — ADR-035, ADR-048 |
+| Charging & power | BQ25798 charger, STUSB4500 USB-C PD sink, buck-boost always-on rail, power bank on USB-C port 2 — ADR-035, ADR-048, ADR-049 |
 | Solar | Bezel strip with a hardware temperature gate; outdoor top-up only — ADR-041, ADR-048 (`solar_w`) |
 | Radios | Wi-Fi/BT on the CM5, u-blox MAX-M10S GPS on the co-processor — ADR-038 (`gnss`) |
 | Storage | eMMC + M.2 NVMe + microSD; native USB 3 — ADR-042 |
@@ -164,11 +164,16 @@ Numbers live in [`docs/spec_values.json`](docs/spec_values.json); this table nam
 | :--- | :--- |
 | Specs & decisions | Detailed, with one source of truth for numbers and a full [decision log](docs/90-history/decisions.md). |
 | Pin budget | Every CM5 and RP2350 pin assigned for V1 and V2, checked against the datasheets ([`docs/PIN_BUDGET.md`](docs/PIN_BUDGET.md)). |
-| Power board | Capture-ready design package for the first board, EVT-0 ([`docs/EVT0_POWER_BOARD.md`](docs/EVT0_POWER_BOARD.md)). |
+| Power board | Capture-ready design package for the first board, EVT-0, every part picked from a datasheet ([`docs/EVT0_POWER_BOARD.md`](docs/EVT0_POWER_BOARD.md), ADR-049). |
+| Battery | Two EEMB LP7545135 cells as a 1S2P smart pack (`battery_wh.li_ion`); pack quote and UN38.3/IEC 62133 reports requested (ADR-049). |
+| Cost | Every part priced except the panel, its controller and the battery pack (`docs/BOM_COST_ESTIMATE.md`). |
 | Schematic / PCB | Not started for real: the KiCad files are unwired placeholders, and there are no fabrication files. |
 | Software | Frozen until there is hardware to run it on (ADR-046). |
 | Measurements | None yet. Every performance figure is modelled or aspirational. |
 | Certification | Not started ([`docs/REGULATORY.md`](docs/REGULATORY.md)). |
+
+**Frozen until hardware (2026-10-21).** Everything that can be done without parts is done; the repo
+waits on the items below.
 
 **What we're waiting on:**
 1. **Kaleido 4 (E Ink).** Announced without public sizes, resolution or a sampling programme; a 10.3″
@@ -176,8 +181,8 @@ Numbers live in [`docs/spec_values.json`](docs/spec_values.json); this table nam
    until the datasheet exists (ADR-032), and the case outline waits on its drawing.
 2. **The pen layer.** Wacom works with OEMs under NDA; Hanvon Ugee sells custom EMR modules to
    businesses. We'll ask for quotes once the panel size is confirmed.
-3. **A certified Li-ion cell (ADR-048).** Chosen from a datasheet with UN38.3 and IEC 62133 reports;
-   `battery_wh.li_ion` stays `null` until then.
+3. **The battery pack (ADR-049).** EEMB's quote, samples and pack-level UN38.3 / IEC 62133 reports for
+   the 1S2P pack; the battery bay is re-cut from their pack drawing.
 4. **Bench numbers.** Linux wake time, wake-word power, heat and charging behaviour come from a dev-kit
    bench, bought once the panel and pen layer are available.
 

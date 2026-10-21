@@ -137,6 +137,31 @@ def check_charger(err):
     return c["part"], c["vreg_min_v"], c["vreg_max_v"], b["chemistry"], b["charge_limit_v"]
 
 
+def check_pack(err):
+    """ADR-049: the chosen cell, protector and connector must cover the modelled pack load."""
+    b, k, c = SPEC["battery"], SPEC["pack"], SPEC["charger"]
+    wh = round(b["cells_parallel"] * b["cell_capacity_mah"] * b["cell_nominal_v"] / 1000, 1)
+    if SPEC["battery_wh"]["li_ion"] != wh:
+        err(f"battery_wh.li_ion {SPEC['battery_wh']['li_ion']} != {wh} Wh from battery.cell_*")
+    rail = SPEC["cm5"]["supply_design_a"] + SPEC["usb"]["port2_current_limit_a"]
+    if abs(k["rail_5v_a"] - rail) > 0.01:
+        err(f"pack.rail_5v_a {k['rail_5v_a']} != CM5 {SPEC['cm5']['supply_design_a']} A + port 2 limit")
+    peak = k["rail_5v_a"] * 5.0 / (k["boost_efficiency"] * b["low_alarm_v"])
+    if abs(k["peak_a"] - peak) > 0.01:
+        err(f"pack.peak_a {k['peak_a']} != {peak:.2f} A modelled from the 5 V rail at battery.low_alarm_v")
+    cells_a = b["cells_parallel"] * b["cell_max_discharge_a"]
+    if cells_a < k["discharge_margin"] * peak:
+        err(f"cells give {cells_a} A continuous, below {k['discharge_margin']} x the {peak:.2f} A pack peak")
+    if k["connector_contact_a"] < peak:
+        err(f"pack connector {k['connector_contact_a']} A per contact < {peak:.2f} A pack peak")
+    # The protector must never trip in normal charging: its minimum OVP clears the charger's worst VREG.
+    ovp_min = k["protector_ovp_v"] - k["protector_ovp_acc_mv"] / 1000
+    vreg_max = b["charge_limit_v"] * (1 + c["vreg_acc_max_pct"] / 100)
+    if ovp_min <= vreg_max:
+        err(f"protector {k['protector']} OVP min {ovp_min:.3f} V <= charger VREG max {vreg_max:.3f} V")
+    return wh, peak, cells_a, ovp_min, vreg_max
+
+
 def check_stated_assumptions(err):
     hw = read(os.path.join(ROOT, "docs", "HARDWARE_SPEC.md"))
     for pat, why in [
@@ -152,6 +177,7 @@ def main():
     lo, hi, n = check_bom(errors.append)
     gen, idle, ratio = check_power(errors.append)
     chg = check_charger(errors.append)
+    pack = check_pack(errors.append)
     check_stated_assumptions(errors.append)
     if errors:
         for e in errors:
@@ -161,6 +187,7 @@ def main():
     print(f"  BOM: {n} rows derived to ${lo:.2f}-${hi:.2f}, prose agrees.")
     print(f"  Power: strip {gen:.2f} Wh/day vs idle {idle:.3f} Wh/day = {ratio:.1f}x.")
     print("  Charger: {} VREG {}-{} V covers {} {} V; firmware gate agrees.".format(*chg))
+    print("  Pack: {:.1f} Wh; peak {:.2f} A vs cells {:.0f} A; protector OVP min {:.3f} V > VREG max {:.3f} V.".format(*pack))
     return 0
 
 

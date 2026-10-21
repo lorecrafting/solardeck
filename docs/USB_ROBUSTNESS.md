@@ -24,8 +24,8 @@ Enforced by `scripts/check_longevity.py` (Phase 13).
 | 5 | **Charge-only cable** | No D+/D- inside. Power works, enumeration never happens | Unavoidable; must be **diagnosable** |
 | 6 | **CC capacitance / stub** | A filter cap on CC breaks BMC PD signalling; a long stub corrupts it | Design-induced, silent |
 | 7 | **Over-current negotiation** | Sinking 3 A from a 500 mA port ⇒ host cuts the port and blames the device | Cheap chargers, hubs |
-| 8 | **Two sources fighting** | Laptop on Port 1, panel on Port 2 ⇒ circulating current without OR-ing | Already solved (LM66100) |
-| 9 | **Back-powering the host** | Device sources 5 V onto a port that is being charged | Already solved (LM66100 + TPS2051B) |
+| 8 | **Two sources fighting** | Laptop on Port 1, panel on Port 2 ⇒ circulating current without OR-ing | Already solved: port 1 is the only input (ADR-049) |
+| 9 | **Back-powering the host** | Device sources 5 V onto a port that is being charged | Already solved: port 2 only sources, through the TPS2051B; port 1 never sources (ADR-049) |
 | 10 | **Flashing depends on USB** | If the only recovery path is USB, failure 1 or 5 bricks the unit | Every board without a second door |
 
 Failures 1–4 are one design decision; 5 is a *diagnostic* problem, not a hardware one; 10 is the one

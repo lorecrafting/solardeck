@@ -51,7 +51,7 @@ exist on real silicon" for a bench total that is TBD (§2) before a ~$1.5 k PCB 
 | 7 | Protoboard, jumpers, duponts, 40-pin GPIO extender, assorted | Wiring everything loose | Interconnect | **$25** | Amazon / local | |
 | 8 | USB-C hub + cables (CM5 eMMC is flashed over USB with `rpiboot`/usbboot — TBD, verify CM5 procedure) | Flashing, debug console | Tooling | **$20** | Amazon | |
 | 9 | **TI BQ25798 evaluation board** | The production charger (ADR-035): proves VREG hold-off, the charge limit, JEITA and NTC cutoff before EVT-0 | Charge-path gate | **TBD** | TI store / DigiKey | First item of the build order (ADR-043): power carries the safety risk |
-| 10 | **One protected Li-ion cell** (the candidate for ADR-040/048) + NTC thermistor | A real cell on the charger board; its datasheet also unlocks `battery_wh.li_ion` | Charge-path gate | **TBD** | US-side cell vendor (UN38.3 shipping, §5) | Wh stays `null` until its datasheet is in hand (ADR-040) |
+| 10 | **EEMB LP7545135 cells or EEMB's sample 1S2P pack** (ADR-049) + NTC thermistor | A real pack on the charger board | Charge-path gate | **TBD** | US-side cell vendor (UN38.3 shipping, §5) | Wh stays `null` until its datasheet is in hand (ADR-040) |
 | 11 | **u-blox MAX-M10S breakout** | The V1 GNSS (ADR-038): RP2350 UART bring-up and tracking power vs `gnss.tracking_mw` | GNSS bring-up | **TBD** | DigiKey / SparkFun | Wired to item 4a; passive antenna |
 | | **Bench total** | | | **TBD** (CM5 IO board and items 9–11 TBD) | | Shipped total TBD (2–3 vendors, HI freight) |
 
