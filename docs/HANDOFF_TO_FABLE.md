@@ -56,7 +56,7 @@ On 2026-10-19, the complete Turnkey PCBA and Box-Build quotation package was off
 │   ├── io.kicad_sch                        # VL805 PCIe USB, M.2 NVMe, M.2 Modem, Dual-SIM
 │   ├── solardeck-carrier.net               # Complete 20-component electrical netlist
 │   ├── solardeck-carrier.kicad_pcb         # 6-layer PCB layout with ENIG stackup
-│   ├── audit_hardware_traps.py             # 7-rule electrical netlist trap auditor
+│   ├── audit_hardware_traps.py             # 8-rule electrical netlist trap auditor
 │   ├── export_production_zip.py            # RS-274X Gerber & binary STL exporter
 │   ├── enclosure/
 │   │   ├── solardeck_chassis.scad          # Parametric OpenSCAD 232×170×14.0mm IP67 chassis

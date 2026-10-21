@@ -1,6 +1,6 @@
 # FMEA — Failure Modes & Effects Analysis (the "unite the sensors" spine)
 
-Written 2026-11-02 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-0731
+Written 2026-10-20 14:40 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-0731
 
 Read this document when: adding a sensor, an actuator, a repair hatch, or a gate. It is the single
 cross-reference that ties **failure family → design countermeasure → telemetry detector → heal

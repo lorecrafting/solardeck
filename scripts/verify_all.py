@@ -8,7 +8,7 @@ never restated by hand in docs, CI, or README (that is how the old 7-vs-9 drift 
 Every doc that mentions a phase count is checked against docs/spec_values.json by phase 10.
 
   Phase  1: KiCad schematics + netlist structure, and kicad-cli ERC/DRC when installed
-  Phase  2: Netlist electrical trap audit (7 rules)
+  Phase  2: Netlist electrical trap audit (8 rules)
   Phase  3: RP2350 co-processor firmware contract tests
   Phase  4: Host daemon contract tests (eink-refreshd, solardeck-telemetryd)
   Phase  5: OpenSCAD mechanical envelope
@@ -144,8 +144,8 @@ PHASES = [
     ("KiCad schematics & netlist structure",
      lambda: run_step("Phase 1: KiCad schematics & netlist", [sys.executable, "hardware/verify_schematics.py"])
      and verify_kicad_cli()),
-    ("Netlist electrical trap audit (7 rules)",
-     lambda: run_step("Phase 2: Netlist electrical trap audit (7 rules)", [sys.executable, "hardware/audit_hardware_traps.py"])),
+    ("Netlist electrical trap audit (8 rules)",
+     lambda: run_step("Phase 2: Netlist electrical trap audit (8 rules)", [sys.executable, "hardware/audit_hardware_traps.py"])),
     ("RP2350 co-processor firmware contract tests",
      lambda: run_step("Phase 3: RP2350 firmware contract tests", FIRMWARE_TEST)),
     ("Host daemon contract tests",

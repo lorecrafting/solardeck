@@ -1,8 +1,9 @@
-# SolarDeck (Codename: XuanDeck / KoaDeck)
+# SolarDeck
 
 > **The Sovereign, Sunlight-Readable 10.3" Color E-Ink Mobile Workstation & Tactical LifeOps Terminal.**
 > 
-> *Written 2026-10-18 17:35 UTC in the Pi harness by antigravity/gemini-3.8-flash*
+> *Written 2026-10-18 17:35 UTC in the Pi harness by antigravity/gemini-3.8-flash*  
+> *Revised 2026-10-20 14:40 UTC in the Pi harness by openrouter/deepseek/deepseek-v4-flash-0731*
 > 
 >
 > **Status (2026-10-20): reference architecture, not yet fabricable.** Specs and BOM are complete and
@@ -130,7 +131,7 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
 * **Universal Mechanical Anchor:** The rear chassis integrates standard **M2.5 threaded brass heat-set inserts (50mm/75mm spacing)** and an embedded **MagSafe-compatible neodymium magnetic ring**.
 * **Handheld Bed/Couch Mode:** Using an open-source 3D-printed clip, users can snap on a **$25 Solder Party BlackBerry Q20 USB/BLE keyboard** directly beneath the screen, transforming SolarDeck into a handheld thumb-typing terminal for lounging in bed or a hammock.
 * **Desktop Workstation Mode:** Pair any Bluetooth LE 5.0 or USB-C keyboard (Keychron, ThinkPad TrackPoint, NuPhy, Apple Magic Keyboard, Corne) and prop the tablet upright in portrait (80 lines of code) or landscape.
-* **Pogo Footprint Reserved:** The 5-pin hermetic magnetic pogo bus footprint remains routed on the PCBA for an optional SnapDeck clamshell accessory in Phase 2.
+* **Expansion Footprint Reserved:** The rear USB-C Port 2 host interface is the sole expansion contract — no hermetic pogo bus (ADR-006: pogo descoped, USB-C only).
 
 ### IV. Hardware Airgap Switch: Zero EMF & Sovereign Privacy
 * **The Problem:** Software "airplane mode" on phones is a soft setting easily bypassed by baseband firmware, malware, or carrier updates.
@@ -148,7 +149,7 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
 ### VI. Modular Backpack Isolation (Keeping the Core Pure)
 * **The Problem:** Cramming every RF hacking tool onto the main motherboard causes thermal throttling, RF desensitization (desense), and massive PCB layer costs.
 * **The Genius Fix:** The core tablet carries only essential daily communication (Worldwide LTE with soldered MFF2 eSIM, 915MHz LoRa Meshtastic, and GNSS).
-* High-power tactical tools—**Flipper Zero suite (Sub-GHz CC1101, NFC, RFID, IR blaster)** and **Sky-Scan Wideband SDR (Airplane ADS-B 1090MHz, NOAA Weather Satellites 137MHz, Marine AIS)**—are isolated in a rear snap-on module connecting over an 8-pin magnetic pogo bus.
+* High-power tactical tools—**Flipper Zero suite (Sub-GHz CC1101, NFC, RFID, IR blaster)** and **Sky-Scan Wideband SDR (Airplane ADS-B 1090MHz, NOAA Weather Satellites 137MHz, Marine AIS)**—are isolated in rear snap-on Hotpacks connecting over the IP68-sealed USB-C Port 2 expansion interface (no spring-loaded pogo pins; see §7).
 * The core tablet stays slim (~510g), cool, and lasts for days. When you want to sniff radio protocols or track aircraft overhead, you snap on the backpack and Linux launches the SIGINT stack instantly.
 
 ### VII. Self-Observant Hardware: The LLM Evolutionary Feedback Loop
@@ -196,7 +197,7 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
 │       THE WORKHORSE          │     THE ZEN SCRIBE           │    THE PERPETUAL CLOCK       │
 │  (Mobile Coding Station)     │  (Field Slate & Reader)      │   (LifeOps Desk Dashboard)   │
 ├──────────────────────────────┼──────────────────────────────┼──────────────────────────────┤
-│ • SnapDeck keyboard docked   │ • Detached keyboard (510g)   │ • Propped on OEM desk stand  │
+│ • Bluetooth/USB-C keyboard  │ • Detached keyboard (510g)   │ • Propped on OEM desk stand  │
 │ • Sway tiles terminal to 2/3 │ • Wacom EMR pen (4096 lvl)   │ • Linux CM4 dead (0.000W)    │
 │ • Claude Code AI CLI active  │ • 100GB Offline Kiwix docs   │ • RP2350 direct-drives EPDC  │
 │ • Worldwide 4G LTE connected │ • Airgap Switch ON (Zero EMF)│ • 1-sec TCXO live clock tick │
@@ -221,7 +222,7 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
 | **Digitizer & Touch**| Laminated Wacom EMR (<18ms ink) + Hardware `PEN_PROX_INT` Palm Blanking Gate + 0.1mm Mu-Metal |
 | **All-Weather Rain** | Torrential Rain "Water-Lock" Mode (TPS22918 capacitive touch cutoff; 100% water-immune Wacom stylus) |
 | **Tactical Controls**| Left-Bezel IP67 Sealed 5-Way Tactical Navigation Rocker (ALPS SKRH; gloved 1-handed terminal/reading) |
-| **Dual Cameras** | 12MP Sony IMX708 PDAF Macro Autofocus Rear Camera (Multimodal Claude Code & PCB Loupe) |
+| **Rear Camera** | 12MP Sony IMX708 PDAF Macro Autofocus Rear Camera (Multimodal Claude Code & PCB Loupe; a forward-facing unit was descoped — ADR-006) |
 | **Keyboard & Input**   | Universal M2.5 Threaded Mount + MagSafe Magnetic Array + Bluetooth LE 5.0 / USB-C to Any Keyboard (ThinkPad, Keychron, Corne, Apple, or $20 BlackBerry Q20 Thumb Keyboard) |
 | **Cold Storage Vault**| Gasketed M.2 Service Hatch: 3x Uniform Friction-Fit MicroSD Pockets (Supports Nano-SIM via SD shell) + Ejector Clip ($0 BOM) |
 | **Cellular Internet**| M.2 Key-B 3042 (Quectel EG25-G, 30+ LTE bands) with Dual-SIM: Soldered MFF2 eSIM (ST4SIM-200M) + External Nano-SIM Tray |
@@ -256,7 +257,56 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
 
 ---
 
-## 7. Repository Architecture & Documentation
+## 7. The Modular "Hotpack" Backpack System — and Why It Exists
+
+SolarDeck treats the **core tablet** and the **specialised mission packs** as two separate products, connected by one standard: *a recessed, IP68-sealed USB-C Port 2 host interface, mechanically anchored by the rear MagSafe ring + M2.5 inserts*. That single decision buys four things at once:
+
+1. **Corrosion-proof by design.** Spring-loaded pogo pins jam and corrode in beach sand, volcanic dust, and salt spray. A right-angle USB-C male plug has no springs, wipes clean, and seals at IP68 (`docs/OFFGRID_TACTICAL_SENSORS.md` §8).
+2. **The core stays pure.** Daily-driver radios (LTE, LoRa mesh, GNSS) live on the carrier; anything exotic moves to a snap-on pack so the main board stays slim, cool, and cert-light.
+3. **Certification isolation.** A direct-to-satellite modem (Hotpack 6) would cost $40,000+ in FCC/CE/Skylo lab certifications if soldered onto the main board. As a USB-C pack, SolarDeck never licenses the radio — the pack does.
+4. **YAGNI, applied to hardware.** Instead of cloning a Flipper Zero (which would just be a worse Flipper Zero), the design says *buy the $169 Flipper Zero, clip it to the MagSafe ring, and run `qflipper-cli`* — SolarDeck contributes the sunlight-readable 10.3" screen and the Linux workflow, not a redundant CC1101.
+
+The seven specced Hotpacks (`spec_values.features.hotpacks`, full detail in `docs/OFFGRID_TACTICAL_SENSORS.md`):
+
+| Pack | Mission | Why it is a pack, not onboard |
+| :--- | :--- | :--- |
+| **H1 Doomsday Sky-Scan** | Passive all-band SIGINT receiver (ADS-B 1090 MHz, NOAA 137 MHz, AIS, broadcast) | Stealth/spectrum tools stay off the carrier; zero transmit-authority overhead |
+| **H2 Dual-Mesh & HF** | Active off-grid comms: Meshtastic + HF shortwave transceiver (Si4732/Si4735) | High-power RF kept off the main board; regional-band licensing isolated |
+| **H3 CBRN & SAR** | Environmental sensing: chemical, ionising radiation dosimeter, search-and-rescue | Specialty sensors are perishable/calibratable; don't age inside the carrier |
+| **H4 RTK Survey** | Centimetre land surveying (dual-frequency RTK, Galileo HAS) | Unused most days; costs and weight stay with the surveyor |
+| **H5 Thermal NV** | 15 g thermal night-vision + electrical-inspection module | Optics are fragile and cold-chain sensitive; snap-on keeps them serviceable |
+| **H6 Satellite (Skylo)** | 3GPP NTN direct-to-satellite + global SAR (PLB integration over NFC) | Certification isolation (see §3 above) — biggest single cost kept off the carrier |
+| **H7 Geophone** | Sub-surface acoustic perimeter sensing (`solardeck-geophoned`) | Physically invasive (100 mm ground spike); belongs to the mission, not the tablet |
+
+The **why** in one sentence: every pack that *would* compromise the core — by desense, thermal load, licensing, fragility, or cost — lives behind one IP68 USB-C connector instead of inside the sealed chassis, so the daily driver stays perfect at its one job: always-on, sunlight-readable, months on a charge.
+
+---
+
+## 8. Failover, Longevity & Self-Diagnosis (The 30-Year Design)
+
+Three properties make SolarDeck a *30-year object* rather than a gadget — and each is enforced by a gate in `docs/spec_values.json` (`features.acceptance_gates`):
+
+### 8.1 Failover — the system survives its own updates
+- **Dual-bank A/B firmware** on the RP2350: one bank is always the last-known-good image; a 5-second autonomous hardware watchdog rolls back a hung boot (**G6**: zero-brick rollback < 2.5 ms).
+- **Sleep-ladder integrity**: S2idle (15 mW, <0.3 s resume), hibernate (0 W), and RP2350 keep-alive (<0.2 mW) each have resume contracts (**G12**), so Linux never loses the terminal, Neovim buffers, or Claude Code session across a near-death battery.
+- **USB-C dead-battery protocol** (gate G11): the Port 1/2 controllers negotiate even when the pack is at 0 V, so a drained SolarDeck is still a charging receiver, not a brick.
+
+### 8.2 Longevity — a budget, not a wish
+- `docs/LONGEVITY_30Y.md` is a real 30-year failure budget: drop survival **G7** (1.22 m, 26 orientations), thermal-cycle joint integrity **G8** (500 cycles, dR < 10%), UV/weather **G9** (ASTM G154, 1000 h, ΔE < 3), unpowered storage **G10** (12 months, data intact).
+- **Service schedule driven by data**: `solardeck-battcare` holds LiFePO4 at 50% SOC when idle and flags cell service by *measured* capacity retention; `solardeck-nandcare` scrubs the read-mostly storage quarterly — flash written often, kept read-mostly.
+- **Repairability is a spec**: conformal acrylic coat is *reworkable* (Parylene is explicitly DNP — it would seal the board shut against ADR-024's service thesis), connectors are gasketed, and rework is a priced BOM line.
+
+### 8.3 Self-Diagnosis — the LLM reads the hardware's own health
+- A sub-$3.50 physical telemetry suite (INA3221 3-rail ammeter, BQ27441 coulomb counter / SOH, dual TMP112 thermals, zero-BOM solar-strip lux meter, BMA400 accel, BMP390 baro) writes a rolling SQLite DB (`/var/log/solardeck/telemetry.db`).
+- **BIST + module health registers** on every board subsystem; `solardeck-diag` sweeps them, `solardeck-correlate` fuses the streams, and the Tier-2 loop (SOFTWARE_SPEC §3.3.2) feeds *measured* current, temperature, and impedance into the LLM Context Protocol — so Claude Code reasons from instrumented fact, not assumption.
+- **The honest ceiling, stated**: the LLM can only diagnose what the instrumentation senses. A cracked pad under a BGA chip stays invisible without the registers — which is why per-rail current sense, six thermal zones, and module-health registers are **quote-line items for the fab**, not afterthoughts (`docs/HANDOFF_TO_FABLE.md`, `docs/FMEA.md`).
+- The whole self-diagnosis story, failure family by failure family (connector corrosion → burnish actuator → gate), lives in `docs/FMEA.md`.
+
+> **Status (2026-10-20): reference architecture, not yet fabricable.** The design is pursuable; the gates are the *contract* for the build. Cross-referenced in `docs/FMEA.md`; budgets in `docs/LONGEVITY_30Y.md`.
+
+---
+
+## 9. Repository Architecture & Documentation
 
 ```
 .
@@ -267,33 +317,46 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
 ├── CONTRIBUTING.md            # How to propose, verify and submit changes
 ├── docs/
 │   ├── README.md              # Reading order + claim-status vocabulary (start here)
+│   ├── WORKFLOW.md            # THE method: tags, change classes, intent→ledger lifecycle
 │   ├── AUDIT_2026-10-20.md    # What is built vs written; fix plan. Read before trusting specs
 │   ├── spec_values.json       # SINGLE SOURCE OF TRUTH for every quantitative claim
 │   ├── INDEX.md               # Cross-reference table: claim -> file section
+│   ├── STATUS.md              # Generated feature-status catalogue (Phase 12)
 │   ├── STANDOUT_FEATURES.md   # Core standout pillars, latency budgets, & emergent superpowers
 │   ├── MVP_ARCHITECTURE.md    # Dual-brain architecture, power state transitions, block diagrams
 │   ├── HARDWARE_SPEC.md       # Complete carrier board schematic, pinouts, RF & power design
-│   ├── SOFTWARE_SPEC.md       # Linux kernel, DRM waveform drivers, 50 daemons & applications
+│   ├── SOFTWARE_SPEC.md       # Linux kernel, waveform drivers, 44 daemons & power profiles
+│   ├── FIRMWARE_INTERFACE.md  # CM4 <-> RP2350 register contract + wire test (Phase 15)
 │   ├── BOM_COST_ESTIMATE.md   # Bill of materials, supplier sourcing, turnkey cost breakdown
-│   ├── FIRST_BOOT_CHECKLIST.md# Unboxing to first prompt bring-up checklist & power rail checks
-│   ├── HANDOFF_TO_FABLE.md    # Turnkey Seeed Studio Fusion & manufacturing handoff package
+│   ├── LONGEVITY_30Y.md       # 30-year failure budget, service kit, gates G7-G10
+│   ├── FMEA.md                # Failure family -> countermeasure -> detector -> actuator -> gate
+│   ├── USB_ROBUSTNESS.md      # USB-C interoperability, dead-battery Rd, failure taxonomy (G11)
+│   ├── REGULATORY.md          # Regional RF bands, EIRP, EMI, materials declarations
 │   ├── OFFGRID_TACTICAL_SENSORS.md # Navigation, plate-solving, CBRN, & Hotpacks 1–7
 │   ├── MECHANICAL_FIT_AND_ENCLOSURE_WORKFLOW.md # Tolerance, CAD envelope, & 2-tier checks
-│   ├── HARDWARE_VERIFICATION_WORKFLOW.md # 7-rule netlist trap audit; what each phase proves
-│   └── 90-history/decisions.md# ADR-001..016: what was descoped and why
+│   ├── HARDWARE_VERIFICATION_WORKFLOW.md # 8-rule netlist trap audit; what each phase proves
+│   ├── DECK_BUILDER_LAYOUT.md # Who-can-build guide: snap-in vs soldered vs fab
+│   ├── DEV_KIT_BENCH.md       # Breadboard bring-up plan, BOM, measurement gates
+│   ├── FIRST_BOOT_CHECKLIST.md# Unboxing to first prompt bring-up checklist & power rail checks
+│   ├── HANDOFF_TO_FABLE.md    # Turnkey Seeed Studio Fusion & manufacturing handoff package
+│   └── 90-history/decisions.md# ADR-001..026: what was descoped and why
 ├── hardware/                  # NOTE: partial capture (20/62 parts), unrouted PCB -- see AUDIT
 │   ├── solardeck-carrier.*    # KiCad 8 schematics, PCB layout, and netlists
-│   ├── enclosure/             # OpenSCAD 3D chassis models and dimensional verification
-│   └── production/            # Seeed Studio Fusion Gerber zip, BOM, CPL, & box-build guides
-├── firmware/
-│   └── rp2350/                # Bare-metal C co-processor state machine, RTC, & PSRAM tests
+│   ├── verify_schematics.py   # Netlist structure checks (Phase 1)
+│   ├── audit_hardware_traps.py# 8-rule electrical trap audit (Phase 2)
+│   ├── enclosure/             # OpenSCAD 3D chassis models + verify_enclosure.py
+│   └── production/            # Generated Fusion Gerber zip, BOM, CPL, box-build guides
+├── firmware/rp2350/           # Bare-metal C co-processor state machine, RTC, & PSRAM tests
 ├── src/
 │   ├── daemons/               # eink-refreshd, solardeck-telemetryd, & C bridge daemons
 │   └── dts/                   # solardeck-cm4.dts Device Tree Overlay
-├── tools/
-│   └── provision/             # setup_solardeck_os.sh automated OS provisioning engine
+├── tools/provision/           # setup_solardeck_os.sh automated OS provisioning engine
 └── scripts/
-    ├── verify_all.py         # 11-phase automated master verification runner
-    ├── check_docs_numbers.py # docs vs spec_values.json (CI Phase 10)
-    └── check_bom_coverage.py # BOM <-> netlist <-> CPL (CI Phase 11)
+    ├── verify_all.py          # 16-phase automated master verification runner
+    ├── check_docs_numbers.py  # docs vs spec_values.json (CI Phase 10)
+    ├── check_bom_coverage.py  # BOM <-> netlist <-> CPL (CI Phase 11)
+    ├── gen_status.py          # regenerates docs/STATUS.md (CI Phase 12)
+    ├── check_longevity.py     # LONGEVITY_30Y budgets (CI Phase 13)
+    ├── check_cost_and_power.py, check_firmware_interface.py,
+    │   check_reliability_and_supply.py, reliability_model.py
 ```
