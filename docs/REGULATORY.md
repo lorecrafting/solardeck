@@ -24,7 +24,7 @@ Statuses: `not started` → `scoped` → `tested` → `filed` → `granted`.
 | Battery | **UN 38.3** transport test | Pack, shipped separately | not started | TBD | Required to ship a LiFePO4 pack at all, air or ground |
 | Battery | **IEC 62133-2** | Pack | not started | TBD | The BQ2970 PCM is protection, not certification |
 | Battery | **EU 2023/1542** battery passport + carbon label | Pack | not started | TBD | Applies from 2027; a 30-year product will live inside this regime |
-| Materials | **RoHS / REACH** declarations | All 61 line items | not started | TBD | Collect supplier declarations now — 2046 sourcing is easier with them |
+| Materials | **RoHS / REACH** declarations | All 62 line items | not started | TBD | Collect supplier declarations now — 2046 sourcing is easier with them |
 | Materials | **WEEE** registration + **Prop 65** | End product | not started | TBD | Per-country registration for sale |
 | Export | **ECCN / EAR** classification | End product | not started | TBD | Cellular + crypto (LUKS, WireGuard) may trigger classification review |
 | Radio (region) | **EIRP table per region** in firmware | Firmware | not started | TBD | Already a spec constraint (`HARDWARE_SPEC.md` §RF); the table itself does not exist |

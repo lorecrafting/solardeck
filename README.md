@@ -6,7 +6,7 @@
 > 
 >
 > **Status (2026-10-20): reference architecture, not yet fabricable.** Specs and BOM are complete and
-> internally consistent; schematic capture covers 20 of 61 core BOM parts and the PCB is unrouted.
+> internally consistent; schematic capture covers 20 of 62 core BOM parts (32%) and the PCB is unrouted.
 > Read `docs/AUDIT_2026-10-20.md` before quoting or ordering anything.
 >
 > *Open-Hardware Linux • AI Coding Terminal • 12MP Rear Camera • Wacom Stylus Slate • Meshtastic LoRa Node • Worldwide 4G LTE with Soldered eSIM • 300-Day Ambient Desk Clock • External USB-C / Bluetooth Keyboard • Hardware Airgap Switch • IP67 Rugged Enclosure.*
@@ -281,7 +281,7 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
 │   ├── MECHANICAL_FIT_AND_ENCLOSURE_WORKFLOW.md # Tolerance, CAD envelope, & 2-tier checks
 │   ├── HARDWARE_VERIFICATION_WORKFLOW.md # 7-rule netlist trap audit; what each phase proves
 │   └── 90-history/decisions.md# ADR-001..016: what was descoped and why
-├── hardware/                  # NOTE: partial capture (20/61 parts), unrouted PCB -- see AUDIT
+├── hardware/                  # NOTE: partial capture (20/62 parts), unrouted PCB -- see AUDIT
 │   ├── solardeck-carrier.*    # KiCad 8 schematics, PCB layout, and netlists
 │   ├── enclosure/             # OpenSCAD 3D chassis models and dimensional verification
 │   └── production/            # Seeed Studio Fusion Gerber zip, BOM, CPL, & box-build guides

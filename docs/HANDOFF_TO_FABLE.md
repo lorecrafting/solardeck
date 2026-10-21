@@ -102,7 +102,7 @@ python3 scripts/verify_all.py
 8. **Phase 8: OS provisioning** -- `tools/provision/setup_solardeck_os.sh --test`.
 9. **Phase 9: Documentation presence, attribution and relative-link integrity.**
 10. **Phase 10: Single source of truth** -- every quantitative claim in the docs must agree with `docs/spec_values.json`.
-11. **Phase 11: BOM <-> netlist <-> CPL coverage** -- fails when the netlist, CPL and BOM disagree on part count. Currently reports 24/61 (39%) schematic coverage.
+11. **Phase 11: BOM <-> netlist <-> CPL coverage** -- fails when the netlist, CPL and BOM disagree on part count. Currently reports 20/62 (32%) schematic coverage.
 12. **Phase 12: feature status catalogue** -- `docs/STATUS.md` must be generated and current; a daemon with a SOFTWARE_SPEC heading but no declared status fails the build.
 13. **Phase 13: 30-year longevity constraints** -- every constraint in `spec_values.longevity` must be present in the artifact that implements it (HARDWARE_SPEC §7.6, the BOM, the aging daemons, gates G7-G10, the maintenance plan).
 
