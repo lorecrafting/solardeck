@@ -14,26 +14,44 @@
 
 ---
 
-## 1. The Problems SolarDeck Tackles
+## 1. The Problem SolarDeck Tackles
 
-Modern personal computing has trapped developers, writers, and field researchers between two deeply flawed paradigms:
+Portable computing forces a false choice: a machine that **computes hard** (laptop: 4–8 h battery, washed out in sun, fragile glass, endless notifications) or a machine that **lasts long** (e-reader: months per charge, but a locked-down appliance that cannot compile, run a terminal, or talk to the field). Nobody wants to carry both.
+
+SolarDeck is one device that refuses the trade-off. It is shaped like a reader and thinks like a workstation — because it is really a **power ladder with an instant hand-off at every rung**:
 
 ```
-┌───────────────────────────────────────┐     ┌───────────────────────────────────────┐
-│     THE COMMERCIAL E-READER TRAP      │     │         THE MODERN LAPTOP TRAP        │
-│   (Kindle, Boox, reMarkable, iPad)    │     │       (MacBook, ThinkPad, Surface)    │
-├───────────────────────────────────────┤     ├───────────────────────────────────────┤
-│ • Locked behind proprietary Android   │     │ • Completely washed out in direct sun │
-│ • Heavy telemetry & cloud DRM gates   │     │ • Battery dies in 4–8 hours of work   │
-│ • High typing latency (>150ms lag)    │     │ • Fragile glass & zero weather seals  │
-│ • Cannot compile code or run CLI tools│     │ • Notification dopamine feedback loops│
-│ • No true hardware RF kill switches   │     │ • Power-hungry 60Hz RGB backlight eye │
-│ • Phantom power leakage in sleep      │     │   strain outdoors                     │
-└───────────────────────────────────────┘     └───────────────────────────────────────┘
+  ~110 µW   calendar clock / weather dashboard ........... hundreds of days per charge
+             (Linux asleep; RP2350 co-processor only)
+  ~4.5 mW   e-book reader & sketchpad .................... 200+ days per charge
+             (RP2350 drives the panel; Linux still asleep)
+  ~15 mW    S2idle — your whole session hot in RAM ........ ~80 days per charge
+             (terminal, Neovim, Claude Code, reachable in <400 ms glass-to-glass)
+   ~0.6 W+  full Linux — compiling, local LLM, barge-in voice, camera … the same
+             session, now with both brains awake (24–32 h active, solar-recharged)
 ```
 
-### The Solution: SolarDeck
-SolarDeck is a sovereign, sunlight-readable, distraction-free field workstation running **pure, mainline bare-metal Linux (Debian/Alpine)** on open hardware. It delivers paper-like reading comfort in full Hawaiian sunlight, full-throttle AI development with Claude Code, and emergency off-grid communication—all within an IP67 ruggedized slate that lasts for months on a single charge.
+Reading one book and compiling a kernel are no longer different devices, or even different
+moods of the same device — they are **two intensities of one machine**, and the ramp between
+them (and back down when you close the lid) costs under 400 milliseconds and zero context
+loss. When you're done working and just want a desk clock, the same slab sips 110 µW and
+disappears from the power question for months.
+
+### The seven problems it actually solves — each one by a named pillar:
+
+| # | The problem | The pillar that fixes it |
+| :--- | :--- | :--- |
+| 1 | **Pick battery life or compute power — never both.** | Pillar 1 — the dual-brain instant hand-off: the RP2350 keeps the panel alive at µW/mW while Linux sleeps, and wakes the exact session you left in <400 ms |
+| 2 | **E-readers are appliances: no terminal, no toolchain, no control.** | Pillar 1 again — the reader mode **is** Linux; you are never locked out of the machine that renders your books |
+| 3 | **Screens wash out the moment the sun comes out.** | Pillar 3 — sunlight sovereignty: 227 PPI e-ink with 0% glare; the brighter the day, the better it reads |
+| 4 | **Battery anxiety during real work.** | Pillar 3 — 24–32 h of active coding per charge and a net-positive indoor solar harvest on a shelf |
+| 5 | **Your device reports home, and you can't prove otherwise.** | Pillar 5 — a physical hardware airgap that electrically cuts LTE, LoRa, Wi-Fi/BT, GPS and the mic to 0.000 V |
+| 6 | **Field gear dies to a single drop or a rain shower.** | Pillar 5 — IP67 sealed, 1.22 m drop-rated, water-locked touch (Wacom + rocker survive a downpour) |
+| 7 | **Obsolescence: the whole device is thrown away to upgrade one chip.** | Pillar 6 — the modular bridge: unclip the ARM CM4, snap in a RISC-V SOM, swap RAM or storage in seconds |
+| 8 | **Voice assistants are either always-listening or always-useless.** | Pillar 7 — a hardware VAD (<0.05 mW) + RP2350 wake-word gates the mic, so listening standby costs ~nothing and the mic is only hot when you want it |
+| 9 | **Distraction is built into the chassis.** | Pillar 2 — e-ink at 18–20 ms keystroke latency with zero flash background-swept, in a slate that has no room for a notification loop to begin with |
+
+The rest of this README (and `docs/STANDOUT_FEATURES.md`) is the engineering argument that these nine fixes are not aspirational — each has a latency budget, a power budget, and a measurement gate. **Pillar 4** (the sovereign 620 g form) is the reason all of it is field-carryable, and the **Master System Blueprint** in the next section ties the parts together.
 
 ---
 
