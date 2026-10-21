@@ -15,7 +15,7 @@ Regenerate: `python3 scripts/gen_status.py`. CI Phase 12 fails if this page is s
 | `aspirational` | A design goal. Do not quote it as a capability. |
 | `TBD` | Unknown, and we refuse to guess. |
 
-`specified` is the honest default for this repo: 62 BOM lines, 30 captured in schematics, 0 board nets.
+`specified` is the honest default for this repo: 62 BOM lines, 40 captured in schematics, 0 board nets.
 Read `docs/AUDIT_2026-10-20.md` before treating any row here as a purchase decision.
 
 ## Totals

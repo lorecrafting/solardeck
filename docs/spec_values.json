@@ -49,7 +49,7 @@
   "engineering_pillars": 9,
   "verification_phases": 16,
   "core_bom_line_items": 62,
-  "schematic_coverage_baseline": 30,
+  "schematic_coverage_baseline": 40,
   "pcb_thickness_mm": 1.0,
   "rear_wall_mm": 1.5,
   "mass_g": 620,
