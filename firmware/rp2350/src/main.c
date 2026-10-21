@@ -38,19 +38,14 @@ int main(void) {
     gpio_set_dir(PIN_GPIO16_PWRFAIL, GPIO_OUT);
     gpio_put(PIN_GPIO16_PWRFAIL, 0);
 
-    gpio_init(PIN_CHEM_SEL);
-    gpio_set_dir(PIN_CHEM_SEL, GPIO_IN);
-    gpio_pull_up(PIN_CHEM_SEL);
-
     // ADC setup for solar monitoring
     adc_init();
     adc_gpio_init(PIN_SOLAR_ADC);
     adc_select_input(0);
 
-    bool chem_pin = gpio_get(PIN_CHEM_SEL);
-    solardeck_sm_init(&ctx, chem_pin);
+    solardeck_sm_init(&ctx);
 #else
-    solardeck_sm_init(&ctx, false);
+    solardeck_sm_init(&ctx);
 #endif
 
     // Initial transition into CM5 active mode

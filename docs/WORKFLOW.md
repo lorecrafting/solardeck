@@ -112,7 +112,7 @@ regenerated from source in the same commit; never hand-edited; never the only co
 
 ### 3.6 LEDGER — INDEX, HANDOFF, CHANGELOG
 - `docs/INDEX.md` is generated; do not hand-edit rows.
-- `docs/HANDOFF_TO_FABLE.md` is the reviewer's entry point; update it at each stable checkpoint.
+- `docs/REVIEW_PACKET.md` and the latest `docs/AUDIT_*` are the reviewer's entry point; update them at each stable checkpoint.
 - `CHANGELOG.md` for behaviour changes, not for doc churn.
 - **Exit:** the next contributor can start from `docs/README.md` and not need the previous chat.
 
@@ -146,7 +146,7 @@ Each rule maps to an audit finding. They are not style preferences.
    what the doc claims in the meantime.
 2. Put `null` in `spec_values.json`.
 3. Prose says "TBD" or "unmeasured" — never a range that looks measured.
-4. Add the unlock condition to `HANDOFF_TO_FABLE.md` so the next reviewer sees it as an open gate, not a
+4. Add the unlock condition to `REVIEW_PACKET.md` so the next reviewer sees it as an open gate, not a
    missing feature.
 5. When it is measured, promote the tag, delete the ADR's "unknown" wording by *superseding* it with a
    new ADR entry.

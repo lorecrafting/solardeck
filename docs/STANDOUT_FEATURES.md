@@ -2,6 +2,7 @@
 
 Written 2026-10-18 17:42 UTC in the Pi harness by antigravity/gemini-3.8-flash
 Revised 2026-10-21 15:59 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
+Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
 
 ---
 
@@ -11,107 +12,35 @@ SolarDeck is not an incremental iteration on an Android e-reader or a miniature 
 
 The product is defined by **seven non-negotiable standout pillars** (summarised in `README.md` and expanded below), followed by seven further chapters of emergent capability. If any of the seven core pillars feels sluggish, clumsy, or compromised, the product fails. If all seven are executed flawlessly, SolarDeck defines an entirely new category of personal computing.
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                 THE 7 SOLARDECK PILLARS TO HAMMER IN ON                     │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ 1. THE DUAL-BRAIN INSTANT HANDOFF (<400ms Wake, 300-Day Zen / Infinite Desk)│
-│ 2. THE TYPEWRITER-ON-PAPER LATENCY ENGINE (<20ms Keystroke & Inking)        │
-│ 3. SUNLIGHT SOVEREIGNTY & PERPETUAL INDOOR HARVESTING (Zero-Glare, 0W Hold) │
-│ 4. THE SNAPDECK FORM-MORPHOLOGY (Rigid Lapdeck ⟷ 620g Slate ⟷ Desk Easel)   │
-│ 5. SOVEREIGN FIELD HARDENING (Hardware Airgap, Meshtastic LoRa, IP67 Rain)  │
-│ 6. THE MODULAR UPGRADE BRIDGE (ARM-to-RISC-V Swappability, M.2 NVMe, & RAM) │
-│ 7. THE SOVEREIGN VOICE AGENT (Barge-In & Touch-to-Talk, 80-Day Standby)     │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+The seven pillars, as named in `spec_values.features.product_pillars` (Pillar N below = PN):
+
+| # | Pillar |
+| :-- | :--- |
+| P1 | Dual-brain handoff: instant ambient modes on the RP2350, Linux resume in seconds (ADR-036) |
+| P2 | Typewriter-on-paper latency (1-bit DU keystroke, EMR ink, LRA haptics) |
+| P3 | Sunlight-readable; solar tops up the idle co-processor outdoors (ADR-041) |
+| P4 | Form-morphology: 620 g slate, desk easel, modular grips |
+| P5 | Field hardening: airgap, LoRa mesh, GNSS, IP54 (V1) / IP67 (V2), rain-lock |
+| P6 | Modular upgrade bridge: ARM/RISC-V SOM, RAM, NVMe |
+| P7 | Voice-first control: hold-to-talk button, opt-in hands-free wake word, barge-in (ADR-036) |
 
 ---
 
-## Pillar 1: The "Dual-Brain" Instant Handoff (<400ms Glass-to-Glass)
+## Pillar 1: Dual-Brain Handoff — Instant Ambient Modes on the RP2350, Linux Resume in Seconds (ADR-036)
 
 ### The Vision
 SolarDeck is **never truly "off", yet never dies**. Every conventional laptop or portable PC has a binary state: it is either an active computer burning watts, or a dead black mirror sleeping in a sleeve. Starting work requires the cognitive friction of opening a lid, waiting for wake, entering passwords, and waiting for radios to connect.
 
-SolarDeck destroys this friction. When resting on a desk or shelf, it operates as a **perpetual ambient instrument** (110 µW indoor desk clock, weather barograph, or Zen book reader). The instant you touch a key or the pen, the Linux brain activates in **under 300 milliseconds**, restoring your terminal, Neovim buffers, and Claude Code sessions in **under 400ms glass-to-glass**.
-
-### The Latency & Power Budget
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│               DUAL-BRAIN STATE TRANSITION TIMELINE (<400ms)                 │
-├─────────────────────────────────────────────────────────────────────────────┤
-│   T = 0.0 ms  │ Keypress or Pen Proximity trips RP2350 GPIO Wake Interrupt  │
-│   T + 2.0 ms  │ RP2350 asserts PMIC buck enable (TPS61088 5.0V Boost rail)  │
-│   T + 8.0 ms  │ 5.0V system rail stabilizes; CM5 receives clean POWER_OK     │
-│   T + 45.0 ms │ BCM2712 exits S2idle / LP state (AUDIT 6 X4)                │
-│   T + 85.0 ms │ Cortex-A76 cores ramp up; Linux kernel resume irq           │
-│   T + 120 ms  │ Sway/Wayland compositor renders pending terminal dirty rect  │
-│   T + 135 ms  │ TMUX1575 bus switch flips display ownership to CM5          │
-│   T + 155 ms  │ K4 display controller (TBD, ADR-032) gets the DU command     │
-│   T + 175 ms  │ Pigment particles rotate into place on physical 10.3" glass │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ TOTAL TIME:   │ < 180 ms (from S2idle) / < 380 ms (from cold power-gate)    │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+SolarDeck splits the work between two brains. When resting on a desk or shelf, the **RP2350 runs the ambient modes** (desk clock, weather barograph, Zen book reader, LoRa pager) and they are instant, because the co-processor that runs them never powers off. The CM5 has no RAM-retaining low-power state, so when you need Linux, it **resumes from off/hibernate in seconds**, not milliseconds (`sleep_ladder` R2 is `null`, ADR-036). The hold-to-talk voice button (Pillar 7) starts recording on the RP2350 the moment it is pressed, so the boot time costs no words.
 
 ### Engineering Rules to Enforce:
 1. **Zero Bus Contention:** The **2× Texas Instruments TMUX1575** bus switch pair (4 channels each, 8 total) guarantees that when the RP2350 owns the display bus during Zen reading, all CM5 display pins are galvanically isolated with zero parasitic back-powering ($I_{\text{off}}$).
 2. **Deterministic Wake Pins:** Keyboard keystroke IRQ (via USB-C or BLE), Wacom `PEN_PROX_INT`, BMA400 tap detection, and the 5-way navigation rocker are hardwired directly to RP2350 edge-triggered interrupt pins (GPIO 10–13), guaranteeing sub-microsecond interrupt capture.
-3. **No Bootloader Delays:** In S2idle suspend, RAM remains refreshed at 15 mW. In cold hibernate, an immutable Linux kernel image with `initramfs` resides on high-speed eMMC with all non-essential systemd services disabled.
+3. **Short Linux Resume:** There is no RAM-retaining suspend on the CM5 (ADR-036). Resume is from hibernate or a cold boot of an immutable kernel image with `initramfs` on eMMC/NVMe, with all non-essential systemd services disabled; the resume time is measured on the dev-kit bench (gate G1).
 
 ---
 
-## Pillar 2: "Sunlight Sovereignty" & Perpetual Indoor Life
-
-### The Vision
-Modern laptops fail the instant they step outdoors. In direct sunlight, a 500-nit MacBook screen completely washes out. To compensate, users crank brightness to maximum, turning the laptop into a 50W furnace that burns their thighs and drains the battery in 90 minutes.
-
-SolarDeck inverts this entirely: **The brighter the sun, the crisper, higher-contrast, and more vibrant the screen becomes.** And when sitting on a desk indoors, it sips micro-watts and stays charged indefinitely from ambient room light.
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                        SUNLIGHT SOVEREIGNTY MATRIX                          │
-├──────────────────────────────┬──────────────────────────────┬───────────────┤
-│ Operating Environment        │ Conventional Laptop (MacBook)│ SolarDeck     │
-├──────────────────────────────┼──────────────────────────────┼───────────────┤
-│ Direct Noon Sun (100,000 lux)│ Unreadable; heavy glare      │ Razor-sharp   │
-│ Screen Backlight Power       │ 12W–18W (100% max brightness)│ 0.000 Watts   │
-│ Thermal Behavior             │ Fans roar, CPU throttles     │ Silent, cool  │
-│ Active Battery Runtime       │ 1.5 to 2.5 hours             │ 24 to 32 hours│
-│ Eye Strain Index             │ High (60Hz RGB blue light)   │ Zero (Reflect)│
-└──────────────────────────────┴──────────────────────────────┴───────────────┘
-```
-
-### Perpetual Indoor Harvesting (The "Solar Calculator" Effect)
-* **The Physics:** By utilizing an indoor-tuned **Amorphous Silicon (a-Si)** micro-strip (PowerFilm Indoor Light / Panasonic Amorton) coupled to the **TI BQ25504** nano-power boost harvester:
-  * Indoor ambient office lighting (400–600 lux) generates **200 to 350 µW**.
-  * SolarDeck ambient desk clock / dashboard consumes **110 µW** (RP2350 sleep + 1-minute 1-bit partial time flip).
-  * **Net Energy Balance: POSITIVE (+100 to +240 µW surplus).**
-  * It sits on your desk, bookshelf, or kitchen counter, displaying time, weather barographs, tasks, and off-grid LoRa emergency traffic **forever, without ever being plugged into a wall outlet.**
-
----
-
-## Pillar 3: The Sovereign Voice Agent (Barge-In & Touch-to-Talk)
-
-*Written 2026-10-20 19:37 UTC in the Pi harness by openrouter/deepseek/deepseek-v4-flash-0731*
-
-The voice channel is a first-class pillar, not a bolt-on: SolarDeck can hear you for **80+ days on standby**, you can **speak over it mid-sentence**, and you can always fall back to a deterministic **touch-to-talk** path. It exists so the operator can command the machine hands-free in the field, the workshop, the cockpit — without cradling a keyboard.
-
-### 1. The Cascaded 3-Tier Wake (Zero Standby Battery Penalty)
-Instead of keeping the CM5 awake, listening runs on a **cascaded 3-tier filter**:
-  1. **Knowles MEMS hardware acoustic front-end** ($<0.05\text{ mW}$).
-  2. **RP2350 co-processor** running INT8 `microWakeWord` (~14 mW, delivering **80+ days continuous standby**).
-  3. **CM5 wakes in 250 ms** only when "Hey Deck" is spoken, evaluating **Resemblyzer speaker biometrics** (cosine similarity $\ge 0.78$) to reject bystanders before running `whisper.cpp`.
-
-### 2. True Acoustic Barge-In (Interruption)
-PipeWire loops back the MAX98357A speaker audio into SpeexDSP / WebRTC AEC3 Acoustic Echo Cancellation, subtracting SolarDeck's own voice from the microphones. The operator can speak over SolarDeck while it talks at full volume, and it **stops and retargets instantly** — no push-to-talk required for the barge-in path.
-
-### 3. Touch-to-Talk (Deterministic Fallback)
-A **held-call PTT path bypasses the wake-word entirely**: the mic is hot only while the touch target is held, giving deterministic, full-duplex operator control. This is the fallback when acoustic conditions or bystanders defeat the wake-word, and it never depends on wake latency.
-
----
-
-## Pillar 4: The "Typewriter-on-Paper" Latency Engine (<20ms Keystroke & Inking)
+## Pillar 2: Typewriter-on-Paper Latency (1-Bit DU Keystroke, EMR Ink, LRA Haptics)
 
 ### The Vision
 The single greatest reason developers abandon E-Ink displays for programming is **input lag and ghosting flashes**. If there is a 100ms–150ms delay between striking a key and seeing the character appear on screen, the human brain rejects the interface as sluggish and disconnected.
@@ -148,36 +77,41 @@ SolarDeck treats text entry like an **electric IBM Selectric typewriter striking
    * Wacom EMR digitizer sits laminated **behind the display backplane** (0% optical distortion, zero added surface reflection, zero parallax).
    * Passive, battery-free stylus with 4096 pressure levels and tilt detection.
    * `solardeck-inkd` renders pen strokes directly into EPDC hardware memory, providing zero-latency inking for sketching, mathematical derivations, and code margin notes.
-4. **Haptic Engine: Wideband LRA by Default, Spatial Piezo Array as an Option:**
-   * *The Problem with Global Vibration:* Standard phones and tablets shake the entire aluminum body when you tap a virtual key, vibrating both palms and feeling artificial.
-   * *Base build:* A single TI **DRV2605L** + 8 mm Z-axis LRA, chassis-mounted with its mass on the metal frame. `solardeck-hapticd` still shapes per-keystroke waveforms (<0.6 ms trigger), and the actuator is a replaceable part. The whole frame moves slightly; it feels like a good phone, not like a microswitch.
+4. **Haptic Engine (core, ADR-037): Frame-Mounted LRA, Spatial Piezo Array as a DNP Option:**
+   * *Instant feedback:* Every keystroke — on the glass, the thumb-keyboard grip or an external keyboard — fires a haptic tap and an optional typewriter sound **at key-down**, independent of the panel refresh, so the feedback lands before the E-Ink draws and masks its latency.
+   * *Base build:* A single TI **DRV2605L** + 8 mm Z-axis LRA, mounted on the frame (not on the glass). `solardeck-hapticd` still shapes per-keystroke waveforms (<0.6 ms trigger), and the actuator is a replaceable part. The whole frame moves slightly; it feels like a good phone, not like a microswitch.
    * *Why:* The spatial array puts four adhesively bonded ceramics at the highest-strain location in a drop. It is the best tactile experience here and the worst 30-year bet here (ADR-020, `HARDWARE_SPEC.md` §7.6).
    * *Retained option (DNP footprint):* 4× **TDK PowerHap** at the glass corners + dual **Boréas BOS1901** CapDrive drivers with >80% energy recovery. `solardeck-hapticd` fires a sub-1.0 ms impulse into the nearest corner and phase-inverted damping pulses at the opposite corners, concentrating displacement under the fingertip for a genuine **localized mechanical click on flat glass**. Populate it for demos or for a buyer who accepts a 10-year glass-bond service life.
 
 ---
 
-## Pillar 5: Sovereign Field Hardening (Airgap, LoRa, & IP67 All-Weather)
+## Pillar 3: Sunlight-Readable; Solar Tops Up the Idle Co-Processor Outdoors (ADR-041)
 
 ### The Vision
-In an era of cloud-locked, fragile, spy-by-design hardware, SolarDeck is an **indestructible, sovereign survival instrument**. It works when the cellular network is down, when the power grid fails, in torrential rain, and under zero-trust operational security requirements.
+Modern laptops fail the instant they step outdoors. In direct sunlight, a 500-nit MacBook screen completely washes out. To compensate, users crank brightness to maximum, turning the laptop into a 50W furnace that burns their thighs and drains the battery in 90 minutes.
 
-### The Three Hardening Anchors:
-1. **Physical Hardware Airgap Switch (0.000 dBm / Zero Phantom Bleed):**
-   * A recessed 2-position slide switch physically breaks the enable lines of all **TI TPS22918** power gates to ground.
-   * Completely severs power to the Quectel LTE modem, Semtech LoRa transceiver, Broadcom Wi-Fi/BT module, GPS engine, and MEMS microphone to **0.000V**.
-   * Digital lines are isolated via **TI TXU0104** buffers, eliminating parasitic back-powering through silicon clamping diodes.
-   * 100% immune to software baseband exploits; completely invisible to RF spectrum analyzers.
-2. **Autonomous Meshtastic Off-Grid Radio Node (80+ Days):**
-   * Built-in **Semtech SX1262 LoRa (868/915 MHz)** transceiver connected to a top-edge **IP67 bulkhead SMA female jack**.
-   * Permanently owned by the RP2350 co-processor over dedicated SPI.
-   * Acts as a continuous, autonomous emergency repeater node across off-grid mesh networks for **80+ days** on battery without ever waking the Linux SoC.
-3. **IP67 Enclosure & All-Weather "Water-Lock":**
-   * SLS 3D-printed PA12 nylon or CNC 6061 aluminum enclosure with continuous silicone perimeter gaskets and a GORE ePTFE hydrophobic pressure-equalization vent.
-   * **Torrential Rain "Water-Lock" Mode:** Capacitive touch screens go haywire when water droplets strike the surface. Flipping the water-lock switch cuts power to the Goodix capacitive touch overlay, while the **Wacom EMR digitizer and left-bezel 5-way tactical navigation rocker remain 100% immune to water**, enabling full terminal navigation in pouring rain.
+SolarDeck inverts this entirely: **The brighter the sun, the crisper, higher-contrast, and more vibrant the screen becomes.** Outdoors, the bezel strip tops up the idle co-processor; indoors it does not keep the device charged (ADR-041).
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        SUNLIGHT SOVEREIGNTY MATRIX                          │
+├──────────────────────────────┬──────────────────────────────┬───────────────┤
+│ Operating Environment        │ Conventional Laptop (MacBook)│ SolarDeck     │
+├──────────────────────────────┼──────────────────────────────┼───────────────┤
+│ Direct Noon Sun (100,000 lux)│ Unreadable; heavy glare      │ Razor-sharp   │
+│ Screen Backlight Power       │ 12W–18W (100% max brightness)│ 0.000 Watts   │
+│ Thermal Behavior             │ Fans roar, CPU throttles     │ Silent, cool  │
+│ Active Battery Runtime       │ 1.5 to 2.5 hours             │ TBD (ADR-040) │
+│ Eye Strain Index             │ High (60Hz RGB blue light)   │ Zero (Reflect)│
+└──────────────────────────────┴──────────────────────────────┴───────────────┘
+```
+
+### Outdoor Solar Top-Up
+* The bezel strip feeds the **TI BQ25504** harvester and tops up the idle co-processor **outdoors only**. The indoor net-positive claim is withdrawn (ADR-041, gate G4).
 
 ---
 
-## Pillar 6: Universal Form-Morphology (Handheld Grip ⟷ Pure Slate ⟷ Desk Easel)
+## Pillar 4: Form-Morphology — 620 g Slate, Desk Easel, Modular Grips
 
 ### The Vision
 The computing industry has struggled with 2-in-1 form factors:
@@ -196,9 +130,9 @@ SolarDeck solves this by decoupling the core tablet from proprietary keyboards a
 │      thumb keyboard beneath the 10.3" display.                              │
 │    • Type bash commands and prompts with two thumbs while walking outdoors. │
 ├─────────────────────────────────────────────────────────────────────────────┤
-│ 2. TACTICAL READING & INKING SLATE (The Pure 510g Tablet)                   │
+│ 2. TACTICAL READING & INKING SLATE (The Pure Slate)                         │
 │    • Detach from grip or stand in 0.5 seconds.                              │
-│    • 510g lightweight, 9.8mm slim IP67 waterproof reading slate.            │
+│    • Lightweight slate (mass_g, chassis_mm), IP54 (V1 target).              │
 │    • Full 10.3" portrait or landscape canvas for 100GB offline Kiwix docs,  │
 │      technical schematics, and Wacom EMR handwritten annotations.           │
 ├─────────────────────────────────────────────────────────────────────────────┤
@@ -212,13 +146,35 @@ SolarDeck solves this by decoupling the core tablet from proprietary keyboards a
 
 ---
 
-## Pillar 7: The Modular Upgrade Bridge (ARM-to-RISC-V Swappability, RAM, & 2TB NVMe)
+## Pillar 5: Field Hardening — Airgap, LoRa Mesh, GNSS, IP54 (V1) / IP67 (V2), Rain-Lock
+
+### The Vision
+In an era of cloud-locked, fragile, spy-by-design hardware, SolarDeck is an **indestructible, sovereign survival instrument**. It works when the cellular network is down, when the power grid fails, in torrential rain, and under zero-trust operational security requirements.
+
+### The Three Hardening Anchors:
+1. **Physical Hardware Airgap Switch (0.000 dBm / Zero Phantom Bleed):**
+   * A recessed 2-position slide switch physically breaks the enable lines of all **TI TPS22918** power gates to ground.
+   * Completely severs power to the Semtech LoRa transceiver, Broadcom Wi-Fi/BT module, u-blox MAX-M10S GNSS receiver, and MEMS microphones to **0.000V**. (No cellular modem in V1, ADR-034.)
+   * Digital lines are isolated via **TI TXU0104** buffers, eliminating parasitic back-powering through silicon clamping diodes.
+   * 100% immune to software baseband exploits; completely invisible to RF spectrum analyzers.
+2. **Autonomous Meshtastic Off-Grid Radio Node with GNSS:**
+   * Built-in **Semtech SX1262 LoRa (868/915 MHz)** transceiver connected to a top-edge **IP67 bulkhead SMA female jack**.
+   * Permanently owned by the RP2350 co-processor over dedicated SPI.
+   * Acts as a continuous, autonomous emergency repeater node across off-grid mesh networks without waking the Linux SoC; battery endurance is TBD until the cell is chosen (ADR-040).
+   * A **u-blox MAX-M10S** GNSS receiver on an RP2350 UART, behind a load switch, with a passive antenna at the top edge (ADR-038), gives the node position with Linux off (tracking power `spec_values.gnss.tracking_mw`).
+3. **IP54 (V1 target) / IP67 (V2 target) Enclosure & All-Weather "Water-Lock":**
+   * SLS 3D-printed PA12 nylon prototypes and PC/ABS production enclosure (ADR-039) with continuous silicone perimeter gaskets and a GORE ePTFE hydrophobic pressure-equalization vent. IP67 waits for V2, once every aperture has a named sealing part.
+   * **Torrential Rain "Water-Lock" Mode:** Capacitive touch screens go haywire when water droplets strike the surface. Flipping the water-lock switch cuts power to the Goodix capacitive touch overlay, while the **Wacom EMR digitizer and left-bezel 5-way tactical navigation rocker remain 100% immune to water**, enabling full terminal navigation in pouring rain.
+
+---
+
+## Pillar 6: Modular Upgrade Bridge — ARM/RISC-V SOM, RAM, NVMe
 
 ### The Vision: A Computer That Never Becomes E-Waste
 Consumer electronics are designed for planned obsolescence: when Apple or Lenovo releases a faster chip, your $1,500 laptop must be thrown in the trash. The RAM is soldered, the SSD is soldered, and the CPU is locked.
 
 SolarDeck is designed with **Generational Modular Longevity**:
-* The expensive components—the **10.3" Color E-Ink glass**, the **Wacom EMR digitizer**, the **custom 32 Wh LiFePO4 battery**, the **precision CNC/SLS enclosure**, and the **carrier motherboard**—are built to last a decade.
+* The expensive components—the **10.3" Color E-Ink glass**, the **Wacom EMR digitizer**, the **custom LiFePO4 battery** (capacity TBD until the cell is chosen, ADR-040), the **precision CNC/SLS enclosure**, and the **carrier motherboard**—are built to last a decade.
 * The compute brain, RAM, and mass storage are **100% modular and field-upgradable in under 60 seconds with two screws**.
 
 ```
@@ -276,18 +232,37 @@ Giving developers and autonomous AI agents root access to flash co-processor sil
 * **Silicon Mask ROM:** Factory-etched into RP2350 silicon at TSMC; physically unbrickable.
 * **Dual-Bank A/B Flash & Hardware Watchdog:** Experimental firmware boots with an 8-second countdown. If new code hangs or faults, the hardware watchdog auto-rolls back to Bank A (Golden Image) in $<2.5\text{ ms}$.
 * **Current-Clamping Resistors:** All shared I/O lines incorporate 330Ω–1kΩ resistors, physically preventing pin burnout even during software logic contention.
-* **Autonomous Analog Battery Protection:** TI BQ25895 analog comparator cuts charging if cell thermals exceed limits, bypassing all software.
+* **Autonomous Battery Protection:** The TI BQ25798 charger's programmable JEITA zones and a BQ29706-class protector with a back-to-back N-FET pair cut charging on cell thermals or over-voltage, independent of Linux; charging stays disabled until the RP2350 has written the LiFePO4 VREG (ADR-035).
 * **Immutable Linux Rootfs with OverlayFS:** Base system is cryptographically locked with `dm-verity`; `solardeck-reset --safe` restores pristine factory OS in 3 seconds.
 
 ### 6. The "Cold Storage Vault" (Carry Up to 6+ Terabytes Off-Grid for $0 BOM)
 To make SolarDeck the ultimate sovereign archive workstation without adding a single cent in electronics or compromising exterior unibody waterproofing:
-* **Gasketed M.2 Service Hatch Cavity:** Molded directly into the inner face of the flush, IP67 silicone-gasketed M.2 SSD service hatch on the rear chassis unibody (secured by 2x stainless M2 captive screws).
+* **Gasketed M.2 Service Hatch Cavity:** Molded directly into the inner face of the flush, silicone-gasketed M.2 SSD service hatch on the rear chassis unibody (secured by 2x stainless M2 captive screws).
 * **Storage Capacity:**
   * **3x Uniform Friction-Fit MicroSD Card Pockets:** Holds three extra MicroSD cards (e.g. Card 1: 1TB offline Kiwix Wikipedia + MDN + Library of Genesis; Card 2: bootable Tails / Arch rescue OS; Card 3: encrypted personal git vault).
-  * **Nano-SIM Compatibility via Adapter:** Standardizes on uniform MicroSD pocket dimensions (15.0mm × 11.0mm × 1.0mm). To store a spare Nano-SIM, users slide the SIM into a standard $0.05 plastic MicroSD carrier shell.
-  * **1x Stainless Steel SIM Ejector Tool Retaining Clip:** Keeps a metal SIM ejector pin snapped into place.
-* **Mechanical Retention & Weather Protection:** Molded 85A TPU micro-ribs prevent rattling or dislodging during severe drops, while the gasketed hatch keeps the cards 100% sealed inside the IP67 envelope, completely hidden and protected from rain, dust, and visual inspection.
-* **Total Accessible Storage:** With 2TB on the active edge MicroSD slot, 3TB in the cold vault, and 2TB on the internal M.2 NVMe SSD, developers can carry **up to 7 Terabytes of uncompressed human knowledge and local AI weights** in a 510g tablet!
+  * **Spare SIM storage and SIM ejector clip:** V2 (ADR-034).
+* **Mechanical Retention & Weather Protection:** Molded 85A TPU micro-ribs prevent rattling or dislodging during severe drops, while the gasketed hatch keeps the cards inside the IP54 (V1 target) envelope, completely hidden and protected from rain, dust, and visual inspection.
+* **Total Accessible Storage:** With 2TB on the active edge MicroSD slot, 3TB in the cold vault, and 2TB on the internal M.2 NVMe SSD, developers can carry **up to 7 Terabytes of uncompressed human knowledge and local AI weights** in one slate (`mass_g`).
+
+---
+
+## Pillar 7: Voice-First Control — Hold-to-Talk Button, Opt-In Hands-Free Wake Word, Barge-In (ADR-036)
+
+*Written 2026-10-20 19:37 UTC in the Pi harness by openrouter/deepseek/deepseek-v4-flash-0731*
+
+The voice channel is a first-class pillar, not a bolt-on: you can **hold a button and talk** at any time, **speak over it mid-sentence**, and opt in to hands-free "Hey Deck". Hardware: two MEMS mics, a speaker with an echo-cancel reference, and a hardware mute switch.
+
+### 1. Hold-to-Talk Voice Button (Always Available, Zero Standby Cost)
+Press and hold: the RP2350 starts capturing audio into PSRAM **at the press**, while the CM5 boots; Linux transcribes the buffer, so no words are lost to boot time. The mic is live only while the button is held, so the button costs nothing in standby.
+
+### 1b. Hands-Free Wake Word (Opt-In)
+"Hey Deck" is opt-in, and the device shows its measured battery cost before you enable it. It runs on the CM5 when Linux is up and on the RP2350 when Linux is off; the RP2350 wake-word power is TBD until measured on the bench. A verified speaker (**Resemblyzer biometrics**, cosine similarity $\ge 0.78$) is required before `whisper.cpp` acts on the command.
+
+### 2. True Acoustic Barge-In (Interruption)
+PipeWire loops back the MAX98357A speaker audio into SpeexDSP / WebRTC AEC3 Acoustic Echo Cancellation, subtracting SolarDeck's own voice from the microphones. The operator can speak over SolarDeck while it talks at full volume, and it **stops and retargets instantly** — no push-to-talk required for the barge-in path.
+
+### 3. Touch-to-Talk (On-Screen Twin of the Button)
+An on-screen **held-call PTT target** behaves like the voice button when Linux is up: the mic is hot only while it is held, giving deterministic operator control when acoustic conditions or bystanders defeat the wake word.
 
 ---
 
@@ -295,8 +270,8 @@ To make SolarDeck the ultimate sovereign archive workstation without adding a si
 
 By orchestrating and cross-wiring the existing hardware components in innovative ways, SolarDeck delivers four extraordinary convenience features without adding a single cent to the Bill of Materials:
 
-### 1. The 32 Wh Survival Powerbank (15W Reverse Boost)
-* Utilizing the bidirectional synchronous boost engine in the **TI BQ25895** buck charger, SolarDeck outputs **5.1V @ 3.1A (15.8W)** backwards through USB-C Port 1 or 2 to fast-charge external smartphones, flashlights, or radios.
+### 1. The Survival Powerbank (Reverse OTG, ADR-035)
+* Utilizing the OTG boost mode of the **TI BQ25798** charger, SolarDeck sources USB power backwards through USB-C Port 1 or 2 to charge external smartphones, flashlights, or radios, capped at `power_bank.otg_max_a` (2 A).
 * **Linux Stays 100% Asleep (0.000W):** The RP2350 co-processor manages power delivery and displays a live, crisp battery percentage and output wattage on the E-Ink screen. Never carry a separate powerbank again.
 
 ### 2. The Solar Micro-Strip as a Free Ambient Light Sensor ($0.00 Cost)
@@ -308,30 +283,24 @@ By orchestrating and cross-wiring the existing hardware components in innovative
 * The CM5's USB device-mode port (TBD — verify on CM5) enumerates as a high-speed composite USB Gadget display sink (UVC / Weylus), giving you an instantaneous, 10.3" matte, zero-glare, eye-strain-free secondary monitor for terminal logs, documentation, or reading in bright sunlight while the laptop powers the tablet!
 
 ### 4. The Airgapped Hardware Crypto Vault & Document Notary (Zero-EMF Signing)
-* Combining the physical **Hardware Airgap Kill Switch** (cutting all RF radios to 0.000V), the **rear flush 12MP Sony IMX708 autofocus camera**, the **10.3" Color E-Ink display**, and **top-bezel 13.56 MHz NFC**.
-* When flipped to Stealth (0.000 dBm), SolarDeck becomes an impenetrable, mathematically verifiable cold-storage signing station:
-  1. Scan an unsigned Bitcoin/Ethereum transaction QR or document hash with the rear 12MP camera.
-  2. Inspect the complete decoded transaction details, contract calls, and gas fees in razor-sharp high contrast on the 10.3" screen.
-  3. Authorize and sign using an onboard airgapped GPG/SSH key, or tap a physical **YubiKey, Tangem, or Coldcard** against the top-bezel NFC coil.
-  4. Display the signed transaction QR on the E-Ink screen for an online smartphone to broadcast.
-* Completely immune to remote exploits or RF sniffing because the wireless power rails are physically cut by hardware switches!
+* V2 (ADR-034): QR camera scanning and NFC YubiKey/Tangem/Coldcard signing need the deferred rear camera and NFC.
 
 ### 5. Presence-Aware Power Scheduler (Attention-Gap Computing)
-* Combining the **Wacom EMR digitizer**, the **Knowles MEMS wake-word tier**, and the **per-rectangle refresh scheduler** on the Kaleido 4 display controller (TBD, ADR-032) into one cognitive budget.
+* Combining the **Wacom EMR digitizer**, the **voice button / opt-in wake word** (ADR-036), and the **per-rectangle refresh scheduler** on the Kaleido 4 display controller (TBD, ADR-032) into one cognitive budget.
 * Hover-approaching stylus, grip-pressure, and keyboard events feed a *user-present* signal. The system runs refresh scrubbing, LoRa mailbox polling, telemetry bursts, and telemetryd relays **only in attention gaps** — never mid-stroke, never mid-paragraph.
-* **Result:** the perceived smoothness target of Pillar 4 (the Typewriter-on-Paper latency engine) is reached on the *existing* 30 ms partial-rectangle scheduler, and the sleep tier extends further — the device does its housekeeping when you are thinking, not when you are typing.
+* **Result:** the perceived smoothness target of Pillar 2 (the Typewriter-on-Paper latency engine) is reached on the *existing* 30 ms partial-rectangle scheduler, and the sleep tier extends further — the device does its housekeeping when you are thinking, not when you are typing.
 
 ### 6. RP2350-as-Secure-Element Voiceprint (Tamper-Resistant Identity)
-* The **RP2350 co-processor** (already the wake-word tier) becomes the trust boundary for the speaker-verification enrollment (ADR-026, `SOFTWARE_SPEC.md` §17.2).
+* The **RP2350 co-processor** (which runs the opt-in wake word while Linux is off) becomes the trust boundary for the speaker-verification enrollment (ADR-026, `SOFTWARE_SPEC.md` §17.2).
 * The 256-d voiceprint is flashed to co-processor non-volatile storage; the CM5 asks the RP2350 for an owner/not-owner verdict over the existing CM5↔RP2350 interface and never holds a reference copy.
-* **Result:** a root-compromised Linux brain cannot swap the voiceprint or re-threshold cosine similarity — the identity anchor survives even a fully owned CM5. And because the verdict runs in the 14 mW tier, stranger speech never wakes Linux at all.
+* **Result:** a root-compromised Linux brain cannot swap the voiceprint or re-threshold cosine similarity — the identity anchor survives even a fully owned CM5. And because the verdict runs on the co-processor, stranger speech never wakes Linux at all.
 
 ### 7. Acoustic Home-Zone (Privacy-Clean Ambient Fingerprint)
-* The already-always-on Knowles array computes an **ambient-sound feature profile** (energy bands, cadence, occupancy rhythm) — features only, nothing recorded, nothing stored.
+* Requires the opt-in hands-free mode (ADR-036); with it enabled, the MEMS mics compute an **ambient-sound feature profile** (energy bands, cadence, occupancy rhythm) — features only, nothing recorded, nothing stored.
 * SolarDeck learns to distinguish *its desk* from *the van* or *the workshop* purely acoustically.
 * **Result:** theft alarm arms only outside the known home-zone; notification and brightness policy switch silently when the device knows where it is; zero camera, zero RF, zero GPS involved.
 
-*(Further out: cooperative barometer mesh forecasting across the LoRa fleet, golden-hour chrono-locked crypto signing gated on verified presence, and the LoRa → LTE → placard comms escalation ladder. Adding any of them touches the same code surface as the three above.)*
+*(Further out: cooperative barometer mesh forecasting across the LoRa fleet, golden-hour chrono-locked crypto signing gated on verified presence, and the LoRa → LTE (V2, ADR-034) → placard comms escalation ladder. Adding any of them touches the same code surface as the three above.)*
 
 ---
 
@@ -345,27 +314,27 @@ When ultra-low-power microcontrollers (RP2350), bistable electrophoretic physics
 ├─────────────────────┬───────────────────────┬───────────────────────────────┤
 │ EMERGENT FEATURE    │ HARDWARE SYNERGY      │ OPERATIONAL RESULT            │
 ├─────────────────────┼───────────────────────┼───────────────────────────────┤
-│ 1. Zero-Power Pager │ RP2350 + SX1262 LoRa  │ 60–90 day autonomous terminal;│
+│ 1. Zero-Power Pager │ RP2350 + SX1262 LoRa  │ Autonomous terminal (days TBD)│
 │    & Mailbox        │ + E-Ink Bistability   │ updates e-paper while CM5 off.│
 ├─────────────────────┼───────────────────────┼───────────────────────────────┤
-│ 2. Shadow-Gesture   │ Bezel Solar Strip     │ <300ms wake without buttons;  │
-│    S2idle Wake      │ + 12-bit ADC          │ auto-flips Day/Night palette. │
+│ 2. Shadow-Gesture   │ Bezel Solar Strip     │ Linux wake without buttons;   │
+│    Wake             │ + 12-bit ADC          │ auto-flips Day/Night palette. │
 ├─────────────────────┼───────────────────────┼───────────────────────────────┤
-│ 3. Airgapped Video  │ 12MP IMX708 Autofocus │ Ingests multi-MB files visually│
-│    QR Bridge        │ + CM5 GPU (TBD)       │ under 100% RF kill.           │
+│ 3. Airgapped Video  │ Rear camera           │ V2 (ADR-034)                  │
+│    QR Bridge        │                       │                               │
 ├─────────────────────┼───────────────────────┼───────────────────────────────┤
-│ 4. Whisper Voice-to-│ Knowles MEMS Dual-Mic │ Transcribes speech in <600ms  │
+│ 4. Whisper Voice-to-│ Two MEMS Mics         │ Transcribes speech in <600ms  │
 │    LoRa PTT Memos   │ + ARM NEON + SX1262   │ and blasts encrypted text.    │
 ├─────────────────────┼───────────────────────┼───────────────────────────────┤
-│ 5. Optical Celestial│ IMX708 + 9-DOF IMU +  │ Derives lat/long within 150m  │
-│    Dead-Reckoning   │ DS3231 RTC + Plate-Sol│ with zero GPS/GNSS satellites.│
+│ 5. Optical Celestial│ Rear camera           │ V2 (ADR-034)                  │
+│    Dead-Reckoning   │                       │                               │
 ├─────────────────────┼───────────────────────┼───────────────────────────────┤
 │ 6. Barometric Storm │ Bosch BMP390 Baro     │ Sounds piezo siren on sudden  │
 │    & Flood Alarm    │ + RP2350 Low-IQ Loop  │ 2.5 hPa drop before rain.     │
 └─────────────────────┴───────────────────────┴───────────────────────────────┘
 ```
 
-### 1. The 90-Day Zero-Power Dead-Drop LoRa Pager & Mailbox
+### 1. The Zero-Power Dead-Drop LoRa Pager & Mailbox
 * **The Synergy:** Electrophoretic pigment particles retain their physical orientation indefinitely with **zero holding current**. The RP2350 co-processor and SX1262 LoRa transceiver consume just **12 milliwatts** in continuous packet listen mode.
 * **The Workflow:**
   1. The CM5 Linux processor is powered completely OFF (0.000W).
@@ -373,24 +342,22 @@ When ultra-low-power microcontrollers (RP2350), bistable electrophoretic physics
   3. The RP2350 decrypts the packet header in hardware and draws the message into its 8MB PSRAM framebuffer.
   4. The RP2350 asserts `PIN_TMUX_SEL_CM5_NRP` to claim the display SPI bus, sends a 1-bit partial refresh command to the bottom 2 inches of the 10.3" screen, pulses the onboard micro-piezo buzzer once, and returns to sleep.
   5. The message remains legibly stamped in physical ink on the display.
-* **Result:** SolarDeck can sit on a vehicle dashboard, camp table, or tactical operations center for **over 2 months** as a live, self-updating electronic paper bulletin board that requires zero boot time to read.
+* **Result:** SolarDeck can sit on a vehicle dashboard, camp table, or tactical operations center (for a duration TBD until the cell is chosen, ADR-040) as a live, self-updating electronic paper bulletin board that requires zero boot time to read.
 
-### 2. Shadow-Gesture S2idle Wake & Solar Auto-Inversion
+### 2. Shadow-Gesture Wake & Solar Auto-Inversion
 * **The Synergy:** The front-bezel monocrystalline solar panel generates open-circuit voltage ($V_{OC}$) continuously sampled by the RP2350 ADC every 100ms ($<5\,\mu\text{A}$ budget).
-* **Hover Wake:** Waving a hand or notebook 2–3 inches above the top bezel drops incident light by >75% for 200 milliseconds. The RP2350 recognizes this distinct "shadow-dip signature" as an intentional user gesture and asserts the CM5 wake line (`PIN_GPIO17_WAKE`), waking the Linux terminal in **<300 milliseconds** without touching a physical button or keyboard.
+* **Hover Wake:** Waving a hand or notebook 2–3 inches above the top bezel drops incident light by >75% for 200 milliseconds. The RP2350 recognizes this distinct "shadow-dip signature" as an intentional user gesture and asserts the CM5 wake line (`PIN_GPIO17_WAKE`), starting the Linux resume (seconds, ADR-036) without touching a physical button or keyboard.
 * **Sunlight Auto-Inversion:** Moving from direct noon sunlight (100,000 lux, 6.0V on solar cell) into a dark tent (<5 lux, 0.2V on solar cell) automatically signals Sway/Wayland to flip color palettes: from high-contrast black-on-white paper text to an inverted white-on-black terminal with the amber/red frontlight engaged at minimum lux.
 
 ### 3. Air-Gapped High-Density Animated QR Bridge (Zero-EMF Ingestion)
-* **The Synergy:** Combining the hardware RF Airgap Kill Switch (which cuts all wireless transmitters to 0.000V), the 12MP Sony IMX708 PDAF autofocus camera, and the CM5 GPU video pipeline (hardware decode support TBD — verify on CM5).
-* **The Workflow:** When full radio silence is mandatory, software patches, encrypted documents, or cryptographic keys are transferred into SolarDeck visually. An external device displays a high-speed animated 2D barcode stream (UR / BBQr standard). The IMX708 captures 30 FPS video frames, hardware-decoded by the GPU in memory. Multi-megabyte files are sucked in across the airgap in seconds with **zero radio emissions (0.000 dBm)**.
+* V2 (ADR-034): needs the deferred rear camera.
 
 ### 4. Whisper Voice-to-LoRa PTT Tactical Dictaphone
-* **The Synergy:** Dual Knowles SPH0645 MEMS microphones + CM5 ARM NEON SIMD vector processing + Semtech SX1262 LoRa mesh.
-* **The Workflow:** Typing lengthy tactical sitreps on an e-ink screen while wearing heavy gloves or walking is cumbersome. The operator presses and holds the left-bezel tactical button (Push-to-Talk). Spoken audio is recorded at 16 kHz. As soon as the button is released, a quantized `whisper.cpp` engine runs across the 4x Cortex-A76 cores, transcribing speech to plain text in **<600 milliseconds**. The text is instantly encrypted (AES-256) and transmitted across the LoRa mesh as a compact 60-byte packet. Field operators communicate silently and digitally with voice ergonomics.
+* **The Synergy:** Two MEMS microphones + CM5 ARM NEON SIMD vector processing + Semtech SX1262 LoRa mesh.
+* **The Workflow:** Typing lengthy tactical sitreps on an e-ink screen while wearing heavy gloves or walking is cumbersome. The operator presses and holds the voice button (Push-to-Talk, ADR-036). Spoken audio is recorded at 16 kHz. As soon as the button is released, a quantized `whisper.cpp` engine runs across the 4x Cortex-A76 cores, transcribing speech to plain text in **<600 milliseconds**. The text is instantly encrypted (AES-256) and transmitted across the LoRa mesh as a compact 60-byte packet. Field operators communicate silently and digitally with voice ergonomics.
 
 ### 5. Optical Celestial Dead-Reckoning (Zero-Satellite Navigation)
-* **The Synergy:** 12MP Sony IMX708 camera + DS3231 temperature-compensated RTC (<2 ppm drift) + Bosch 9-DOF IMU + offline `astrometry.net` solver.
-* **The Workflow:** In severe electronic warfare or geomagnetic storms where GPS/GNSS signals are jammed or spoofed, the operator places SolarDeck flat facing the night sky. The camera captures a 2-second exposure. The onboard plate-solver matches stellar coordinates against the offline Tycho-2 star catalog, combines them with atomic UTC from the RTC and gravity tilt vectors from the IMU, and computes the observer's exact terrestrial latitude and longitude within **150 meters**—with **zero satellites, zero cell reception, and zero RF emissions**.
+* V2 (ADR-034): needs the deferred rear camera.
 
 ### 6. Autonomous Barometric Sudden Storm & Flash-Flood Alarm
 * **The Synergy:** Bosch BMP390 ultra-low-noise barometer connected to the RP2350 Always-On I2C bus.
@@ -406,24 +373,24 @@ Carrying a giant 6.7" glass smartphone alongside a 10.3" sovereign e-ink termina
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                 THE TWO-DEVICE EVERYDAY CARRY (EDC) RIG                     │
 ├──────────────────────────────────────┬──────────────────────────────────────┤
-│ 1. POCKET COMMUNICATOR (~170g)       │ 2. SOLARDECK WORKSTATION (510g)      │
+│ 1. POCKET COMMUNICATOR (~170g)       │ 2. SOLARDECK WORKSTATION (mass_g)    │
 ├──────────────────────────────────────┼──────────────────────────────────────┤
 │ • 50MP OIS Camera (Travel memories)  │ • 10.3" Colour E-Ink Kaleido 4       │
 │ • Global 5G/4G + eSIM (Airalo ready) │ • Quad A76 CM5 + RP2350 Dual-Brain   │
 │ • Turn-by-Turn Google Maps Navigation│ • Neovim, Claude Code CLI, Kiwix     │
-│ • Tactile QWERTY Thumbboard & Calls  │ • 26–32 Wh LiFePO4 All-Day Battery   │
+│ • Tactile QWERTY Thumbboard & Calls  │ • LiFePO4 battery (Wh TBD, ADR-040)  │
 └──────────────────────────────────────┴──────────────────────────────────────┘
 ```
 
 ### 1. Bluetooth PAN Low-Power Internet Tethering (`bnep0`)
 * **The Physics:** Standard Wi-Fi hotspots force the phone into high-power AP mode (~1.8W–2.3W total system overhead), heating the phone and draining its battery in 3–4 hours.
 * **The Bluetooth PAN Alternative:** By routing data over Bluetooth Network Access Point (NAP) via Linux `bnep0`, link power drops to **~0.10W total system overhead (22× lower power)**.
-* **The Result:** The pocket phone stays ice-cold in your pocket, lasts **2 to 3 days on a single charge**, and auto-reconnects to SolarDeck in **<2.0 seconds** upon waking from S2idle. The 1.5–2.5 Mbps bandwidth is more than enough for terminal sessions, SSH, Claude Code CLI, git operations, and documentation browsing.
+* **The Result:** The pocket phone stays ice-cold in your pocket, lasts **2 to 3 days on a single charge**, and auto-reconnects to SolarDeck in **<2.0 seconds** once Linux has resumed. Phone tethering (Bluetooth PAN or Wi-Fi) is V1's only wide-area link; cellular is V2 (ADR-034). The 1.5–2.5 Mbps bandwidth is more than enough for terminal sessions, SSH, Claude Code CLI, git operations, and documentation browsing.
 
 ### 2. Center-of-Gravity "Chin-Dock" Dual-Screen Handheld
-* **The Cantilever Problem:** Cantilevering a phone below the bottom edge of a 510g tablet creates a 227mm lever arm that exhausts wrists within minutes of handheld thumb-typing.
+* **The Cantilever Problem:** Cantilevering a phone below the bottom edge of the tablet creates a 227mm lever arm that exhausts wrists within minutes of handheld thumb-typing.
 * **The Screen-Overlap Solution:** The Clicks Communicator docks **on top of the lower bezel/screen face**, suspended 1.0mm above the E-Ink front glass with soft silicone bumpers.
-* **Handheld Ergonomics:** Both hands grip the rigid bottom chassis of SolarDeck. The 510g tablet mass is cradled directly between your palms with **zero wrist torque**, matching the balanced feel of a Nintendo Switch or Steam Deck.
+* **Handheld Ergonomics:** Both hands grip the rigid bottom chassis of SolarDeck. The tablet mass is cradled directly between your palms with **zero wrist torque**, matching the balanced feel of a Nintendo Switch or Steam Deck.
 * **Dynamic Software Viewport Masking:** Sway/Wayland shifts the active workspace upwards (`swaymsg "gaps bottom 400"`), rendering a clean desktop (resolution TBD, ADR-032) on the top visible E-Ink panel. The occluded bottom pixels are filled with static black/white, drawing **0.000 Watts**.
 * **Dual-Screen Symbiosis:**
   * **Top Canvas (10.3" E-Ink):** Deep focus, zero glare, sunlight-readable code, terminal, and documentation.
@@ -441,13 +408,13 @@ Carrying a giant 6.7" glass smartphone alongside a 10.3" sovereign e-ink termina
 ### 5. Hybrid Remote-Builder Loop (`bld --remote`)
 * **Local vs. Remote Tradeoff:** Small code tweaks (<15s) compile locally on CM5 using ~18 Joules. Heavy builds (Linux kernel, DRM tree, large Rust/C++ projects) are offloaded via `bld --remote`.
 * **The Pipeline:** Computes a `git diff`, pushes across encrypted **Tailscale (WireGuard)** to a home Apple Silicon or Ryzen workstation, cross-compiles in 10 seconds inside Docker ARM64, and SCPs the stripped binary back to SolarDeck.
-* **Energy Impact:** Burns **180 Joules** on SolarDeck vs **18,000 Joules** locally—a **100× power saving** that eliminates fanless thermal throttling in direct sunlight. Mosh ensures terminal connections survive spotty cell coverage indefinitely.
+* **Energy Impact:** Burns **180 Joules** on SolarDeck vs **18,000 Joules** locally—a **100× power saving** that eliminates fanless thermal throttling in direct sunlight. Mosh ensures terminal connections survive a spotty tethered link indefinitely.
 
 ---
 
 ## Pillar 11: Campervan E-Ink Dual-Screen Dock, Blackout Beacon & Field Digitizer
 
-*Written 2026-10-19 14:20 UTC in the Pi harness by antigravity/gemini-3.8-flash. Voice content moved to Pillar 3 (2026-10-21).*
+*Written 2026-10-19 14:20 UTC in the Pi harness by antigravity/gemini-3.8-flash. Voice content moved to Pillar 7 (2026-10-21).*
 
 ### 1. Giant E-Ink Secondary Monitor & Campervan Docking
 * **Native Micro-HDMI 4K Silicon Path:** CM5 routes `HDMI0` (TBD — verify on CM5) to a sealed Micro-HDMI port with TPD4E05U06 ESD protection.
@@ -456,7 +423,7 @@ Carrying a giant 6.7" glass smartphone alongside a 10.3" sovereign e-ink termina
 
 ### 2. Blackout Supercapacitor Emergency SOS Beacon
 * **The Zero-Battery Bootstrap:** When the main LiFePO4 battery is completely dead (0.000V) or missing, an onboard **1.0F 3.3V supercapacitor** fed by the front micro-solar strip charges in 12–15 minutes under direct sunlight.
-* **150ms Cold Burst:** RP2350 cold-boots, grabs last-known GPS coordinates from RTC NVRAM, transmits a +22 dBm emergency LoRa SOS burst on 915 MHz, and burns an indelible distress placard onto the 10.3" screen. The distress message remains legible forever with **0.000W battery consumption**.
+* **150ms Cold Burst:** RP2350 cold-boots, grabs last-known GNSS (MAX-M10S) coordinates from RTC NVRAM, transmits a +22 dBm emergency LoRa SOS burst on 915 MHz, and burns an indelible distress placard onto the 10.3" screen. The distress message remains legible forever with **0.000W battery consumption**.
 
 ### 3. Zero-Hardware Wacom Field Caliper & CAD Digitizer
 * **10mm Hover Tracking:** The Wacom EMR digitizer senses the stylus tip up to 10 mm above the glass with **0.1 mm precision**, allowing contact-free measurement of delicate physical specimens without touching the screen.
@@ -482,8 +449,8 @@ Engineered specifically to defeat forensic extraction kiosks (Cellebrite UFED, M
 │ 2. Physical Duress  │ Dual-PIN Decoy Boot   │ Decoy PIN boots tourist OS;   │
 │    Screen Search    │ (Plausible Deniability│ panic PIN wipes volatile keys.│
 ├─────────────────────┼───────────────────────┼───────────────────────────────┤
-│ 3. IMSI Catchers &  │ AT Signaling Watchdog │ Detects forced 2G & cuts radio│
-│    Stingray Towers  │ (`solardeck-stingray`)│ power via TPS22918 load gate. │
+│ 3. IMSI Catchers &  │ AT Signaling Watchdog │ V2 (ADR-034): no cellular     │
+│    Stingray Towers  │ (`solardeck-stingray`)│ radio in V1.                  │
 ├─────────────────────┼───────────────────────┼───────────────────────────────┤
 │ 4. BadUSB / Kiosk   │ Physical Analog SPST  │ Mechanically severs D+/D- lines│
 │    Juice-Jacking    │ Switch (TS3USB221A)   │ while negotiating 20W PD power│
@@ -493,10 +460,10 @@ Engineered specifically to defeat forensic extraction kiosks (Cellebrite UFED, M
 └─────────────────────┴───────────────────────┴───────────────────────────────┘
 ```
 
-1. **Detached LUKS Header:** Relocating the 16MB LUKS header to the IP67 cold storage vault renders the 2TB NVMe SSD mathematically indistinguishable from factory-unpartitioned random NAND flash.
+1. **Detached LUKS Header:** Relocating the 16MB LUKS header to the cold storage vault renders the 2TB NVMe SSD mathematically indistinguishable from factory-unpartitioned random NAND flash.
 2. **Dual-PIN Plausible Deniability:** Unlocks an authentic Debian tourist desktop (travel itineraries, photos, recipes) under inspection, keeping tactical volumes invisible.
 3. **Hardware USB Isolation:** Physical SPST analog switch breaks high-speed USB data lines ($D+/D-$) to 0.000V during charging at untrusted public stations or border ports.
-4. **Active IMSI Catcher Watchdog:** Automatically halts cellular emissions before transmitting IMSI when rogue base stations attempt forced 2G downgrade attacks.
+4. **Active IMSI Catcher Watchdog:** V2 (ADR-034).
 5. **Chassis Zeroization Sensor:** Internal micro-phototransistor and leaf contact trigger instantaneous RAM key wiping within 3 ms if the unibody shell is opened.
 
 ---
@@ -539,7 +506,7 @@ Transforming SolarDeck from an active computer into an immortal, zero-battery am
 4. **Perpetual Solar Mesh Relay:** Operates as a permanent, immortal Meshtastic LoRa packet repeater atop a mountain or campervan roof, forwarding regional emergency communications without needing a battery.
 5. **Snap-On MagSafe 7.1W "Solar Armor" Backplate & 2.5m Remote Shade Tether (`SOLAR-ARMOR-V1`):**
    * Snaps via the embedded MagSafe N52 magnetic ring with a 2.0mm convective chimney to dissipate heat, harvesting **7.13W Peak** in direct tropical sun—surpassing the 5.5W full turbo compilation load of the quad-core CM5.
-   * **The Remote Shade Tether:** Features an integrated 2.5-meter Kevlar-reinforced flat ribbon cable that unspools from the backplate. The panel sits out on a sunlit boulder or vehicle roof generating 7.1W, while the operator sits comfortably in the cool shade using the 510g tablet with **zero thermal stress on the LiFePO4 battery**. Doubles as an independent 7.1W USB-C solar charger for phones and flashlights.
+   * **The Remote Shade Tether:** Features an integrated 2.5-meter Kevlar-reinforced flat ribbon cable that unspools from the backplate. The panel sits out on a sunlit boulder or vehicle roof generating 7.1W, while the operator sits comfortably in the cool shade using the tablet with **zero thermal stress on the LiFePO4 battery**. Doubles as an independent 7.1W USB-C solar charger for phones and flashlights.
 
 ---
 
@@ -549,13 +516,13 @@ Transforming SolarDeck from an active computer into an immortal, zero-battery am
 
 Equipping the sovereign traveler and wilderness naturalist with completely offline scientific instruments:
 
-1. **Airgapped Sovereign e-Passport Inspector (`solardeck-epassport`):** Reads ICAO 9303 RFID passport chips via the 13.56 MHz NFC coil, authenticates RSA/ECDSA digital signatures against the Machine Readable Zone, and archives verified sovereign digital identity clones in cold storage.
-2. **Zero-Cloud Camera Sign Translation & Currency Arbitrage (`solardeck-lensworld`):** Offline OCR and neural translation for non-Latin scripts (Arabic, Cyrillic, Asian scripts) plus real-time currency conversion based on historical forex and purchasing-power parity tables.
+1. **Airgapped Sovereign e-Passport Inspector (`solardeck-epassport`):** V2 (ADR-034): needs the deferred NFC.
+2. **Zero-Cloud Camera Sign Translation & Currency Arbitrage (`solardeck-lensworld`):** V2 (ADR-034): needs the deferred rear camera.
 3. **Consular & Geopolitical Evacuation Navigator (`solardeck-evacd`):** Offline 195-nation database of embassies, Level-1 trauma centers, and paved airstrips, displaying high-contrast great-circle evacuation vectors during regional unrest or telecommunications collapse.
-4. **Macro Parasite & Tick Morphology Triage (`solardeck-parasited`):** 12MP macro camera analysis distinguishes Lyme-carrying blacklegged deer ticks from dog ticks and brown recluse from wolf spiders, providing immediate bite triage.
+4. **Macro Parasite & Tick Morphology Triage (`solardeck-parasited`):** V2 (ADR-034): needs the deferred rear camera.
 5. **Galvanic Soil pH & Agricultural Profiler (`solardeck-soild`):** Dual tent-stake probes measure soil galvanic potential and conductivity, calculating pH (3.5–9.0) and moisture for survival agriculture and heavy-metal contamination screening.
 6. **Timber Fuel Energy & Bow-Drill Firecraft Oracle (`solardeck-timberd`):** Evaluates tree bark and leaf morphology to identify wood BTU density, wet-splitting characteristics, and friction fire spindle/hearth combinations.
-7. **Microscopic Waterborne Pathogen Lens Guide (`solardeck-microbed`):** Magnetic $5 100x smartphone lens over the 12MP camera evaluates water droplets on-screen to identify *Giardia*, *Cryptosporidium*, and toxic cyanobacteria.
+7. **Microscopic Waterborne Pathogen Lens Guide (`solardeck-microbed`):** V2 (ADR-034): needs the deferred rear camera.
 
 ---
 
@@ -565,10 +532,10 @@ Before any prototype PCBA or firmware build is declared ready for field release,
 
 | # | Metric | Target Threshold | Method of Verification |
 | :--- | :--- | :--- | :--- |
-| **G1** | S2idle to Active Keystroke Response | **< 350 milliseconds** | High-speed 240 FPS camera recording key strike to display glyph. |
+| **G1** | Linux resume to first keystroke (ADR-036) | **Target set from the dev-kit bench** (no RAM-retaining suspend on CM5) | High-speed 240 FPS camera recording key strike to display glyph. |
 | **G2** | 1-Bit Fast-Typing Latency | **< 20 milliseconds** | Oscilloscope measuring key switch closure to the Kaleido 4 display controller (TBD, ADR-032) pin toggle. |
 | **G3** | Zen Reading Power Consumption | **< 5.0 milliwatts** | TI INA3221 telemetry / Keithley precision source meter at VBAT. |
-| **G4** | Ambient Indoor Solar Sustainability | **Positive Net Energy** | Lux chamber @ 500 lux; verify battery charge current $> 0\text{ }\mu\text{A}$. |
+| **G4** | Outdoor solar top-up of RP2350 idle (indoor claim withdrawn, ADR-041) | **Strip output exceeds RP2350 idle draw outdoors** | Outdoor insolation; verify net charge current into the cell with the CM5 off. |
 | **G5** | Airgap RF Radiation | **0.000 dBm (Noise Floor)** | Rohde & Schwarz / HackRF sweep in anechoic chamber across 50MHz–6GHz. |
 | **G6** | Zero-Brick Watchdog Auto-Rollback | **< 2.5 milliseconds** | Fault injected into Bank B; verify hardware WDT fallback to Golden Image. |
 | **G7** | Transit Drop Survival | **1.22 m, 26 orientations, functional** | MIL-STD-810H 516.8 procedure IV; corner drops first (cell retention, corner bond). |
@@ -576,7 +543,7 @@ Before any prototype PCBA or firmware build is declared ready for field release,
 | **G9** | UV & Weather Durability | **ASTM G154 1000 h, ΔE < 3, no crazing** | Quartz-xenon chamber on PA12 + anodised samples; colour dye degrades faster by design. |
 | **G10** | Unpowered Storage Survival | **12 months, boots, OS volumes intact** | Powered off at 50% SOC, 30 °C; validates the NAND scrub policy against real retention loss. |
 | **G11** | USB-C interoperability: 10-row matrix incl. dead-battery Rd and charge-only-cable diagnostic | Every row passes on the dev kit | `USB_ROBUSTNESS.md` §3 |
-| **G12** | Sleep-ladder energy & resume integrity: R2 S2idle ≈15 mW floor / ≤0.3 s resume; R3 disk-hibernate 0.000 W idle; R4 deep-off keep-alive <0.2 mW via Li-primary; resumed sessions pass a post-wake integrity check | All rungs measured on the dev kit; hibernation image survives 30-day cold storage (§54 scrub) | `SOFTWARE_SPEC.md` §3.3.3, `HARDWARE_SPEC.md` §2.30 |
+| **G12** | Sleep-ladder energy & resume integrity: R2 is `null` (no RAM-retaining state on CM5, ADR-036); R3 disk-hibernate 0.000 W idle; R4 deep-off keep-alive <0.2 mW via Li-primary; resumed sessions pass a post-wake integrity check | All rungs measured on the dev kit; hibernation image survives 30-day cold storage (§54 scrub) | `SOFTWARE_SPEC.md` §3.3.3, `HARDWARE_SPEC.md` §2.30 |
 
 ---
 

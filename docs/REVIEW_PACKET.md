@@ -4,6 +4,8 @@ Written 2026-10-20 13:55 UTC in the Pi harness by openrouter/deepseek/deepseek-v
 
 Revised 2026-10-21 16:03 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
 
+Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
+
 Four internal audit rounds are done. Further internal reading has near-zero yield; the open questions
 are judgement calls that need an outside opinion. This is the brief for that review.
 
@@ -48,13 +50,13 @@ speculative? Use `docs/STATUS.md` and `docs/OFFGRID_TACTICAL_SENSORS.md` §8. Be
 catalogue was written by someone who likes features.
 
 ### Q3 — What is the shortest path to three measured numbers?
-The pillars (`<400 ms` glass-to-glass, typewriter latency, S2idle `<25 mW`) have no measurements and no
-test points. **Attack:** design the cheapest dev-kit experiment that produces those three numbers
+The pillars (Linux resume from off/hibernate in seconds — S2idle is withdrawn, ADR-036 — typewriter
+latency, ambient-mode floor `<25 mW` with the CM5 off) have no measurements and no test points. **Attack:** design the cheapest dev-kit experiment that produces those three numbers
 without a full carrier spin. Which can be measured on the display eval board alone? Which need the CM5
 and the panel in the same rig? Is a two-board lash-up acceptable for a pillar claim?
 
 ### Q4 — Battery, UN38.3, and shipping
-LiFePO4 pouch, ~32 Wh, adhesive-free mechanical retention now. UN38.3 is the longest-lead gate in the
+LiFePO4 pouch, capacity TBD until the cell is chosen (ADR-040), adhesive-free mechanical retention now. UN38.3 is the longest-lead gate in the
 programme (~$8–15 k, 6–10 weeks) and has no owner.
 **Attack:** does the chosen cell survive UN38.3, and is a pouch the right form factor for a 30-year
 serviceable device? Which test house, which schedule, and what does a failed UN38.3 cost?

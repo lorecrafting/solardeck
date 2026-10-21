@@ -15,7 +15,7 @@ Written 2026-10-20 04:13 UTC in the Pi harness by openrouter/deepseek/deepseek-v
 | 6 | `SOFTWARE_SPEC.md` | Kernel, E-Ink pipeline, power profiles, daemons |
 | 7 | `FIRMWARE_INTERFACE.md` | The CM5 <-> RP2350 register contract (header is canonical) |
 | 8 | `MECHANICAL_FIT_AND_ENCLOSURE_WORKFLOW.md` | XY/Z budgets, tolerances, the enclosure |
-| 9 | `BOM_COST_ESTIMATE.md` | $576.05-$578.05 across 62 line items, before the TBD Kaleido 4 panel, controller and eSIM; a floor — AUDIT 6 H22 |
+| 9 | `BOM_COST_ESTIMATE.md` | $497.55-$499.55 across 55 line items, before 7 TBD parts (panel, controller, cell, charger, gauge, protector, GNSS); a floor — AUDIT 6 H22 |
 | 10 | `REGULATORY.md` | Certification matrix — **no certificate, no ship** |
 | 11 | `USB_ROBUSTNESS.md` | Every USB-C failure mode and the rules that close them (gate G11) |
 | 12 | `LONGEVITY_30Y.md` | 30-year failure budget, service kit, maintenance schedule, gates G7-G10 |
@@ -31,7 +31,7 @@ Written 2026-10-20 04:13 UTC in the Pi harness by openrouter/deepseek/deepseek-v
 | 22 | `REVIEW_PACKET.md` | What to ask an external reviewer, and in what order |
 | 23 | `90-history/decisions.md` | Why things were chosen or dropped (the ADR log) |
 | — | `INDEX.md` | Cross-reference table: claim → file § (hand-maintained; stale — AUDIT 6 §4) |
-| — | `HANDOFF_TO_FABLE.md` | Reviewer checklist, frozen at 2026-10-19 (stale — AUDIT 6 §4) |
+| — | `90-history/HANDOFF_TO_FABLE_2026-10-19.md` | The 2026-10-19 reviewer checklist, kept as history (ADR-043) |
 | — | `AUDIT_2026-10-20.md`, `AUDIT_2026-10-20_3.md`, `AUDIT_4_2026-10-20.md`, `AUDIT_5_2026-10-20.md` | Earlier audits (repo checked against itself). Historical; AUDIT 6 §5 corrects three of their verdicts. |
 
 ## The status vocabulary

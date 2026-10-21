@@ -2,6 +2,7 @@
 
 Written 2026-10-20 06:10 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017
 Revised 2026-10-21 15:59 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
+Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
 
 Second audit round, scoped to one question: **what breaks over 30 years, and is the current design
 built to survive it?** The existing audit asked "is the documentation true". This one asks "will the
@@ -116,7 +117,7 @@ Only two are needed. Humidity, dew point and temperature logging already exist i
 | **4× TDK PowerHap 0904H014V060 + 2× BOS1901** → demoted to DNP option (ADR-020) | Adhesive-mounted ceramic actuators crack, and four of them are four failure points. The base build uses the single TI DRV2605L + 8 mm LRA footprint that already existed as the DNP fallback. | **−$5.55**, −4 failure modes |
 | **Always-on thermal viscosity assist** | Heating the panel accelerates dye fade and the battery's calendar aging. Keep it as opt-in burst mode only. | −$0, −aging |
 | **"2 TB NVMe as cold storage"** | It is a working drive, not an archive. Sell the vault microSD + printed/paper archive as the archival path; keep NVMe for LLM weights. | −$0, −false claim |
-| **IP67-with-TPU-bumpers claim** | Replace with "IP67 with the specified gasket; bumpers are impact only". | −$0, −over-claim |
+| **IP67-with-TPU-bumpers claim** | Replace with "IP54 (V1 target), IP67 (V2 target) with the specified gasket; bumpers are impact only" (ADR-039). | −$0, −over-claim |
 | **1.0 F supercapacitor zombie mode as a headline** | Supercaps age ~10 years and their ESR doubles. Keep as an accessory capability, not a pillar. | −$0, −claim |
 
 Net: **−$5.55 of BOM is certain** and four failure modes leave with it. The NVMe line is a
@@ -149,7 +150,7 @@ stroke that is ≈ 600 g; over 4 mm, ≈ 300 g. Therefore:
   the single most common "my tablet died" failure on the market. Mechanical clamp + bracket.
 - **Glass survives by load path, not by thickness.** Corners 1.2 mm proud of the glass, glass inset
   1.5 mm behind the frame lip, 4+ PCB standoffs so the board cannot cantilever.
-- **No unsupported mass over ~5 g** — the modem, cell, and NVMe are the candidates and each needs its
+- **No unsupported mass over ~5 g** — the cell and NVMe are the candidates and each needs its
   own retention, not connector friction.
 
 ---

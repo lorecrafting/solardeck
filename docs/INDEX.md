@@ -4,6 +4,8 @@ Written 2026-10-18 18:28 UTC in the Pi harness by antigravity/gemini-3.8-flash
 
 Revised 2026-10-21 16:02 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
 
+Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
+
 ---
 
 ## 1. Documentation Structure & Reading Order
@@ -55,7 +57,7 @@ treat `docs/AUDIT_2026-10-20.md` as the current statement of what is measured, m
 │      KiCad 3D board export, tolerance budget (+0.4mm XY, 13.85mm Z), │
 │      and Two-Tier Sanity Check (1:1 paper DXF + $15 3D-printed fit). │
 │                                                                             │
-│ 10. docs/HANDOFF_TO_FABLE.md                                                │
+│ 10. docs/90-history/HANDOFF_TO_FABLE_…                                        │
 │    • Comprehensive engineering handover for Fable Wednesday audit: Seeed    │
 │      quotation status, 16-phase verification pipeline, and review checklist. │
 │                                                                             │
@@ -78,21 +80,22 @@ treat `docs/AUDIT_2026-10-20.md` as the current statement of what is measured, m
 | **Main Compute Brain** | `docs/HARDWARE_SPEC.md` §2.1 | Broadcom BCM2712 (CM5116064, ADR-031) | Hirose DF40 100-pin Dual Socket |
 | **Co-Processor Nervous System** | `docs/HARDWARE_SPEC.md` §2.1 | Raspberry Pi RP2350B | Dedicated SPI, UART, & GPIO |
 | **Display & Digitizer** | `docs/HARDWARE_SPEC.md` §2.2 | Kaleido 4 display controller (TBD, ADR-032) + Wacom EMR | Host interface TBD (ADR-032) via TMUX1575 Switch |
-| **Power Management & Solar** | `docs/HARDWARE_SPEC.md` §2.3 | TI BQ25895 + TI TPS62840 | I2C / Dynamic MPPT Tracking |
-| **USB Host / Peripherals** | `docs/HARDWARE_SPEC.md` §2.4 | VIA VL805 / ASM1042A | PCIe Gen 2 x1 to Quad USB 2.0 |
-| **Cellular, GNSS & Dual-SIM** | `docs/HARDWARE_SPEC.md` §2.4 | Quectel EG25-G (LTE Cat-4) | USB 2.0 + Dual SIM (MFF2 + Nano) |
+| **Power Management & Solar** | `docs/HARDWARE_SPEC.md` §2.3 | TI BQ25798 + BQ29706-class protector + BQ27Z561-R2 gauge (ADR-035) + TI TPS62840 | I2C / Dynamic MPPT Tracking |
+| **USB Host / Peripherals** | `docs/HARDWARE_SPEC.md` §2.4 | CM5 native USB 3 (no external host controller, ADR-042) | PCIe Gen 2 x1 to the M.2 NVMe socket |
+| **Cellular & SIM** | `docs/90-history/decisions.md` ADR-034 | Deferred to V2 (ADR-034); the V2 eSIM requirement is a consumer SGP.22 eUICC (ADR-033) | — |
+| **GNSS** | `docs/90-history/decisions.md` ADR-038 | u-blox MAX-M10S | RP2350 UART behind a load switch; passive antenna at top edge |
 | **Off-Grid Radio Mesh** | `docs/HARDWARE_SPEC.md` §2.4 | Semtech SX1262 (LoRa) | Dedicated SPI to RP2350 (Meshtastic) |
-| **Local NFC & Security** | `docs/HARDWARE_SPEC.md` §2.4 | STMicroelectronics ST25R3916 | SPI / I2C (13.56 MHz NFC-A/B/V) |
-| **Audio & Speech Input** | `docs/HARDWARE_SPEC.md` §2.7 | Knowles MEMS + MAX98357A | PDM Dual-Mic + I2S Class-D Amp |
+| **Local NFC & Security** | `docs/90-history/decisions.md` ADR-034 | Deferred to V2 (ADR-034) | — |
+| **Audio & Speech Input** | `docs/HARDWARE_SPEC.md` §2.7 | Dual MEMS mics + MAX98357A + hardware mute (ADR-036) | PDM Dual-Mic + I2S Class-D Amp |
 | **Secondary Monitor Sink** | `docs/HARDWARE_SPEC.md` §2.4 | CM5 USB device mode (TBD — verify on CM5) | USB-C Port 1 (`g_webcam` / `dummy_hcd`)|
 | **Universal Mechanical Mount** | `docs/HARDWARE_SPEC.md` §3 | M2.5 Threaded + MagSafe | Mechanical Heat-Set & N52 Magnets |
 | **EDC Phone & Cyberdeck Dock** | `docs/STANDOUT_FEATURES.md` §9 | Clicks Communicator / Jelly| Bluetooth PAN (`bnep0`) & Chin-Dock |
 | **External 4K Video & Campervan Dock**| `docs/HARDWARE_SPEC.md` §2.18 | CM5 HDMI0 + TPD4E05U06 | Micro-HDMI 4K60 / Sway Multi-Head |
 | **Blackout Supercap Emergency Beacon** | `docs/HARDWARE_SPEC.md` §2.19 | 1.0F Supercap + RP2350 | Bat-Free Solar Cold-Boot & LoRa SOS|
-| **Sovereign Voice & Barge-In Pipeline**| `docs/HARDWARE_SPEC.md` §2.20 | Knowles MEMS + RP2350/NDP120 | microWakeWord + Resemblyzer + AEC |
+| **Sovereign Voice & Barge-In Pipeline**| `docs/HARDWARE_SPEC.md` §2.20 | Dual MEMS + RP2350 (PSRAM capture while the CM5 boots) | Hold-to-talk button; opt-in wake word with measured cost (ADR-036) + AEC |
 | **Zero-Hardware Wacom Field Caliper** | `docs/HARDWARE_SPEC.md` §2.21 | Wacom EMR + Goodix Touch | 10mm Hover + Mutual Cap Centroid |
-| **Thermal Night-Vision Hotpack** | `docs/OFFGRID_TACTICAL_SENSORS.md` §8.7| InfiRay Tiny1-C (256x192 LWIR) | USB-C Port 2 / GPU 16-shade Dither |
-| **3GPP NTN Satellite Skylo Hotpack** | `docs/OFFGRID_TACTICAL_SENSORS.md` §8.8| Quectel CC660D-LS (IoT-NTN) | USB-C Port 2 / S-Band RHCP Patch |
+| **Thermal Night-Vision Hotpack** | `docs/OFFGRID_TACTICAL_SENSORS.md` §8.7| V2 (ADR-034) | — |
+| **3GPP NTN Satellite Skylo Hotpack** | `docs/OFFGRID_TACTICAL_SENSORS.md` §8.8| V2 (ADR-034) | — |
 | **Off-Grid & Tactical Sensors**| `docs/OFFGRID_TACTICAL_SENSORS.md` | Dual Brain (CM5 + RP2350) | BLE, SocketCAN, 9-DOF IMU, RTK, RAG |
 | **Dual-Footprint & DNP Architecture** | `docs/HARDWARE_SPEC.md` §2.22 | 8 Strategic Fallback Footprints| NDP120, RV-3028, WSON-8, CH224K, PCIe|
 | **Autonomous LLM Hardware BIST Engine**| `docs/SOFTWARE_SPEC.md` §21 | `solardeck-diag --json` | 8-Subsystem BIST & Power-Gated Heal|
@@ -102,36 +105,36 @@ treat `docs/AUDIT_2026-10-20.md` as the current statement of what is measured, m
 | **Feature Status Catalogue** | `docs/STATUS.md` (generated) | 80 features x measured/modelled/specified/aspirational | Phase 12 fails on stale or uncatalogued|
 | **Decadal Mechanical Durability** | `docs/HARDWARE_SPEC.md` §7.4 | Knurled Inserts + Poron Relief | 500+ Cycles, 4-Point USB-C, Hard Gold |
 | **30-Year Chemistry & Solid-State** | `docs/HARDWARE_SPEC.md` §7.5 | 3.45V Float, Tantalum, UV LOCA | 10,000+ Cycles, Gold Switches, Ti Nib |
-| **Instant-Ink 4.5mW Legal Pad** | `docs/HARDWARE_SPEC.md` §2.23 | RP2350 + Wacom Direct Blit | Sub-15ms S2idle Legal Pad & solardeck-inkd|
+| **Instant-Ink 4.5mW Legal Pad** | `docs/HARDWARE_SPEC.md` §2.23 | RP2350 + Wacom Direct Blit | RP2350-only Legal Pad (Linux off) & solardeck-inkd|
 | **Multi-Source Emergency Battery** | `docs/HARDWARE_SPEC.md` §2.24 | JST-PH 3.9V–14V DC Terminal | Boots from 18650, AA, or 12V Car Battery|
 | **3-Position Hardware Privacy Switch**| `docs/HARDWARE_SPEC.md` §2.25 | Physical Slide Switch | NORMAL, MIC_MUTE, FULL_BLACKOUT |
 | **Blackout Indexing Pips & Chamfer**| `docs/HARDWARE_SPEC.md` §3.5 | Tactile Pips + 45° Corner | Blind Night-Vision / Blackout Operation|
 | **Secret Knock & Anti-Theft Tripwire**| `docs/SOFTWARE_SPEC.md` §23 | `solardeck-tripwired` | 4µA BMA400 Knock Wake & LoRa Camp Alarm|
 | **Autonomous Solar Tracking HUD**| `docs/SOFTWARE_SPEC.md` §24 | `solardeck-sunaim` | Sun Azimuth Fusion HUD & Peak Watt Reticle|
 | **Bistable "Black Box" Crash QR** | `docs/SOFTWARE_SPEC.md` §25 | `solardeck-blackboxd` | 0.000W Permanent Panic QR & Phone Triage|
-| **Offline Ghost-Nav Geolocation**| `docs/SOFTWARE_SPEC.md` §26 | `solardeck-ghostnavd` | Zero-Satellite Indoor BSSID & Cell Fix |
+| **Offline Ghost-Nav Geolocation**| `docs/SOFTWARE_SPEC.md` §26 | `solardeck-ghostnavd` | Zero-Satellite Indoor BSSID Fix (cell fix: V2, ADR-034) |
 | **Passive RF Sweeper & Drone Alert**| `docs/SOFTWARE_SPEC.md` §27 | `solardeck-sweeperd` | Multi-Band Near-Field Radar & AirTag Sniff|
 | **Airgapped Ultrasonic Sound-Bridge**| `docs/SOFTWARE_SPEC.md` §28 | `solardeck-soundbridged` | 19kHz Acoustic FSK Modem for RF-Silent Airgap|
 | **Barometric Storm & Flood Radar**| `docs/SOFTWARE_SPEC.md` §29 | `solardeck-stormd` | 10cm BMP390 Pressure Drop Warning & Elevation |
 | **GPU Display Steganography** | `docs/SOFTWARE_SPEC.md` §30 | `solardeck-stegod` | Blue-Noise LSB Photographic Leak Attribution |
-| **Cold Storage Vault & Desiccant Pocket**| `docs/HARDWARE_SPEC.md` §4.6 | 3x MicroSD + 1g/2g Desiccant | IP67 Hatch Cavity / 100+ Regen Cycles |
-| **Sub-Surface Geophone & Radar Hotpack**| `docs/OFFGRID_TACTICAL_SENSORS.md` §8.9| Hotpack 7 (`solardeck-geophoned`)| SM-24 Geophone + 100mm Spike + 24-bit ADC|
+| **Cold Storage Vault & Desiccant Pocket**| `docs/HARDWARE_SPEC.md` §4.6 | 3x MicroSD + 1g/2g Desiccant | IP54 (V1 target) Hatch Cavity / 100+ Regen Cycles |
+| **Sub-Surface Geophone & Radar Hotpack**| `docs/OFFGRID_TACTICAL_SENSORS.md` §8.9| V2 (ADR-034) | — |
 | **Direct-Satellite Weather Fax Decoder**| `docs/SOFTWARE_SPEC.md` §31 | `solardeck-satweathd` | NOAA-15/18/19 & Meteor-M2 137MHz APT Storm|
 | **Hands-Free Trauma Medic AI** | `docs/SOFTWARE_SPEC.md` §32 | `solardeck-traumad` | Touch-Free Whisper + 3B LLM + Medical ZIM |
 | **Campervan Alternator & Battery Profiler**| `docs/SOFTWARE_SPEC.md` §33 | `solardeck-alternatord` | 50kHz ADC 12V Diode Ripple & Cranking Sag|
 | **8-Channel Logic Analyzer & CAN Sniffer**| `docs/SOFTWARE_SPEC.md` §34 | `solardeck-logicanalyzerd` | RP2350 PIO 100MSPS DMA & Sigrok/PulseView |
-| **Radio Direction-Finding Foxhunt Pointer**| `docs/SOFTWARE_SPEC.md` §35 | `solardeck-foxhuntd` | Hotpack 1 SDR Directional Bearing Needle |
+| **Radio Direction-Finding Foxhunt Pointer**| `docs/SOFTWARE_SPEC.md` §35 | `solardeck-foxhuntd` | V2 (ADR-034): needs the Hotpack 1 SDR |
 | **Stargazing Monochromatic 660nm Red Mode**| `docs/SOFTWARE_SPEC.md` §36 | `solardeck-nvgd` | Zero Photopic Glare Dark-Adaptation & NVG |
 | **Autonomous Trailhead Community Mailbox**| `docs/SOFTWARE_SPEC.md` §37 | `solardeck-trailboxd` | 12mW Meshtastic ?WEATHER/?TRAIL/?SOS Resp |
 | **Detached LUKS & Dual-PIN Decoy Boot**| `docs/SOFTWARE_SPEC.md` §38 | `solardeck-stealthluks` | Plausible Deniability & Zero Metadata |
-| **Rogue Cellular Tower & Stingray Watchdog**| `docs/SOFTWARE_SPEC.md` §39 | `solardeck-stingrayd` | Anti-Stingray 2G Downgrade Kill Switch|
-| **Airgapped e-Passport NFC Inspector** | `docs/SOFTWARE_SPEC.md` §40 | `solardeck-epassport` | ICAO 9303 RFID & Sovereign Clone Backup|
-| **Camera Sign OCR & Currency Arbitrage** | `docs/SOFTWARE_SPEC.md` §41 | `solardeck-lensworld` | Offline Neural Translation & PPP Forex |
+| **Rogue Cellular Tower & Stingray Watchdog**| `docs/SOFTWARE_SPEC.md` §39 | `solardeck-stingrayd` | V2 (ADR-034): needs the LTE modem |
+| **Airgapped e-Passport NFC Inspector** | `docs/SOFTWARE_SPEC.md` §40 | `solardeck-epassport` | V2 (ADR-034): needs NFC |
+| **Camera Sign OCR & Currency Arbitrage** | `docs/SOFTWARE_SPEC.md` §41 | `solardeck-lensworld` | V2 (ADR-034): needs the camera |
 | **Consular Emergency Evacuation Navigator**| `docs/SOFTWARE_SPEC.md` §42 | `solardeck-evacd` | 195-Nation Embassy & Airstrip Vectors |
-| **Parasite & Tick Morphology Triage AI** | `docs/SOFTWARE_SPEC.md` §43 | `solardeck-parasited` | 12MP Macro Cam Lyme & Venom Triage |
+| **Parasite & Tick Morphology Triage AI** | `docs/SOFTWARE_SPEC.md` §43 | `solardeck-parasited` | V2 (ADR-034): needs the camera |
 | **Soil pH & Agronomy Chemistry Profiler**| `docs/SOFTWARE_SPEC.md` §44 | `solardeck-soild` | Galvanic Dual-Probe 3.5–9.0 pH & Moisture|
 | **Timber Energy & Bow-Drill Firecraft** | `docs/SOFTWARE_SPEC.md` §45 | `solardeck-timberd` | Wood BTU Density & Friction Fire Pairs |
-| **Microscopic Water Pathogen Lens Guide**| `docs/SOFTWARE_SPEC.md` §46 | `solardeck-microbed` | 100x Smartphone Lens Giardia & Algae Guide|
+| **Microscopic Water Pathogen Lens Guide**| `docs/SOFTWARE_SPEC.md` §46 | `solardeck-microbed` | V2 (ADR-034): needs the camera |
 | **Perpetual Solar Living Wall Clock** | `docs/SOFTWARE_SPEC.md` §47 | `solardeck-zen-clock` | 4.5mW Astronomical Calendar & Baro HUD |
 | **Perpetual Solar Entertainment & Games**| `docs/SOFTWARE_SPEC.md` §48 | `solardeck-zen-games` | E-Ink Chess, Puzzles & Infocom Z-Machine|
 | **Zen Stoic & Tao Te Ching Daily Oracle**| `docs/SOFTWARE_SPEC.md` §49 | `solardeck-zen-oracle` | 10,000 Text Dawn Typographic Inking |
@@ -155,7 +158,7 @@ ended up asserting both a descoped pogo bus and its full pinout at the same time
 
 ## 4. Hardware Safety & Power Discipline Check
 
-* **LiFePO4 Chemistry Discipline:** Nominal cell voltage is **3.2V** (3.65V charging cutoff). Never apply 4.2V Li-ion charging profiles.
+* **LiFePO4 Chemistry Discipline:** Nominal cell voltage is **3.2V** (3.65V charging cutoff). Never apply 4.2V Li-ion charging profiles; there is no chemistry strap (ADR-035), and charging is held off by the BQ25798 enable pin until the RP2350 has written VREG = `battery.charge_limit_v`.
 * **Always-On Rail Isolation:** The **TI TPS62840** buck-boost regulator maintains 3.3V power to the RP2350 and critical sensors when the CM5 5V system boost is disabled.
 * **Galvanic Display Bus Isolation:** **2× TI TMUX1575** (4-channel each, 8 channels total) ensure zero parasitic back-powering from unpowered CM5 GPIO pins into the Kaleido 4 display controller (TBD, ADR-032) during Zen reading.
 * **Airgap Series Disconnect:** The physical airgap slide switch disconnects power gate enable nets in series, preventing direct GPIO-to-ground short circuits.

@@ -4,6 +4,8 @@ Written 2026-10-19 13:15 UTC in the Pi harness by antigravity/gemini-3.8-flash
 
 Revised 2026-10-21 16:02 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
 
+Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
+
 ---
 
 ## 1. Executive Summary & Purpose
@@ -100,7 +102,7 @@ Two vertical branches share the cavity. The limit is the **battery branch**, not
 ├─────────────────────────────────────────────────────────┼───────────┤
 │ 1-4. Display glass stack (as above)                      │    TBD    │
 │ 5. Main Carrier PCB (6-layer ENIG)                       │  1.20 mm  │
-│ 6. LiFePO4 flat pouch cell (142 x 90 x 8.5mm, 32 Wh)     │  8.50 mm  │
+│ 6. LiFePO4 flat pouch cell (142 x 90 x 8.5mm, Wh TBD)    │  8.50 mm  │
 │    Branch B total (cavity requirement)                   │    TBD    │
 ├─────────────────────────────────────────────────────────┼───────────┤
 │ 7. Rear Unibody Enclosure Wall (CNC 6061-T6 / PA12)      │  1.50 mm  │
@@ -111,7 +113,7 @@ Two vertical branches share the cavity. The limit is the **battery branch**, not
 
 The CM5 sits *beside* the cell, not on top of it: a 142 x 90 mm pouch occupies the lower-left of the cavity and the CM5 + DF40 stack occupies the upper-right, sharing the same display stack above them. The cavity is 12.5 mm; whether the battery branch clears it is TBD until the Kaleido 4 stack thickness is known (ADR-032), and the CM5 module height is TBD — verify on CM5.
 
-**Why not thinner:** 32 Wh of LiFePO4 needs ~8.5 mm of cell. A 5.0 mm cell caps the pack at roughly 18 Wh. `docs/90-history/decisions.md` ADR-009 records the trade: V1 keeps 32 Wh at 14.0 mm and 620 g; a 10.5 mm / 18 Wh "thin" variant is a deferred SKU, not a free change.
+**Why not thinner:** the 8.5 mm cell envelope is a placeholder; pack capacity is TBD until the cell is chosen (ADR-040). `docs/90-history/decisions.md` ADR-009 records the thickness trade; its capacity figures are re-derived from the chosen cell's datasheet, and a thinner variant stays a deferred SKU, not a free change.
 
 ### 4.3 FPC Ribbon Bend Radius & Relief Slot
 * The ribbon cable must bend $180^\circ$ around the internal midframe to reach the carrier PCB ZIF connector on the reverse side.

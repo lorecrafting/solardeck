@@ -112,14 +112,15 @@ def audit_hardware_traps():
 
     assert "U8" in wake_refs and "J2" in wake_refs, "GPIO17_WAKE must bridge RP2350 (U8) and CM5 (J2)"
     assert "U8" in pwrfail_refs and "J2" in pwrfail_refs, "GPIO16_PWRFAIL must bridge RP2350 (U8) and CM5 (J2)"
-    print("  ✓ Passed: <300ms S2idle wake (GPIO17) & <150ms emergency powerfail (GPIO16) paths verified.")
+    print("  ✓ Passed: GPIO17 wake and GPIO16 powerfail nets bridge U8 and J2 (connectivity only; timing is not checked).")
 
-    # Trap 5: LiFePO4 Chemistry Hardware Interlock (SW1)
-    print("\n[Rule 5] Checking Battery Chemistry Selection Pin...")
-    chem_net = nets.get("CHEM_SEL_RP", [])
-    chem_refs = [r for r, p in chem_net]
-    assert "SW1" in chem_refs and "U8" in chem_refs, "CHEM_SEL must route between SW1 and RP2350"
-    print("  ✓ Passed: Hardware CHEM_SEL interlock verified to prevent 4.2V over-voltage on LiFePO4.")
+    # Trap 5: chemistry strap. ADR-035 deleted it (a switch that can select 4.2 V is a hazard).
+    print("\n[Rule 5] Checking for the deleted chemistry strap...")
+    if nets.get("CHEM_SEL_RP"):
+        print("  ! Pre-V1 placeholder netlist still carries CHEM_SEL/SW1; the first real capture must not "
+              "(ADR-035, AUDIT 6 X8). Charger CE hold-off is not checkable until then.")
+    else:
+        print("  ✓ Passed: no chemistry strap in the netlist.")
 
     # Trap 6: Solar MPPT Energy Harvester Routing
     print("\n[Rule 6] Checking Solar MPPT Monitoring Circuit...")
