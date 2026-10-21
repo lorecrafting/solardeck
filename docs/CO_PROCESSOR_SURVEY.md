@@ -2,6 +2,7 @@
 
 Written 2026-10-21 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-0731
 Revised 2026-10-21 15:59 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
+Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
 
 Status: **investigation record** — no design change committed by this document alone. Open question:
 does the max-tier (ESP32-P4) or a bigger PSRAM on the RP2350 enter V1? See `docs/90-history/decisions.md`
@@ -13,7 +14,7 @@ for the ADR that will lock it. Companion: `docs/SOFTWARE_SPEC.md` §55 (reader t
 ## 1. The survey question
 
 SolarDeck's sleep story is a one-chip ladder today: the RP2350 co-processor owns RTC, ADC sampling,
-PSRAM frame cache, S2idle wake, and the reader tier. This survey asks three things:
+PSRAM frame cache, Linux wake, and the reader tier. This survey asks three things:
 
 1. Who else does the "dual ARM/RISC-V" trick, and at what power?
 2. What would a *3-tier* co-processor ladder (ultra-low / mid / max) actually buy?
@@ -35,21 +36,22 @@ low-power co-rear that stays awake while the high-performance cores sleep. The n
 crowded; no vendor does ARM **and** RISC-V simultaneously (RP2350/C6/P4 are *one ISA, two tiers*; the
 dual-ISA line in the table is "which ISA you boot into").
 
-## 3. Power envelope vs. 32 Wh usable battery
+## 3. Power envelope vs. battery (capacity TBD, ADR-040)
 
-`native-read` tier today sits at 4.5 mW; the floor is the cell's own shelf life, not the silicon.
+`native-read` tier today sits at 4.5 mW; the floor is the cell's own shelf life, not the silicon. Days on
+one charge are TBD until the cell is chosen (ADR-040); re-derive the column from `battery_wh.lifepo4`.
 
-| Mode | Power | Days @ 32 Wh | Sobered note |
+| Mode | Power | Days on one charge | Sobered note |
 | :--- | :---: | :---: | :--- |
-| **RP2350 reader tier** (incumbent) | 4.5 mW | **296** | The real number. 10 months on one charge, uninterrupted reading. |
-| RP2350 POWMAN deep sleep | ~0.033 mW | ~40 000 | Meaningless — beyond the cell's ~18 y self-discharge + 8 y first-wearout floor |
-| ESP32-C6 deep sleep | ~0.023 mW | ~58 000 | Same caveat |
-| ESP32-P4 deep sleep | ~0.040 mW | ~33 000 | Same caveat |
-| ESP32-P4 light sleep | 1.3 mW | ~1 026 | The *honest* P4 advantage: it stays interactive longer |
-| ESP32-C6 active, no RF | ~6 mW | ~222 | The floor you'd actually live in if the C6 ran the mesh |
-| Wake-word tier (§17.2) | 14 mW | 95 | The rung that matters — where a *snappier* max tier would slot in |
-| LoRa repeater | 13.5 mW | 99 | |
-| R4 keepalive + LoRa beacon | 0.2 mW | ~6 667 | The current deep-off floor; battery-bound, not power-bound |
+| **RP2350 reader tier** (incumbent) | 4.5 mW | TBD (ADR-040) | The real number, once the cell is chosen. |
+| RP2350 POWMAN deep sleep | ~0.033 mW | TBD (ADR-040) | Meaningless — beyond the cell's ~18 y self-discharge + 8 y first-wearout floor |
+| ESP32-C6 deep sleep | ~0.023 mW | TBD (ADR-040) | Same caveat |
+| ESP32-P4 deep sleep | ~0.040 mW | TBD (ADR-040) | Same caveat |
+| ESP32-P4 light sleep | 1.3 mW | TBD (ADR-040) | The *honest* P4 advantage: it stays interactive longer |
+| ESP32-C6 active, no RF | ~6 mW | TBD (ADR-040) | The floor you'd actually live in if the C6 ran the mesh |
+| Opt-in wake-word tier (§17.2, ADR-036) | TBD (bench) | TBD (ADR-040) | The rung that matters — where a *snappier* max tier would slot in |
+| LoRa repeater | 13.5 mW | TBD (ADR-040) | |
+| R4 keepalive + LoRa beacon | 0.2 mW | TBD (ADR-040) | The current deep-off floor; battery-bound, not power-bound |
 
 **The sobering edit:** every sub-mW cell turns into "years" — but the LiFePO4 has only ~18 y of useful
 shelf life and a hard 8 y first wear-out (`spec_values.reliability.first_wearout_years`). **No
@@ -60,8 +62,8 @@ power-bound. This kills candidate #1 (a lower tier) with a clean YAGNI.
 
 | Tier | Chip | Would it buy? | Verdict |
 | :--- | :--- | :--- | :--- |
-| **Ultra-low** (R4 keepalive, 0.2 mW today) | ESP32-C6 7 µA | Goes 0.2 mW → 0.023 mW | **YAGNI — already battery-bound at 6667 days.** Extra chip, extra SPI bus, extra security surface, zero user-visible gain. |
-| **Mid** (reader + wake-word, incumbent) | RP2350 | Reader 296 days; wake-word 95 days | **Keep.** POWMAN 10 µA deep sleep + native PSRAM is the right center. |
+| **Ultra-low** (R4 keepalive, 0.2 mW today) | ESP32-C6 7 µA | Goes 0.2 mW → 0.023 mW | **YAGNI — already bound by the cell's shelf life, not the silicon.** Extra chip, extra SPI bus, extra security surface, zero user-visible gain. |
+| **Mid** (reader + wake-word, incumbent) | RP2350 | Reader and wake-word runtimes TBD (ADR-040) | **Keep.** POWMAN 10 µA deep sleep + native PSRAM is the right center. |
 | **Max** (snappier reader, richer zero-kernel tier) | ESP32-P4 (400 MHz, 16–32 MB in-package PSRAM, MIPI, H.264) | 4× clocks; 2–4× PSRAM; hardware display IFs | **Tempting, but unproven against our panel.** P4's display muscle is for DSI/CSI panels; the host interface of the Kaleido 4 display controller (TBD, ADR-032) is unknown. Paying for a MIPI pipeline before that is known is the classic over-build. |
 
 **Honest verdict: do not add a third co-processor.** The real ceiling in the reader tier is PSRAM

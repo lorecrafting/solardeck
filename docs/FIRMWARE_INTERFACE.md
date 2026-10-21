@@ -2,6 +2,8 @@
 
 Written 2026-10-20 12:40 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017
 
+Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
+
 Audit 3 found the two halves of the product had no interface definition, so neither could be built or
 tested against the other. This is that definition.
 
@@ -13,11 +15,11 @@ does not exist in the header. Prose cannot drift from code in either direction.
 
 | Property | Value | Why |
 | :--- | :--- | :--- |
-| Bus | SPI, **CM5 is master**, RP2350 is slave | The CM5 sleeps; it must be the side that initiates |
+| Bus | SPI, **CM5 is master**, RP2350 is slave | The CM5 is often off; it must be the side that initiates |
 | Frame | **64 bytes fixed**, little-endian, fixed offsets | No variable-length parsing on a device that wakes in 30 ms |
 | Integrity | **CRC-16/CCITT-FALSE** over bytes `0x00..0x3D`, stored at `0x3E` | A single bit flip must not become a state change |
 | Identity | `magic0='S'`, `magic1='D'`, `proto=1` | A driver that reads the wrong magic refuses to bind |
-| Cadence | CM5 polls at 10 Hz awake, 1 Hz in S2idle | `heartbeat_ms` catches a wedged RP2350 |
+| Cadence | CM5 polls at 10 Hz awake; it does not poll while off or hibernated (ADR-036) | `heartbeat_ms` catches a wedged RP2350 |
 
 `sd_frame_valid()` in the header is the only validator either side should call. It checks magic,
 protocol version, and CRC, in that order.
@@ -35,7 +37,7 @@ protocol version, and CRC, in that order.
 | `0x06` | `REG_FLAGS` | RO | u8 | `SD_FLAG_*` bitfield |
 | `0x08` | `REG_VBAT_MV` | RO | u16 | battery voltage |
 | `0x0A` | `REG_VSOLAR_MV` | RO | u16 | solar open-circuit voltage |
-| `0x0C` | `REG_SOC_PCT` | RO | u8 | state of charge, from BQ27441 |
+| `0x0C` | `REG_SOC_PCT` | RO | u8 | state of charge, from BQ27Z561-R2 (ADR-035) |
 | `0x0D` | `REG_TEMP_C` | RO | i8 | battery thermistor |
 | `0x0E` | `REG_WAKE_CAUSE` | RO | u8 | `SD_WAKE_*`, valid after a wake |
 | `0x0F` | `REG_SEQ` | RO | u8 | increments on every accepted state change |
@@ -57,17 +59,17 @@ protocol version, and CRC, in that order.
 | `SD_STATE_COLD_BOOT` | 0 | RP2350 up, CM5 not yet talking |
 | `SD_STATE_CM5_ACTIVE` | 1 | CM5 owns the EPDC bus |
 | `SD_STATE_ZEN_READER` | 2 | RP2350 drives the panel, CM5 off |
-| `SD_STATE_S2IDLE` | 3 | CM5 suspended, RP2350 listening |
+| `SD_STATE_S2IDLE` | 3 | CM5 off or hibernated (it has no RAM-retaining state, ADR-036), RP2350 listening; the name is historical |
 | `SD_STATE_LOW_BATT` | 4 | below cutoff, shedding loads |
 
 | Command | Value | Meaning |
 | :--- | ---: | :--- |
 | `SD_CMD_NOP` | 0 | no operation |
 | `SD_CMD_SLEEP_CM5` | 1 | RP2350 takes the EPDC bus, CM5 may power down |
-| `SD_CMD_WAKE_CM5` | 2 | assert GPIO17, expect S2idle exit |
+| `SD_CMD_WAKE_CM5` | 2 | power on / resume the CM5 from off or hibernate (seconds, ADR-036); assert GPIO17 |
 | `SD_CMD_RELEASE_EPDC` | 3 | hand the bus back to the CM5 |
 | `SD_CMD_PWRFAIL_ACK` | 4 | CM5 finished its 150 ms flush |
-| `SD_CMD_BLACKOUT` | 5 | cut mics + RF + camera (hardware already latched) |
+| `SD_CMD_BLACKOUT` | 5 | cut mics + RF (hardware already latched; camera is V2, ADR-034) |
 
 | Ack | Value | Meaning |
 | :--- | ---: | :--- |
@@ -88,7 +90,7 @@ protocol version, and CRC, in that order.
 | `SD_FLAG_CM5_SELECTED` | 0 | TMUX is on the CM5 side |
 | `SD_FLAG_5V_ENABLED` | 1 | TPS61088 boost on |
 | `SD_FLAG_PWRFAIL` | 2 | powerfail pin asserted |
-| `SD_FLAG_LIFEPO4` | 3 | chemistry strap reads LiFePO4 |
+| `SD_FLAG_LIFEPO4` | 3 | always 1: LiFePO4 is the only chemistry; the strap was deleted (ADR-035) |
 | `SD_FLAG_LOW_BATT` | 4 | below cutoff threshold |
 | `SD_FLAG_CHARGING` | 5 | charger active |
 
@@ -117,21 +119,23 @@ protocol version, and CRC, in that order.
 3. **Events are write-1-to-clear and are latched.** `SD_EVENT_PWRFAIL` must survive a slow CM5 poll —
    the CM5 has 150 ms to flush, so a missed latch is data loss.
 
-## 4. Sequence: waking from S2idle
+## 4. Sequence: waking the CM5 (from off or hibernate, ADR-036)
 
 ```
-RP2350 (event)                       CM5 (S2idle)
+RP2350 (event)                       CM5 (off / hibernated)
   button/lora/rtc interrupt
+  voice button: start mic capture into PSRAM now
   latch SD_EVENT_WAKE_REQ
-  assert PIN_GPIO17_WAKE ──────────►  GPIO interrupt, kernel resumes
+  power on + assert PIN_GPIO17_WAKE ►  boots / resumes in seconds
                                       read frame, see WAKE_REQ
                                       write REG_EVENTS = WAKE_REQ (clear)
   deassert GPIO17   ◄──────────────── 
-  REG_LAST_WAKE_US = measured  ─────►  daemon logs it; >400 ms is a regression
+  REG_LAST_WAKE_US = measured  ─────►  daemon logs it against sleep_ladder.r3_resume_s
 ```
 
-`REG_LAST_WAKE_US` is the measurement the dual-brain pillar is judged on. Without this register the
-`<400 ms` claim had no mechanism to be true or false — which is exactly what audit 1 found.
+`REG_LAST_WAKE_US` is the measurement the resume claim is judged on. Without this register the old
+sub-second claim had no mechanism to be true or false — which is exactly what audit 1 found. Voice
+loses no words to boot time because the RP2350 buffers audio from the button press (ADR-036).
 
 ## 5. What the CM5 side must not do
 

@@ -93,11 +93,37 @@ def check_power(err):
         err(f"strip/idle margin is only {ratio:.2f}x; claim 'infinite' is not defensible")
 
     wh = SPEC["battery_wh"]["lifepo4"]  # the shipped chemistry
+    if wh is None:
+        print("  UNVERIFIED: battery_wh.lifepo4 is null until a cell is chosen (ADR-040); "
+              "LoRa endurance not derived.")
+        return gen_wh, idle_wh, ratio, None, None
     days_lo = wh / (P["lora_repeater_mw_high"] / 1000 * 24)
     days_hi = wh / (P["lora_repeater_mw_low"] / 1000 * 24)
     if days_lo < 80:
         err(f"LoRa repeater endurance is {days_lo:.0f}-{days_hi:.0f} days, the docs claim 80+")
     return gen_wh, idle_wh, ratio, days_lo, days_hi
+
+
+def check_charger(err):
+    """ADR-035 / AUDIT 6 X1: the charger must be able to regulate at the battery's charge limit.
+    The BQ25895 (VREG floor 3.84 V) on a 3.6 V LiFePO4 cell is the failure this exists to catch."""
+    c, b = SPEC["charger"], SPEC["battery"]
+    limit_mv = round(b["charge_limit_v"] * 1000)
+    if not (c["vreg_min_v"] <= b["charge_limit_v"] <= c["vreg_max_v"]):
+        err(f"charger {c['part']} regulates {c['vreg_min_v']}-{c['vreg_max_v']} V; it cannot terminate at "
+            f"the {b['chemistry']} limit {b['charge_limit_v']} V")
+    elif (limit_mv - round(c["vreg_min_v"] * 1000)) % c["vreg_step_mv"]:
+        err(f"charge limit {limit_mv} mV is not on the charger's {c['vreg_step_mv']} mV VREG grid")
+    if b["chemistry"].lower().replace("₄", "4") != "lifepo4":
+        err(f"battery.chemistry is {b['chemistry']!r}; AGENTS §4.1 allows LiFePO4 only")
+    if limit_mv > 3650:
+        err(f"charge limit {limit_mv} mV exceeds the AGENTS §4.1 LiFePO4 ceiling of 3650 mV")
+    # The firmware gate that releases the charger's CE pin must use the same limit.
+    hdr = read(os.path.join(ROOT, "firmware", "rp2350", "include", "solardeck_state.h"))
+    m = re.search(r"#define\s+SD_CHARGE_LIMIT_MV\s+(\d+)", hdr)
+    if not m or int(m.group(1)) != limit_mv:
+        err(f"firmware SD_CHARGE_LIMIT_MV ({m.group(1) if m else 'missing'}) != battery.charge_limit_v ({limit_mv} mV)")
+    return c["part"], c["vreg_min_v"], c["vreg_max_v"], b["chemistry"], b["charge_limit_v"]
 
 
 def check_stated_assumptions(err):
@@ -114,6 +140,7 @@ def main():
     errors = []
     lo, hi, n = check_bom(errors.append)
     gen, idle, ratio, dlo, dhi = check_power(errors.append)
+    chg = check_charger(errors.append)
     check_stated_assumptions(errors.append)
     if errors:
         for e in errors:
@@ -121,8 +148,9 @@ def main():
         print(f"   {len(errors)} derived-number failure(s)")
         return 1
     print(f"  BOM: {n} rows derived to ${lo:.2f}-${hi:.2f}, prose agrees.")
-    print(f"  Power: strip {gen:.2f} Wh/day vs idle {idle:.3f} Wh/day = {ratio:.1f}x; "
-          f"LoRa repeater {dlo:.0f}-{dhi:.0f} days.")
+    lora = f"LoRa repeater {dlo:.0f}-{dhi:.0f} days" if dlo is not None else "LoRa endurance TBD (cell null)"
+    print(f"  Power: strip {gen:.2f} Wh/day vs idle {idle:.3f} Wh/day = {ratio:.1f}x; {lora}.")
+    print("  Charger: {} VREG {}-{} V covers {} {} V; firmware gate agrees.".format(*chg))
     return 0
 
 

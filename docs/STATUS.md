@@ -15,7 +15,7 @@ Regenerate: `python3 scripts/gen_status.py`. CI Phase 12 fails if this page is s
 | `aspirational` | A design goal. Do not quote it as a capability. |
 | `TBD` | Unknown, and we refuse to guess. |
 
-`specified` is the honest default for this repo: 62 BOM lines, 40 captured in schematics, 0 board nets.
+`specified` is the honest default for this repo: 55 BOM lines, 40 captured in schematics, 0 board nets.
 Read `docs/AUDIT_6_2026-10-21.md` before treating any row here as a purchase decision.
 
 ## Totals
@@ -24,8 +24,8 @@ Read `docs/AUDIT_6_2026-10-21.md` before treating any row here as a purchase dec
 | :--- | ---: |
 | `measured` | 0 |
 | `modelled` | 2 |
-| `specified` | 65 |
-| `aspirational` | 17 |
+| `specified` | 58 |
+| `aspirational` | 24 |
 | `TBD` | 0 |
 | **total** | **84** |
 
@@ -35,13 +35,13 @@ What the product is judged on (`README.md`, “Product pillars”).
 
 | ID | Feature | Status |
 | :--- | :--- | :--- |
-| P1 | Dual-brain instant handoff (<400 ms glass-to-glass) | `aspirational` |
+| P1 | Dual-brain handoff: instant ambient modes on the RP2350, Linux resume in seconds (ADR-036) | `aspirational` |
 | P2 | Typewriter-on-paper latency (1-bit DU keystroke, EMR ink, LRA haptics) | `aspirational` |
-| P3 | Sunlight sovereignty and perpetual indoor harvest | `aspirational` |
+| P3 | Sunlight-readable; solar tops up the idle co-processor outdoors (ADR-041) | `aspirational` |
 | P4 | Form-morphology: 620 g slate, desk easel, modular grips | `modelled` |
-| P5 | Sovereign field hardening: airgap, LoRa mesh, IP67, rain-lock | `aspirational` |
+| P5 | Field hardening: airgap, LoRa mesh, GNSS, IP54 (V1) / IP67 (V2), rain-lock | `aspirational` |
 | P6 | Modular upgrade bridge: ARM/RISC-V SOM, RAM, NVMe | `specified` |
-| P7 | Sovereign voice agent (acoustic barge-in, touch-to-talk, local-first STT/TTS) | `aspirational` |
+| P7 | Voice-first control: hold-to-talk button, opt-in hands-free wake word, barge-in (ADR-036) | `aspirational` |
 
 ## Engineering pillars
 
@@ -116,13 +116,13 @@ Field expansion modules (`OFFGRID_TACTICAL_SENSORS.md` §8).
 
 | ID | Feature | Status |
 | :--- | :--- | :--- |
-| H1 | Doomsday sky-scan and SIGINT (passive all-band receiver) | `specified` |
-| H2 | Tactical dual-mesh and HF shortwave transceiver | `specified` |
-| H3 | CBRN and search-and-rescue environmental pack | `specified` |
-| H4 | Precision RTK centimetre survey pack | `specified` |
-| H5 | 15 g thermal night-vision and electrical inspection pack | `specified` |
-| H6 | 3GPP NTN satellite (Skylo) transceiver and global SAR | `specified` |
-| H7 | Sub-surface acoustic and perimeter geophone module | `specified` |
+| H1 | Doomsday sky-scan and SIGINT (passive all-band receiver) (V2, ADR-034) | `aspirational` |
+| H2 | Tactical dual-mesh and HF shortwave transceiver (V2, ADR-034) | `aspirational` |
+| H3 | CBRN and search-and-rescue environmental pack (V2, ADR-034) | `aspirational` |
+| H4 | Precision RTK centimetre survey pack (V2, ADR-034) | `aspirational` |
+| H5 | 15 g thermal night-vision and electrical inspection pack (V2, ADR-034) | `aspirational` |
+| H6 | 3GPP NTN satellite (Skylo) transceiver and global SAR (V2, ADR-034) | `aspirational` |
+| H7 | Sub-surface acoustic and perimeter geophone module (V2, ADR-034) | `aspirational` |
 
 ## Accessories
 
@@ -142,10 +142,10 @@ The numbers that decide whether a build is field-ready (`STANDOUT_FEATURES.md`).
 
 | ID | Feature | Status |
 | :--- | :--- | :--- |
-| G1 | S2idle to active keystroke response < 350 ms | `aspirational` |
+| G1 | Linux resume to first keystroke (target set from the dev-kit bench; ADR-036) | `aspirational` |
 | G2 | 1-bit fast-typing latency < 20 ms | `aspirational` |
 | G3 | Zen reading power < 5.0 mW | `aspirational` |
-| G4 | Net-positive energy at 500 lux | `aspirational` |
+| G4 | Outdoor solar top-up of RP2350 idle (indoor 500-lux claim withdrawn, ADR-041) | `aspirational` |
 | G5 | Airgap RF radiation 0.000 dBm, 50 MHz-6 GHz | `aspirational` |
 | G6 | Zero-brick watchdog rollback < 2.5 ms | `aspirational` |
 | G7 | Transit drop survival (1.22 m, 26 orientations) | `aspirational` |
@@ -153,7 +153,7 @@ The numbers that decide whether a build is field-ready (`STANDOUT_FEATURES.md`).
 | G9 | UV & weather durability (ASTM G154 1000 h, dE<3) | `aspirational` |
 | G10 | Unpowered storage survival (12 months, data intact) | `aspirational` |
 | G11 | USB-C interoperability (10-row matrix, incl. dead-battery Rd) | `specified` |
-| G12 | Sleep-ladder energy & resume integrity (R2 S2idle 15mW/0.3s, R3 hibernate 0W, R4 keep-alive <0.2mW) | `specified` |
+| G12 | Sleep-ladder energy & resume integrity (R3 hibernate, R4 keep-alive <0.2mW; R2 null per ADR-036) | `specified` |
 
 ## How this page stays true
 

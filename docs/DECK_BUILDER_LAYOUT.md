@@ -4,8 +4,10 @@ Written 2026-10-20 22:10 UTC in the Pi harness by openrouter/deepseek/deepseek-v
 
 Revised 2026-10-21 16:01 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
 
+Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
+
 Purpose: classify every `BOM_COST_ESTIMATE.md` line as **snap-in (user-serviceable)** or
-**soldered (factory-welded)** so the SolarDeck quote (`HANDOFF_TO_FABLE.md`) is structured around a
+**soldered (factory-welded)** so the SolarDeck quote (`90-history/HANDOFF_TO_FABLE_2026-10-19.md`) is structured around a
 user-assemblable "Deck-Builder" top layer — and to make that modularity serve the project's
 AI-self-diagnosis ambition: an on-device LLM that reads telemetry and explains *which part is
 failing or degrading, and where power is going*. Companion to
@@ -19,7 +21,7 @@ failing or degrading, and where power is going*. Companion to
 | :--- | :--- | :--- |
 | **Substrate (carrier PCB)** | Factory-soldered SMT: power rails, bus mux, charge tree, air-gap gates | The safety-critical, density-crazy, thin-slab part — cannot be Lego |
 | **Sockets/studs** | M.2, SMA, standoff posts, FPC latches | The *user-assemblable* interface — Lego studs |
-| **Modules** | CM5, LTE, antennas, panel, RP2350 dev brick | The expensive, swappable, diagnosable top layer |
+| **Modules** | CM5, NVMe, antennas, panel, RP2350 dev brick | The expensive, swappable, diagnosable top layer |
 
 Rule: if it is dense (<0.5 mm pin pitch), carries the always-on rail, or is a safety gate → welded.
 If it has a human-scale interface (screw, latch, twist-on) → snap.
@@ -33,7 +35,7 @@ If it has a human-scale interface (screw, latch, twist-on) → snap.
 | Part | Interface | Diagnosable? (see §4) |
 | :--- | :--- | :--- |
 | CM5 (CM5116064, ADR-031) | 2× standoff screws + DF40 board-to-board connectors | ✅ identity + current sense on its rail |
-| EG25-G LTE + MIMO antennas | M.2 Key-B slot + 2× SMA | ✅ AT diagnostics + GNSS fix telemetry |
+| LTE modem + antennas | Deferred to V2 (ADR-034). | — |
 | SX1262 LoRa + whip | Castellated pad *or* socket + SMA | ✅ RSSI/SNR telemetry |
 | Kaleido 4 panel + EMR (ADR-032) | FPC latch (pin count TBD, ADR-032) | 🟨 physical latch, delicate; health via refresh-ACK latency |
 | Speaker / dual MEMS / piezo | Fly-wires + micro connectors | ✅ audio-loop self-test |
@@ -51,13 +53,13 @@ If it has a human-scale interface (screw, latch, twist-on) → snap.
 
 | Part | Why it cannot be Lego |
 | :--- | :--- |
-| BQ25895 charger, TPS62840/TPS61088/TPS63020 rails | Power-delivery ICs: always-on rail, brownout-critical, sub-millimetre pitch |
+| BQ25798 charger, BQ29706-class protector + back-to-back N-FETs, BQ27Z561-R2 gauge (ADR-035), TPS62840/TPS61088 rails | Power-delivery ICs: always-on rail, brownout-critical, sub-millimetre pitch |
 | TPS22918 load-switch gates | **Safety + sleep-floor hard requirements** (air-gap cut, <25 mW floor, G6/G12) — a connector here is a failure point in the one rail that must never fail |
 | TMUX1575 bus mux pair | Display-bus isolation; a loose contact = glitch mid-refresh |
-| VL805 / ASM1042A / USB2514B hub | BGA-class package — not hand-solderable, not snap-pable |
-| eSIM — consumer SGP.22 eUICC (part TBD, ADR-033) | Soldered MFF2 package (ADR-033); still managed via `lpac` (AT+CCHO/CGLA) |
+| eSIM | Deferred to V2 (ADR-034); the V2 requirement is a consumer SGP.22 eUICC (ADR-033) |
+| u-blox MAX-M10S GNSS (ADR-038) | Module on an RP2350 UART behind a load switch; passive antenna at the top edge |
 | **Battery terminals + cells** | The cells' welded tabs are a fire-safety joint — never a snap |
-| Camera (IMX708) | Flush optical alignment — factory |
+| Camera | Deferred to V2 (ADR-034) |
 
 ---
 
@@ -65,11 +67,11 @@ If it has a human-scale interface (screw, latch, twist-on) → snap.
 
 When structuring the Seeed/JLCPCB request, ask for the carrier to be *born with these studs*:
 
-1. **M.2 Key-B slot** (LTE) + **SMA stub mounts ×3** (LTE main/div + LoRa) + **U.FL** (Wi-Fi/GNSS)
-2. **MFF2 eSIM land pattern** (soldered, not socketed — consumer SGP.22 eUICC, part TBD, ADR-033; `lpac`-manageable)
+1. **M.2 NVMe socket** (CM5 PCIe lane, ADR-042) + **SMA stub mount** (LoRa) + **U.FL** (Wi-Fi) + passive GNSS antenna at the top edge (ADR-038)
+2. LTE slot, LTE antennas and eSIM land pattern: deferred to V2 (ADR-034); the V2 eSIM requirement is a consumer SGP.22 eUICC (ADR-033)
 3. **40-pin FPC latch** for the panel (already specced)
 4. **Standoff post inserts ×2** for CM5; **CG-adjacent posts** for the RP2350 PGA brick (PGA2350 is 64-pin 25.4 mm — a pinned socket for it is feasible if the quote allows a 2.54 mm-pitch castellation)
-5. **Per-rail current-sense nodes** — the *diagnosis* requirement, not just assembly: a µA-grade sense point (sense resistor + ADC feed to RP2350) on each TPS22918-gated load rail (LTE, Wi-Fi, audio) and on the CM5 rail. See §4.
+5. **Per-rail current-sense nodes** — the *diagnosis* requirement, not just assembly: a µA-grade sense point (sense resistor + ADC feed to RP2350) on each TPS22918-gated load rail (GNSS, Wi-Fi, audio) and on the CM5 rail. See §4.
 6. **JTAG/UART breakout** (TP_SWD_CLK/TP_SWD_DIO/TP_UART_* already exist in `HARDWARE_SPEC.md:635` — keep them in the quote as the diagnosis ports)
 
 ---
@@ -84,10 +86,10 @@ power constrictions" you described. The modular top layer makes each reading *is
 
 | Diagnostic | Sensor | LLM conclusion (example) |
 | :--- | :--- | :--- |
-| **Power constriction / overdraw** | µA sense per rail (§3.5) vs `spec_values.power.*` / `sleep_ladder.*` | "LTE rail draws 2.1× budget at idle → EG25-G module degrading or modem stuck in high-power; swap-test the M.2 module" |
-| **Battery degradation** | Charge/discharge curve fit from telemetry DB | "Battery has 82% of 30 Wh → 18% capacity fade, near mid-life threshold (`longevity.*`)" |
+| **Power constriction / overdraw** | µA sense per rail (§3.5) vs `spec_values.power.*` / `sleep_ladder.*` | "GNSS rail draws 2.1× `gnss.tracking_mw` → MAX-M10S stuck out of power-save; power-cycle it through its load switch" |
+| **Battery degradation** | Charge/discharge curve fit from telemetry DB | "Battery has 82% of rated capacity → 18% capacity fade, near mid-life threshold (`longevity.*`)" |
 | **E-ink panel wear** | Partial-refresh ACK latency creep + ghosting rate | "Refresh latency +38 ms over 90 days → panel pigment wear or waveform drift; re-run DC-balance calibration" |
-| **RF degradation** | SX1262 RSSI/SNR, EG25-G signal stats | "LoRa RSSI floor −15 dB vs mesh baseline → antenna SMA loose or cable fatigue; check the twist-on joint first" |
+| **RF degradation** | SX1262 RSSI/SNR, MAX-M10S fix/satellite stats | "LoRa RSSI floor −15 dB vs mesh baseline → antenna SMA loose or cable fatigue; check the twist-on joint first" |
 | **Thermal / airflow** | On-board NTC per zone | "Charger zone runs 8 °C over profile → BQ heat-spread degradation, recommend service" |
 | **Register-level** | CM5 SMART, eMMC wear counters (already in telemetry) | "eMMC at 61% endurance → plan recapture within the 30-year budget (`longevity`) precedence" |
 
@@ -96,7 +98,7 @@ remediation is *user-safe* — pop the M.2/SMA/PGA unit, bench-test it, replace.
 world the LLM can still isolate by rail signature but the repair isn't user-doable. So modularity
 turns "diagnosis" into "diagnosis **and** self-service."
 
-**Honest ceiling:** the LLM diagnoses what instrumentation senses. A cracked BGA pad under VL805 is
+**Honest ceiling:** the LLM diagnoses what instrumentation senses. A cracked solder joint under a power-path QFN is
 invisible without per-module register health and thermal zones — which is why §3.5 and NTC zones
 are quote-line items, not afterthoughts.
 
@@ -114,7 +116,7 @@ Module ↔ RP2350/CM5      Module emits:
 ```
 
 - CM5: SMART + eMMC wear + rail sense
-- LTE: AT+CSQ, GNSS fix, rail sense
+- GNSS: fix status, satellites in view, rail sense
 - LoRa: RSSI/SNR, rail sense
 - Panel: per-refresh ACK latency (already needed for G1), ghosting counter
 - Battery: coulomb-counted charge/discharge curve

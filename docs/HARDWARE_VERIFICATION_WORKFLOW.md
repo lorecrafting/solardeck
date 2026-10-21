@@ -4,6 +4,8 @@ Written 2026-10-19 08:45 UTC in the Pi harness by antigravity/gemini-3.8-flash
 
 Revised 2026-10-21 16:03 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
 
+Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
+
 ---
 
 ## 1. Overview & Objective
@@ -18,7 +20,7 @@ To prevent costly silicon destruction, "painted-into-a-corner" dead-ends, and mu
 │   • Verifies back-powering isolation, pull-ups, power domains, and shorts.  │
 │                                                                             │
 │ Stage 2: SPICE Analog & Power Integrity Simulation (ngspice / LTspice)      │
-│   • Simulates transient 2A LTE bursts, battery sag, and MPPT slew rates.    │
+│   • Simulates transient CM5 load steps, battery sag, and MPPT slew rates.   │
 │                                                                             │
 │ Stage 3: Virtual Firmware & Silicon Co-Simulation (Renode & QEMU)          │
 │   • Runs RP2350 bare-metal C in Renode; boots CM5 Linux 6.6 LTS in QEMU.    │
@@ -35,20 +37,22 @@ To prevent costly silicon destruction, "painted-into-a-corner" dead-ends, and mu
 
 ## 2. Stage 1: Static Netlist & Hardware Trap Audit
 
-Before routing copper or ordering parts, the netlist is validated by `hardware/audit_hardware_traps.py` to intercept the 10 classic beginner and professional hardware traps:
+Before routing copper or ordering parts, the netlist is validated by `hardware/audit_hardware_traps.py` to intercept the 10 classic beginner and professional hardware traps. The placeholder netlist still lists
+pre-V1 parts (modem rail, CHEM_SEL strap), so the auditor still checks them; both go with the first real
+capture (ADR-034, AUDIT 6 X8). The table below states the V1 design:
 
 | Trap # | Trap Name | Physics / Failure Mode | SolarDeck Hardware Safeguard | Automated Audit Rule |
 | :--- | :--- | :--- | :--- | :--- |
 | **01** | **Phantom Back-Powering** | Unpowered CM5 CPU receives 3.3V GPIO leakage via display bus, destroying internal ESD diodes. | **TI TMUX1575** SPDT switch with fail-safe $I_{\text{off}}$ circuit isolation. | Check display nets pass through TMUX isolation when CM5 is 0V. |
 | **02** | **Floating Open-Drain Bus** | I2C SDA/SCL lines float without pull-up resistors, causing bus hangs. | Dedicated 4.7 kΩ pull-ups to `VDD_3V3_AON`. | Verify pull-up resistance paths exist on all open-drain nets. |
-| **03** | **LTE Burst Brown-Out** | 4G modem draws 2.0A in 577µs bursts, sagging rail and resetting CPU. | Dedicated **TPS63020** buck-boost with 47µF low-ESR ceramic + 220µF tantalum buffer. | Verify modem 3.8V rail is isolated from CM5 core rail. |
-| **04** | **LiFePO4 Over-Voltage** | Applying standard 4.2V Li-ion charge voltage causes thermal runaway in 3.2V LiFePO4 cells. | Hardware **SW1 CHEM_SEL** pin tied to BQ25895 register lock (3.65V cap). | Verify CHEM_SEL net routes to RP2350 supervisor pin. |
-| **05** | **Power Rail Collision** | Accidentally tying 5.0V system rail to a 3.3V logic line. | Distinct power net naming (`VDD_5V_SYS`, `VDD_3V3_AON`, `VDD_3V8_MODEM`). | Assert 0 ohm shorts do not exist between separate voltage codes. |
+| **03** | **LTE Burst Brown-Out** | Deferred to V2 (ADR-034). | — | — |
+| **04** | **LiFePO4 Over-Voltage** | Applying standard 4.2V Li-ion charge voltage causes thermal runaway in 3.2V LiFePO4 cells. | One chemistry, no strap (ADR-035): the **BQ25798** enable pin holds charging off until the RP2350 writes VREG = `battery.charge_limit_v`; a BQ29706-class protector backs it up. | Verify the charger enable net is driven by the RP2350 and defaults to charge-off. |
+| **05** | **Power Rail Collision** | Accidentally tying 5.0V system rail to a 3.3V logic line. | Distinct power net naming (`VDD_5V_SYS`, `VDD_3V3_AON`). | Assert 0 ohm shorts do not exist between separate voltage codes. |
 | **06** | **Floating Reset Pins** | Active-low RESET lines float and trigger random spurious resets. | Hardware 10 kΩ pull-ups to appropriate local rail. | Check all active-low `#RESET` pins have pull-ups or active drivers. |
 | **07** | **Unbuffered ADC Clipping** | Solar panel Voc exceeds 3.3V ADC pin rating, burning co-processor ADC. | Resistor voltage divider (1/2 scaling) protecting RP2350 ADC0. | Check maximum Vin does not exceed $V_{\text{ref}} = 3.3\text{V}$. |
 | **08** | **Net Netname Typo Island** | Slight spelling difference creates an un-driven floating net island. | Netlist parser flags single-node nets (`pin count == 1`). | Flag any net with only 1 connected node. |
 | **09** | **Ground Loop Disconnect** | Separate analog and digital grounds without single-point star ground. | Unified low-impedance ground plane on Layers 2 and 5. | Assert all component grounds route to master `GND`. |
-| **10** | **Reverse Battery Polarity** | Inserting LiFePO4 cell backward blows input buck PMIC. | BQ25895 integrated reverse battery blocking FETs. | Verify reverse battery protection present on `VBAT` input. |
+| **10** | **Reverse Battery Polarity** | Inserting LiFePO4 cell backward blows input buck PMIC. | Reverse-polarity protection on `VBAT` (part chosen at schematic capture with the protector, ADR-035). | Verify reverse battery protection present on `VBAT` input. |
 
 ---
 
@@ -56,7 +60,7 @@ Before routing copper or ordering parts, the netlist is validated by `hardware/a
 
 Using KiCad's integrated **ngspice** engine:
 1. **Transient Load Step Test:**
-   * Apply a simulated 0.1A $\rightarrow$ 2.5A pulse (10 µs rise time) to `VDD_5V_SYS` and `VDD_3V8_MODEM`.
+   * Apply a simulated 0.1A $\rightarrow$ 2.5A pulse (10 µs rise time) to `VDD_5V_SYS`.
    * **Pass Criteria:** Voltage sag $\Delta V \le 150\text{ mV}$; rail settles within 200 µs without ringing.
 2. **LiFePO4 Power-Fail Hold-Up Slew Rate:**
    * Simulate battery cutoff at 2.85V.
@@ -94,7 +98,7 @@ gcc -Wall -Wextra -I src/daemons/eink-refreshd src/daemons/eink-refreshd/refresh
 ### 4.2 Renode Co-Simulation Configuration
 SolarDeck uses Renode scripts (`.resc`) to model:
 * Dual-core Cortex-M33 RP2350 target.
-* Virtual BQ25895 I2C peripheral reporting battery millivolts.
+* Virtual BQ25798 I2C peripheral reporting battery millivolts.
 * Virtual IT8951 SPI peripheral receiving display packets (bench stand-in model, ADR-025; the Kaleido 4 controller is TBD, ADR-032).
 * GPIO wake triggers simulated via Renode monitor commands.
 
@@ -123,7 +127,7 @@ To ensure internal electronics mate with the unibody chassis without mechanical 
 Before uploading Gerbers to JLCPCB or PCBWay:
 * **Trace Width / Spacing:** Minimum 0.127 mm (5 mil) signal, 0.40 mm for high-current power nets.
 * **Annular Rings:** Minimum 0.13 mm annular ring on via drills.
-* **BGA / QFN Solder Mask Dams:** Minimum 0.10 mm mask bridge between adjacent pads on the RP2350 QFN-80 and BQ25895 WQFN-24 to eliminate solder bridging.
+* **BGA / QFN Solder Mask Dams:** Minimum 0.10 mm mask bridge between adjacent pads on the RP2350 QFN-80 and BQ25798 QFN to eliminate solder bridging.
 * **Impedance Control:** JLC06161H-3313 stackup verified for 90 Ω USB differential pairs and 100 Ω PCIe Gen 2 lanes.
 
 ---
@@ -134,7 +138,7 @@ Before releasing purchase orders or fab files, all boxes must be checked:
 
 - [x] **Trap Audit:** `hardware/audit_hardware_traps.py` passes with 0 errors and 0 single-node nets.
 - [x] **KiCad Schematics:** All 5 hierarchical sheets structurally verified (`hardware/verify_schematics.py`).
-- [x] **Firmware Logic:** RP2350 host tests pass with $\Delta t_{\text{wake}} < 300\text{ ms}$ (`test_rp2350_sm`).
+- [x] **Firmware Logic:** RP2350 host tests pass (`test_rp2350_sm`); the wake time they check is a placeholder constant until Linux resume is measured (ADR-036).
 - [x] **Cadence Daemon:** Anti-ghosting lockout and scrub verified (`test_refreshd`).
 * [x] **Chassis Fit:** OpenSCAD envelope verified against `docs/spec_values.json` (232 × 170 × 14.0 mm, 12.5 mm cavity) by `verify_enclosure.py`.
 - [ ] **Physical PCB Layout:** 6-layer routing completed and DRC clean.

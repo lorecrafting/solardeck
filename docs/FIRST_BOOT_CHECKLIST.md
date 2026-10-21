@@ -4,6 +4,8 @@
 
 Revised 2026-10-21 16:01 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
 
+Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
+
 This step-by-step technical punch list guides the hardware engineer or field operator from unboxing the DHL Express package from Seeed Studio Fusion in Honolulu to running an authorized terminal session in pure sunlight.
 
 ---
@@ -20,8 +22,8 @@ This step-by-step technical punch list guides the hardware engineer or field ope
 1. **Packaging Verification:** Inspect the anti-static shielded bubble bag for transit punctures or crushed corners. Confirm Seeed QC pass sticker.
 2. **Hirose 100-Pin Sockets (`J1`, `J2`):** Inspect the dual 0.4mm pitch DF40 connectors under 10x magnification. Ensure zero bent pins, solder bridges, or flux residue.
 3. **EPDC FPC Connector (`J_EPDC`):** Verify the flip-lock actuator (pin count and pitch TBD with the Kaleido 4 panel, ADR-032) is undamaged and moves freely.
-4. **Solder Joint Inspection:** Inspect the QFN-80 package of the RP2350B, the TI BQ25895 buck charger, and the TI TMUX1575 bus switch for solder bridging or tombstoned 0402 passives.
-5. **Cold-Storage Vault & SIM:** Verify the gasketed hatch fits flush and the 3x friction-fit MicroSD slots retain cards securely.
+4. **Solder Joint Inspection:** Inspect the QFN-80 package of the RP2350B, the TI BQ25798 charger, and the TI TMUX1575 bus switch for solder bridging or tombstoned 0402 passives.
+5. **Cold-Storage Vault:** Verify the gasketed hatch fits flush and the 3x friction-fit MicroSD slots retain cards securely.
 
 ---
 
@@ -102,13 +104,13 @@ Before inserting the CM5, initialize the RP2350B co-processor to confirm power s
 ## 5. First Boot & Verification Run
 
 1. **Power Application:**
-   * Connect the 8,000–10,000 mAh LiFePO4 battery pack to `J_BAT`.
-   * Connect a USB-PD 20W charger to USB-C Port 1. Confirm the TI BQ25895 amber charge LED illuminates.
+   * Connect the LiFePO4 battery pack (capacity TBD until the cell is chosen, ADR-040) to `J_BAT`.
+   * Connect a USB-PD 20W charger to USB-C Port 1. Confirm charging stays **off** until the RP2350 has written the BQ25798 VREG to `battery.charge_limit_v` (charger enable pin held off, ADR-035); only then does the amber charge LED illuminate. Read VREG back over I²C before leaving the pack on charge.
 2. **Cold Boot Execution:**
    * Press the physical Power button on the top edge for 1.5 seconds.
    * The RP2350 co-processor will enable the CM5 (enable net TBD — verify on CM5) and cycle the reset net of the Kaleido 4 display controller (TBD, ADR-032).
    * The 10.3" E-Ink panel will execute an initial global white clearing flash.
-   * **In <400 milliseconds**, the Linux console login will appear on the high-contrast paper screen.
+   * Linux boots to the console login on the paper screen in seconds (ADR-036; no sub-second claim).
 3. **Execute Automated Built-In Self-Test (BIST):**
    * Log in to the terminal and execute:
      ```bash
@@ -120,35 +122,29 @@ Before inserting the CM5, initialize the RP2350B co-processor to confirm power s
      - `display`: Kaleido 4 display controller (TBD, ADR-032) communication, temperature LUT matching.
      - `i2c_bus`: All 7 core sensors responding (`0x60`, `0x44`, `0x12`, `0x68`, `0x5D`, `0x40`, `0x6B`).
      - `environmental`: SHT40 internal humidity $<30\%$ (desiccant active).
-     - `audio`: Dual Knowles MEMS mics and MAX98357A speaker functional.
-     - `rf`: SX1262 LoRa SPI response and EG25-G modem AT response.
+     - `audio`: Dual MEMS mics, speaker echo-cancel reference and hardware mute switch functional.
+     - `rf`: SX1262 LoRa SPI response and MAX-M10S GNSS UART response (ADR-038).
      - `storage`: NVMe/eMMC write speed $>250\text{ MB/s}$.
 
 ---
 
-### 5b. S2idle Gate (the 15 mW / 0.3 s pillar rests on this)
+### 5b. Sleep Gate (ADR-036)
 
-The 300-day desk clock and the 0.3 s instant wake both assume the CM5 can actually enter `s2idle`.
-The CM5 (BCM2712) has no RAM-retaining low-power state (ADR-031, AUDIT 6 X4); whether `s2idle`
-reaches the gate below is board-firmware and kernel-version dependent (TBD — verify on CM5), and
-nothing in CI measures it.
-Run this gate before accepting the power claims:
+The CM5 (BCM2712) has no RAM-retaining low-power state (ADR-031, AUDIT 6 X4), so `sleep_ladder` R2
+is `null`: ambient modes (clock, reader, LoRa) run on the RP2350 with the CM5 off, and Linux resumes
+from off/hibernate in seconds. Nothing in CI measures either. Run this gate before accepting any
+power claim:
 
-```bash
-cat /sys/power/state                    # must contain "freeze"
-grep -c . /sys/power/suspend_stats/success
-sudo rtcwake -m freeze -s 10            # measure the round trip
-cat /sys/power/suspend_stats/last_failed_dev   # empty means no device vetoed it
-```
-
-* **Pass:** `freeze` present, `success` increments by 1, wall time 10 s ± 0.5 s, and a measured
-  current draw (USB-C PD meter or INA3221 telemetry) **< 25 mW** with radios gated.
+* **Ambient floor:** with the CM5 off and every TPS22918 load hard off, the measured draw (USB-C PD
+  meter or INA3221 telemetry) is **< 25 mW**.
+* **Linux resume:** time power-button press to console login from hibernate and from cold off;
+  record both as `measured <date>` against `sleep_ladder.r3_resume_s`.
 * **If it fails:** record the kernel version and the firmware commit in this checklist, downgrade
-  the pillar to `modelled` in `README.md`, and re-scope the runtime arithmetic in
-  `MVP_ARCHITECTURE.md`. Do not ship a marketing number for a suspend state the board does not enter.
-* **Replace the constant:** the <300 ms wake figure is currently a hardcoded constant in
-  `firmware/rp2350/src/solardeck_sm.c`. Once measured, put the real number in `docs/spec_values.json`
-  and assert against that.
+  the claim to `modelled` in `README.md`, and re-scope the runtime arithmetic in
+  `MVP_ARCHITECTURE.md`. Do not ship a number the board does not reach.
+* **Replace the constant:** `firmware/rp2350/src/solardeck_sm.c` still records a hardcoded sub-second
+  wake time from the withdrawn S2idle design. Replace it with the measured resume time from
+  `docs/spec_values.json` and assert against that.
 
 ---
 

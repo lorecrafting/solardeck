@@ -484,7 +484,7 @@ non-historical prose while the figure is `null`.
 
 ## ADR-031 — The CM5 is the compute standard; CM4 text is propagation debt (2026-10-21)
 
-Written 2026-10-21 16:40 UTC in Claude Code by anthropic/claude-opus-5-5. Records the owner's decision
+Written 2026-10-21 16:05 UTC in Claude Code by anthropic/claude-opus-5-5. Records the owner's decision
 ("we are standardizing everything on CM5 not cm4") that `spec_values.cm5` (commit `19a789c`) already
 assumed but cited as a non-existent ADR-032.
 
@@ -518,7 +518,7 @@ not a competing design.
 
 ## ADR-032 — Kaleido 4 is the only panel; V1 waits for its release (2026-10-21)
 
-Written 2026-10-21 16:50 UTC in Claude Code by anthropic/claude-opus-5-5. Records the owner's decision
+Written 2026-10-21 16:05 UTC in Claude Code by anthropic/claude-opus-5-5. Records the owner's decision
 ("let's standardize around Kaleido 4, we will wait for the release"). **Supersedes ADR-030's two-SKU
 split**: there is no mono Carta default.
 
@@ -553,7 +553,7 @@ chassis, choose the controller, then capture the display sheet.
 
 ## ADR-033 — The soldered eSIM stays, and it must be a consumer (SGP.22) eUICC (2026-10-21)
 
-Written 2026-10-21 17:20 UTC in Claude Code by anthropic/claude-opus-5-5. Records the owner's decision
+Written 2026-10-21 16:05 UTC in Claude Code by anthropic/claude-opus-5-5. Records the owner's decision
 ("please keep the esim") after AUDIT 6 H15 and the follow-up recommendation to drop it from V1.
 
 **Trigger.** AUDIT 6 H15: the specified ST4SIM-200M is an M2M eUICC (GSMA SGP.02), so the promised
@@ -570,3 +570,166 @@ confirming SGP.22 support (and an MFF2 package) is in hand.
 the software spec.
 
 **Still assumes.** The chosen modem exposes the logical channels (`AT+CCHO`/`AT+CGLA`) `lpac` needs.
+
+---
+
+## ADR-034 — V1 scope: a voice-first E-Ink slate without cellular (2026-10-21)
+
+Written 2026-10-21 16:37 UTC in Claude Code by anthropic/claude-opus-5-5. Records the owner's scope
+decision after AUDIT 6 §7 ("no LTE or SIMs; voice is a must; haptics if we can").
+
+**Trigger.** AUDIT 6 found 84 catalogued features and no measured number; scope was the largest risk.
+
+**Decision.** V1 is: CM5 (ADR-031), RP2350, Kaleido 4 + Wacom (ADR-032), LiFePO4 power path (ADR-035),
+Wi-Fi/BT on the CM5, LoRa mesh, standalone GNSS (ADR-038), first-class voice (ADR-036) and haptic
+typing feedback (ADR-037). **Deferred to V2:** LTE modem, nano-SIM tray, soldered eSIM (ADR-033 stays
+the V2 requirement), NFC, rear camera, the modem's buck-boost supply, LTE antennas, Hotpacks.
+
+**Because.** Cellular brings the slowest and costliest certification (carrier PTCRB/GCF, SAR) and the
+hardest antenna problem behind a full-face panel; voice and typing feel are the product's identity.
+Connectivity in V1 is Wi-Fi plus phone tethering.
+
+**Delta.** BOM loses the modem, SIM, eSIM, LTE antennas, modem supply, NFC and camera rows; gains GNSS
+and a voice button. The placeholder netlist and production CSVs still list the old parts; they are
+replaced by the first real schematic capture (AUDIT 6 X8), not edited by hand.
+
+---
+
+## ADR-035 — LiFePO4 power path: BQ25798, BQ29706-class protector, BQ27Z561-R2 gauge (2026-10-21)
+
+Written 2026-10-21 16:37 UTC in Claude Code by anthropic/claude-opus-5-5.
+
+**Trigger.** AUDIT 6 X1–X3: BQ25895 cannot regulate below 3.84 V; BQ29700 trips at 4.275 V; BQ27441-G1A
+has only a LiCoO₂ profile. AGENTS §4.1 (LiFePO4, 3.65 V limit) was violated by the BOM.
+
+**Decision.**
+- **Charger: TI BQ25798** (datasheet: VREG 3.0–18.8 V in 10 mV steps; 3.6–24 V input; OTG 0.12–3.32 A;
+  JEITA; VOC-scaling MPPT). Charge limit `battery.charge_limit_v` = 3.6 V. Charging is held off with
+  the charger's enable pin until the RP2350 has written VREG, because every I²C charger's POR default
+  is a Li-ion voltage; the watchdog is fed or disabled after that. The BQ25798's CE pin is active-low,
+  so a hardware pull-up keeps charging off at power-up without any firmware; the RP2350 drives CE low
+  only once VREG reads back at the limit. The charger sits on the RP2350's always-on I²C bus and
+  Linux never binds it.
+- **Protector: a BQ29706-class LiFePO4 protector** (3.85 V OVP, 2.50 V UVP) with a back-to-back N-FET
+  pair. CSD87330Q3D (a half-bridge power stage) is removed.
+- **Gauge: TI BQ27Z561-R2** (TI lists LiFePO4), characterised on the chosen cell (ADR-040).
+- **Reverse power bank capped at 2 A** (`power_bank.otg_max_a`); 15.8 W exceeded the cell path.
+- **The CHEM_SEL Li-ion/LiFePO4 strap is deleted.** There is one chemistry; a switch that can select
+  4.2 V is a hazard, not a feature.
+
+**Enforced consequences.** Phase 14 asserts `charger.vreg_min_v ≤ battery.charge_limit_v ≤
+charger.vreg_max_v`, that the limit lies on the VREG step grid, and that the firmware's
+`SD_CHARGE_LIMIT_MV` equals it; firmware test 7 checks the CE gate. All red-controlled.
+
+**Still assumes.** Part prices are TBD until quoted; the protector's exact variant and FETs are chosen
+at schematic capture against the cell's datasheet.
+
+---
+
+## ADR-036 — Linux wakes in seconds; voice is first-class through a button and an opt-in wake word (2026-10-21)
+
+Written 2026-10-21 16:37 UTC in Claude Code by anthropic/claude-opus-5-5.
+
+**Trigger.** AUDIT 6 X4 (no RAM-retaining low-power state on CM5) and H10 (no VAD in the mic; RP2350
+draws 39–51 mW at full speed; no RP2350 wake-word port). Owner: voice must drive the tablet.
+
+**Decision.**
+- **P1 is reworded:** ambient modes on the RP2350 are instant; Linux resumes from off/hibernate in
+  seconds. `sleep_ladder` R2 (15 mW s2idle, 0.3 s) is `null`.
+- **Voice button (always available, zero standby cost).** Press-and-hold starts RP2350 capture into
+  PSRAM immediately while the CM5 boots; Linux transcribes the buffer, so no words are lost to boot
+  time. The mic is live only while held.
+- **Hands-free wake word is opt-in**, shown with its measured battery cost. It runs on the CM5 when
+  Linux is up (free) and on the RP2350 when Linux is off (power measured on the bench before any
+  claim). A dedicated low-power voice chip is the V2 path if the RP2350 cost is too high.
+- Two MEMS mics, speaker with echo-cancel reference, hardware mute switch.
+
+**Still assumes.** Local STT/TTS and barge-in run on the CM5; cloud LLMs over Wi-Fi/tethering.
+
+**Open design item.** Capture-while-booting needs the microphones on the RP2350 (PIO I²S/PDM input)
+while the CM5 is off, yet the CM5 needs the same audio when it is up. Decide at schematic capture
+between (a) mics always on the RP2350, which streams audio to the CM5 (e.g. as a USB audio device),
+and (b) a mic-bus switch shared like the display bus. (a) avoids a second mux and keeps one owner.
+
+---
+
+## ADR-037 — Haptics are core: one LRA plus instant typewriter feedback (2026-10-21)
+
+Written 2026-10-21 16:37 UTC in Claude Code by anthropic/claude-opus-5-5.
+
+**Decision.** People type on the glass and on the thumb-keyboard grip as well as external keyboards,
+so the DRV2605L + LRA is a core part, frame-mounted (not on the glass). Every keystroke fires a haptic
+pulse and an optional typewriter sound at key-down, independent of the panel refresh, so feedback
+lands long before the E-Ink update and masks its latency. The quad piezo array stays DNP (ADR-020).
+
+---
+
+## ADR-038 — Standalone GNSS on the co-processor (supersedes ADR-003) (2026-10-21)
+
+Written 2026-10-21 16:37 UTC in Claude Code by anthropic/claude-opus-5-5.
+
+**Trigger.** GNSS lived inside the LTE modem, which ADR-034 defers.
+
+**Decision.** A **u-blox MAX-M10S** (datasheet: 25 mW continuous tracking, integrated LNA for passive
+antennas, UART/I²C, hardware backup and power-save modes) on an RP2350 UART behind a load switch, with
+a passive GNSS antenna at the top edge. The RP2350 owns it so the LoRa node has position with Linux off.
+Receive-only: no intentional-radiator certification.
+
+---
+
+## ADR-039 — Enclosure, heat and ingress for V1 (2026-10-21)
+
+Written 2026-10-21 16:37 UTC in Claude Code by anthropic/claude-opus-5-5.
+
+**Decision.** PA12 (SLS/MJF) for prototypes, PC/ABS for production, aluminium midframe and graphite
+spreader inside; antennas behind plastic. A power governor caps sustained CM5 load at what the shell
+sheds (value from the bench). Ingress target **IP54 for V1**, IP67 for V2 once every aperture has a
+named sealing part. The outline is not frozen until the Kaleido 4 drawing exists (ADR-032).
+
+**Because.** AUDIT 6 H8/H19/H20: the CM5 draws ~7 W under load, PA12 cannot spread it, and ~24
+apertures have no sealing part.
+
+---
+
+## ADR-040 — The cell is chosen before the pack size is claimed (2026-10-21)
+
+Written 2026-10-21 16:37 UTC in Claude Code by anthropic/claude-opus-5-5.
+
+**Decision.** LiFePO4 stays (longevity, thermal safety). `battery_wh.lifepo4` is `null` until a buyable
+cell's datasheet is in hand; the Li-ion figure is deleted. Expect ~20–22 Wh in the current envelope
+(AUDIT 6 X7) unless the device gets thicker. Runtime claims are re-derived from the chosen cell.
+
+---
+
+## ADR-041 — Solar promises an outdoor top-up only (2026-10-21)
+
+Written 2026-10-21 16:37 UTC in Claude Code by anthropic/claude-opus-5-5.
+
+**Decision.** The bezel strip is crystalline silicon; at 500 lux it yields ~40–80 µW (AUDIT 6 H1). The
+indoor net-positive claim (gate G4) is withdrawn. The product claims only that the strip tops up the
+idle co-processor outdoors (Phase 14 derives this from outdoor insolation).
+
+---
+
+## ADR-042 — USB on the CM5: no external host controller; PCIe goes to NVMe (2026-10-21)
+
+Written 2026-10-21 16:37 UTC in Claude Code by anthropic/claude-opus-5-5.
+
+**Decision.** The CM5 has two native USB 3.0 ports and one USB 2.0 port (CM5 datasheet §2.4), so the
+VL805 / ASM1042A host controller is removed and the single PCIe Gen 2 lane goes to the M.2 NVMe socket.
+
+---
+
+## ADR-043 — Verification that reaches reality, and the build order (2026-10-21)
+
+Written 2026-10-21 16:37 UTC in Claude Code by anthropic/claude-opus-5-5.
+
+**Decision.**
+- Phase 14 checks the charger's VREG range against the battery charge limit (added with ADR-035).
+- Next gates, in order: KiCad ERC in CI that fails when ERC cannot run; an LCSC C-number → MPN resolver
+  for the production BOM.
+- Build order: dev-kit bench → power-only board (EVT-0: charger, protector, gauge, rails) → RP2350
+  minimum system → CM5 carrier. Power carries the safety risk and does not wait on the panel.
+- `HANDOFF_TO_FABLE.md` moves to `90-history/`; `INDEX.md` gets a generator or stops being called
+  generated.
+- Contact E Ink for the Kaleido 4 datasheet, drawing and controller reference under NDA (ADR-032).

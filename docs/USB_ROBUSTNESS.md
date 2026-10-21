@@ -1,10 +1,11 @@
 # USB_ROBUSTNESS.md — Every Way USB-C Fails, and What the Hardware Does About It
 
 Written 2026-10-20 13:05 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017
+Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
 
 The quoted failure is the most common one in the field: a USB-C device with **no 5.1 kΩ Rd pull-downs**
 looks like nothing at all to a Mac's Thunderbolt port, so a C-to-C cable "doesn't work" and the user
-concludes the device is dead. SolarDeck has two C ports and a Hotpack bus, so it can hit this six
+concludes the device is dead. SolarDeck has two C ports (and, in V2, a Hotpack bus — ADR-034), so it can hit this six
 different ways. This is the taxonomy and the rules that close each one.
 
 Machine-readable constraints: `docs/spec_values.json` → `usb`.
@@ -51,7 +52,7 @@ it. (ESD on CC is handled inside the CC controller.)
 **R4 — Advertise, then respect.** TPS25750 reads the host's advertised current and the firmware must
 clamp charging to it. Never assume 3 A.
 
-**R5 — Every Hotpack repeats R1 and R2.** A Hotpack is a USB-C sink with its own CC pins; a missing Rd
+**R5 — Every Hotpack repeats R1 and R2 (Hotpacks are V2, ADR-034).** A Hotpack is a USB-C sink with its own CC pins; a missing Rd
 pair in a $20 accessory reproduces failure 1 for the whole tablet. Hotpack spec includes the two
 resistors and the dead-battery check.
 

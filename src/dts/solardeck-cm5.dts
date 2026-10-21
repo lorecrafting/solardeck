@@ -7,11 +7,10 @@
  * NOT YET VALID FOR CM5. This overlay was written for the CM4 (BCM2711). On the CM5, GPIO, SPI, I2C
  * and I2S are provided by the RP1 I/O controller, so the brcm,pins pinctrl below and the target
  * labels must be ported to the CM5/RP1 base tree before it is compiled. Known defects to fix in the
- * same pass: AUDIT 6 H11 (audio clock master, SD_MODE on PCM_CLK, charger node binding).
+ * same pass: AUDIT 6 H11 (audio clock master, SD_MODE on PCM_CLK).
  * The display controller node is deliberately absent: the Kaleido 4 controller is TBD (ADR-032).
  *
  * Configures:
- *  - TI BQ25895 5A LiFePO4 PMIC on I2C1 (0x6A)
  *  - TI INA3221 3-Channel System Power Ammeter on I2C1 (0x40)
  *  - Wacom EMR Digitizer on I2C1 (0x09)
  *  - MAX98357A I2S Class-D Audio Amplifier on I2S
@@ -48,15 +47,8 @@
             #address-cells = <1>;
             #size-cells = <0>;
 
-            /* Texas Instruments BQ25895 5A Fast Charger */
-            bq25895: charger@6a {
-                compatible = "ti,bq25895";
-                reg = <0x6a>;
-                ti,battery-regulation-voltage = <3650000>; /* 3.65V strict LiFePO4 cutoff */
-                ti,charge-current = <3000000>;             /* 3.0A max charge current */
-                ti,termination-current = <200000>;         /* 200mA termination */
-                status = "okay";
-            };
+            /* No charger node: the BQ25798 is on the RP2350's always-on bus and Linux never binds or
+             * writes it (ADR-035). Charge state reaches Linux through the RP2350 telemetry bridge. */
 
             /* Texas Instruments INA3221 3-Channel Power Monitor */
             ina3221: power-monitor@40 {

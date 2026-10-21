@@ -18,8 +18,12 @@ extern "C" {
 #define PIN_EN_5V_SYS           14   // TPS61088 5V System Boost Enable
 #define PIN_GPIO17_WAKE         15   // CM5 S2idle Wake Trigger (<300ms)
 #define PIN_GPIO16_PWRFAIL      16   // CM5 Emergency Powerfail Flush (<150ms)
-#define PIN_CHEM_SEL            18   // Hardware Chem Sel (Low: LiFePO4 3.65V, High: Li-ion 4.2V)
 #define PIN_SOLAR_ADC           26   // ADC Channel 0 for Solar Panel Voc/Vmpp
+
+// ADR-035: BQ25798 CE is active-low and pulled HIGH in hardware, so the charger is off at power-up.
+// Firmware may drive CE low only once VREG reads back as this value. Must equal
+// spec_values.battery.charge_limit_v (Phase 14 checks it).
+#define SD_CHARGE_LIMIT_MV      3600
 
 // System States
 typedef enum {
@@ -40,16 +44,17 @@ typedef struct {
     uint16_t vbat_mv;          // Battery voltage (mV)
     uint16_t solar_voc_mv;     // Solar panel open-circuit voltage (mV)
     uint16_t solar_vmpp_mv;    // Target MPP voltage (approx 78% Voc)
-    bool is_lifepo4;           // Chem select (true = LiFePO4)
     uint32_t last_wake_elapsed_us; // Wake latency measurement
+    uint16_t charger_vreg_mv;  // VREG read back from the charger; 0 until written (ADR-035)
 } solardeck_ctx_t;
 
 // Core Functions
-void solardeck_sm_init(solardeck_ctx_t *ctx, bool chem_sel_pin);
+void solardeck_sm_init(solardeck_ctx_t *ctx);
 void solardeck_sm_transition(solardeck_ctx_t *ctx, solardeck_state_t next_state);
 void solardeck_sample_solar_mppt(solardeck_ctx_t *ctx, uint16_t measured_voc_mv);
 bool solardeck_trigger_s2idle_wake(solardeck_ctx_t *ctx);
 bool solardeck_check_power_thresholds(solardeck_ctx_t *ctx, uint16_t vbat_mv);
+bool solardeck_charge_enable_allowed(const solardeck_ctx_t *ctx);
 
 #ifdef __cplusplus
 }

@@ -163,7 +163,7 @@ ACTION=="add", SUBSYSTEM=="input", ATTRS{name}=="*Wacom*", ENV{LIBINPUT_CALIBRAT
 KERNEL=="ttyAMA0", GROUP="dialout", MODE="0660"
 KERNEL=="ttyAMA1", GROUP="dialout", MODE="0660"
 
-# TI BQ25895 & INA3221 I2C permissions
+# CM5 host I2C bus permissions (the charger is on the RP2350 bus and is never driven by Linux, ADR-035)
 KERNEL=="i2c-1", GROUP="i2c", MODE="0660"
 EOF
 

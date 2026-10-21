@@ -5,11 +5,11 @@
 
 #include "solardeck_state.h"
 
-void solardeck_sm_init(solardeck_ctx_t *ctx, bool chem_sel_pin) {
+void solardeck_sm_init(solardeck_ctx_t *ctx) {
     if (!ctx) return;
 
     ctx->current_state = SOLAR_STATE_COLD_BOOT;
-    ctx->is_lifepo4 = !chem_sel_pin; // Low = LiFePO4 (safe default)
+    ctx->charger_vreg_mv = 0; // charger stays held off by its CE pull-up until VREG is confirmed
     ctx->tmux_cm5_selected = false;
     ctx->sys_5v_enabled = false;
     ctx->wake_pin_asserted = false;
@@ -92,7 +92,7 @@ bool solardeck_check_power_thresholds(solardeck_ctx_t *ctx, uint16_t vbat_mv) {
 
     // LiFePO4 cutoff: 2900 mV (alarm). The PCM hard-trips at 2500 mV; 2.80-2.90V is where
     // the SoC has enough headroom left to write state and enter the deep-sleep path.
-    uint16_t cutoff_mv = ctx->is_lifepo4 ? 2900 : 3400;
+    const uint16_t cutoff_mv = 2900; // LiFePO4 is the only chemistry (ADR-035)
 
     if (vbat_mv <= cutoff_mv) {
         solardeck_sm_transition(ctx, SOLAR_STATE_LOW_BATT_ALARM);
@@ -100,4 +100,10 @@ bool solardeck_check_power_thresholds(solardeck_ctx_t *ctx, uint16_t vbat_mv) {
     }
 
     return false;
+}
+
+// ADR-035: release the charger's CE pin only after VREG reads back at the LiFePO4 limit. Any other
+// value (0 = never written; ~4200 = a Li-ion-class POR default) keeps charging off.
+bool solardeck_charge_enable_allowed(const solardeck_ctx_t *ctx) {
+    return ctx && ctx->charger_vreg_mv == SD_CHARGE_LIMIT_MV;
 }

@@ -16,8 +16,8 @@
     8.5
   ],
   "battery_wh": {
-    "lifepo4": 32,
-    "liion": 37
+    "lifepo4": null,
+    "_comment": "ADR-040: null until a buyable cell's datasheet exists; Li-ion figure deleted (LiFePO4 only)."
   },
   "solar_w": {
     "bezel_strip": 0.15,
@@ -64,7 +64,7 @@
   "standout_pillars": 7,
   "engineering_pillars": 9,
   "verification_phases": 16,
-  "core_bom_line_items": 62,
+  "core_bom_line_items": 55,
   "schematic_coverage_baseline": 40,
   "pcb_thickness_mm": 1.0,
   "rear_wall_mm": 1.5,
@@ -75,7 +75,7 @@
     "product_pillars": [
       {
         "id": "P1",
-        "name": "Dual-brain instant handoff (<400 ms glass-to-glass)",
+        "name": "Dual-brain handoff: instant ambient modes on the RP2350, Linux resume in seconds (ADR-036)",
         "status": "aspirational"
       },
       {
@@ -85,7 +85,7 @@
       },
       {
         "id": "P3",
-        "name": "Sunlight sovereignty and perpetual indoor harvest",
+        "name": "Sunlight-readable; solar tops up the idle co-processor outdoors (ADR-041)",
         "status": "aspirational"
       },
       {
@@ -95,7 +95,7 @@
       },
       {
         "id": "P5",
-        "name": "Sovereign field hardening: airgap, LoRa mesh, IP67, rain-lock",
+        "name": "Field hardening: airgap, LoRa mesh, GNSS, IP54 (V1) / IP67 (V2), rain-lock",
         "status": "aspirational"
       },
       {
@@ -105,7 +105,7 @@
       },
       {
         "id": "P7",
-        "name": "Sovereign voice agent (acoustic barge-in, touch-to-talk, local-first STT/TTS)",
+        "name": "Voice-first control: hold-to-talk button, opt-in hands-free wake word, barge-in (ADR-036)",
         "status": "aspirational"
       }
     ],
@@ -425,38 +425,38 @@
     "hotpacks": [
       {
         "id": "H1",
-        "name": "Doomsday sky-scan and SIGINT (passive all-band receiver)",
-        "status": "specified"
+        "name": "Doomsday sky-scan and SIGINT (passive all-band receiver) (V2, ADR-034)",
+        "status": "aspirational"
       },
       {
         "id": "H2",
-        "name": "Tactical dual-mesh and HF shortwave transceiver",
-        "status": "specified"
+        "name": "Tactical dual-mesh and HF shortwave transceiver (V2, ADR-034)",
+        "status": "aspirational"
       },
       {
         "id": "H3",
-        "name": "CBRN and search-and-rescue environmental pack",
-        "status": "specified"
+        "name": "CBRN and search-and-rescue environmental pack (V2, ADR-034)",
+        "status": "aspirational"
       },
       {
         "id": "H4",
-        "name": "Precision RTK centimetre survey pack",
-        "status": "specified"
+        "name": "Precision RTK centimetre survey pack (V2, ADR-034)",
+        "status": "aspirational"
       },
       {
         "id": "H5",
-        "name": "15 g thermal night-vision and electrical inspection pack",
-        "status": "specified"
+        "name": "15 g thermal night-vision and electrical inspection pack (V2, ADR-034)",
+        "status": "aspirational"
       },
       {
         "id": "H6",
-        "name": "3GPP NTN satellite (Skylo) transceiver and global SAR",
-        "status": "specified"
+        "name": "3GPP NTN satellite (Skylo) transceiver and global SAR (V2, ADR-034)",
+        "status": "aspirational"
       },
       {
         "id": "H7",
-        "name": "Sub-surface acoustic and perimeter geophone module",
-        "status": "specified"
+        "name": "Sub-surface acoustic and perimeter geophone module (V2, ADR-034)",
+        "status": "aspirational"
       }
     ],
     "accessories": [
@@ -489,7 +489,7 @@
     "acceptance_gates": [
       {
         "id": "G1",
-        "name": "S2idle to active keystroke response < 350 ms",
+        "name": "Linux resume to first keystroke (target set from the dev-kit bench; ADR-036)",
         "status": "aspirational"
       },
       {
@@ -504,7 +504,7 @@
       },
       {
         "id": "G4",
-        "name": "Net-positive energy at 500 lux",
+        "name": "Outdoor solar top-up of RP2350 idle (indoor 500-lux claim withdrawn, ADR-041)",
         "status": "aspirational"
       },
       {
@@ -544,7 +544,7 @@
       },
       {
         "id": "G12",
-        "name": "Sleep-ladder energy & resume integrity (R2 S2idle 15mW/0.3s, R3 hibernate 0W, R4 keep-alive <0.2mW)",
+        "name": "Sleep-ladder energy & resume integrity (R3 hibernate, R4 keep-alive <0.2mW; R2 null per ADR-036)",
         "status": "specified"
       }
     ]
@@ -585,8 +585,8 @@
     "unpowered_months": 12,
     "drop_orientations": 26
   },
-  "bom_total_low": 576.05,
-  "bom_total_high": 578.05,
+  "bom_total_low": 497.55,
+  "bom_total_high": 499.55,
   "cm5": {
     "_comment": "CM5 pivot (ADR-031, 2026): V1 moves from CM4 8 GB/32 GB eMMC to CM5 16 GB/64 GB eMMC wireless (CM5116064 / SC1608). 16 GB DRAM is the LLM-resident assumption: the 1-3B local model tier runs in RAM without swap/heritage modes. eMMC 64 GB holds the base image, reader cache, and full offline corpus. Wireless variant carries the Wi-Fi/BT that CM4 needed a USB dongle for — one less peripheral spine. The BOM compute row is priced at price_usd; Phase 14 totals were re-derived on 2026-10-21.",
     "sku": "CM5116064",
@@ -644,7 +644,6 @@
       "RP2350 (Raspberry Pi)"
     ],
     "active_confirmed": [
-      "BQ25895",
       "CM5"
     ],
     "strategy": "socketed module + published carrier pinout + 3 spare modules at build time"
@@ -655,8 +654,9 @@
     "enroll_sample_sentences": 3,
     "d_vector_dims": 256,
     "cosine_threshold": 0.78,
-    "verification_tier": "rp2350,wake-word,14mW",
-    "verification_before_cm4_wake": true
+    "verification_tier": "rp2350, wake-word; power TBD on the bench (ADR-036)",
+    "verification_before_cm5_wake": true,
+    "wake_trigger": "button (always available); hands-free wake word opt-in with measured battery cost (ADR-036)"
   },
   "reader": {
     "_comment": "SOFTWARE_SPEC §55 Zero-Kernel Reader Tier: pre-rendered page-flip engine; the RP2350 flips, it never renders PDFs. Page geometry and flip time are null until the Kaleido 4 datasheet (ADR-032).",
@@ -678,14 +678,14 @@
     "text_reflow_status": "aspirational"
   },
   "sleep_ladder": {
-    "_comment": "Thresholded sleep ladder, SOFTWARE_SPEC.md 3.3.3. E=modelled on measurables; re-derive on dev kit.",
-    "r2_s2idle_mw": 15,
-    "r2_resume_s": 0.3,
-    "r2_idle_wh_per_day": 0.36,
+    "_comment": "Thresholded sleep ladder, SOFTWARE_SPEC.md 3.3.3. E=modelled on measurables; re-derive on dev kit. R2 is null: the CM5 has no RAM-retaining low-power state (AUDIT 6 X4, ADR-036).",
+    "r2_s2idle_mw": null,
+    "r2_resume_s": null,
+    "r2_idle_wh_per_day": null,
     "r3_hibernate_image_write_wh_nvme": 0.005,
     "r3_hibernate_image_write_wh_emmc": 0.02,
-    "r3_breakeven_min_nvme": 30,
-    "r3_breakeven_min_emmc": 90,
+    "r3_breakeven_min_nvme": null,
+    "r3_breakeven_min_emmc": null,
     "r3_resume_s": 6,
     "r4_keepalive_mw": 0.2,
     "solar_strip_wh_per_day": 0.45
@@ -722,5 +722,33 @@
     "powercycle_hold_ms": 500,
     "baseband_retry_polls": "N consecutive LoRa RSSI polls below baseline, modelled"
   },
-  "_comment_adr032": "ADR-032: ppi, display_active_mm, panel_module_outline_mm, display_stack_mm, epdc_spi_mhz, refresh timings and reader page geometry are null until E Ink publishes the 10.3\" Kaleido 4 datasheet. Gates skip them loudly; they never fall back to stand-in values."
+  "_comment_adr032": "ADR-032: ppi, display_active_mm, panel_module_outline_mm, display_stack_mm, epdc_spi_mhz, refresh timings and reader page geometry are null until E Ink publishes the 10.3\" Kaleido 4 datasheet. Gates skip them loudly; they never fall back to stand-in values.",
+  "battery": {
+    "chemistry": "LiFePO4",
+    "charge_limit_v": 3.6,
+    "_comment": "ADR-035; AGENTS §4.1 hard ceiling is 3.65 V."
+  },
+  "charger": {
+    "part": "BQ25798",
+    "vreg_min_v": 3.0,
+    "vreg_max_v": 18.8,
+    "vreg_step_mv": 10,
+    "source": "datasheet: TI BQ25798 VREG_RANGE (ADR-035)"
+  },
+  "power_bank": {
+    "otg_max_a": 2.0,
+    "_comment": "ADR-035 cap; aspirational until measured with the protector in circuit."
+  },
+  "gnss": {
+    "part": "u-blox MAX-M10S",
+    "tracking_mw": 25,
+    "owner": "RP2350 UART",
+    "source": "datasheet: u-blox MAX-M10S (ADR-038)"
+  },
+  "ingress": {
+    "v1_target": "IP54",
+    "v2_target": "IP67",
+    "status": "aspirational",
+    "_comment": "ADR-039"
+  }
 }

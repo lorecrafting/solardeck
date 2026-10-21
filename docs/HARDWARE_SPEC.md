@@ -2,6 +2,7 @@
 
 Written 2026-10-18 17:38 UTC in the Pi harness by antigravity/gemini-3.8-flash
 Revised 2026-10-21 15:58 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
+Revised 2026-10-21 16:41 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
 
 Detailed hardware architecture, component selection, bus topology, antenna engineering, and electrical requirements for the custom carrier board and mechanical enclosure.
 
@@ -16,9 +17,9 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
                                                         │ (MIPI DSI / Parallel / SPI)
                                                         │
 ┌───────────────────────────┐                 ┌─────────┴─────────┐
-│  TI BQ25895 BUCK CHARGER  │                 │ K4 DISPLAY CTRL   │
+│  TI BQ25798 BUCK CHARGER  │                 │ K4 DISPLAY CTRL   │
 │  • WCH CH224K USB-PD Sink │                 └─────────▲─────────┘
-│  • 1S LiPo/LiFePO4 Pack   │                           │
+│  • 1S LiFePO4 Pack        │                           │
 └─────────────┬─────────────┘                 ┌─────────┴─────────┐
               │ VBAT Rail                     │ TI TMUX1575 MUX   │ (8-Ch SPDT Bus Isolation)
               ▼                               └────▲─────────▲────┘
@@ -45,16 +46,14 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
                                           │ Native USB OTG    │ PCIe Gen 2 x1
                                           ▼                   ▼
                             ┌─────────────────────┐   ┌───────────────────────────┐
-                            │ USB-C PORT 1 (DRP)  │   │ DEDICATED USB HOST / HUB  │
-                            │ • Driverless Display│   │ • VIA VL805 / ASM1042A or │
-                            │ • rpiboot Recovery  │   │   Microchip USB2514B Hub  │
-                            └─────────────────────┘   └─────────────┬─────────────┘
-                                                                    │
-                                      ┌─────────────────────────────┴─────────────┐
+                            │ USB-C PORT 1 (DRP)  │   │ M.2 KEY-M NVMe SOCKET     │
+                            │ • Driverless Display│   │ (CM5 native USB 3 feeds   │
+                            │ • rpiboot Recovery  │   │  the ports; ADR-042)      │
+                            └─────────────────────┘   └───────────────────────────┘
+
+                                      ┌───────────────────────────────────────────┐
                                       │  PERIPHERALS & NETWORKING                 │
-                                      │  • Quectel EG25-G 4G LTE Modem (M.2)      │
-                                      │    (Includes Integrated Qualcomm GNSS)    │
-                                      │  • Onboard MFF2 eSIM (SGP.22 eUICC, TBD)  │
+                                      │  • u-blox MAX-M10S GNSS (RP2350 UART)     │
                                       │  • Semtech SX1262 LoRa 915MHz (RP2350 SPI)│
                                       │  • Knowles I2S MEMS Mic Array             │
                                       │  • Maxim/ADI MAX98357A 1W Speaker Amp     │
@@ -97,12 +96,12 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
       * **Bank A (0x010000 – 0x40FFFF, 4 MB):** Active golden firmware partition.
       * **Bank B (0x410000 – 0x80FFFF, 4 MB):** Staged OTA / developer test firmware partition.
       * **Data & Telemetry Pool (0x810000 – 0xFFFFFF, 8 MB):** Non-volatile shadow sensor barograph and telemetry logs.
-      * **Hardware Watchdog Fallback:** The bootloader boots into the target bank with a **5-second hardware watchdog window**. Newly flashed firmware must execute a self-test and assert `WATCHDOG_KICK`. If the watchdog trips twice without a kick, the bootloader automatically reverts to the previous known-good golden bank, guaranteeing the power arbiter and S2idle wake logic cannot be bricked.
+      * **Hardware Watchdog Fallback:** The bootloader boots into the target bank with a **5-second hardware watchdog window**. Newly flashed firmware must execute a self-test and assert `WATCHDOG_KICK`. If the watchdog trips twice without a kick, the bootloader automatically reverts to the previous known-good golden bank, guaranteeing the power arbiter and wake logic cannot be bricked.
   * **External High-Speed Memory:** Paired with an **8MB QSPI PSRAM chip** (APMemory `APS6404L` / Winbond, $0.75).
   * **The 5 RP2350 Superpowers:**
-    1. **Full-Screen Autonomous Framebuffering (30ms Zen Reader):** Holds two full-screen framebuffers (frame size TBD until the Kaleido 4 resolution is published, ADR-032). Pre-caches eBook pages and executes sub-30ms paper-fast page turns without waking the CM5, dropping reading power to **4.5 mW (300+ days battery life)**.
-    2. **Perpetual Standalone LoRa Meshtastic Mesh Repeater:** Dedicated Semtech SX1262 LoRa SPI lines connect directly to the RP2350, allowing the co-processor to route mesh packets autonomously at **12–15 mW**, transforming SolarDeck into an 80+ day off-grid emergency mesh node.
-    3. **Hardware Power Master & Anti-Brownout Shield:** Continuously monitors the TI BQ27441 fuel gauge; blocks CM5 boot if battery voltage is $<3.0\text{V}$, preventing inrush brownouts and eMMC filesystem corruption.
+    1. **Full-Screen Autonomous Framebuffering (30ms Zen Reader):** Holds two full-screen framebuffers (frame size TBD until the Kaleido 4 resolution is published, ADR-032). Pre-caches eBook pages and executes sub-30ms paper-fast page turns without waking the CM5, dropping reading power to **4.5 mW** (runtime TBD until the cell is chosen, ADR-040).
+    2. **Perpetual Standalone LoRa Meshtastic Mesh Repeater:** Dedicated Semtech SX1262 LoRa SPI lines connect directly to the RP2350, allowing the co-processor to route mesh packets autonomously at **12–15 mW**, transforming SolarDeck into an off-grid emergency mesh node (endurance TBD until the cell is chosen, ADR-040).
+    3. **Hardware Power Master & Anti-Brownout Shield:** Continuously monitors the TI BQ27Z561-R2 fuel gauge (ADR-035); blocks CM5 boot if battery voltage is $<3.0\text{V}$, preventing inrush brownouts and eMMC filesystem corruption.
     4. **Shadow Environmental Telemetry Logger:** Samples BMP390 barometric trends and TMP112 thermals every 60 seconds into a circular PSRAM buffer; dumps a 7-day weather barograph to Linux upon wake in 2ms.
     5. **Autonomous Bezel Touch Gestures:** Scans capacitive side-bezel touch traces at 10 Hz (15 µA) for instant page-flip navigation.
 * **Dual-Master Display Bus Multiplexer:** **2 × Texas Instruments TMUX1575** (each a 4-channel SPDT bus switch, giving 8 channels). TMUX1575 is only available in the 16-bump DSBGA (YCJ) package. See `docs/90-history/decisions.md` ADR-004.
@@ -131,7 +130,7 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
     * The V1 PCBA integrates a balanced internal copper thermal dissipation plane that routes heat from the CM5 CPU shield directly beneath the display backplane.
     * During sustained high-motion work (rapid pagination, dither-heavy imaging), the thermal daemon (`solardeck-thermal-boostd`) uses waste CPU heat to hold the backplane at **30°C–33°C** (monitored by the panel TMP112 sensor), cutting motion trails without dedicated heater elements.
 * **EPDC (Electronic Paper Display Controller):** The Kaleido 4 display controller (TBD, ADR-032). The IT8951 cannot drive Kaleido 4; it appears in this spec only as the bench stand-in's controller (ADR-025).
-  * *SoC-Direct Drive Architectural Evaluation:* While driving E-Ink directly from an SoC's integrated controller (e.g. RK3566 `rockchip-ebc`) eliminates an $18 chip, it creates fatal system lock-in: the display cannot be driven when the main CPU is powered down to 0.000W. Retaining a dedicated EPDC with a switchable SPI host (CM5 for compute, RP2350 for Zen reading) is mandatory to enable both the **universal modular compute socket** and the **RP2350 dual-brain co-processor** (which commands the display over SPI to achieve 160+ day desk-clock and 300+ day reading lifespans).
+  * *SoC-Direct Drive Architectural Evaluation:* While driving E-Ink directly from an SoC's integrated controller (e.g. RK3566 `rockchip-ebc`) eliminates an $18 chip, it creates fatal system lock-in: the display cannot be driven when the main CPU is powered down to 0.000W. Retaining a dedicated EPDC with a switchable SPI host (CM5 for compute, RP2350 for Zen reading) is mandatory to enable both the **universal modular compute socket** and the **RP2350 dual-brain co-processor** (which commands the display over SPI for the desk-clock and reader modes; runtimes TBD until the cell is chosen, ADR-040).
 * **reMarkable-Grade Stylus Digitizer & Tactile Paper-Feel:**
   * **Digitizer Sensor:** Genuine **Wacom EMR (Electro-Magnetic Resonance)** sensor board laminated behind the e-paper panel (240 Hz sampling rate, 4,096 levels of pressure and tilt, `wacom_w9013` driver).
   * **Magnetic Shielding & Flux Absorption:** Wacom EMR is inherently sensitive to external magnetic fields (~560 kHz resonant coil). To prevent coordinate warping or pen drift from the SnapDeck keyboard pogo magnets, backpack dock, or internal speaker:
@@ -139,16 +138,16 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
     2. All chassis docking neodymium magnets (N52) are positioned strictly outside the active writing perimeter with a minimum **14mm mechanical keep-out zone** into the outer bezel margin.
   * **Tactile Paper Friction:** The front cover lens uses **chemically etched anti-glare matte glass** (15% haze). When paired with soft elastomer or felt-composite nibs (Staedtler Noris Digital, Lamy AL-star with PC/EL nibs, or genuine reMarkable Marker felt nibs), the friction coefficient matches real 80gsm paper ($\mu = 0.18–0.22$), producing the authentic acoustic pencil "scritch-scratch" sound without slippery plastic glide.
   * **Predictive 3-Stage Wacom EMR Hover Proximity Power Gating:**
-    1. *Stage 1 (Reading / Rest >15mm):* System rests in S2idle suspend (15 mW) or RP2350 Zen reader mode (4.5 mW). Display is static (0 mW).
-    2. *Stage 2 (Hover Approach 10–15mm):* The Wacom resonant coil detects pen proximity and fires the hardware interrupt `PEN_PROX_INT`. In **< 2 milliseconds**, the system wakes to "Inking Standby": Core 0 runs throttled at 600 MHz (Cores 1–3 stay OFF) and the display controller primes its 1-bit Direct Update (DU) waveform buffer. Total standby power is ~350 mW—pre-armed before the pen even touches glass.
+    1. *Stage 1 (Reading / Rest >15mm):* Linux is idle or off (the CM5 has no RAM-retaining sleep, ADR-036) and the RP2350 holds Zen reader mode (4.5 mW). Display is static (0 mW).
+    2. *Stage 2 (Hover Approach 10–15mm):* The Wacom resonant coil detects pen proximity and fires the hardware interrupt `PEN_PROX_INT`. When Linux is running, within **< 2 milliseconds** it enters "Inking Standby" (when Linux is off, the RP2350 inks directly, §2.23): Core 0 runs throttled at 600 MHz (Cores 1–3 stay OFF) and the display controller primes its 1-bit Direct Update (DU) waveform buffer. Total standby power is ~350 mW—pre-armed before the pen even touches glass.
     3. *Stage 3 (Tip Contact & Active Drawing):* Tip switch closes (`BTN_TOUCH = 1`). Coordinates bypass the window compositor directly into the display controller's partial line buffer (<18ms tip-to-ink latency, ~600 mW active power on Linux, or <15ms and ~220 mW when driven directly by the RP2350).
-    4. *Stage 4 (Pen Lift & Retreat >500ms):* Stroke vector is committed to disk; system immediately drops back to 15 mW / 4.5 mW suspend.
+    4. *Stage 4 (Pen Lift & Retreat >500ms):* Stroke vector is committed to disk; system immediately drops back to Linux idle or the 4.5 mW RP2350 reader mode.
 * **Touch Panel & Hardware-Enforced Zero-Latency Palm Rejection:**
   * **Sensor:** Capacitive multi-touch glass overlay with chemically etched anti-glare matte finish.
   * **Direct Hardware Proximity Blanking Gate:** When the battery-free Wacom stylus approaches within **10–14 mm** of the glass, the Wacom digitizer asserts **`PEN_PROX_INT`** LOW. This signal is routed directly to a hardware logic gate on the Goodix GT911 touch interrupt line, **hardware-suppressing all capacitive touch coordinates** before they reach the CPU. The user can rest their entire hand and forearm on the glass while writing with 100% immunity to stray touch events, with zero software latency or CPU overhead.
 * **Haptic Engine — Wideband LRA by Default, Piezo Array as DNP Option (ADR-020):**
   * **Why the default changed:** The quad-corner piezo array (4× TDK PowerHap + 2× Boréas BOS1901) is the best tactile experience in this design and the worst 30-year bet in it. Multi-layer ceramics are adhesively bonded to the glass perimeter — the highest-strain location in a drop — so the array is four crack sites, each of which can debond into a rattle. Age, thermal cycling, and a single 1.22 m corner drop all target exactly that joint (§7.6, `LONGEVITY_30Y.md`).
-  * **Base build:** Single TI **DRV2605L** wideband haptic driver + **Vybronics 8 mm Z-axis LRA** ($2.35), chassis-mounted with the actuator mass on the metal frame rather than the glass. The daemon still shapes per-keystroke waveforms, and the LRA mass is a serviceable part.
+  * **Base build:** Single TI **DRV2605L** wideband haptic driver + **Vybronics 8 mm Z-axis LRA** ($2.35), chassis-mounted with the actuator mass on the metal frame rather than the glass. This is a core part (ADR-037): every keystroke (glass, thumb-keyboard grip or external keyboard) fires a haptic tap and an optional typewriter sound at key-down, independent of and before the E-Ink draw, which masks the panel latency. The daemon shapes per-keystroke waveforms, and the LRA mass is a serviceable part.
   * **Retained option (DNP):** The PCBA keeps the full piezo footprint — dual **BOS1901CD-TR** CapDrive drivers ($1.45 each, >80% energy recovery, 190 Vpp from 3.3 V) and 4× **TDK PowerHap 0904H014V060** ($1.25 each). Populate it for a demonstration unit or a buyer who explicitly accepts a 10-year glass-bond service life.
   * **What the option buys:** Sub-1.0 ms acceleration with >5 G peak and 15 µm displacement (magnetic motors need 12–20 ms to overcome inertia), plus spatial $(X,Y)$ weighting across the four corners so kinetic displacement concentrates under the touching fingertip:
     $$w_i = \frac{1 / d_i^\alpha}{\sum_j (1 / d_j^\alpha)}$$
@@ -161,40 +160,37 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
 
 ### 2.3 Power Subsystem & Multi-Tier Voltage Regulation
 * **Battery Chemistry & Secondary Hardware Protection:**
-  * **Chemistry:** **1S Li-ion / LiPo** (3.7V nominal, 4.2V peak) or **1S2P LiFePO4** (3.2V nominal, 3.65V peak).
-  * **Target Capacity:** 8,000 to 10,000 mAh (26–32 Wh LiFePO4 / 30–37 Wh Li-ion) pouch pack (airline-compliant <100Wh).
-  * **Physical Battery Chemistry Strap (`CHEM_SEL` LiFePO4 vs. Li-ion Hardware Lock):**
-    * A dedicated 3-pin solder-bridge / sub-miniature slide switch (**C&K JS102011SAQN**, $0.35) located on the PCBA under the battery cover rigidly straps the hardware charging ceiling:
-      * **Position 1 (GND / LiFePO4 Mode):** Hardwires the BQ25895 resistor network / default register pin to clamp maximum charge voltage strictly to **3.60V / 3.65V**. Prevents destructive 4.2V overcharging even if Linux OS, config files, or I2C bus are corrupted.
-      * **Position 2 (VDD / Li-ion Mode):** Unlocks standard **4.20V** charging for standard lithium polymer chemistry.
-      * **Fuel Gauge Auto-Profile:** Connected directly to RP2350 `GPIO 15` on Power-On Reset (POR). The co-processor reads the physical strap state and automatically configures the BQ27441 fuel gauge with the appropriate chemical Open-Circuit Voltage (OCV) profile table.
+  * **Chemistry:** **1S LiFePO4 only** (3.2V nominal; charge limit `battery.charge_limit_v`, below the AGENTS §4.1 ceiling of 3.65V). There is no Li-ion option (ADR-035).
+  * **Capacity:** TBD until the cell is chosen (ADR-040); `battery_wh.lifepo4` stays `null` until a buyable cell's datasheet is in hand.
+  * **No chemistry strap:** the earlier `CHEM_SEL` Li-ion/LiFePO4 strap is deleted (ADR-035); a switch that can select 4.2V is a hazard, not a feature. Every I²C charger's power-on default is a Li-ion voltage, so the BQ25798 is held off by its charge-enable pin until the RP2350 has written VREG; the charger watchdog is then fed or disabled. CE is active-low (charging needs CE low *and* EN_CHG set, BQ25798 datasheet pin table) and carries a **pull-up to the always-on rail**, so the charger is off at power-up even if the firmware never runs; the RP2350 drives CE low only after VREG reads back at `battery.charge_limit_v` (`solardeck_charge_enable_allowed()`, firmware test 7).
+  * **Fuel Gauge:** TI **BQ27Z561-R2** (TI lists LiFePO4), characterised on the chosen cell (ADR-035, ADR-040).
   * **Hardware Battery PCM (Pure Silicon Secondary Protection):**
-    * Texas Instruments **BQ2970** battery protection IC paired with dual low-$R_{\text{DS(on)}}$ (12 mΩ) N-channel power MOSFETs (**TI CSD87330Q3D**, $0.55 total).
-    * Completely autonomous from software and I2C: physically cuts off the battery pack if cell voltage drops below **2.50V** (over-discharge protection) or exceeds **3.65V/4.25V** (over-charge protection).
-    * Instantaneous hardware short-circuit trip: physically disconnects in **< 10 microseconds** if load current exceeds **8.0A peak**.
+    * A **BQ29706-class LiFePO4 protector** (3.85V OVP, 2.50V UVP) driving a **back-to-back N-FET pair** (ADR-035). The exact protector variant and FETs are chosen at schematic capture against the cell's datasheet.
+    * Completely autonomous from software and I2C: physically cuts off the battery pack on over-discharge or over-charge, independent of the charger.
+    * Short-circuit and over-current trip thresholds: per the chosen protector variant (TBD at schematic capture).
 * **Battery Charger IC & Autonomous Hardware JEITA Thermal Protection:**
-  * Texas Instruments **BQ25895** I2C-controlled Synchronous Buck Charger paired with a dedicated **WCH CH224K** (or STMicroelectronics STUSB4500) standalone USB-PD Sink Controller ($0.45).
-  * **USB-PD 20W Power Negotiation:** The CH224K automatically advertises sink capabilities and negotiates a 9V/2.22A or 12V/1.67A (20W) power contract from any standard USB-PD charger, supplying high voltage to the BQ25895 buck input to recharge the pack in **1.5 to 2 hours**.
-  * **Pure Silicon JEITA Cold-Weather Lockout Ladder (Zero Software Dependency):**
-    * The BQ25895 `TS` pin is configured with a precision 0.1% resistor divider network (5.23 kΩ pull-up $R_1$, 30.1 kΩ pull-down $R_2$) paired with a **10 kΩ NTC thermistor (Murata NCP18XH103F03RB, $\beta = 3950\text{K}$)** glued directly to the battery pouch cell.
+  * Texas Instruments **BQ25798** I2C-controlled buck-boost charger (`spec_values.charger`; VREG range covers `battery.charge_limit_v`, ADR-035) paired with a dedicated **WCH CH224K** (or STMicroelectronics STUSB4500) standalone USB-PD Sink Controller ($0.45).
+  * **USB-PD 20W Power Negotiation:** The CH224K automatically advertises sink capabilities and negotiates a 9V/2.22A or 12V/1.67A (20W) power contract from any standard USB-PD charger, supplying high voltage to the BQ25798 input to recharge the pack in **1.5 to 2 hours**.
+  * **JEITA Cold-Weather Lockout Ladder (programmable zones on the BQ25798):**
+    * The BQ25798 `TS` pin is biased by a precision 0.1% resistor divider (values set at schematic capture for the programmed JEITA thresholds) paired with a **10 kΩ NTC thermistor (Murata NCP18XH103F03RB, $\beta = 3950\text{K}$)** glued directly to the battery pouch cell.
     * **$T < 0^\circ\text{C}$ (Freezing Lockout):** Charger automatically terminates charging completely ($I_{\text{CHG}} = 0.000\text{ A}$), preventing catastrophic metallic lithium plating and internal micro-shorts while still powering system loads from solar/USB.
     * **$0^\circ\text{C} \le T < 10^\circ\text{C}$ (Cold Taper):** Charge current automatically throttled to $0.2\text{C}$ ($400\text{ mA}$) to protect chemistry.
     * **$10^\circ\text{C} \le T \le 45^\circ\text{C}$ (Normal Band):** Full 20W fast charging ($3.0\text{A}$).
-    * **$45^\circ\text{C} < T \le 60^\circ\text{C}$ (Heat Taper):** Charge voltage throttled from 3.65V down to 3.40V.
+    * **$45^\circ\text{C} < T \le 60^\circ\text{C}$ (Heat Taper):** Charge voltage throttled from `battery.charge_limit_v` down to 3.40V.
     * **$T > 60^\circ\text{C}$ (Overheat Lockout):** Complete charger shutdown.
 * **Dual-Stage Solar Harvesting & Ambient Sensing Architecture:**
-  1. *High-Power Field Solar (Fast Recharge via USB-C):* Standard USB-C Port 2 supports 5V–14V input from folding 15W–28W outdoor panels. The BQ25895's integrated dynamic input voltage management (**VINDPM / MPPT**) tracks optimal solar output to recharge the pack safely in field conditions.
+  1. *High-Power Field Solar (Fast Recharge via USB-C):* Standard USB-C Port 2 supports 5V–14V input from folding 15W–28W outdoor panels. The BQ25798's integrated dynamic input voltage management (**VINDPM / VOC-scaling MPPT**) tracks optimal solar output to recharge the pack safely in field conditions.
   2. *Dedicated Nano-Power Bezel Harvester (Texas Instruments BQ25504 & Full-Width Dual-Bezel IBC Solar Array):*
-     * Resolves the primary charger's 3.9V Under-Voltage Lockout ($V_{\text{UVLO}}$) ceiling.
+     * Harvests at cell voltages below the primary charger's input range.
      * **Full-Width Dual-Bezel High-Efficiency IBC Solar Array:** Instead of an isolated single cell, the top and bottom bezels integrate custom back-contact Interdigitated Back Contact (IBC) monocrystalline solar strips (SunPower Maxeon Gen 7 grade, ~24% cell efficiency).
        * Top Bezel Array: $215\text{ mm} \times 12\text{ mm}$ ($25.8\text{ cm}^2$).
        * Bottom Bezel Array: $215\text{ mm} \times 12\text{ mm}$ ($25.8\text{ cm}^2$).
        * Total Surface Area: **$51.6\text{ cm}^2$**.
        * **Peak Solar Power:** **1.24W in direct sunlight** ($1000\text{ W/m}^2$), producing up to **350 mA charging current** directly into the LiFePO4 battery rail.
-       * **Indoor / Overcast Harvesting:** In indirect indoor light or cloudy daylight (100–200 W/m²), the array harvests **120 mW to 240 mW**—providing an **8× to 20× energy surplus** over the 4.5 mW to 15 mW consumed by the RP2350 co-processor and E-Ink display!
+       * **Outdoor top-up only:** the strip tops up the idle co-processor outdoors; there is no indoor net-positive claim (ADR-041).
      * Dedicated ultra-low-quiescent boost converter ($1.80) wired directly to the bezel solar array.
      * Cold-starts from as low as **330 mV** and continuously harvests down to **100 mV**.
-     * Executes autonomous 80% Fractional Open-Circuit Voltage (FOCV) MPPT sampling, boosting micro-solar energy directly into the battery rail with >90% efficiency, keeping the 4.5 mW RP2350 Zen reader topped off indefinitely even under indoor lighting.
+     * Executes autonomous 80% Fractional Open-Circuit Voltage (FOCV) MPPT sampling, boosting micro-solar energy directly into the battery rail with >90% efficiency, topping up the idle RP2350 co-processor outdoors (ADR-041).
   3. *Batteryless Direct Solar Cold-Boot ("Zombie Mode"):*
      * If the internal LiFePO4 battery is completely drained to 0.0V, damaged, or physically removed, SolarDeck operates in pure **Batteryless Solar Mode**.
      * The bezel solar array charges the onboard **1.0F 3.3V supercapacitor**.
@@ -205,50 +201,36 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
      * The open-circuit voltage ($V_{OC}$) of the top-bezel solar strip is tapped through a high-impedance 10:1 divider (1.0 MΩ / 110 kΩ, <3 µA draw) into RP2350 analog input pin `RP2350_ADC0`.
      * The co-processor maps cell photodiode voltage across a calibrated log curve from 10 lux (candlelit room) to 120,000 lux (blinding noon sunlight).
      * Automatically adjusts E-ink Look-Up Table (LUT) waveform contrast, boosts color saturation in sunlight, and signals the compositor to engage dark mode in dim environments without adding a dedicated ambient light sensor IC ($0.00 BOM cost).
-* **Survival Powerbank Mode (15W Reverse Boost):**
-  * The Texas Instruments **BQ25895** features a built-in bidirectional synchronous boost converter mode.
-  * When an external phone or USB device is connected to USB-C Port 1 or Port 2, the RP2350 writes to the BQ25895 I2C register to enable **OTG Mode** (`OTG_CONFIG = 1`).
-  * The charger steps up battery voltage to output **5.1V @ 3.1A (15.8W max)** with internal current limiting and short-circuit protection.
+* **Survival Powerbank Mode (Reverse Boost, capped at `power_bank.otg_max_a`):**
+  * The Texas Instruments **BQ25798** features a built-in bidirectional OTG converter mode.
+  * When an external phone or USB device is connected to USB-C Port 1 or Port 2, the RP2350 writes to the BQ25798 I2C register to enable **OTG Mode** (`EN_OTG`).
+  * The charger outputs 5V with its current limit set to `power_bank.otg_max_a` (2 A, ADR-035), plus short-circuit protection.
   * **Zero-Compute Autonomous Operation:** The entire reverse powerbank session runs under RP2350 supervision while the power-hungry CM5 Linux brain remains **100% powered off (0.000W)**.
   * The E-Ink screen displays a live, high-contrast charging gauge updated every 10 seconds:
-    `"Powering External Device: 5.10V @ 2.40A (12.2W) | Battery: 74% (25.9 Wh) | Est: 2h 15m remaining"`.
-  * Turns the 32 Wh LiFePO4 tablet into an ultra-durable, flame-safe emergency power bank for smartphones, GPS handhelds, and flashlights in off-grid emergencies.
+    `"Powering External Device: <V> @ <A> | Battery: <%> | Est: <time> remaining"`.
+  * Turns the LiFePO4 tablet into an ultra-durable, flame-safe emergency power bank for smartphones, GPS handhelds, and flashlights in off-grid emergencies.
 * **Rigid Voltage Regulators (Anti-Brownout Engineering):**
   1. *Always-On 3.3V System Rail (`VDD_3V3_AON`):* Dedicated Texas Instruments **TPS62840** ultra-low quiescent current (**60 nA $I_Q$**) synchronous buck-boost converter. Powered directly from VBAT (2.5V–4.35V), it supplies a stable, ultra-clean 3.3V rail at up to 750 mA to the RP2350, 8MB PSRAM, DS3231 RTC, `I2C_ALWAYS_ON` sensors, and Semtech SX1262 LoRa module continuously, ensuring perpetual operation when the main CM5 5V boost converter is completely unpowered.
-  2. *Main 5.0V System Boost:* Texas Instruments **TPS61088** synchronous boost converter steps up 3.0V–4.2V battery voltage to a rigid 5.0V @ 3.5A rail, delivering up to 17.5W peak power for CM5 turbo compilation (CM5 peak draw TBD — verify against the CM5 datasheet), USB peripheral bus power, and display supply.
-  3. *Cellular Modem 3.8V Buck-Boost:* Texas Instruments **TPS63020** 3.8V 2.5A synchronous buck-boost converter dedicated exclusively to the M.2 Quectel EG25-G modem, accompanied by a **1,000 µF low-ESR polymer capacitor array**. This completely buffers the modem's 2.0A transient GSM/LTE transmit bursts, preventing battery rail sag and system brownouts even when the battery is depleted to 3.0V.
+  2. *Main 5.0V System Boost:* Texas Instruments **TPS61088** synchronous boost converter steps up battery voltage to a rigid 5.0V @ 3.5A rail, delivering up to 17.5W peak power for CM5 turbo compilation (CM5 peak draw TBD — verify against the CM5 datasheet), USB peripheral bus power, and display supply.
+  3. *Cellular modem supply (TPS63020):* Deferred to V2 (ADR-034).
 * **Power Gating (Physical Cutoff Switches):**
-  * Texas Instruments **TPS22918** ultra-low leakage load switches on peripheral power rails (LTE modem, Wi-Fi, audio amp, and external expansion bus). Zero leakage current during S2idle sleep.
+  * Texas Instruments **TPS22918** ultra-low leakage load switches on peripheral power rails (GNSS receiver, Wi-Fi, audio amp, and external expansion bus). Loads are hard off when not in use.
 
-### 2.4 USB Host Controller & Wireless Subsystem
-* **Dedicated PCIe USB Host Controller & Port Architecture:**
-  * Whether the CM5's native USB pin-out makes a separate host controller unnecessary is TBD — verify against the CM5 datasheet (ADR-031). Until then the carrier keeps the PCIe host-controller topology:
-    1. **Host Peripherals (Dedicated PCIe USB Controller):** A dedicated **VIA VL805** or **ASMedia ASM1042A** USB host controller (or industrial Microchip **USB2514B** USB 2.0 Hub IC) interfaces to the CM5 via the PCIe Gen 2 x1 lane, providing isolated, simultaneous downstream USB channels to:
-       * M.2 Key-B 3042 Quectel EG25-G Cellular Modem
-       * USB-C Port 2 (Host peripheral port with TPS2051B current limiter)
-       * SnapDeck 5-pin magnetic pogo keyboard dock
-       * Rear 8-pin hermetic backpack expansion bus
-       * RP2350 USB CDC serial console (`/dev/ttyACM0`)
-    2. **Dedicated USB Gadget & Recovery Port (CM5 native USB):** The CM5's native USB port used for gadget mode and `rpiboot` (TBD — verify against the CM5 datasheet) connects directly to **USB-C Port 1**. This ensures that entering USB Gadget Secondary Display Mode or triggering `rpiboot` recovery never disconnects the internal cellular modem, keyboard, or modular backpack.
-* **Cellular Modem & Dual-SIM Architecture:** **M.2 Key-B (3042)** socket connected to dedicated host USB lines.
-  * Module: **Quectel EG25-G** (Worldwide Cat-4 LTE, 30+ bands, global carrier certifications).
-  * **Dual-SIM Capability:**
-    1. **Onboard Soldered MFF2 eSIM:** a consumer SGP.22 eUICC (part TBD, ADR-033) in an MFF2 package, directly soldered to the carrier board. M2M (SGP.02) eUICCs are rejected because they cannot accept a user QR-code profile. Managed natively under Linux via **`lpac`** and `ModemManager` over standard AT channels (`AT+CCHO`/`AT+CGLA`) for instant QR-code carrier activation.
-    2. **External Physical Nano-SIM Tray:** IP67 weather-sealed push-push Nano-SIM tray on the chassis edge for local prepaid, international traveler, or burner SIM cards.
-    3. **Software Slot Switching:** Instant toggle between physical SIM and eSIM via standard `mmcli -m 0 --set-primary-sim-slot=1/2`.
-  * **RF Decoupling:** 470 µF low-ESR polymer capacitor placed adjacent to modem VCC to handle 2.0A transient TX bursts without voltage sag.
-* **Near Field Communication (13.56 MHz NFC / Smartcard / Crypto):**
-  * Controller: **NXP PN532** (or STMicroelectronics **ST25R3916**) connected via I2C (`0x24`) to Linux.
-  * Antenna: Tuned flexible PCB loop antenna laminated in the top bezel (free of metal shielding).
-  * Capabilities: ISO/IEC 14443 Type A/B, FeliCa, MIFARE, ePassport reading (ICAO 9303), hardware FIDO2 / WebAuthn authentication (tap physical YubiKey to top bezel), and airgapped NFC crypto wallet signing (Tangem, Satochip, Coldcard).
-  * Physical Wallet Companion: Rear chassis MagSafe magnetic ring supports snapping standard physical MagSafe card wallets (Apple, Moft, Peak Design) for carrying 2–3 physical credit cards, IDs, and cash.
+### 2.4 USB Ports & Wireless Subsystem
+* **USB Port Architecture (CM5 native USB, ADR-042):**
+  * The CM5 has two native USB 3.0 ports and one USB 2.0 port (CM5 datasheet §2.4), so there is **no external USB host controller or hub** on the carrier; the single PCIe Gen 2 x1 lane goes to the M.2 NVMe socket (§2.1).
+    1. **Host Peripherals (CM5 native USB 3):** feed USB-C Port 2 (host peripheral port with TPS2051B current limiter), the rear 8-pin hermetic backpack expansion bus, and the RP2350 USB CDC serial console (`/dev/ttyACM0`).
+    2. **Dedicated USB Gadget & Recovery Port (CM5 native USB 2.0):** connects directly to **USB-C Port 1** for gadget mode and `rpiboot`, so entering USB Gadget Secondary Display Mode or triggering `rpiboot` recovery never disconnects the backpack or host peripherals.
+* **Connectivity in V1:** Wi-Fi/BT on the CM5 plus phone tethering (ADR-034).
+* **Cellular modem, nano-SIM tray and soldered eSIM:** Deferred to V2 (ADR-034); the V2 requirement is a consumer SGP.22 eUICC (ADR-033).
+* **NFC:** Deferred to V2 (ADR-034).
+* **Physical Wallet Companion:** Rear chassis MagSafe magnetic ring supports snapping standard physical MagSafe card wallets (Apple, Moft, Peak Design) for carrying 2–3 physical credit cards, IDs, and cash.
 * **LoRa Mesh Radio:** **Semtech SX1262** 915/868 MHz transceiver (up to +22 dBm output).
   * Connects via dedicated SPI to the RP2350 co-processor, running autonomous 24/7 **Meshtastic** mesh repeating firmware at 12–15 mW, and exposing a virtual serial interface to Linux over the inter-processor UART/serial bus (`/dev/ttyAMA0`).
-* **Global Satellite Navigation (Integrated Qualcomm GNSS):**
-  * Integrated multi-constellation GNSS engine inside the Quectel EG25-G modem (Qualcomm Gen8C Lite).
-  * Concurrent reception of GPS, BeiDou, Galileo, GLONASS, and QZSS.
-  * Connects via an internal dedicated high-efficiency FPC antenna (Molex 1461860100).
-  * Feeds standard NMEA sentences directly into Linux `gpsd` (`/dev/ttyUSB1`) for offline OsmAnd, QGIS, and FoxtrotGPS mapping without requiring a redundant standalone GPS chip, saving $17.00 in BOM and precious PCB space.
+* **Global Satellite Navigation (standalone GNSS, ADR-038):**
+  * **u-blox MAX-M10S** (`spec_values.gnss`) on an RP2350 UART behind a TPS22918 load switch, with a passive GNSS antenna at the top edge (the module's integrated LNA supports passive antennas).
+  * Tracking power: `spec_values.gnss.tracking_mw` (datasheet). The RP2350 owns it so the LoRa node has position with Linux off; when Linux is up the RP2350 forwards NMEA to `gpsd` for offline OsmAnd, QGIS, and FoxtrotGPS mapping.
+  * Receive-only: no intentional-radiator certification.
 
 ### 2.5 Antenna Engineering & RF Architecture
 To prevent the device from becoming an unwieldy "hedgehog" with 5 external antennas, SolarDeck adopts a hybrid external/embedded antenna topology:
@@ -258,18 +240,17 @@ To prevent the device from becoming an unwieldy "hedgehog" with 5 external anten
 │                       SOLARDECK TOP BEZEL RF TOPOLOGY                       │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
-│   [IP67 SMA JACK]                                     [IP67 SMA JACK]       │
-│         │                                                   │               │
-│         ▼                                                   ▼               │
-│    LoRa 915MHz                                        Cellular MAIN         │
-│  (Detachable Whip)                                  (Optional Field Whip)   │
+│   [IP67 SMA JACK]                                                           │
+│         │                                                                   │
+│         ▼                                                                   │
+│    LoRa 915MHz                                                              │
+│  (Detachable Whip)                                                          │
 │                                                                             │
 │  ─────────────────────────────────────────────────────────────────────────  │
 │  INTERNAL CONCEALED ANTENNAS (Inside PA12 Frame / TPU Bumpers):             │
 │                                                                             │
-│  • Cellular DIVERSITY (RX):  Taoglas FXUB63 Ultra-Wideband Flexible PCB     │
 │  • Wi-Fi / BT (2.4/5GHz):    Molex 1461530100 Dual-Band Dipole FPC         │
-│  • GNSS (GPS/BeiDou/Galileo): 15×15mm Ceramic Active Patch (Upward Facing)  │
+│  • GNSS (MAX-M10S):          Passive antenna, top edge (ADR-038)           │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -277,45 +258,42 @@ To prevent the device from becoming an unwieldy "hedgehog" with 5 external anten
    * **Mount:** Top-edge IP67 Bulkhead SMA Female (Jack) with silicone O-ring gasket.
    * **Tactical Field Whip:** **Linx Technologies `ANT-916-CW-HWR-SMA`** (1/2-wave center-fed dipole, 3.2 dBi gain, operates independently of internal ground plane, hinged knuckle).
    * **Low-Profile Pocket Stub:** **Linx Technologies `ANT-916-CW-RH-SMA`** (50mm rubber ducky for compact transit).
-2. **Cellular LTE 2×2 MIMO Antennas (Quectel EG25-G):**
-   * **Main (TX/RX):** Vertical **Taoglas `FXUB63.07.0150C`** ultra-wideband (698–3000 MHz) flexible PCB antenna adhered along the right chassis bezel.
-   * **Diversity (RX Only):** Horizontal **Taoglas `FXUB63.07.0150C`** flexible PCB antenna adhered along the bottom chassis bezel.
-   * **Spatial & Polarization Isolation:** The two cellular antennas are separated by $>180\text{ mm}$ and cross-polarized (vertical vs. horizontal), achieving >20 dB isolation and enabling full 2×2 MIMO carrier aggregation, doubling weak-signal throughput in rural areas.
+2. **Cellular LTE antennas:** Deferred to V2 (ADR-034).
 3. **Wi-Fi & Bluetooth (CM5 on-module; standard and version TBD — verify against the CM5 datasheet):**
    * **Molex `1461530100`** balanced dual-band (2.4 GHz / 5.8 GHz) dipole FPC with micro-coax pigtail to the CM5 antenna connector (type TBD — verify against the CM5 datasheet). Balanced dipole design ensures human hand grip does not de-tune the wireless link.
 4. **Enclosure RF Physics (Faraday Cage Mitigation):**
    * **PA12 SLS Nylon:** Inherently RF-transparent; all internal FPC antennas radiate freely.
-   * **CNC 6061-T6 Aluminum:** Aluminum completely blocks RF signals. When the aluminum unibody is chosen, the top 25mm bezel is manufactured as a modular **PA12/Delrin "RF Window"** cap, allowing RF waves to escape while maintaining IP67 gasket sealing.
+   * **CNC 6061-T6 Aluminum:** Aluminum completely blocks RF signals. When the aluminum unibody is chosen, the top 25mm bezel is manufactured as a modular **PA12/Delrin "RF Window"** cap, allowing RF waves to escape while maintaining the IP54 (V1 target) gasket sealing.
 
 ### 2.5.1 RF Coexistence & Multi-Radio Isolation Architecture
-SolarDeck operates five concurrent radio channels (LoRa 915 MHz, Cellular LTE Cat-4, Wi-Fi 5 GHz, Bluetooth 2.4 GHz, and GNSS L1 1575.42 MHz) within a single 10.3" portable frame without mutual receiver desensitization (desense) or packet degradation:
+SolarDeck operates four concurrent radio channels (LoRa 915 MHz, Wi-Fi 5 GHz, Bluetooth 2.4 GHz, and receive-only GNSS L1 1575.42 MHz; cellular is V2, ADR-034) within a single 10.3" portable frame without mutual receiver desensitization (desense) or packet degradation:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                 SOLARDECK 4-CORNER RF COEXISTENCE TOPOLOGY                  │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ [TOP-LEFT CORNER]                                       [TOP-RIGHT CORNER]  │
-│ LoRa 915/868 MHz External Whip                          Cellular LTE Main   │
-│ • Vertically Polarized                                  • Internal FPC / SMA│
-│ • Bursty Duty Cycle (<0.1% TX)                          • Integrated SAW    │
+│ LoRa 915/868 MHz External Whip                          GNSS (MAX-M10S)     │
+│ • Vertically Polarized                                  • Passive antenna   │
+│ • Bursty Duty Cycle (<0.1% TX)                          • Receive-only      │
 │            │                                                    │           │
 │            │ ◄─────────── 240mm Spatial Isolation ────────────► │           │
 │            ▼              (25 to 35 dB Path Loss)               ▼           │
 │ [BOTTOM-LEFT CORNER]                                    [BOTTOM-RIGHT]      │
-│ Wi-Fi 5.0 GHz & BT 2.4 GHz                              Cellular Diversity  │
-│ • Dual-Band Balanced Dipole                             • Taoglas FXUB63    │
-│ • Hardware PTA Coexistence                              • Cross-Polarized   │
+│ Wi-Fi 5.0 GHz & BT 2.4 GHz                              (no radio in V1;    │
+│ • Dual-Band Balanced Dipole                              cellular is V2,    │
+│ • Hardware PTA Coexistence                               ADR-034)           │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 1. **Spatial Path-Loss Isolation (> 200mm Separation):**
-   * Signal power drops with the square of distance ($1/r^2$). Unlike a smartphone crammed into a 70mm chassis, SolarDeck's 240mm width provides **25 to 35 dB of natural path-loss attenuation** between the high-power LoRa transmitter (+22 dBm) and the sensitive Cellular/Wi-Fi receivers.
+   * Signal power drops with the square of distance ($1/r^2$). Unlike a smartphone crammed into a 70mm chassis, SolarDeck's 240mm width provides **25 to 35 dB of natural path-loss attenuation** between the high-power LoRa transmitter (+22 dBm) and the sensitive GNSS/Wi-Fi receivers.
 2. **Polarization Orthogonality (Cross-Polarization):**
    * The external LoRa whip is vertically polarized (perpendicular to chassis).
-   * The internal Cellular Diversity and Wi-Fi dipole antennas are oriented horizontally along the bottom/side frame.
+   * The internal Wi-Fi dipole antenna is oriented horizontally along the bottom/side frame.
    * Orthogonal polarization provides an additional **15 to 20 dB of cross-polarization isolation**, preventing front-end LNA saturation.
 3. **Front-End SAW & BAW Filtering:**
-   * Both the Quectel EG25-G modem and the Semtech SX1262 transceiver incorporate internal Surface Acoustic Wave (SAW) bandpass filters directly on their RF inputs, rejecting out-of-band harmonics by $>40\text{ dB}$.
+   * The Semtech SX1262 transceiver incorporates internal Surface Acoustic Wave (SAW) bandpass filters directly on its RF inputs, rejecting out-of-band harmonics by $>40\text{ dB}$.
 4. **Bursty LoRa Duty Cycle (<0.1% Airtime):**
    * LoRa transmits short text and telemetry packets lasting 60–150 milliseconds once every few minutes, remaining in passive microamp listening mode for 99.9% of the operational cycle.
 5. **5 GHz Wi-Fi Spectrum Steering:**
@@ -325,47 +303,13 @@ SolarDeck operates five concurrent radio channels (LoRa 915 MHz, Cellular LTE Ca
 To guarantee peak radiation efficiency, prevent destructive transmitter reflection, and maintain impedance integrity across manufacturing tolerances:
 * **0402 Discrete Pi-Matching Networks:** Every antenna trace on the carrier board features a dedicated 3-element Pi-matching footprint ($C_{\text{shunt1}}$ – $L_{\text{series}}$ – $C_{\text{shunt2}}$ in 0402 surface-mount packaging with high-Q Murata / TDK RF components) immediately adjacent to its U.FL / SMA launch point:
   * `RF_LORA`: Tuned specifically for 915 MHz (US) or 868 MHz (EU) to cancel chassis grounding reactance.
-  * `RF_LTE_MAIN` & `RF_LTE_DIV`: Tuned across wideband LTE 700–2600 MHz to achieve $\text{VSWR} < 2.0:1$ across all carrier aggregation bands.
   * `RF_WIFI_BT`: Dual-band conjugate matching for 2.4 GHz and 5.8 GHz.
-  * `RF_GNSS`: High-rejection ceramic matching with DC bias choke for active LNA injection.
+  * `RF_GNSS`: Matching from the passive top-edge antenna into the MAX-M10S integrated LNA (no active-antenna bias, ADR-038).
 * **Inner-Layer Ground Keepout:** A continuous **3.0 mm copper clearance void** is etched across all internal PCBA ground layers directly beneath each surface-mount U.FL pad, eliminating parasitic shunt capacitance that would otherwise detune high-frequency RF launches.
 * **Molded Coaxial Cable Retention Channels:** Internal chassis ribs feature recessed silicone-gasketed micro-routing channels that lock IPEX MHF4 / U.FL micro-coaxial pigtails securely in place, completely preventing cable detachment or microphonics during heavy vehicle vibration and 4-foot drops.
 
-### 2.6 Rear Camera Subsystem (Multimodal AI)
-SolarDeck leverages one of the Broadcom SoC's MIPI CSI-2 camera ports (`CAM1`) and the hardware Image Signal Processor (ISP) to deliver visual intelligence with zero USB overhead. No forward-facing camera exists in V1 (ADR-006):
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                    SOLARDECK REAR CAMERA ARCHITECTURE                       │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ 1. REAR FLUSH CAMERA FOR AI VISUAL REASONING (Back Chassis):                 │
-│    • Sensor: Sony IMX708 (12.0 Megapixels, 4608 × 2592, HDR, PDAF)          │
-│    • 100% Flush Zero-Bump Integration: Sits recessed beneath an anti-reflec-│
-│      tive sapphire crystal optical window flush with the rear aluminum plate │
-│      (0.0mm camera bump / zero wobble when typing flat on a desk).          │
-│    • Focus: Motorized Phase Detection Autofocus (PDAF) from 5cm to infinity │
-│    • Bus: 2-Lane MIPI CSI-2 on `CAM1` (Direct Hardware ISP Pipeline)        │
-│    • Shutter: Internal hardware load switch cut + firmware electronic gate  │
-│    • Role: Claude Vision multimodal analysis, document & receipt digitizing,│
-│            whiteboard capture, 5cm macro PCB inspection, TXQR ingestion     │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ 2. V1 FRONT BEZEL STREAMLINING (Ponytail Descoping Win):                   │
-│    • Front camera and mechanical sliding ThinkShutter are descoped from V1. │
-│    • Eliminates high-speed MIPI-CSI trace routing noise and IP67 water leak │
-│      vulnerabilities, while freeing bezel space for solar energy harvesting.│
-│    • Standard UVC USB-C webcams are 100% plug-and-play via USB-C Port 2.    │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ 3. POWER & AIRGAP INTEGRATION:                                              │
-│    • Rear camera power-gated via TI TPS22918 load switch (0.000W standby).  │
-│    • Hardware Airgap Switch physically shunts camera VDD to GND in STEALTH. │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
-* **Rear Camera Capabilities (Sony IMX708 12MP PDAF):**
-  * **Multimodal Claude Code CLI:** Pass real-world photos directly to Claude (`claude "Inspect this breadboard wiring, verify pinout, and write the driver"`).
-  * **5cm Macro PCB Inspection Loupe:** Uses the 10.3" Kaleido 4 display (PPI TBD, ADR-032) as a real-time digital microscope to inspect 0402 SMD solder bridges, trace micro-fractures, and laser-etched IC part numbers.
-  * **High-Speed Optical Airgap Data Ingestion (`txqr`):** Ingests multi-megabyte files, encrypted GPG archives, and tactical maps at 250+ kbps by reading 30 FPS animated QR fountain streams with zero RF emission.
-  * **Night-Sky Celestial Navigation:** Captures night sky star patterns; local offline plate-solving (`astrometry.net`) computes astronomical heading and coordinates when GPS is jammed.
+### 2.6 Rear Camera Subsystem
+Deferred to V2 (ADR-034). No forward-facing camera exists either (ADR-006); standard UVC USB-C webcams work via USB-C Port 2.
 
 ### 2.7 Audio & Standby Alert Subsystem
 * **Dual-MEMS Noise-Cancelling Acoustic Array (Broadside Beamforming):**
@@ -374,7 +318,9 @@ SolarDeck leverages one of the Broadcom SoC's MIPI CSI-2 camera ports (`CAM1`) a
   * **Bus Architecture:** Connected to the Broadcom I2S bus configured for stereo L/R time-division multiplexing over a single data line (`I2S_DIN`).
   * **Acoustic Beamforming & Wind Rejection:** Processed in Linux via PipeWire / WebRTC audio processing DSP (`solardeck-beamformd`). Computes differential phase delay between Left and Right microphones, forming an elliptical 60° directional voice pickup cone targeted at the operator's face while attenuating 18–24 dB of ambient wind gusts, road noise, and office chatter. Yields clean, near-studio 16 kHz voice streams for 99%+ accuracy in local Whisper and Claude Code voice prompts.
 * **Physical Privacy Switch:** Hardware slide switch that physically breaks VDD to both microphones simultaneously (hardware-guaranteed un-hackable mute).
-* **Primary Audio Output (Linux Master):** Maxim Integrated / Analog Devices **MAX98357A** I2S Class-D amplifier driving an internal 1W sealed acoustic chamber micro-box speaker.
+* **Hold-to-Talk Voice Button (ADR-036):** Always available and costs nothing in standby; the mics are live only while it is held. At press the RP2350 starts capturing audio into PSRAM while the CM5 boots, and Linux transcribes the buffer, so no words are lost to boot time. Routing the mics so the RP2350 can capture with the CM5 off is TBD at schematic capture.
+* **Hands-Free Wake Word (opt-in, ADR-036):** Off by default and shown with its measured battery cost. Runs on the CM5 when Linux is up and on the RP2350 when Linux is off; RP2350 wake-word power is TBD (bench).
+* **Primary Audio Output (Linux Master):** Maxim Integrated / Analog Devices **MAX98357A** I2S Class-D amplifier driving an internal 1W sealed acoustic chamber micro-box speaker. The speaker feed is also taken as the echo-cancel reference for voice capture (ADR-036).
 * **High-Fidelity 3.5mm TRRS Audio Jack (Bottom Edge):**
   * **Connector:** IP67 water/dust sealed 3.5mm TRRS jack (**CUI Devices SJ2-35984A-SMT-TR** / Wurth Elektronik) mounted on the bottom chassis edge.
   * **Pinout Standard:** CTIA Standard (Tip = Left Audio, Ring 1 = Right Audio, Ring 2 = Ground, Sleeve = Microphone In).
@@ -442,7 +388,8 @@ To completely eliminate bus arbitration lockups and the hardware address collisi
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 1. `I2C_ALWAYS_ON` BUS (RP2350 Master, 100 kHz, 3.3V Low-Power):           │
 │    • 0x68: Maxim DS3231 TCXO Real-Time Clock (DNP Fallback Footprint)        │
-│    • 0x55: TI BQ27441-G1 Impedance Track Battery Fuel Gauge                 │
+│    • 0x55?: TI BQ27Z561-R2 Fuel Gauge (address: verify in the TI TRM)       │
+│    • 0x6B: TI BQ25798 Charger, programmed by the RP2350 (ADR-035)           │
 │    • 0x40: TI INA3221 3-Channel System Power Ammeter                        │
 │    • 0x48: TI TMP112 #1 (Battery Pouch Thermal Sensor)                      │
 │    • 0x49: TI TMP112 #2 (E-Ink Backplane Thermal Sensor)                    │
@@ -452,7 +399,6 @@ To completely eliminate bus arbitration lockups and the hardware address collisi
 │ 2. `I2C_HOST` BUS (CM5 Master, 400 kHz Fast-Mode):                          │
 │    • 0x09: Wacom EMR Stylus Digitizer Controller (`wacom_w9013`)            │
 │    • 0x5D: Goodix GT911 Capacitive Multi-Touch Controller (Hardwired)       │
-│    • 0x6A: TI BQ25895 Synchronous Buck Battery Charger                      │
 │    • 0x42: RP2350 Virtual Telemetry Target (Exposes I2C_ALWAYS_ON to Linux) │
 │    • External: USB-C Port 2 Host (Plug-and-play USB-to-I2C bridge dongles)   │
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -463,7 +409,7 @@ To completely eliminate bus arbitration lockups and the hardware address collisi
   1. It samples battery thermals, ambient lux, and power rails in hardware.
   2. It exposes these metrics as an I2C Target device (`0x42`) on `I2C_HOST` and streams structured telemetry over the dedicated high-speed UART/USB CDC serial pipe (`/dev/ttyACM0`). Linux daemons (`solardeck-telemetryd`, `eink-refreshd`) read thermal and battery metrics directly from this bridge without requiring physical access to `I2C_ALWAYS_ON`.
 * **External I2C Sensor Expansion via USB-C Port 2:**
-  * To preserve the IP67 enclosure seal and avoid fragile external JST connectors, external sensor expansion (BME280, thermal imagers, Geiger counters) is routed through **USB-C Port 2** using standard USB-to-I2C/Qwiic bridge dongles (e.g. MCP2221A or RP2040 PIO).
+  * To preserve the IP54 (V1 target) enclosure seal and avoid fragile external JST connectors, external sensor expansion (BME280, thermal imagers, Geiger counters) is routed through **USB-C Port 2** using standard USB-to-I2C/Qwiic bridge dongles (e.g. MCP2221A or RP2040 PIO).
   * Eliminates a dedicated chassis penetration and provides instant plug-and-play CLI access (`i2cdetect -y 1`) without exposing delicate 1.0mm pins to mud or rain.
 
 ### 2.10 Multi-Rail Power & Environmental Telemetry Sensors
@@ -472,29 +418,29 @@ To completely eliminate bus arbitration lockups and the hardware address collisi
   * Measures voltage and shunt current across three isolated domains simultaneously:
     * **Rail 1 (Compute):** CM5 module (SoC, DRAM, eMMC). Pinpoints CPU governor efficiency and memory leaks.
     * **Rail 2 (Display):** Kaleido 4 display controller (TBD, ADR-032) and high-voltage rails. Pinpoints display power draw per waveform mode.
-    * **Rail 3 (RF Radios):** Quectel modem, LoRa transceiver, Wi-Fi/BT. Catches hung cellular RRC sockets and rogue radio beacons.
+    * **Rail 3 (RF Radios):** LoRa transceiver, GNSS receiver, Wi-Fi/BT. Catches rogue radio beacons.
   * Direct telemetry to Claude Code CLI and `solardeck-telemetryd` SQLite database for empirical algorithmic power profiling.
-  * **Per-gated-rail current sense (TPS22918 [- 4 TPS22918-gated rails](DECK_BUILDER_LAYOUT.md)):** each of the 4 TPS22918 peripheral load-switch rails (LTE, Wi-Fi, audio, expansion) carries a µA-grade shunt + INA3221/ADC tap into the RP2350, so the LLM can distinguish "EG25-G overdraws" from "Wi-Fi radio storm" instead of only seeing RF aggregate. This is the Deck-Builder self-diagnosis contract (§4) made physical: **rail sense is the difference between a diagnosis and a guess.**
-* **Coulomb Counter & Battery Fuel Gauge (Texas Instruments BQ27441-G1):**
+  * **Per-gated-rail current sense (TPS22918 [- 4 TPS22918-gated rails](DECK_BUILDER_LAYOUT.md)):** each of the 4 TPS22918 peripheral load-switch rails (GNSS, Wi-Fi, audio, expansion) carries a µA-grade shunt + INA3221/ADC tap into the RP2350, so the LLM can distinguish "GNSS receiver overdraws" from "Wi-Fi radio storm" instead of only seeing RF aggregate. This is the Deck-Builder self-diagnosis contract (§4) made physical: **rail sense is the difference between a diagnosis and a guess.**
+* **Coulomb Counter & Battery Fuel Gauge (Texas Instruments BQ27Z561-R2, ADR-035):**
   * Integrated Impedance Track™ fuel-gauge technology tracks exact milliamp-hours entering and leaving the pack (true Coulomb counting).
   * Measures battery cell internal impedance ($R_{\text{cell}}$ in mΩ) and computes true State-of-Health (SOH %) across 3,000+ charge cycles.
-  * Enables charging optimization: signals the BQ25895 charger to reduce charge current when cell resistance rises or temperatures elevate, doubling battery operational lifespan to 10+ years.
+  * Enables charging optimization: signals the BQ25798 charger to reduce charge current when cell resistance rises or temperatures elevate, doubling battery operational lifespan to 10+ years.
 * **Multi-Zone Precision Thermal Array — 6 zones (Texas Instruments TMP112 + SoC Diode - KEPT FOR THERMAL LOGS):**
   * High-precision ($\pm 0.5^\circ\text{C}$), ultra-thin SOT-563 digital temperature sensors placed at strategic thermal points. Three hard-wired TMP112s, three derived zones:
     * **Battery Zone:** Directly adhered to the pouch cell under the thermal protection sleeve for millidegree charging logs. (TMP112 #1)
     * **Display Zone:** Adhered to the aluminum backplate behind the E-Ink panel. Directly feeds the display controller's temperature input (`TEMP_REG` on the IT8951 stand-in; Kaleido 4 equivalent TBD, ADR-032) via the RP2350 bridge to dynamically adjust waveform voltage pulses as liquid microcapsule viscosity changes with temperature (eliminating ghosting in winter cold and bleeding in summer heat). (TMP112 #2)
-    * **Compute Zone:** Monitored via the CM5 SoC thermal sensor and modem AT commands (`AT+QTEMP`). (TMP112 #3 + SoC diode)
-    * **RF/Modem Zone:** derived from `AT+QTEMP` on the EG25-G modem, so certification-relevant heat spikes in the radio stack are visible to the LLM.
-    * **Charger-Rail Zone:** derived from the BQ25895 die-temperature and the charger rail sense, catching thermal stress that degrades the charge path before it becomes a longevity claim violation.
+    * **Compute Zone:** Monitored via the CM5 SoC thermal sensor. (TMP112 #3 + SoC diode)
+    * **RF/Modem Zone:** Deferred to V2 with the modem (ADR-034); `spec_values.telemetry.thermal_zones` still counts it.
+    * **Charger-Rail Zone:** derived from the BQ25798 die-temperature and the charger rail sense, catching thermal stress that degrades the charge path before it becomes a longevity claim violation.
     * **Audio Zone:** derived from the amplifier die — audio is a 4th TPS22918-gated rail, so thermal sanity of the audio channel is part of the LLM telemetry surface.
   * All 6 zones land in the `thermal_zones` table (§3.3.1) — the LLM reads the array, not a single dial.
 * **Ambient Light & Solar Lux Sensing (Via Bezel Solar Strip & RP2350 ADC - Zero BOM):**
   * Rather than adding a dedicated photodiode IC, the RP2350's internal 12-bit ADC directly samples the open-circuit voltage ($V_{OC}$) of the top-bezel IXYS solar strip. Dynamic range spans from 0.01 lux up to 120,000 lux.
   * Enables dynamic E-Ink contrast optimization: disables front-lights completely in full sunlight ($>10,000\text{ lux}$), decreases anti-ghosting frequency, and calculates optimal solar panel angles when external folding panels are connected.
 * **Module Health Registers (the Deck-Builder contract, §5):**
-  * Every user-serviceable module (CM5, LTE, eSIM, LoRa, panel, audio, battery, solar — 8 registers) emits a `(ok | waning | fault, value)` row into the `module_health` table (§3.3.1):
+  * Every user-serviceable module (CM5, LoRa, GNSS, panel, audio, battery, solar — 7 registers; LTE/eSIM are V2, ADR-034) emits a `(ok | waning | fault, value)` row into the `module_health` table (§3.3.1):
     * **CM5:** SMART + eMMC wear + rail sense
-    * **LTE:** `AT+CSQ`, GNSS fix stats, rail sense
+    * **GNSS:** fix stats, rail sense
     * **LoRa:** RSSI/SNR, rail sense
     * **Panel:** per-refresh ACK latency + ghosting counter
     * **Battery:** coulomb-counted charge/discharge curve + ESR
@@ -505,24 +451,24 @@ To completely eliminate bus arbitration lockups and the hardware address collisi
     * **INA3221:** malfunction-indication flag (0x40 bus, `~LLM_READS_FAULT_REG`)
     * **TMP112x3:** status-register error bit (0x48/0x49)
     * **BMA400 / BMP390:** error-status registers
-    * **BQ27441:** fault/error flags (0x55)
-  * **Physical cross-validation (free, physics-provided):** battery voltage = INA3221 Rail 1 = INA3221 Rail 3 (three views of one bus, low bus-ripple at steady state); temperature = TMP112 battery zone = BQ27441 internal = charger rail (three thermometers on one pouch); ambient light = solar-strip ADC = front-light lux *only when the panel is off* (self-illumination confounds it — *when* a cross-check is valid is part of the check). The zones are deliberately on different thermal planes so all three cannot drift in lockstep.
+    * **BQ27Z561-R2:** fault/error flags (0x55)
+  * **Physical cross-validation (free, physics-provided):** battery voltage = INA3221 Rail 1 = INA3221 Rail 3 (three views of one bus, low bus-ripple at steady state); temperature = TMP112 battery zone = BQ27Z561-R2 internal = charger rail (three thermometers on one pouch); ambient light = solar-strip ADC = front-light lux *only when the panel is off* (self-illumination confounds it — *when* a cross-check is valid is part of the check). The zones are deliberately on different thermal planes so all three cannot drift in lockstep.
   * **Trend-vs-self:** the telemetry DB is a 7-day baseline; a sensor that drifts from its own history while its cross-check twins hold flat is `waning` — the LLM detects degradation with zero extra hardware.
 * **Motion & Kinematics Accelerometer (Bosch BMA400):**
   * Ultra-low-power 12-bit 3-axis accelerometer drawing **3.5 µA**.
   * Continuous autonomous motion detection: picks up physical desk wake interrupts, detects orientation (portrait vs. landscape), double-tap frame gestures, and free-fall conditions (firing an emergency interrupt to flush eMMC dirty buffers before ground impact).
 * **GNSS Course-Over-Ground (Descoping Win for Compass):**
-  * Compass heading is provided natively by the Quectel modem's integrated Qualcomm GNSS receiver calculating course-over-ground. Eliminates the separate MMC5603NJ magnetometer, avoiding complex magnetic hard/soft-iron distortion from chassis magnets.
+  * Compass heading is provided by the u-blox MAX-M10S GNSS receiver (ADR-038) calculating course-over-ground. Eliminates the separate MMC5603NJ magnetometer, avoiding complex magnetic hard/soft-iron distortion from chassis magnets.
 * **Precision Barometer & Altimeter (Bosch BMP390):**
   * 0.1m relative altitude precision; samples ambient air pressure to plot barometric barographs on the ambient desk clock and alert the user to incoming weather fronts.
 * **Benchtop Diagnostic Test Points & Hardware Probing Straps:**
-  * Labeled 1.0mm gold SMD test pads (`TP_VCC_CORE`, `TP_VCC_MODEM`, `TP_SPI_SCK`, `TP_CHG_STAT`, `TP_AIRGAP_STAT`) exposed on the secondary PCB layer for oscilloscope and logic analyzer probing.
+  * Labeled 1.0mm gold SMD test pads (`TP_VCC_CORE`, `TP_SPI_SCK`, `TP_CHG_STAT`, `TP_AIRGAP_STAT`) exposed on the secondary PCB layer for oscilloscope and logic analyzer probing.
 
 ### 2.11 Dual USB-C Architecture, Driverless Monitor Mode & Host Protection
 SolarDeck provides two rugged IP68 Type-C ports engineered with autonomous hardware protection against reverse currents and accidental cross-plugging:
 * **Autonomous Ideal Diode Power OR-ing:**
   * Two Texas Instruments **LM66100** ultra-low $R_{\text{ON}}$ ideal diode ICs arbitrate VBUS inputs from Port 1 and Port 2.
-  * Whichever port provides higher voltage (e.g. 12V folding solar panel vs 5V laptop) seamlessly feeds the BQ25895 charger.
+  * Whichever port provides higher voltage (e.g. 12V folding solar panel vs 5V laptop) seamlessly feeds the BQ25798 charger.
   * Reverse leakage is **0.000 µA**, completely preventing circulating currents between two connected power sources.
 * **USB-C Port 1 Dual-Role Port (DRP) & Secondary Monitor Mode:**
   * Managed by Texas Instruments **TUSB320** Configuration Channel (CC) controller paired with the CM5's native gadget-capable USB port (TBD — verify against the CM5 datasheet).
@@ -544,8 +490,8 @@ their absence is the most common field failure in this product class:
   not wake up".
 * **No capacitance on CC.** No filter caps, no TVS on CC outside the controller, no long stubs: CC is
   current-mode PD signalling and ~100 pF of convenience breaks it.
-* **Every Hotpack repeats both.** A USB-C sink accessory without an Rd pair reproduces the failure for
-  the whole tablet; it is in the Hotpack spec and the Hotpack acceptance checklist.
+* **Every USB-C sink accessory repeats both.** One without an Rd pair reproduces the failure for the
+  whole tablet (Hotpacks are V2, ADR-034).
 
 **Recovery never depends on USB enumeration** — three doors: RP2350 BOOTSEL pinhole, a UART/SWD 4-pin
 header under the M.2 service hatch, and a signed microSD recovery image. A charge-only cable is then a
@@ -568,11 +514,10 @@ For true sovereign privacy, commercial flight compliance, sensitive compartmente
              │                                                       │
              ▼                                                       ▼
    All Peripherals Under OS Control                        All Radio Load Switches Dead:
-                                                           • Quectel EG25-G Modem & GNSS (0.000V)
+                                                           • u-blox MAX-M10S GNSS (0.000V)
                                                            • Semtech SX1262 LoRa (0.000V)
-                                                           • CM5 Wi-Fi/BT (0.000V)
+                                                           • CM5 Wi-Fi/BT (WL/BT_nDisable low)
                                                            • Knowles MEMS Mic (0.000V)
-                                                           • Rear Flush 12MP Camera (0.000V)
                                                            • Rear Backpack Pogo (0.000V)
 ```
 
@@ -589,13 +534,13 @@ For true sovereign privacy, commercial flight compliance, sensitive compartmente
    * Sway/Wayland renders a padlock badge: `[AIRGAP LOCKED: 0.000 dBm]`.
    * CPU governor immediately throttles to `powersave` (600 MHz single-core), and all radio daemons are frozen.
    * Active system power drops from 2.5W to **under 0.75W**!
-   * **Battery Life:** Reading PDFs in Zathura, annotating with the battery-free Wacom stylus, and browsing offline Wikipedia in Kiwix lasts **35 to 42 continuous hours** on a single charge.
+   * **Battery Life:** Reading PDFs in Zathura, annotating with the battery-free Wacom stylus, and browsing offline Wikipedia in Kiwix lasts a runtime that is TBD until the cell is chosen (ADR-040).
 4. **Airgapped Cold-Storage Cryptographic Signer & Document Notary:**
    * When flipped to STEALTH, SolarDeck becomes an impenetrable, mathematically verifiable cold-storage signing station:
-     * **Zero RF Transmission:** Hardware power switches disconnect the cellular modem, LoRa transceiver, and Wi-Fi/Bluetooth to 0.000V.
-     * **Visual Optical Ingestion:** The operator scans an unsigned Bitcoin/Ethereum transaction QR code or document hash using the rear flush 12MP Sony IMX708 camera.
+     * **Zero RF Transmission:** Hardware power switches disconnect the GNSS receiver and LoRa transceiver to 0.000V, and Wi-Fi/Bluetooth are held disabled.
+     * **Visual Optical Ingestion (QR camera signing):** V2 (ADR-034).
      * **High-Contrast On-Screen Verification:** The decoded recipient address, smart contract bytecode, and fee breakdown are rendered in high contrast on the 10.3" E-Ink paper screen.
-     * **Hardware Authentication:** The operator authorizes the signature by tapping a physical YubiKey, Tangem, or Coldcard NFC hardware wallet against the top-bezel 13.56 MHz NFC antenna, or enters an airgapped passphrase.
+     * **Hardware Authentication:** The operator authorizes the signature with an airgapped passphrase; NFC hardware-wallet / YubiKey tap is V2 (ADR-034).
      * **Optical Broadcast:** The signed transaction QR code is displayed on the 10.3" screen for an online smartphone or companion device to scan and broadcast to the public blockchain.
      * **Zero-Leakage Assurance:** Private keys never touch an internet-connected bus or memory space, backed by physical hardware power gates.
 
@@ -628,34 +573,34 @@ To guarantee true 0.000V electrical isolation and zero phantom leakage across al
    * Each TPS22918 load switch includes an internal discharge transistor that connects the output rail (`VOUT`) to GND through a 470 Ω resistor whenever the switch is disabled.
    * Floating pins and residual capacitor charges are forcibly drained to true 0.000V within 50 microseconds.
 2. **$I_{\text{off}}$ Partial-Power-Down Protection on All Inter-Domain Lines:**
-   * All digital lines crossing between power tiers (UART to Quectel modem, UART to GPS, SPI to LoRa, and I2S to microphone) pass through Texas Instruments **TXU0104** or **SN74LVC1G125** buffers featuring **$I_{\text{off}}$ circuitry**.
+   * All digital lines crossing between power tiers (UART to GNSS, SPI to LoRa, and I2S to microphone) pass through Texas Instruments **TXU0104** or **SN74LVC1G125** buffers featuring **$I_{\text{off}}$ circuitry**.
    * When either $V_{CCA}$ or $V_{CCB}$ is 0V, the device automatically forces all I/O lines into a high-impedance (Hi-Z) state, guaranteeing leakage current **$I_{\text{leak}} < 1\text{ µA}$**.
 3. **Display Bus Multiplexer Isolation (TMUX1575):**
    * The high-speed SPI bus to the Kaleido 4 display controller (TBD, ADR-032) is isolated by **2× TI TMUX1575** (4 channels each, 8 total — ADR-004; suitability to be re-checked against that controller's host interface). Its fail-safe inputs tolerate up to 5.5V independent of supply voltage, completely preventing display signals from back-powering the CM5 when it is off.
-4. **Physical Line-Breaker for Microphone & Cameras:**
-   * The physical airgap switch cuts `VDD_MIC`, shunts `I2S_CLK` and `I2S_DATA` to GND, and disables the camera load switches, cutting `VCC_CAM_FRONT` and `VCC_CAM_REAR` to 0.000V.
+4. **Physical Line-Breaker for Microphones:**
+   * The physical airgap switch cuts `VDD_MIC` and shunts `I2S_CLK` and `I2S_DATA` to GND.
 
 #### Summary of SolarDeck Tiered Power Domains
 
-| Operating Tier | Active Brain | Display Driver | Powered Subsystems | Total Power Draw | Battery Runtime (32 Wh LiFePO4 Pack) |
+| Operating Tier | Active Brain | Display Driver | Powered Subsystems | Total Power Draw | Battery Runtime |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Tier 0: Dormant Standby** | RP2350 (10 µA sleep) | Display OFF (Static) | Internal 32kHz RTC, BQ27441 (CM5 0V, Radios 0V, Hi-Z)| **< 0.1 mW** | **10+ Years shelf life** |
-| **Tier 1: Ambient Clock & Zen Reader**| RP2350 (12MHz Cortex-M33)| Display ctrl (PSRAM Double-Buf)| 8MB PSRAM, BMA400, BMP390 (30ms Page Turns) | **~4.5 mW** | **300+ Days (10 Months)** |
-| **Tier 2: Perpetual LoRa Mesh Node** | RP2350 (48MHz M33 / RISC-V)| Display ctrl (Status Banner) | Semtech SX1262 LoRa Transceiver (Autonomous routing)| **12 to 15 mW** | **80+ Days (2.6 Months)** |
-| **Tier 3: Paper-Feel Scribe Slate** | CM5 (1 core @ 600 MHz) | Display ctrl (DU 1-bit Buffer) | Wacom EMR (240 Hz, Hover-gated), eMMC | **~0.60 W** | **58 Hours** active (460h study) |
-| **Tier 4: Adaptive Mixed Workstation**| CM5 (Dynamic DVFS)| Display ctrl (Dynamic Waveforms)| Wi-Fi/LTE, Web, Twitter, Discord, Claude Code CLI | **~1.40 W** | **25 Hours** screen-on (3–6 days) |
-| **Tier 5: Multimedia & Audio Station**| CM5 (Hardware Audio Pipeline)| Display ctrl (A2 Motion / GC16)| Knowles Mic, MAX98357A Box Speaker, Wi-Fi/LTE | **~1.70 W** | **20 Hours** continuous audio/calls |
-| **Tier 6: AI Compile Turbo** | CM5 (Quad A76) | Display ctrl (Sway Wayland) | All Radios, USB-C Keyboard, Parallel Compiles | **2.8 W to 3.8 W** | **9 to 12 Hours** continuous |
+| **Tier 0: Dormant Standby** | RP2350 (10 µA sleep) | Display OFF (Static) | Internal 32kHz RTC, BQ27Z561-R2 (CM5 0V, Radios 0V, Hi-Z)| **< 0.1 mW** | TBD until the cell is chosen (ADR-040) |
+| **Tier 1: Ambient Clock & Zen Reader**| RP2350 (12MHz Cortex-M33)| Display ctrl (PSRAM Double-Buf)| 8MB PSRAM, BMA400, BMP390 (30ms Page Turns) | **~4.5 mW** | TBD until the cell is chosen (ADR-040) |
+| **Tier 2: Perpetual LoRa Mesh Node** | RP2350 (48MHz M33 / RISC-V)| Display ctrl (Status Banner) | Semtech SX1262 LoRa Transceiver (Autonomous routing)| **12 to 15 mW** | TBD until the cell is chosen (ADR-040) |
+| **Tier 3: Paper-Feel Scribe Slate** | CM5 (1 core @ 600 MHz) | Display ctrl (DU 1-bit Buffer) | Wacom EMR (240 Hz, Hover-gated), eMMC | **~0.60 W** | TBD until the cell is chosen (ADR-040) |
+| **Tier 4: Adaptive Mixed Workstation**| CM5 (Dynamic DVFS)| Display ctrl (Dynamic Waveforms)| Wi-Fi, Web, Twitter, Discord, Claude Code CLI | **~1.40 W** | TBD until the cell is chosen (ADR-040) |
+| **Tier 5: Multimedia & Audio Station**| CM5 (Hardware Audio Pipeline)| Display ctrl (A2 Motion / GC16)| Knowles Mic, MAX98357A Box Speaker, Wi-Fi | **~1.70 W** | TBD until the cell is chosen (ADR-040) |
+| **Tier 6: AI Compile Turbo** | CM5 (Quad A76) | Display ctrl (Sway Wayland) | All Radios, USB-C Keyboard, Parallel Compiles | **2.8 W to 3.8 W** | TBD until the cell is chosen (ADR-040) |
 
 ---
 
 ### 2.14 Tool-Free Field Recovery & Factory Diagnostic Test Points
-To ensure the sealed IP67 tablet is 100% field-recoverable without screwdrivers or factory teardowns:
+To ensure the sealed IP54 (V1 target) tablet is 100% field-recoverable without screwdrivers or factory teardowns:
 * **Single Recessed IP67 Pinhole Recovery Button (Bottom Edge):**
   * Actuates a micro-tactile switch pulling the CM5 `nRPIBOOT` pin (TBD — verify against the CM5 datasheet) to GND. When connected to a host computer via USB-C Port 1, the CM5 enumerates as a mass storage device via `rpiboot`, allowing instant reflashing of the Linux rootfs.
   * Co-processor (RP2350) firmware recovery and updates are handled directly by Linux over dedicated internal SWD lines (`solardeck-coproc-flash`) with automatic hardware watchdog rollback, eliminating the need for a second physical chassis button.
 * **Bed-of-Nails Automated Factory Test Matrix (PCBA Bottom):**
-  * Standardized 1.27mm gold pogo pads: `TP_5V0`, `TP_3V8`, `TP_3V3`, `TP_1V8`, `TP_VBAT`, `TP_SWD_CLK`, `TP_SWD_DIO`, `TP_UART_TX`, `TP_UART_RX` for automated SMT testing and initial silicon flashing.
+  * Standardized 1.27mm gold pogo pads: `TP_5V0`, `TP_3V3`, `TP_1V8`, `TP_VBAT`, `TP_SWD_CLK`, `TP_SWD_DIO`, `TP_UART_TX`, `TP_UART_RX` for automated SMT testing and initial silicon flashing.
 
 ### 2.15 Industrial ESD & Transient Voltage Suppression Matrix
 To withstand field operations where exposed gold pogo pins and USB-C ports touch metallic surfaces, wet desks, or receive high-voltage human-body static shocks in dry environments, SolarDeck integrates an exhaustive, multi-tier ESD protection network complying with **IEC 61000-4-2 Level 4 (±15 kV air discharge, ±8 kV contact discharge)**:
@@ -679,14 +624,14 @@ To withstand field operations where exposed gold pogo pins and USB-C ports touch
 ```
 
 ### 2.16 PCBA Signal Integrity & 6-Layer Impedance-Controlled Stackup
-To eliminate EMI radiation from dual 1 Gbps MIPI-CSI camera interfaces, guarantee 50Ω coplanar waveguide matching for LTE/LoRa RF traces, and prevent digital noise from leaking into sensitive GPS and audio LNAs, SolarDeck mandates a **6-layer impedance-controlled board stackup** (Standard JLC2313 / Isola FR408HR):
+To guarantee 50Ω coplanar waveguide matching for LoRa/GNSS RF traces, and prevent digital noise from leaking into sensitive GPS and audio LNAs, SolarDeck mandates a **6-layer impedance-controlled board stackup** (Standard JLC2313 / Isola FR408HR):
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                   SOLARDECK 6-LAYER PCBA LAYER ASSIGNMENT                   │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ Layer 1 (Top Signal & RF):                                                  │
-│ • 50Ω Coplanar Waveguides (LoRa SMA, Quectel LTE Main/Div, GPS L1 RF traces)│
+│ • 50Ω Coplanar Waveguides (LoRa SMA, GNSS L1 RF traces)                     │
 │ • 90Ω Differential Pairs for USB 2.0 (Port 1, Port 2, Pogo Docks)           │
 │ • SMT Component Pads & Local Decoupling                                     │
 ├─────────────────────────────────────────────────────────────────────────────┤
@@ -696,13 +641,12 @@ To eliminate EMI radiation from dual 1 Gbps MIPI-CSI camera interfaces, guarante
 │ • Zero slots or breaks under RF or high-speed differential pairs            │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ Layer 3 (Inner 2 - High-Speed Routing):                                     │
-│ • 100Ω Differential Pairs for MIPI-CSI (Sony IMX708 PDAF Rear Camera)       │
 │ • SPI Display Bus to K4 display ctrl, TBD (MOSI, MISO, SCLK, CS)            │
 │ • Sandwiched between Layer 2 and Layer 4 ground pours (Stripline Shielding) │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ Layer 4 (Inner 3 - Power Plane & Secondary Ground):                         │
-│ • Power Distribution Islands: VDD_5V0 (Boost), VDD_3V8 (Modem), VDD_3V3, 1V8│
-│ • Star-ground copper pours around analog audio and BQ25895 switching nodes  │
+│ • Power Distribution Islands: VDD_5V0 (Boost), VDD_3V3, 1V8                 │
+│ • Star-ground copper pours around analog audio and BQ25798 switching nodes  │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ Layer 5 (Inner 4 - Solid Ground Plane):                                     │
 │ • Continuous secondary reference plane isolating digital and power switching│
@@ -710,7 +654,7 @@ To eliminate EMI radiation from dual 1 Gbps MIPI-CSI camera interfaces, guarante
 │ Layer 6 (Bottom Signal & Test Points):                                      │
 │ • Low-Speed Busses (I2C_ALWAYS_ON, I2C_HOST, UART, GPIOs)                   │
 │ • 1.27mm Gold Bed-of-Nails Automated Factory Test Pads                      │
-│ • Heat-Spreading Copper Thermal Vias coupling CM5/Modem heat to chassis     │
+│ • Heat-Spreading Copper Thermal Vias coupling CM5 heat to chassis           │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -758,16 +702,12 @@ To provide 100% mission reliability in severe sub-zero weather, dust storms, and
 
 ### 2.20 Cascaded Edge Audio ML Hardware & Acoustic Barge-In Pipeline
 * **The Standby Power Problem:** Running full continuous speech recognition on the CM5 keeps the main SoC at watt-level draw (the CM5 datasheet idle alone is watt-level, AUDIT 6 X4), draining the pack in hours.
-* **The Cascaded Wake Hierarchy:**
-  1. **Tier 1 (Acoustic Activity Detect - VAD):** Knowles SPH0645 MEMS acoustic front-end comparator detects ambient sound energy $> 45\text{ dB SPL}$ (<0.05 mW power).
-  2. **Tier 2 (microWakeWord on RP2350 Co-Processor):**
-     * RP2350 Cortex-M33 ingests 16 kHz audio via PIO DMA.
-     * Evaluates an INT8-quantized depthwise separable convolutional neural network (DS-CNN) wake model (`microWakeWord`).
-     * Power: **14 mW active** (yielding **80+ days continuous hands-free listening** on battery).
-     * Optional drop-in: Dedicated **Syntiant NDP120** Neural Decision Processor footprint (<140 µW active listening, 20+ year standby).
-  3. **Tier 3 (CM5 Voice Biometrics & Whisper Engine):**
-     * If "Hey Deck" matches, RP2350 fires `WAKE_CM5` GPIO interrupt.
-     * Linux resumes from S2idle in 250ms (AUDIT 6 X4: the CM5 datasheet lists no RAM-retaining low-power state), ingests buffered audio, and computes 256-d voice embedding via **Resemblyzer** ($<35\text{ms}$).
+* **Voice Entry (ADR-036):**
+  1. **Hold-to-talk button (always available, zero standby cost):** At press the RP2350 starts capturing 16 kHz audio via PIO DMA into PSRAM while the CM5 boots; Linux transcribes the buffer, so no words are lost to boot time. The mics are live only while the button is held.
+  2. **Hands-free wake word (opt-in):** Off by default and shown with its measured battery cost. Runs on the CM5 when Linux is up; when Linux is off the RP2350 evaluates an INT8-quantized DS-CNN wake model (`microWakeWord`). RP2350 wake-word power is TBD (bench). A dedicated low-power voice chip (e.g. a Syntiant NDP120 footprint) is the V2 path if that cost is too high.
+  3. **CM5 Voice Biometrics & Whisper Engine:**
+     * On a button press or wake-word match, the RP2350 fires the `WAKE_CM5` GPIO interrupt.
+     * Linux resumes from off/hibernate in seconds (the CM5 has no RAM-retaining low-power state; `sleep_ladder` R2 is `null`), ingests the buffered audio, and computes a 256-d voice embedding via **Resemblyzer** ($<35\text{ms}$).
      * If cosine similarity $\ge 0.78$ with owner's enrolled biometric voice print, command is processed via `whisper.cpp` (base.en); bystanders and background radio chatter are rejected.
 * **Acoustic Echo Cancellation (AEC) & Hardware Loopback for Seamless Barge-In:**
   * To allow the operator to interrupt ("barge in") while SolarDeck is speaking or playing audio:
@@ -784,7 +724,7 @@ To provide 100% mission reliability in severe sub-zero weather, dust storms, and
   * The Goodix touch controller computes contact centroid ellipses; software extracts the major axis length (bolt length) and minor axis width (bolt diameter) with sub-millimeter precision automatically with zero manual inputs.
 
 ### 2.22 Resilient Dual-Footprint & DNP (Do Not Populate) Fallback Architecture
-To eliminate supply-chain bottlenecks, enable budget vs. pro hardware tiers, and prevent obsolescence without redesigning the PCB, SolarDeck integrates eight strategic dual-footprint and DNP (Do Not Populate) options across its 6-layer motherboard:
+To eliminate supply-chain bottlenecks, enable budget vs. pro hardware tiers, and prevent obsolescence without redesigning the PCB, SolarDeck integrates strategic dual-footprint and DNP (Do Not Populate) options across its 6-layer motherboard:
 
 ```
                           DUAL-FOOTPRINT TOPOLOGY
@@ -795,9 +735,7 @@ To eliminate supply-chain bottlenecks, enable budget vs. pro hardware tiers, and
                       (I2C / SPI / PDM / PCIe / Power)
 ```
 
-1. **Audio Wake AI: Syntiant NDP120 (3.1×3.1mm QFN-40) ⟷ RP2350 C++ Fallback:**
-   * **Populated ($4.50):** Dedicated neural core runs always-on wake word and acoustic biometrics at **140 µW**, providing 20-year shelf standby.
-   * **DNP ($0.00):** If NDP120 is unpopulated or out of stock, firmware automatically detects the missing I2C address and commands the RP2350 Cortex-M33 to ingest PDM mic data via PIO, running open-source `microWakeWord` in bare-metal C++ at **14 mW** (80+ days continuous standby).
+1. **Audio Wake AI: dedicated voice-chip footprint (e.g. Syntiant NDP120):** V2 path (ADR-036). In V1 the opt-in wake word runs on the CM5 or the RP2350 (RP2350 power TBD, bench).
 2. **Real-Time Clock: Maxim DS3231MZ+ (SOIC-8) ⟷ Micro Crystal RV-3028-C7 (DFN-8):**
    * **Concentric Footprint:** An 8-pad DFN footprint is nested directly in the center of the SOIC-8 pads on the same I2C lines (`SDA`, `SCL`, `INT`, `VBAT`).
    * **DS3231MZ+ Option:** Internal TCXO with $\pm 2\text{ ppm}$ precision for celestial plate-solving star navigation ($1.2\text{ }\mu\text{A}$ draw).
@@ -808,25 +746,18 @@ To eliminate supply-chain bottlenecks, enable budget vs. pro hardware tiers, and
 4. **USB-PD 20W Fast Charge Sink: WCH CH224K (ESSOP-10) ⟷ STUSB4500 (QFN-24) ⟷ 5.1kΩ Pull-Downs:**
    * Dual pads for cheap Asian turnkey assembly (CH224K, $0.45) or certified Western DigiKey sourcing (STMicroelectronics STUSB4500, $1.80).
    * Two DNP 0402 pads allow omitting active PD silicon entirely and populating standard 5.1 kΩ pull-down resistors for basic 5V 3A (15W) charging.
-5. **Broadcom PCIe Gen 2 x1 Steering Bridge: VL805 USB 3.0 Hub ⟷ Direct M.2 NVMe SSD:**
-   * Four 0402 0-ohm jumper resistor links (`R_PCIE_TX_P/N`, `R_PCIE_RX_P/N`) steer the CM5's single PCIe Gen 2 x1 lane:
-     * **Position A (Default):** Routes PCIe x1 to VIA VL805, providing 4x external USB 3.0 ports.
-     * **Position B (Storage Workstation):** Routes PCIe x1 directly to the M.2 Key-M 2242 slot, unlocking a **2TB NVMe SSD operating at 400 MB/s** (with external peripherals falling back to native CM5 USB, TBD — verify against the CM5 datasheet).
+5. **PCIe steering bridge:** Removed. The CM5's single PCIe Gen 2 x1 lane goes directly to the M.2 Key-M NVMe socket; USB comes from the CM5's native ports (ADR-042).
 6. **Onboard LoRa SX1262: Populated ⟷ DNP (Zero-Radio SCIF / Aviation Build):**
    * Semtech SX1262 castellated module footprint can be left unpopulated (DNP) to save $5.50 and guarantee 100% physical absence of RF transmitters on ISM bands.
-   * RP2350 firmware polls SPI status; if absent, LoRa radio stacks are disabled, and the operator can attach external USB-C Hotpack 2 when active RF mesh is needed.
-7. **Cellular Identity: consumer SGP.22 eUICC MFF2 eSIM (part TBD, ADR-033) ⟷ DNP (Nano-SIM Only):**
-   * Operators who rely strictly on physical plastic SIM cards can mark the MFF2 SMD eSIM chip DNP. The hardware Nano-SIM push-push tray operates independently without bridging components.
-8. **Battery Chemistry Hardware Safety Straps: LiFePO4 (3.65V) ⟷ Li-ion (4.20V):**
-   * A 2-way solder-jumper bridge sets the hardware voltage divider feeding the TI BQ25895 `VREG` pin and RP2350 boot pin:
-     * **Jumper A (Default - Hardwired):** Rigidly locks charge voltage to **3.65V** (LiFePO4 safety limit). Software register tampering cannot override this hardware clamp.
-     * **Jumper B (Alternate Solder Bridge):** Reconfigures the clamp to **4.20V** for emergency builds using recycled 3.7V Li-ion or drone LiPo packs.
+   * RP2350 firmware polls SPI status; if absent, LoRa radio stacks are disabled, and the operator can attach an external USB-C LoRa accessory when active RF mesh is needed (Hotpacks are V2, ADR-034).
+7. **Cellular identity (eSIM / Nano-SIM):** Deferred to V2 (ADR-034); the V2 requirement is a consumer SGP.22 eUICC (ADR-033).
+8. **Battery chemistry strap:** Deleted. One chemistry, LiFePO4, charge limit `battery.charge_limit_v` (ADR-035).
 
 ### 2.23 Direct-to-Co-Processor "Instant-Ink" Low-Latency Inking Architecture
-To eliminate the 300ms Linux boot latency and 2.5W processor power penalty when quickly taking notes, sketching field maps, or recording tactical coordinates:
+To eliminate the seconds-long Linux resume from off/hibernate (ADR-036) and 2.5W processor power penalty when quickly taking notes, sketching field maps, or recording tactical coordinates:
 * **Hardware Interconnect:** The Wacom EMR digitizer's coordinate data stream (UART/I2C) and stylus proximity interrupt (`PEN_INT`) are routed directly to the Raspberry Pi RP2350B co-processor, with dual-buffer SPI lines feeding into the Kaleido 4 display controller (TBD, ADR-032).
 * **4.5 mW Always-Ready Legal Pad:**
-  * When the main CM5 Linux brain is asleep or off (consuming 0.000W; AUDIT 6 X4), bringing the stylus within 5mm of the display triggers `PEN_INT`, waking the RP2350 in **$<5\text{ milliseconds}$**.
+  * When the main CM5 Linux brain is off (consuming 0.000W; the CM5 has no RAM-retaining sleep, ADR-036), bringing the stylus within 5mm of the display triggers `PEN_INT`, waking the RP2350 in **$<5\text{ milliseconds}$**.
   * The RP2350 ingests raw $(X, Y, \text{Pressure})$ packets at 200 Hz and blits 1-bit black stroke vectors directly into the display controller using a specialized 15ms zero-ghosting micro-LUT.
   * Inking latency is sub-15ms, delivering the tactile responsiveness of pen on real paper at a total system draw of just **4.5 mW**.
 * **Vector Stroke PSRAM Cache & Atomic Linux Handoff:**
@@ -835,23 +766,23 @@ To eliminate the 300ms Linux boot latency and 2.5W processor power penalty when 
 
 ### 2.24 Multi-Source Emergency Auxiliary Battery Terminal (Under M.2 Service Hatch)
 To guarantee decadal survival in remote areas where the custom internal LiFePO4 pouch battery has aged out, failed, or been physically damaged:
-* **Hardware Interface:** Located inside the IP67 gasketed M.2 service hatch cavity (§4.6) is an auxiliary 2-pin JST-PH (2.0mm pitch) keyed terminal block with adjacent gold-plated solder pads.
+* **Hardware Interface:** Located inside the gasketed M.2 service hatch cavity (§4.6) is an auxiliary 2-pin JST-PH (2.0mm pitch) keyed terminal block with adjacent gold-plated solder pads.
 * **Wide-Voltage Buck Tolerance (3.9V to 14.0V DC):**
-  * The terminal is wired directly into the input stage of the TI BQ25895 power path manager via an onboard Texas Instruments LM74700-Q1 ideal diode controller (reverse-polarity protected up to -36V).
+  * The terminal is wired directly into the input stage of the TI BQ25798 power path manager via an onboard Texas Instruments LM74700-Q1 ideal diode controller (reverse-polarity protected up to -36V).
   * The system will cold-boot and operate continuously from **any salvageable electrical source**:
     * A single 18650 or 21700 cylindrical cell (3.6V–4.2V) pulled from a flashlight or power tool.
     * 3x or 4x standard AA/AAA alkaline or NiMH batteries in series (3.6V–6.0V).
     * A 12V vehicle cigarette lighter / lead-acid battery via standard wire leads.
     * A raw 12V / 18V folding camping solar panel without an external charge controller.
     * **Thermoelectric Generator (TEG) / Peltier Fire Powering:** Connect a standard Seebeck TEG tile ($15) placed on a campervan woodstove or camp stove with snow/water on top. The 150°C thermal gradient produces 3.9V–8.0V DC at 500mA–1A (3W–8W) to run and recharge SolarDeck continuously through arctic winter blizzards with zero sunlight.
-* **Decoupled Operation:** An internal jumper or software command allows the BQ25895 to operate in pure "bus-converter mode," running the CM5 and display directly from the auxiliary input with the internal pouch cell 100% disconnected.
+* **Decoupled Operation:** An internal jumper or software command allows the BQ25798 to operate in pure "bus-converter mode," running the CM5 and display directly from the auxiliary input with the internal pouch cell 100% disconnected.
 
 ### 2.25 3-Position Hardware Privacy & Stealth Disconnect Switch
 To deliver mathematically verifiable, physical airgapped privacy for tactical operations, secure negotiations, and sovereign computing:
 * **Switch Mechanism:** A heavy-duty, IP67 sealed 3-position miniature slide switch located on the top chassis flank:
-  1. **Position 1: NORMAL (Green Index):** All microphones, cameras, and radio load switches operate normally under Linux kernel software power management.
-  2. **Position 2: MIC MUTE (Yellow Index):** Mechanically shunts the PDM clock line (`MIC_CLK`) of both Knowles MEMS microphones to ground (GND) through a physical break switch. Without a clock signal, the MEMS charge pump cannot oscillate; audio eavesdropping is physically and electrically impossible (0.000V signal level). The camera and radios remain operational.
-  3. **Position 3: FULL BLACKOUT (Red Index):** Mechanically disconnects power (`VCC`) to both microphones, pulls the Sony IMX708 MIPI CSI-2 enable line (`CAM_EN`) hard to GND, and de-asserts the hardware gates on the Quectel LTE modem, SX1262 LoRa, and ST25R3916 NFC chips to 0.000V.
+  1. **Position 1: NORMAL (Green Index):** All microphones and radio load switches operate normally under Linux kernel software power management.
+  2. **Position 2: MIC MUTE (Yellow Index):** Mechanically shunts the PDM clock line (`MIC_CLK`) of both Knowles MEMS microphones to ground (GND) through a physical break switch. Without a clock signal, the MEMS charge pump cannot oscillate; audio eavesdropping is physically and electrically impossible (0.000V signal level). The radios remain operational.
+  3. **Position 3: FULL BLACKOUT (Red Index):** Mechanically disconnects power (`VCC`) to both microphones and de-asserts the hardware gates on the u-blox MAX-M10S GNSS receiver and SX1262 LoRa to 0.000V.
 * **Diagnostic Sense Line (`PRIVACY_STAT`):** An auxiliary sense pin informs the RP2350 and Linux kernel of the physical switch position, allowing the OS to display a permanent hardware padlock icon on the 10.3" E-Ink screen with zero CPU overhead.
 
 ### 2.26 Hardware USB Data-Line Shield & Forensic Isolation ("Juice-Jacking" Defense)
@@ -905,8 +836,8 @@ recheck them, and `scripts/check_cost_and_power.py` (CI Phase 14) recomputes bot
 
 | Claim | Derivation | Result |
 | :--- | :--- | :--- |
-| Bezel strip sustains the ambient station forever | 0.15 W × 4.28 × 0.70 = **0.45 Wh/day** vs 4.5 mW × 24 h = **0.108 Wh/day** | **4.2× margin** — claim holds |
-| LoRa repeater lasts 80+ days | 32 Wh ÷ (12–15 mW × 24 h) | **89–111 days** — claim holds |
+| Bezel strip tops up the idle co-processor outdoors (ADR-041) | 0.15 W × 4.28 × 0.70 = **0.45 Wh/day** vs 4.5 mW × 24 h = **0.108 Wh/day** | **4.2× margin** — claim holds |
+| LoRa repeater endurance | `battery_wh.lifepo4` ÷ (12–15 mW × 24 h) | TBD until the cell is chosen (ADR-040) |
 
 Two limits this makes explicit:
 
@@ -914,8 +845,8 @@ Two limits this makes explicit:
    inputs) push energy into the battery; at peak the CM5 draw (TBD — verify against the CM5 datasheet) exceeds the 1.7–1.8 A
    remaining budget. So "runs on sunlight" (true, via the pack) and "runs while charging from sunlight
    at full load" (false) are different claims.
-2. **The CSV 7.6 Wh cell does not inherit any endurance claim.** At exploration duty it is 18–23 h;
-   the 32 Wh pack is what every multi-day figure refers to.
+2. **No cell inherits an endurance claim.** The CSV 7.6 Wh cell is a placeholder, and every multi-day
+   figure is TBD until the cell is chosen (ADR-040).
 
 ---
 
@@ -993,7 +924,7 @@ Mounting a computing terminal to a bicycle or motorcycle handlebar in direct mid
 3. **Internal Aerogel Thermal Shielding & LiFePO4 Chemistry:**
    * **Aerogel Barrier:** A 0.5mm layer of **Aspen Aerogels Spaceloft** ($k = 0.014\text{ W/m}\cdot\text{K}$) sits directly between the CNC rear chassis and the internal battery pouch, mechanically preventing external chassis heat spikes from conducting into the cells.
    * **Safe Operating Window:** Conventional lithium-polymer (NMC) batteries swell, degrade, and trigger fire risk above +45°C. SolarDeck's **LiFePO4 chemistry safely tolerates +65°C continuous operation**.
-   * **Autonomous Path Bypass:** If ambient heat exceeds +45°C, the TI BQ25895 automatically suspends battery charging while continuing to power the CM5 processor directly via NVDC power-path management, keeping the navigation dashboard alive with zero battery degradation.
+   * **Autonomous Path Bypass:** If ambient heat exceeds +45°C, the TI BQ25798 automatically suspends battery charging while continuing to power the CM5 processor directly via NVDC power-path management, keeping the navigation dashboard alive with zero battery degradation.
 4. **Mechanical Cockpit Mounting:**
    * Interfaces with standard **RAM Mount 1" Ball (RAM-B-238U)** or Peak Design motorcycle mounts via the 4x M2.5 threaded brass inserts and rear MagSafe N52 magnetic anchor.
 
@@ -1062,7 +993,7 @@ To eliminate $25,000 in custom injection tooling risk and 6 months of bespoke ZM
   * **The Problem Solved:** Cantilevering a phone below the bottom bezel creates a 227mm lever arm that exhausts wrists.
   * **The Overlap Solution:** A 3D-printed SLS PA12 snap cradle clips the Clicks Communicator **over the front face of the lower bezel/screen**, suspended 1.0mm above the E-Ink glass with 0.5mm Poron foam cushioning.
   * **Ergonomics:** Hands grip the rigid lower chassis of SolarDeck. The 510g tablet mass is cradled directly between your palms with **zero rotational wrist torque**, creating a balanced handheld terminal (like a Steam Deck or Nintendo DS).
-  * **Dual-Screen Hybrid:** Top 10.3" E-Ink runs Wayland terminal/code (shifted via `solardeck-chin-dock`); bottom 4.03" AMOLED runs live color Google Maps, telemetry widgets, and tactile QWERTY thumb keys. Wired 3cm flat U-cable bridges into USB-C Port 2 for sub-1ms typing and 15W reverse charging.
+  * **Dual-Screen Hybrid:** Top 10.3" E-Ink runs Wayland terminal/code (shifted via `solardeck-chin-dock`); bottom 4.03" AMOLED runs live color Google Maps, telemetry widgets, and tactile QWERTY thumb keys. Wired 3cm flat U-cable bridges into USB-C Port 2 for sub-1ms typing and reverse charging (capped at `power_bank.otg_max_a`, ADR-035).
 
 
 ### 3.4 Phase 2 SnapDeck Footprint Preservation
@@ -1071,7 +1002,7 @@ To eliminate $25,000 in custom injection tooling risk and 6 months of bespoke ZM
 ### 3.5 Tactile Blackout Indexing Pips & 45° Orientation Chamfer (Zero-Light Operation)
 To ensure reliable, error-free operation in pitch darkness, under strict military light discipline, or when wearing Night-Vision Goggles (NVG):
 * **Tactile Edge Indexing Pips:** The CNC aluminum / PA12 nylon unibody integrates raised tactile Braille-style hemispherical pips (0.6mm height) machined directly into the chassis edge adjacent to primary controls:
-  * **• (1 Pip):** Located directly adjacent to the recessed Power / S2idle Wake button.
+  * **• (1 Pip):** Located directly adjacent to the recessed Power / Wake button.
   * **•• (2 Pips):** Located adjacent to the E-Ink Global Inversion / Ghosting Flush button.
   * **••• (3 Pips):** Located adjacent to the 3-position Hardware Privacy & Stealth Slide Switch (§2.25).
 * **Asymmetric 45° Corner Orientation Chamfer:**
@@ -1111,7 +1042,7 @@ To ensure reliable, error-free operation in pitch darkness, under strict militar
 │ • Chemically Etched Matte Glass Overlay (15% Haze, Paper-Texture Friction)  │
 │ • 10.3" E Ink Kaleido 4 Panel (ADR-032) + Wacom EMR Digitizer              │
 │ • 0.1mm Mu-Metal / Ferrite Magnetic Shielding Layer (Behind Digitizer)      │
-│ • Top Bezel: IXYS Micro-Solar Strip + 13.56 MHz NFC Antenna Loop (YubiKey)  │
+│ • Top Bezel: IXYS Micro-Solar Strip + GNSS Antenna (NFC is V2, ADR-034)     │
 │ • Bottom Edge: IP67 3.5mm TRRS Audio Jack + Recessed Recovery + USB-C Port 1│
 │ • Right Flank: Magnetic Precision Stylus Clamping (N52 Array + Align Groove)│
 │ • Left Flank: 5-Way Tactical Navigation Rocker (ALPS SKRH) + Airgap Switch  │
@@ -1119,7 +1050,7 @@ To ensure reliable, error-free operation in pitch darkness, under strict militar
 │ [INTERNAL COPLANAR CHASSIS STACKUP (X-Y ARRANGEMENT)]                       │
 │ • Front Glass + E-Ink Panel + Wacom EMR Layer: TBD (ADR-032)                │
 │ • Side-by-Side Co-Planar Layout behind Display:                             │
-│   - Left/Lower Cavity: 8.5 mm LiFePO4 Pouch Cell (142 x 90 mm, 32 Wh)       │
+│   - Left/Lower Cavity: 8.5 mm LiFePO4 Pouch Cell (142 x 90 mm, Wh TBD)      │
 │   - Right/Upper Cavity: 1.2 mm 6-Layer PCB + 1.5 mm DF40 gap + CM5 (TBD)    │
 │ • Outer Chassis: 232.0 x 170.0 mm; cavity 12.5 mm; total thickness 14.0 mm   │
 │ • Thermal Isolation Barrier between Battery Cell and Compute Module         │
@@ -1133,11 +1064,11 @@ To ensure reliable, error-free operation in pitch darkness, under strict militar
 │   - 3x Uniform Friction-Fit MicroSD Card Slots (Supports Nano-SIM via shell)│
 │   - 1x Stainless Steel SIM Ejector Tool Retaining Clip                      │
 │ • GORE ePTFE Pressure Vent (PMF100396): Equalizes altitude barometric delta │
-│   while maintaining IP67 water/dust seal (tested safe to 1 meter immersion) │
+│   while maintaining the IP54 (V1 target) water/dust seal                    │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### 4.1 Ingress Protection (IP67 Engineering)
+### 4.1 Ingress Protection (IP54 V1 target; IP67 V2 target, ADR-039)
 * **Perimeter Gasket:** Continuous CNC silicone O-ring tongue-and-groove channel sealing front lens to rear housing.
 * **Ports & Connectors:**
   * 2x IP68 waterproof Type-C receptacles with rear epoxy potting and silicone outer O-rings.
@@ -1174,7 +1105,7 @@ To protect sensitive private keys, encrypted credentials, and communications log
 
 ### 4.6 The "Cold Storage Vault" & Rechargeable Desiccant Pocket (Concealed Inside M.2 Service Hatch)
 To make SolarDeck the ultimate sovereign, off-grid archive workstation without adding a single cent in electronics or compromising exterior unibody waterproofing:
-* **Gasketed M.2 Service Hatch Cavity:** Molded directly into the inner face of the flush, IP67 silicone-gasketed M.2 SSD service hatch on the rear chassis unibody (secured by 2x stainless M2 captive screws).
+* **Gasketed M.2 Service Hatch Cavity:** Molded directly into the inner face of the flush, silicone-gasketed M.2 SSD service hatch on the rear chassis unibody (secured by 2x stainless M2 captive screws).
 * **Storage & Environmental Maintenance Capacity:**
   * **3x Uniform Friction-Fit MicroSD Card Pockets:** Accommodates three extra MicroSD cards (e.g., Card 1: 1TB offline Kiwix Wikipedia + Library of Genesis; Card 2: bootable Tails / Arch Linux rescue OS; Card 3: encrypted personal git vault).
   * **Nano-SIM Compatibility:** Standardizes on uniform MicroSD pocket dimensions (15.0mm × 11.0mm × 1.0mm). To carry a spare Nano-SIM, users insert the SIM into a standard $0.05 plastic MicroSD-shaped carrier shell. This eliminates asymmetric mold tooling and gives users complete freedom to carry 3x MicroSDs or any combination of SDs and SIMs.
@@ -1186,7 +1117,7 @@ To make SolarDeck the ultimate sovereign, off-grid archive workstation without a
 * **Mechanical Retention & Weather Protection:**
   * Each card pocket is lined with molded 85A TPU retention micro-ribs and a thumb-notch for quick extraction with a fingernail.
   * Zero rattle, zero vibration, and 100% immune to drops.
-  * Completely protected inside the IP67 sealed internal envelope—invisible from the outside, tamper-resistant, and impervious to weather, dirt, and water.
+  * Completely protected inside the sealed (IP54 V1 target) internal envelope—invisible from the outside, tamper-resistant, and impervious to weather, dirt, and water.
 * **Bill of Materials Cost:** **$0.00** (Zero electrical parts; pure CAD negative-cavity geometry).
 
 ---
@@ -1211,7 +1142,7 @@ To interface wideband SDR (USB), Sub-GHz (SPI), 125 kHz RFID (analog/pulse), NFC
 * **Infrared Transceiver:** Vishay **TSOP4838** 38 kHz demodulator receiver + dual high-power **TSAL6200** 940 nm LEDs driven by 2N7002 MOSFET for 15-meter IR blasting.
 
 ### 5.2 Tactical Sky-Scan & SIGINT Suite (Air & Satellite Radio Analysis)
-While the core tablet natively receives positioning and orbital timing from 4 GNSS satellite constellations (GPS, Galileo, GLONASS, BeiDou via the Quectel EG25-G modem's integrated Qualcomm GNSS receiver), wideband RF scanning of airplanes and atmospheric satellites is offloaded to the backpack:
+While the core tablet natively receives positioning and orbital timing from 4 GNSS satellite constellations (via the standalone u-blox MAX-M10S receiver, ADR-038), wideband RF scanning of airplanes and atmospheric satellites is offloaded to the backpack:
 * **Wideband Software Defined Radio (SDR):** Integrated **RTL2832U + R860/R820T2** tuner (24 MHz to 1766 MHz).
 * **Dedicated Top-Right SMA Port:** Tuned for wideband VHF/UHF tactical reception.
 * **Capabilities Enabled:**
@@ -1219,7 +1150,7 @@ While the core tablet natively receives positioning and orbital timing from 4 GN
   2. **Aircraft Voice & ACARS (118–137 MHz):** Decodes air-traffic control telemetry and aircraft maintenance datalinks.
   3. **Direct Weather Satellite Imagery (137 MHz):** Direct reception of orbiting **NOAA 15/18/19** (APT) and **Meteor-M2** (LRPT) satellites as they pass overhead, decoding live infrared cloud maps via `satdump` with zero internet.
   4. **Marine AIS Vessel Tracking (161.975 / 162.025 MHz):** Tracks commercial cargo ships, tankers, and coastal vessel positions via `rtl-ais`.
-* **Thermal & Power Architecture:** An active SDR tuner draws **1.5W to 2.2W (300–450 mA @ 5V)** and runs warm. Housing it in the rear snap-on backpack keeps heat away from the battery and E-Ink display, while allowing the core tablet to maintain its 10+ hour workstation endurance when not scanning the skies.
+* **Thermal & Power Architecture:** An active SDR tuner draws **1.5W to 2.2W (300–450 mA @ 5V)** and runs warm. Housing it in the rear snap-on backpack keeps heat away from the battery and E-Ink display, while sparing the core tablet's battery (workstation endurance TBD until the cell is chosen, ADR-040) when not scanning the skies.
 
 ### 5.3 Modular RF Backpack Interface (USB-C Only in V1)
 
@@ -1237,7 +1168,7 @@ The 8-pin pogo expansion bus is **descoped for V1** (ADR-002). Pogo pins are inc
 ### 6.2 Dual-Bank A/B Flash Partitioning with Hardware Watchdog Rollback
 The 16MB Winbond W25Q128JVS QSPI NOR flash memory is partitioned into two distinct physical segments:
 1. **Bank A (0x000000 – 0x7FFFFF, 8MB): Factory "Golden Image" (Cryptographically Locked):**
-   * Contains the baseline, production-verified power management, S2idle wake listener, battery charging loop, and emergency display-controller recovery waveforms.
+   * Contains the baseline, production-verified power management, wake listener, battery charging loop, and emergency display-controller recovery waveforms.
    * Marked read-only by the RP2350 internal memory protection unit (MPU).
 2. **Bank B (0x800000 – 0xFFFFFF, 8MB): "Playground / Experimental" Bank:**
    * Receives live on-the-fly firmware flashes, custom RISC-V DSP routines, experimental PIO microcode, and alternative operating kernels (e.g., Zephyr / FreeRTOS).
@@ -1256,8 +1187,8 @@ The 16MB Winbond W25Q128JVS QSPI NOR flash memory is partitioned into two distin
 
 ### 6.4 Autonomous Analog Battery & Thermal Protection
 * **Hardware-Autonomous Silicon Safety:** Over-temperature and over-voltage charging cutoffs do not rely on running firmware or operating system software.
-* **Dedicated NTC Analog Comparator:** The 10 kΩ NTC thermistor inside the LiFePO4 battery pouch connects directly to the `TS` (Temperature Sense) analog pin on the **Texas Instruments BQ25895** buck charger.
-* **Instant Analog Trip:** If cell temperature exceeds 45°C during charging or 60°C during discharge, internal analog comparators within the BQ25895 silicon instantly terminate charging current and disconnect the load switch in nanoseconds. This hardware interlock operates independently of the Linux kernel, RP2350 firmware, or software state.
+* **Dedicated NTC Analog Comparator:** The 10 kΩ NTC thermistor inside the LiFePO4 battery pouch connects directly to the `TS` (Temperature Sense) analog pin on the **Texas Instruments BQ25798** buck-boost charger.
+* **Instant Analog Trip:** If cell temperature exceeds 45°C during charging or 60°C during discharge, internal analog comparators within the BQ25798 silicon instantly terminate charging current and disconnect the load switch in nanoseconds. This hardware interlock operates independently of the Linux kernel, RP2350 firmware, or software state.
 
 ### 6.5 Physical Recessed Hardware Recovery Switch ("Dead-Man Recovery")
 * A miniature recessed tactile switch is located adjacent to USB-C Port 1 on the lower chassis flank, accessible via a standard paperclip or SIM-eject tool.
@@ -1348,7 +1279,7 @@ Even with 30-year zero-failure design margins, SolarDeck preserves immediate, lo
    * Enables emergency field power injection from external battery packs or bench supplies if internal PMIC circuits are damaged.
 4. **Fastened Rigid Unibody (Zero Adhesive):**
    * The enclosure relies entirely on **12x stainless steel M2.5 Torx machine screws** threading into brass heat-set inserts embedded in the CNC aluminum or PA12 nylon frame.
-   * The chassis can be opened and resealed over 500 times with zero degradation of the continuous hollow-core silicone IP67 perimeter gasket.
+   * The chassis can be opened and resealed over 500 times with zero degradation of the continuous hollow-core silicone perimeter gasket (IP54 V1 target).
 
 ### 7.3 Automated Micro-Robotic Servicing Compatibility
 To support autonomous robotic servicing via desktop Cartesian gantries (Ender-3 / OpenPnP) or robotic arms:
@@ -1357,7 +1288,7 @@ To support autonomous robotic servicing via desktop Cartesian gantries (Ender-3 
 * **Room-Temperature Solderless Cold Repair:**
   * To avoid the thermal degradation, tip oxidation, and corrosive flux residues of traditional robotic soldering irons, automated physical repairs use **pneumatic micro-dispensing of Room-Temperature Silver Conductive Epoxy** (MG Chemicals 8331S / CircuitWorks CW2400).
   * Dispensed via a 30-gauge blunt needle onto solder jumpers (`SJ1`–`SJ8`), the epoxy cures into a solid metallic electrical bridge with $<0.001\ \Omega\cdot\text{cm}$ resistivity, requiring zero heat and lasting for decades.
-* **Power Supply for Repair Tools:** The tablet's **USB-C Port 2 supplies 15W continuous (5V @ 3A)** via reverse power delivery, providing sufficient electrical power to run a desktop gantry controller, camera ring light, and micro-dispenser without an external wall adapter.
+* **Power Supply for Repair Tools:** The tablet's **USB-C Port 2 supplies 5V reverse power capped at `power_bank.otg_max_a`** (ADR-035) to run a desktop gantry controller, camera ring light, and micro-dispenser without an external wall adapter.
 
 ### 7.4 Decadal Mechanical Durability & Anti-Degradation Architecture
 To prevent the physical wear, joint fatigue, thread stripping, and material degradation that degrade consumer electronics over 10 to 30 years:
@@ -1413,7 +1344,7 @@ To prevent the physical wear, joint fatigue, thread stripping, and material degr
    * Scratch-proof, unaffected by UV solar rays or high temperatures, and guaranteed permanent for 100+ years.
 5. **30 Micro-Inch Electrolytic Hard Gold Contact Plating:**
    * Standard consumer electronics use Flash Gold (1–3 micro-inches) or basic ENIG, which rapidly wears through to raw copper, causing green oxidation (copper carbonate) and contact pitting in marine or humid environments.
-   * All external contact surfaces (bed-of-nails factory pads, SIM/MicroSD spring terminals, and bottom pogo reserve pads) mandate **30 micro-inch Electrolytic Hard Gold over 100 micro-inch Nickel barrier plating (MIL-G-45204 Type II)**.
+   * All external contact surfaces (bed-of-nails factory pads, MicroSD spring terminals, and bottom pogo reserve pads) mandate **30 micro-inch Electrolytic Hard Gold over 100 micro-inch Nickel barrier plating (MIL-G-45204 Type II)**.
    * Rated for over **10,000 mechanical contact wiping cycles** in salt-fog environments without gold depletion or galvanic pitting.
 6. **Internal Humidity & Dew-Point Telemetry (Sensirion SHT40):**
    * An ultra-low-power **Sensirion SHT40 precision relative humidity and temperature sensor** ($0.4\text{ }\mu\text{A}$ average draw, $\pm 1.5\%\text{ RH}$ accuracy) is positioned on the carrier board adjacent to the M.2 cavity on I2C address `0x44`.
@@ -1454,7 +1385,7 @@ To guarantee that the electronics and physical components survive 10 to 30 years
 
 1. **Conservative LiFePO4 Voltage Clamping (The "30-Year Battery" Rule):**
    * Standard LiFePO4 charging terminates at **3.65V/cell**. However, holding cells above 3.50V accelerates electrolyte oxidation.
-   * By programming the TI BQ25895 charger to clamp bulk float at **3.45V/cell**, we retain 95% of usable energy while dropping internal mechanical cell stress to near zero—tripling cycle life to **over 10,000 charge cycles**.
+   * By programming the TI BQ25798 charger to clamp bulk float at **3.45V/cell**, we retain 95% of usable energy while dropping internal mechanical cell stress to near zero—tripling cycle life to **over 10,000 charge cycles**.
 2. **Zero Wet Aluminum Electrolytic Capacitors (No Drying Out):**
    * The primary failure point in vintage computers and power supplies is liquid electrolyte drying out or leaking corrosive acid after 10–15 years.
    * SolarDeck exclusively mandates **solid Tantalum-Polymer (KEMET T520) and soft-termination Ceramic MLCCs**. Solid-state dielectrics do not contain liquid, eliminating shelf-life degradation.
@@ -1494,7 +1425,7 @@ six items below are constraints from `docs/spec_values.json` → `longevity`, au
 │ 3. SEAL             │ • Die-cut VMQ silicone gasket, 27% compression, P/N'd   │
 │                     │   in the BOM as a wear item ($2.10)                     │
 │                     │ • TPU bumpers are impact-only; they are not the seal    │
-│                     │ • Gate: IP67 after 500 open/reseal cycles                │
+│                     │ • Gate: IP54 (V1 target) after 500 open/reseal cycles    │
 ├─────────────────────┼───────────────────────────────────────────────────────┤
 │ 4. CONNECTORS       │ • USB-C receptacles rated >=20,000 insertion cycles      │
 │                     │   (base spec said 10,000: daily charging for 30 years    │

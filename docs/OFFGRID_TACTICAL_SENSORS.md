@@ -2,6 +2,7 @@
 
 Written 2026-10-19 12:12 UTC in the Pi harness by antigravity/gemini-3.8-flash
 Revised 2026-10-21 15:59 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
+Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
 
 Detailed architectural specification for campervan energy bus integration, enhanced sensor navigation (RTK, celestial plate-solving, 9-DOF IMU), grid-down doomsday survival hardware, frontlight optical engineering, and offline AI knowledgebase traversal.
 
@@ -61,17 +62,17 @@ While standard single-band GPS provides 3 to 5 meter accuracy, SolarDeck's senso
 ├───────────────────────┬─────────────────┬───────────────────────────────────┤
 │ NAVIGATION TIER       │ TYPICAL ACCURACY│ HARDWARE / SENSOR MECHANISM       │
 ├───────────────────────┼─────────────────┼───────────────────────────────────┤
-│ Standard GNSS (L1)    │ 3 – 5 Meters    │ Quectel EG25-G Qualcomm GNSS      │
+│ Standard GNSS (L1)    │ 3 – 5 Meters    │ u-blox MAX-M10S (ADR-038)         │
 │ Galileo HAS (E6)      │ < 20 cm         │ Satellite Precise Point Pos (PPP) │
 │ Dual-Frequency RTK    │ 1.4 cm (0.5 in) │ u-blox ZED-F9P (L1/L2/L5 Carrier) │
 │ Barometric Altitude   │ ± 10 cm         │ Bosch BMP390 (0.01 hPa I2C)       │
-│ Optical Celestial Nav │ 0.5 – 1.0 Mile  │ 12MP Camera + DS3231 RTC (Zero RF)│
+│ Optical Celestial Nav │ V2 (ADR-034)    │ Needs the deferred rear camera    │
 │ Inertial 9-DOF Vector │ Continuous $\Delta$│ Bosch BMI270 (6-DOF) + BMM350 Mag │
 └───────────────────────┴─────────────────┴───────────────────────────────────┘
 ```
 
 ### 2.1 Centimeter-Level RTK & Galileo HAS (Multi-Band GNSS)
-* **The RTK Upgrade Option:** The carrier board expansion header accommodates high-precision dual-frequency GNSS modules (**u-blox ZED-F9P** or **Quectel LC29H**). By tracking carrier phase cycles across L1, L2, and L5 bands alongside local RTCM differential corrections (via LoRa or cellular NTRIP), horizontal position accuracy drops to **1.4 centimeters**.
+* **The RTK Upgrade Option:** The carrier board expansion header accommodates high-precision dual-frequency GNSS modules (**u-blox ZED-F9P** or **Quectel LC29H**). By tracking carrier phase cycles across L1, L2, and L5 bands alongside local RTCM differential corrections (via LoRa, or NTRIP over Wi-Fi/tethering), horizontal position accuracy drops to **1.4 centimeters**.
 * **Galileo HAS (High Accuracy Service):** The European Galileo constellation transmits free, open-access correction parameters directly from orbit on the **E6 carrier (1278.75 MHz)**. This provides **sub-20 cm accuracy worldwide** without requiring ground base stations, internet access, or local radios.
 
 ### 2.2 9-DOF Celestial & Orientation IMU (Sensor-Driven Stargazing)
@@ -82,12 +83,7 @@ While standard single-band GPS provides 3 to 5 meter accuracy, SolarDeck's senso
   * Inverted red-on-black or amber-on-black e-paper display modes preserve human rhodopsin (scotopic rod vision) with zero photon glare.
 
 ### 2.3 Optical Celestial Navigation & Plate-Solving (Zero-Satellite Doomsday Nav)
-* **The Scenario:** In the event of satellite jamming, spoofing, orbital kinetic collisions (Kessler syndrome), or electromagnetic warfare, space-based GNSS becomes unavailable.
-* **Optical Plate-Solving Pipeline:**
-  1. The rear **12MP Sony IMX708 PDAF autofocus camera** captures a 1-second exposure of the night sky.
-  2. A local, completely offline plate-solving engine (`astrometry.net` or `stellar-solver` with a compact 500MB Tycho-2/Hipparcos star catalog on NVMe) identifies geometric star triangles.
-  3. The software computes the exact optical boresight coordinates (Right Ascension $\alpha$, Declination $\delta$) to sub-arcminute optical precision, immune to magnetic interference.
-  4. Combining celestial sight reduction with the microsecond-precise UTC time from the **DS3231 TCXO RTC**, SolarDeck computes geographic latitude and longitude **without a single radio wave**.
+V2 (ADR-034): needs the deferred rear camera.
 
 ---
 
@@ -103,7 +99,7 @@ To guarantee survival and utility during severe natural disasters, infrastructur
 ├────────────────────┼────────────────────────────────────────────────────────┤
 │ All-Band HF Radio  │ Si4732 / Si4735 DSP Receiver (LW, MW, SW 3–30M, SSB)   │
 │ Radiation Monitor  │ Pocket Geiger Type 5 / BG51 Tube (RP2350 Interrupt)    │
-│ Wild Power DC Port │ 3.9V–14V Raw DC Input to TI BQ25895 (Direct Solar/Auto)│
+│ Wild Power DC Port │ 3.6V–14V Raw DC Input to TI BQ25798 (Direct Solar/Auto)│
 │ EMP Hardening      │ Sub-ns Bidirectional TVS Arrays + Faraday Storage      │
 │ Physical Hardcopy  │ Mini 58mm Thermal Receipt Printer (ESC/POS Paper Map)  │
 └────────────────────┴────────────────────────────────────────────────────────┘
@@ -124,8 +120,8 @@ To guarantee survival and utility during severe natural disasters, infrastructur
 
 ### 3.3 "Wild Power" Raw DC Input (Salvaged Power Harvesting)
 * **The Problem:** In a disaster, regulated 5V USB-PD wall supplies do not exist. Power must be drawn from salvaged 12V car batteries, fluctuating 18V folding solar blankets, or improvised bicycle/water dynamos.
-* **Implementation:** The carrier board routes an auxiliary rugged 2-pin screw terminal directly to the **TI BQ25895** buck charger:
-  * Accepts raw DC voltages from **3.9V to 14.0V**.
+* **Implementation:** The carrier board routes an auxiliary rugged 2-pin screw terminal directly to the **TI BQ25798** charger (ADR-035):
+  * Accepts raw DC voltages from **3.6V to 14.0V** (BQ25798 input floor, datasheet).
   * Integrated Dynamic Power Management (VINDPM) prevents input voltage collapse when connected to weak or shaded solar panels.
 
 ### 3.4 Micro Thermal Hardcopy Receipt Printer (ESC/POS)
@@ -217,7 +213,7 @@ SolarDeck runs a local, airgapped **Retrieval-Augmented Generation (RAG)** pipel
   * Active Inference RAM: ~2.4 GB (including 4K KV cache).
   * System Free Memory: the rest of the CM5's 16 GB for Linux, Wayland, and user tasks.
   * Inference Throughput: TBD — verify on CM5.
-  * Battery Consumption: ~3.2W during 20 seconds of generation = **~0.018 Wh per query** (< 0.06% of the 32 Wh pack).
+  * Battery Consumption: ~3.2W during 20 seconds of generation = **~0.018 Wh per query** (share of the pack TBD until the cell is chosen, ADR-040).
 * **Zero-Hallucination Grounding:** The prompt template strictly constrains the model to cite only the retrieved excerpts. If an answer is not present in the local manuals, the model explicitly acknowledges the absence rather than guessing.
 
 ---
@@ -248,9 +244,7 @@ The Raspberry Pi CM5's BCM2712 integrates a 3D graphics and compute GPU with ope
    * A custom GLSL fragment shader running on the CM5 GPU dynamically maps 24-bit frames into 1-bit binary or 2-bit (4-level) dithered bitmaps in **under 2.0 milliseconds**, creating smooth optical gradients with near-zero CPU load.
 2. **Vulkan Matrix Compute Acceleration (`llama.cpp` & `whisper.cpp`):**
    * Leveraging Mesa's native `v3dv` Vulkan driver, matrix multiplications and token embedding lookups can be partially offloaded from the Cortex-A76 cores to the GPU shaders, improving local STT transcription latency and conserving battery.
-3. **Hardware Camera ISP & Outgoing Video Encoding:**
-   * Incoming raw Bayer frames from the 12MP Sony IMX708 sensor pass through the Broadcom hardware Image Signal Processor (ISP) for lens shading correction, auto-white-balance, and hardware demosaicing.
-   * Outgoing video encoding for tactical streaming or reconnaissance recording: hardware encoder support TBD — verify on CM5.
+3. **Hardware Camera ISP & Outgoing Video Encoding:** V2 (ADR-034): needs the deferred rear camera.
 
 ---
 
@@ -258,36 +252,7 @@ The Raspberry Pi CM5's BCM2712 integrates a 3D graphics and compute GPU with ope
 
 *Appended 2026-10-19 13:00 UTC in the Pi harness by antigravity/gemini-3.8-flash*
 
-To achieve true physical reliability, zero-leakage battery efficiency, and foolproof field survivability, the system architecture rigorously divides hardware into **Core Onboard Subsystems** and **Modular USB-C Hotpacks**:
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                 CORE TABLET vs. MODULAR USB-C HOTPACK ARCHITECTURE          │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ 1. THE CORE TABLET (Self-Contained Daily Driver & Survival Terminal)        │
-│    • Brains: Broadcom CM5 (Linux) + RP2350B Co-Processor (12mW Supervisor)  │
-│    • Display: 10.3" Kaleido 4 + Laminated Wacom EMR Digitizer               │
-│    • Primary Mesh: Semtech SX1262 LoRa (Meshtastic 24/7 on RP2350 SPI)      │
-│    • Security & Auth: 13.56 MHz NFC (ST25R3916 for YubiKey FIDO2 & Tap-Pair)│
-│    • Inertial & Weather: 9-DOF IMU (BMI270/BMM350) + Bosch BMP390 Barometer │
-│    • Acoustic Array: Dual Knowles MEMS Microphones (Whisper Voice-to-Text)  │
-│    • Cellular & GNSS: Quectel EG25-G LTE + Qualcomm GNSS + eSIM / Nano-SIM  │
-│    • Power: 8,000–10,000 mAh LiFePO4 (3.2V) + TI BQ25895 + Bezel Solar Strip│
-├─────────────────────────────────────────────────────────────────────────────┤
-│ 2. THE EXPANSION INTERFACE: PURE USB-C PORT 2 (No Fragile Pogo Pins!)       │
-│    • Mechanical Anchor: Rear MagSafe Magnetic Ring + 4x M2.5 Threaded Inserts│
-│    • Electrical Connection: Recessed, low-profile right-angle USB-C male    │
-│      mating to IP68-sealed USB-C Port 2 (High-Speed Host).                  │
-│    • Advantage: Eliminates spring-loaded pogo pins that jam or corrode from │
-│      beach sand, volcanic dust, or salt spray in tropical environments.      │
-├─────────────────────────────────────────────────────────────────────────────┤
-│ 3. THE 4 SPECIALIZED MODULAR USB-C HOTPACKS                                 │
-│    • HOTPACK 1: DOOMSDAY SKY-SCAN & SIGINT (Passive Stealth Scanner)        │
-│    • HOTPACK 2: TACTICAL DUAL-MESH & HF SHORTWAVE TRANSCEIVER (Active Comms)│
-│    • HOTPACK 3: CBRN & SEARCH-AND-RESCUE ENVIRONMENTAL (Hazmat & Fire)     │
-│    • HOTPACK 4: PRECISION RTK CENTIMETER SURVEY (1.4cm Land Surveying)      │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+USB-C Hotpacks are deferred to V2 (ADR-034). The V1 core tablet is listed in `README.md` and `MVP_ARCHITECTURE.md` §1.
 
 ---
 
@@ -298,69 +263,8 @@ To achieve true physical reliability, zero-leakage battery efficiency, and foolp
 
 ---
 
-### 8.2 Hotpack 1: Doomsday Sky-Scan & SIGINT (Passive All-Band Receiver)
-* **Operational Doctrine:** 100% passive, zero-emission radio reconnaissance. Allows an operator to gather air, marine, weather, and satellite intelligence in a blackout without broadcasting a single milliwatt.
-* **Silicon Architecture:**
-  1. **RTL-SDR v4 Wideband Tuner (24 MHz – 1.766 GHz):** Built-in 0.5 PPM TCXO (temperature-compensated crystal oscillator) with upconverter direct sampling for High-Frequency (HF) coverage (500 kHz – 28 MHz).
-  2. **Switched SAW Filter Bank & LNAs:**
-     * 137 MHz SAW bandpass filter for crisp polar weather satellite reception.
-     * 1090 MHz SAW bandpass filter for commercial/military ADS-B aircraft radar.
-  3. **Dual Top RF Ports:**
-     * `SMA Port 1 (HF 0.5–30 MHz)`: Connects to a long-wire antenna thrown over a tree or an active magnetic loop for international shortwave and AM emergency broadcasts.
-     * `SMA Port 2 (VHF/UHF 30–1700 MHz)`: Connects to a wideband telescopic whip for aircraft, marine, and satellite scanning.
-* **Field Intelligence Decoded on E-Ink:**
-  * **Direct Weather Satellite Imagery:** Decodes live overhead infrared cloud/storm pictures from **NOAA 15/18/19 (APT)** and **Meteor-M2 (LRPT)** satellites via `satdump` with zero internet.
-  * **Air Radar (`readsb` / `dump1090`):** Plots all commercial and military aircraft positions, altitudes, and squawk codes within 150 miles on offline vector maps.
-  * **Marine AIS (`rtl-ais`):** Tracks commercial cargo ships, tankers, and coast guard cutters.
-  * **Civil Emergency Audio:** Monitors continuous NOAA Weather Radio automated SAME emergency alerts (tornado, tsunami, wildfire).
-
----
-
-### 8.3 Hotpack 2: Tactical Dual-Mesh & HF Transceiver (Active Off-Grid Comms)
-* **Operational Doctrine:** Two-way encrypted long-distance communication when cellular networks and the global internet are completely destroyed.
-* **Silicon Architecture:**
-  1. **Second Semtech SX1262 LoRa Radio (with dedicated top SMA port):**
-     * Dedicated to **MeshCore** or **Reticulum Network Stack (`rns`)**.
-     * **Concurrent Dual-Mesh Operation:** Because this second transceiver has its own dedicated RF path and antenna, it eliminates the 3 dB signal loss and LNA burnout risk of passive splitters. SolarDeck listens and transmits on **both Meshtastic and MeshCore concurrently**, functioning as an autonomous cross-mesh bridge!
-  2. **QRP 5W HF Shortwave Digital Transceiver (40m / 20m bands):**
-     * Encodes and decodes **JS8Call** and **FT8** digital text messages over High Frequency.
-     * Bounces RF energy off the ionosphere to send text messages **500 to 2,000 miles** across oceans or mountain ranges without satellites.
-     * Terminated in a heavy-duty **BNC jack** for rapid connection to an end-fed random wire or dipole.
-  3. **Hardware APRS / AX.25 TNC Audio Interface (3.5mm TRRS Smart Jack):**
-     * A 3.5mm TRRS audio/PTT jack interfaces with any $30 analog handheld radio (Baofeng UV-5R, Yaesu, Kenwood).
-     * Connects via an internal C-Media USB audio codec and optocoupled PTT transistor line.
-     * Functions as a hardware AX.25 packet TNC (`direwolf`), APRS digital tracker, SSTV color image transceiver, and global Winlink emergency email portal without piercing the tablet unibody.
-  4. **High-Power 940nm Infrared (IR) Blaster & Receiver Array:**
-     * Features 4x high-output 940nm IR LEDs (120° flood cone) driven at 500mA pulses plus a Vishay TSOP75238 IR demodulator.
-     * Operates with an offline LIRC library of 3,000+ appliance remotes (campervan MaxxFans, Dometic A/C units, Espar/Webasto heaters, TVs, cameras).
-     * Enables **RF-silent optical line-of-sight data transfer** (115,200 baud serial) between two SolarDecks over a 50-meter clearing with **0.000 dBm radio signature**.
-
----
-
-### 8.4 Hotpack 3: CBRN & Search-and-Rescue (SAR) Environmental Pack
-* **Operational Doctrine:** Threat detection during radiological accidents, chemical leaks, wildfire evacuations, or post-disaster search-and-rescue.
-* **Silicon Architecture:**
-  1. **Solid-State Radiation Dosimeter (PocketGeiger Type 5 / BG51):**
-     * Continuously logs gamma and beta radiation dose rates ($\mu\text{Sv/h}$).
-     * Automatically plots real-time fallout decay curves on the E-Ink display and triggers audible piezo alarms on dangerous spikes.
-  2. **Radiometric Thermal Camera (FLIR Lepton 3.5 or InfiRay P2):**
-     * Long-wave infrared (8–14 µm) thermal sensor.
-     * Sees through pitch-black darkness, dense fog, and thick wildfire smoke.
-     * Locates lost human beings, hidden campfire embers, electrical panel hot spots, or building insulation leaks.
-  3. **Photoacoustic Gas Sensor (Sensirion SCD41 + SGP40):**
-     * Measures true CO2 concentration (400–5,000 ppm), volatile organic compounds (VOC index), and noxious gases.
-     * Prevents asphyxiation in enclosed storm shelters, vans, or contaminated ruins.
-
----
-
-### 8.5 Hotpack 4: Precision RTK Centimeter Survey Pack
-* **Operational Doctrine:** Millimeter-to-centimeter precision surveying, property boundary verification, search-and-rescue grid tracking, and drone landing pad mapping.
-* **Silicon Architecture:**
-  1. **u-blox ZED-F9P Multi-Band RTK GNSS Engine:** Tracks carrier phases across L1, L2, and L5 frequencies concurrently across GPS, GLONASS, Galileo, and BeiDou.
-  2. **Precision High-Gain Top TNC/SMA Port:** Mates to a multi-band helical antenna or carbon-fiber survey pole.
-  3. **Real-World Precision:**
-     * **1.4 cm Horizontal Accuracy:** When receiving RTCM differential corrections via NTRIP (cellular) or local LoRa base station.
-     * **Sub-20 cm Worldwide Precision (Zero Internet):** Directly decodes **Galileo HAS (High Accuracy Service)** corrections broadcast from European satellites on the E6 band—delivering sub-foot precision anywhere on Earth with zero cellular connection.
+### 8.2–8.5 Hotpacks 1–4
+Deferred to V2 (ADR-034).
 
 ---
 
@@ -376,46 +280,8 @@ To achieve true physical reliability, zero-leakage battery efficiency, and foolp
 
 ---
 
-### 8.7 Hotpack 5: 15g Thermal Night-Vision & Electrical Inspection Pack
-* **Operational Doctrine:** Van electrical fire prevention (auditing fuse blocks, wire crimps, cracked solar panel bypass diodes), camp perimeter security in pitch darkness (150m human/wildlife heat detection), and building insulation heat leak mapping.
-* **Silicon Architecture:**
-  1. **Long-Wave Infrared (LWIR) Thermal Core:** Miniature **InfiRay Tiny1-C / P2 Pro** uncooled vanadium oxide (VOx) microbolometer (256 × 192 resolution, 12 µm pixel pitch, 25 Hz frame rate, spectral band 8–14 µm, NETD $<40\text{ mK}$).
-  2. **Mounting & Interface:** Snaps to upper chassis MagSafe magnetic ring; connects via 5cm right-angle jumper to USB-C Port 2. Total weight: **15 grams**.
-  3. **Display & GPU Acceleration:** The CM5 GPU (TBD — verify on CM5) accelerates 25 FPS thermal matrix interpolation and applies custom 16-shade e-ink blue-noise dithering (`dither.glsl`) or false-color palettes in $<2\text{ms}$.
-  4. **Tactical Covertness:** Emits **0.000 lux** of visible light; allows passive thermal reconnaissance in complete darkness with the e-ink frontlight turned off.
-
----
-
-### 8.8 Hotpack 6: 3GPP NTN Satellite Skylo Transceiver & Global SAR Protocol
-* **Operational Doctrine:** Worldwide emergency SOS messaging, telemetry transmission, and life-saving rescue dispatch from anywhere on Earth (high oceans, polar caps, remote slot canyons) with zero cellular infrastructure or local mesh nodes.
-* **Why Satellite Belongs in a Hotpack (Not Carrier Board):**
-  1. **Antenna Geometry:** Satellite uplinks to 36,000 km geostationary orbit require an unobstructed upward-facing **Right-Hand Circularly Polarized (RHCP) ceramic patch antenna** tuned to S-band (~2.0 GHz) or L-band (~1.6 GHz). Internal chassis placement causes severe chassis absorption and detuning.
-  2. **Certification Risk:** Direct-to-satellite modems require rigorous carrier lab certifications ($40,000+ FCC/CE/Skylo testing). Isolating this into a hotpack keeps the main carrier board agile and turnkey.
-* **Silicon Architecture:**
-  1. **Satellite Modem Engine:** **Quectel CC660D-LS** (or Sony Altair ALT1350 / MediaTek MT6825) supporting 3GPP Release 17 Non-Terrestrial Networks (IoT-NTN).
-  2. **Top-Mounted RHCP Ceramic Patch:** 25×25×4mm high-gain circularly polarized antenna aimed directly at the sky.
-  3. **Global SAR Routing:** Two-way encrypted 60-byte packets route directly through the **International Emergency Response Coordination Center (IERCC / Garmin Response)**, which immediately verifies the distress coordinates and dispatches local 911, Coast Guard, or regional air rescue.
-* **Complementary 406 MHz Cospas-Sarsat Companion Protocol:**
-  * For military-grade search-and-rescue, SolarDeck integrates with certified commercial PLBs (e.g. Ocean Signal rescueME PLB1, 116g, 7-year battery). SolarDeck reads the PLB diagnostic status over NFC and triggers automated digital coordinates via USB-C Hotpack 6 while the certified 5W transmitter pulses the international 406.037 MHz satellite payload.
-
----
-
-### 8.9 Hotpack 7: Sub-Surface Acoustic & Perimeter Geophone Module (`solardeck-geophoned`)
-* **Operational Doctrine:** 360-degree covert ground surveillance in zero-visibility conditions (dense fog, smoke, pitch black) with **zero RF emissions and zero optical signature**. Detects and classifies approaching vehicles, human footsteps, and wildlife by tracking Rayleigh seismic ground waves and acoustic transients.
-* **Silicon & Transducer Architecture:**
-  1. **Moving-Coil Electrodynamic Geophone:** Miniature **SM-24 / GS-11D** moving-coil geophone (4.5 Hz / 10 Hz natural resonance frequency, $28.8\text{ V/m/s}$ sensitivity, high-permeability neodymium magnet).
-  2. **Direct Ground Coupling:** Includes a detachable 100mm threaded stainless-steel spike that screws into the Hotpack chassis and inserts into sub-surface soil, bypassing surface acoustic damping.
-  3. **Ultra-Low-Noise Seismic Signal Chain:**
-     * TI INA188 / AD8429 instrumentation amplifier ($1\text{ nV}/\sqrt{\text{Hz}}$ voltage noise).
-     * TI ADS1282 / ADS1256 24-bit Delta-Sigma seismic ADC delivering **130 dB dynamic range**.
-* **Seismic-Acoustic Multi-Modal Fusion:**
-  * **Exact Radial Distance:** Compares the millisecond arrival delta ($\Delta t = t_{\text{air}} - t_{\text{ground}}$) between slow ground Rayleigh waves (250–500 m/s) and airborne sound (343 m/s) detected by the Knowles MEMS array.
-  * **360° Azimuth Angle (Hodogram):** Orthogonal X/Y horizontal shear geophone coils compute the wave polarization ellipse to calculate exact cardinal bearing (0° to 360°).
-* **TinyML Edge Wavelet Classifier:**
-  * **Human Footstep:** 1.6–2.1 Hz cadence with 15–35 Hz heel-strike transients.
-  * **Large Animals (Bear/Boar/Deer):** 3.2–5.0 Hz 4-beat trot/gallop cadence.
-  * **Vehicles:** Continuous narrow-band engine shaft vibrations (20–40 Hz) and tire hum (60–120 Hz).
-* **Tactical E-Ink Polar HUD:** Renders a 360-degree circular radar ring showing bearing, estimated distance, and target classification icons with 0.000W bi-stable persistence.
+### 8.7–8.9 Hotpacks 5–7
+Deferred to V2 (ADR-034).
 
 ---
 
@@ -427,11 +293,11 @@ The following custom software utilities and daemons leverage SolarDeck's bi-stab
 
 ### 9.1 Tactical RF, Air Radar & Signals
 1. **`solardeck-waterfall` (High-Contrast E-Ink RF Spectrum & Air Radar):**
-   * Captures raw I/Q samples from the onboard RTL-SDR and CC1101 radios.
+   * Captures raw I/Q samples from the RTL-SDR and CC1101 radios (Hotpacks, V2, ADR-034).
    * Renders a real-time RF waterfall using custom 1-bit Atkinson dithering optimized for high sunlight visibility.
    * Integrates with `dump1090-fa` to plot commercial and private aircraft ADS-B transponder positions, altitudes, and headings directly over an offline vector topographic map.
 2. **`solardeck-recon` (Zero-Glow Wi-Fi & BLE Tactical RF Audit):**
-   * Integrates with `kismet` or `bettercap` to passively map nearby Wi-Fi APs, client MAC addresses, and Bluetooth beacons along with Qualcomm GNSS coordinates.
+   * Integrates with `kismet` or `bettercap` to passively map nearby Wi-Fi APs, client MAC addresses, and Bluetooth beacons along with MAX-M10S GNSS coordinates.
    * **Zero-Glow Stealth Advantage:** Operates with the frontlight turned off (0.000 lux), remaining completely undetectable to outside observers at night while scanning.
 3. **`solardeck-ham` (Off-Grid Global HF Text Messenger - JS8Call / FT8 / APRS):**
    * Interfaces with external QRP ham transceivers via USB audio or CAT control.
@@ -443,7 +309,7 @@ The following custom software utilities and daemons leverage SolarDeck's bi-stab
    * Utilizes the 65 mm Knowles dual-MEMS microphone array to compute the Time Difference of Arrival (TDoA) of sudden sharp transients (gunshots, distant engine revs, whistles, shouting).
    * Renders a 360-degree tactical compass HUD with an arrow pointing toward the bearing of the sound source.
 5. **`solardeck-sundial` (Optical Solar Heading & Astronomical Compass):**
-   * Samples micro-solar strip voltage via the RP2350 12-bit ADC alongside Qualcomm GNSS coordinates and DS3231 TCXO time.
+   * Samples micro-solar strip voltage via the RP2350 12-bit ADC alongside MAX-M10S GNSS coordinates and DS3231 TCXO time.
    * Rotating the tablet until the micro-solar strip reaches peak voltage calculates **True Geographic North** geometrically from the sun's position, completely immune to magnetic vehicle distortion.
 6. **`solardeck-survey` (BLE Laser Distance Room Sketcher & Clinometer):**
    * Connects via BLE to laser distance measurers (Bosch GLM, Leica DISTO) to automatically sketch real-time floor plans with Wacom EMR in CAD/SVG.
@@ -462,15 +328,15 @@ The following custom software utilities and daemons leverage SolarDeck's bi-stab
    * Turns SolarDeck into an outdoor 24 MHz 8-channel logic analyzer and oscilloscope for probing SPI/I2C/UART lines on field hardware in direct sun.
 
 ### 9.4 Sovereign Writing, Focus & Cryptography
-10. **`solardeck-zen` (Sovereign Prose Typewriter & S2idle Power Gating):**
+10. **`solardeck-zen` (Sovereign Prose Typewriter):**
     * A distraction-free markdown environment running on the 20ms 1-bit typing waveform.
-    * Automatically drops into S2idle (15 mW) between keystroke pauses and wakes in <300ms, providing **35 to 45 hours of continuous active writing** outdoors.
+    * The CM5 has no RAM-retaining suspend (ADR-036), so there is no S2idle gating between keystrokes; writing runtime is TBD until the cell is chosen (ADR-040).
 11. **`solardeck-slate` (Low-Latency Wacom Vector Field Notebook):**
     * Direct-to-DRM canvas hooking into Wacom EMR (<18ms latency) for sketching circuit schematics, physics math, or tactical maps, with 1-click export to vector SVG or Obsidian.
 12. **`solardeck-courier` (Autonomous Bi-Stable LoRa Pager & Bulletin Board):**
     * While Linux is unpowered, the RP2350 receives Meshtastic messages over LoRa at 12 mW and prints them to the E-Ink screen. Because E-Ink is bi-stable, messages remain legibly stamped on the display forever without consuming battery.
 13. **`solardeck-airgap-tx` (Optical QR Fountain Code Bridge):**
-    * Airgapped data exfiltration/ingestion using animated QR codes (`txqr`) at 50–100 KB/s through the rear 12MP camera and 10.3" screen with zero radio waves.
+    * V2 (ADR-034): ingestion needs the deferred rear camera.
 14. **`solardeck-vault-totp` (Bi-Stable Airgapped 2FA & Password Vault):**
     * Generates TOTP two-factor codes and unlocks KeePassXC vaults securely on an airgapped device.
     * Displays the 6-digit code on the zero-power e-ink screen where it can be read without casting a glow in dark rooms.

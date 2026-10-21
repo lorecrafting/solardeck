@@ -12,10 +12,9 @@ int main(void) {
 
     solardeck_ctx_t ctx;
 
-    // 1. Initial State / LiFePO4 default
-    solardeck_sm_init(&ctx, 0); // Pin low = LiFePO4
+    // 1. Initial state
+    solardeck_sm_init(&ctx);
     assert(ctx.current_state == SOLAR_STATE_COLD_BOOT);
-    assert(ctx.is_lifepo4 == true);
     assert(ctx.sys_5v_enabled == false);
     assert(ctx.tmux_cm5_selected == false);
 
@@ -60,6 +59,15 @@ int main(void) {
     assert(ctx.pwrfail_pin_asserted == true);
     assert(ctx.tmux_cm5_selected == false);
     printf("  ✓ LiFePO4 safety cutoff & powerfail alarm verified (<150ms response)\n");
+
+    // 7. Charger hold-off (ADR-035): CE may be released only at the LiFePO4 VREG.
+    solardeck_sm_init(&ctx);
+    assert(solardeck_charge_enable_allowed(&ctx) == false);   // never written
+    ctx.charger_vreg_mv = 4208;                                 // a Li-ion-class POR default
+    assert(solardeck_charge_enable_allowed(&ctx) == false);
+    ctx.charger_vreg_mv = SD_CHARGE_LIMIT_MV;
+    assert(solardeck_charge_enable_allowed(&ctx) == true);
+    printf("  ✓ Charger stays off until VREG reads back at %u mV\n", SD_CHARGE_LIMIT_MV);
 
     printf("✓ All RP2350 State Machine self-tests passed successfully!\n");
     return 0;

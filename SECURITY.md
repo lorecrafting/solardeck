@@ -4,6 +4,8 @@ Written 2026-10-20 04:13 UTC in the Pi harness by openrouter/deepseek/deepseek-v
 
 Revised 2026-10-21 16:03 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
 
+Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
+
 SolarDeck is sold as a *sovereign* device, so its security claims are product claims, not
 boilerplate. This document states what is actually enforced in hardware, what is enforced in
 software, and what a buyer should not assume.
@@ -12,19 +14,19 @@ software, and what a buyer should not assume.
 
 | Control | Mechanism | Limits |
 | :--- | :--- | :--- |
-| Radio cutoff | 3-position slide switch cuts the series enable nets of the TPS22918 radio gates | The modem's own standby draw continues via the AON rail; only the switched rails are cut |
+| Radio cutoff | 3-position slide switch cuts the series enable nets of the TPS22918 radio gates | LoRa and GNSS rails are cut; the CM5's on-module Wi-Fi/BT is held off by tying its `WL_nDisable`/`BT_nDisable` pins low (CM5 datasheet §2.1.1–2.1.2), not by a rail cut. Residual emissions are what gate G5 measures |
 | Microphone cutoff | `MIC_MUTE` shunts the PDM clock to GND | The mic bias rail is not cut, so a hostile firmware could re-enable it if it can drive that GPIO — treat as "hard to do silently", not "impossible" |
 | Display bus isolation | Two TMUX1575 devices (fail-safe, $I_{\text{off}}$) present giga-ohm impedance when the CM5 rail is at 0 V | Isolation is per-line and switch-state dependent |
 | Airgap | Series disconnect of peripheral power gates, not an RF shield | Near-field coupling, thermal and acoustic side channels are outside the model |
 
 **Not claimed:** no tamper-evident mesh, no secure element for disk encryption keys, no measured
-power side-channel resistance, no anti-evil-maid guarantee. The MFF2 eSIM (consumer SGP.22 eUICC, part TBD,
-ADR-033) is soldered, but the cellular *link* is not authenticated against a hostile carrier.
+power side-channel resistance, no anti-evil-maid guarantee. Cellular and the eSIM are V2 (ADR-034); the V2 eSIM requirement is a consumer SGP.22 eUICC
+(ADR-033).
 
 ## Software posture
 
 * Full-disk encryption (LUKS2) with the passphrase entered at boot — the key lives in RAM, and an
-  unlockable device left unattended in suspend is unlocked.
+  unlocked device left unattended while Linux is running stays unlocked.
 * Network default-deny: `nftables` ruleset drops inbound; radios are down unless a profile enables
   them. `solardeck-airgapd` tears down interfaces and flushes keys before reporting blackout.
 * No telemetry leaves the device. `solardeck-telemetryd` writes to `/var/log/solardeck/telemetry.db`

@@ -2,6 +2,8 @@
 
 Written 2026-11-02 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-0731
 
+Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
+
 SolarDeck is open hardware: a sunlight-readable 10.3″ colour E-Ink mobile workstation running
 mainline, bare-metal Linux. Contributions are welcome from hardware engineers, embedded C
 developers, Linux/daemon folk, docs writers, and testers who like asserting things. You do not need
@@ -72,8 +74,8 @@ These need only `docs/` + a GitHub issue, no board in hand — pick the one that
 interests:
 
 - **Bench-measure a spec value.** Pick an entry in `docs/spec_values.json` tagged `modelled`
-  (e.g. `solar_w.bezel_strip`, or the 0.45 Wh/day strip-harvest budget and 15 mW S2idle floor in
-  `docs/SOFTWARE_SPEC.md` R2) and write the measurement procedure + expected-result assertion so
+  (e.g. `solar_w.bezel_strip`, or the `sleep_ladder.solar_strip_wh_per_day` strip-harvest budget and
+  the RP2350 ambient-mode floor; `sleep_ladder` R2 is `null` because the CM5 has no S2idle, ADR-036) and write the measurement procedure + expected-result assertion so
   someone who owns hardware can run it.
 - **Close a Phase-11 coverage gap.** The netlist agrees with the BOM and CPL (30 designators), but
   32 line items are still uncaptured. Each one follows `scripts/capture_schematic_parts.py`:
