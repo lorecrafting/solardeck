@@ -367,3 +367,35 @@ threshold change fixes either. Consequential operations (crypto sign, wipe) requ
 `check_docs_numbers.py` BANNED pattern forbids `owner_voice.npy` and `/etc/solardeck/owner_voice.npy`
 returning to any non-historical doc (SOFTWARE_SPEC §17.2 states the co-processor-resident design);
 DAEMONS catalogue D06 `solardeck-voiced` keeps `spec_section: 17`.
+
+## ADR-027 — "Watching the LLM" is streaming text, and it gets a measured guarantee, not an fps claim (2026-10-21)
+
+**Trigger.** The README asks what happens when someone watches an LLM work on the tablet. Two
+temptations looked seductive and were both wrong: claiming a "smooth" frame rate for the e-ink
+display, and treating Boox-style video playback as a target to match.
+
+**Mechanism.** Full-screen e-ink is hard-capped by physics and transport: a single 32 MHz SPI link
+to the IT8951 EPDC bounds a full-frame 1-bit refresh at ~6 fps (`spec_values.refresh_modes`), and
+colour motion is not supported (`colour_motion_supported: false`, a 1.5 s full-colour cycle). But an
+LLM token stream is a moving cursor appending characters inside a ~1-line-high dirty rectangle while
+the rest of the page stays frozen — the one workload e-ink renders superbly with per-rectangle
+partial updates (DU mode, ≤30 ms, zero flash, and a frozen page costs 0 W to hold).
+
+**Decision.** The product promise is a **streaming-text guarantee**, not a video claim:
+`spec_values.token_stream` pins ≥120 wpm at ≤30 ms/update latency, zero flash, ghost residue under a
+measured threshold, verified by `eink-refreshd --bench stream`. Actual motion content stays off-panel,
+routed to the USB-C monitor-sink surface (`STANDOUT_FEATURES.md` Pillar 8), which is a real
+contradiction-free answer to "the device that shows a video screen". A cropped talking-head patch is a
+tolerated 1-bit mode, never a guarantee.
+
+**Why a guarantee and not a number.** An fps figure cannot be kept honestly on this transport; a
+workload-mapped, bench-measured statement can, and it is exactly the ≤30 ms partial-rectangle
+latency the scheduler already delivers. Boox "plays video" by aggressive ghost-chasing and GC
+flushes; reviewers' honest verdicts put percieved smoothness at ~4-8 fps on small regions with heavy
+ghosting. That behaviour is a tolerated mode here, not a design target.
+
+**Enforced consequences.** `check_docs_numbers.py` already bans old video-rate claims (24 FPS / 30-45
+FPS / 30-60 FPS, B3 note). `verify_all.py` now asserts the `token_stream` block exists, that its
+`update_latency_ms` agrees with `refresh_modes.partial_rect_latency_ms` (a streaming update *is* one
+partial rectangle), and that `full_screen_video` names the monitor-sink path — closing the smoke test
+on SOFTWARE_SPEC §2.6.

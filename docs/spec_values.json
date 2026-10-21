@@ -39,6 +39,14 @@
     "colour_motion_supported": false,
     "kaleido4_fps": null
   },
+  "token_stream": {
+    "guaranteed_wpm": 120,
+    "update_latency_ms": 30,
+    "zero_flash": true,
+    "ghost_residue_threshold_db": 8,
+    "bench_duration_min": 5,
+    "full_screen_video": "via USB-C monitor sink (Pillar 8); colour motion unsupported on-panel"
+  },
   "pen_arbiter": {
     "pen_sample_rate_hz": 133,
     "target_pen_latency_ms": 20,

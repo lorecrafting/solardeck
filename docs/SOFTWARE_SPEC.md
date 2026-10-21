@@ -79,6 +79,15 @@ Video playback is **not** a V1 feature (ADR-005). The display is driven over a s
 
 Local video remains usable: decode on the CM4, dither to 1-bit, accept ~6 fps, or keep the audio and drop the picture. Users who want a real video screen use USB-C monitor-sink mode (`STANDOUT_FEATURES.md` Pillar 8).
 
+### 2.6 The Streaming-Text Guarantee (watching an LLM work)
+
+"Watching an LLM" is **not** video — it is a moving cursor appending tokens while everything above stays static. That is e-ink's home turf: a one-line-high dirty rectangle at the cursor, re-rendered by the §2.4 scheduler in DUA mode while the frozen page above costs zero power to hold. This section makes that experience a *measured guarantee*, not an fps aspiration.
+
+* **The guarantee (numbers in `spec_values.token_stream`):** ≥120 wpm token streaming renders with ≤30 ms per-update latency, **zero flashes**, and post-burst ghost residue below the `ghost_residue_threshold_db` gate — verified by `eink-refreshd --bench stream` over the full `bench_duration_min` window.
+* **Why 120 wpm and not a frame rate:** an fps figure for a full-screen redraw would be a promise the transport cannot keep (~6 fps ceiling, §2.5). Streaming text is the *product* use case, it maps onto per-rectangle physics, and it is measurable on the bench — which is exactly the repo's claim discipline (`spec_values.refresh_modes` keeps full-frame fps, and colour motion stays `false`).
+* **What is asserted in CI:** `verify_all.py` checks the `token_stream` block exists, that `update_latency_ms == refresh_modes.partial_rect_latency_ms` (a streaming update is just one partial rectangle at the guaranteed cadence), and that `full_screen_video` is a string naming the monitor-sink path — so a silent "video engine" drift fails the build.
+* **Motion content stays off-panel:** full-screen video is via USB-C monitor-sink (`STANDOUT_FEATURES.md` Pillar 8); a cropped talking-head region at 1-bit is a tolerated mode, not a guarantee. The scheduler keeps stating `colour_motion_supported: false` rather than approximating it.
+
 ## 3. Power Management & Deep Sleep (Suspend-to-RAM)
 
 ### 3.1 Fast Sleep / Instant Wake Pipeline

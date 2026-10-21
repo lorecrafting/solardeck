@@ -117,6 +117,19 @@ def check_links(path, text, err):
 def main():
     errors = []
     check_geometry(errors.append)
+
+    # ADR-027: the streaming-text guarantee must stay self-consistent. A streaming update IS one
+    # partial rectangle, so the two latencies cannot drift apart; and the video answer must name
+    # the monitor-sink path, not an on-panel video engine.
+    ts = SPEC.get("token_stream") or {}
+    if ts.get("update_latency_ms") != SPEC.get("refresh_modes", {}).get("partial_rect_latency_ms"):
+        errors.append("token_stream.update_latency_ms must equal refresh_modes.partial_rect_latency_ms")
+    if "monitor" not in str(ts.get("full_screen_video", "")).lower():
+        errors.append("token_stream.full_screen_video must name the USB-C monitor-sink path (ADR-027)")
+    for req in ("guaranteed_wpm", "zero_flash", "ghost_residue_threshold_db", "bench_duration_min"):
+        if req not in ts:
+            errors.append(f"token_stream.{req} missing (ADR-027)")
+
     for rel in docs():
         text = open(os.path.join(ROOT, rel), encoding="utf-8", errors="ignore").read()
         check_links(rel, text, errors.append)
