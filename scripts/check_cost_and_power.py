@@ -97,7 +97,7 @@ def check_power(err):
 
 def check_charger(err):
     """ADR-035 / AUDIT 6 X1: the charger must be able to regulate at the battery's charge limit.
-    The BQ25895 (VREG floor 3.84 V) on a 3.6 V LiFePO4 cell is the failure this exists to catch."""
+    The BQ25895 (VREG floor 3.84 V) on a 3.6 V LiFePO4 cell was the failure this exists to catch."""
     c, b = SPEC["charger"], SPEC["battery"]
     limit_mv = round(b["charge_limit_v"] * 1000)
     if not (c["vreg_min_v"] <= b["charge_limit_v"] <= c["vreg_max_v"]):
@@ -105,10 +105,12 @@ def check_charger(err):
             f"the {b['chemistry']} limit {b['charge_limit_v']} V")
     elif (limit_mv - round(c["vreg_min_v"] * 1000)) % c["vreg_step_mv"]:
         err(f"charge limit {limit_mv} mV is not on the charger's {c['vreg_step_mv']} mV VREG grid")
-    if b["chemistry"].lower().replace("₄", "4") != "lifepo4":
-        err(f"battery.chemistry is {b['chemistry']!r}; AGENTS §4.1 allows LiFePO4 only")
-    if limit_mv > 3650:
-        err(f"charge limit {limit_mv} mV exceeds the AGENTS §4.1 LiFePO4 ceiling of 3650 mV")
+    # AGENTS §4.1: one chemistry per hardware revision, each with a hard charge-voltage ceiling (mV).
+    ceiling = {"li-ion": 4200, "lifepo4": 3650}.get(b["chemistry"].lower().replace("₄", "4"))
+    if ceiling is None:
+        err(f"battery.chemistry is {b['chemistry']!r}; AGENTS §4.1 has no ceiling for it")
+    elif limit_mv > ceiling:
+        err(f"charge limit {limit_mv} mV exceeds the AGENTS §4.1 {b['chemistry']} ceiling of {ceiling} mV")
     # The firmware gate that releases the charger's CE pin must use the same limit.
     hdr = read(os.path.join(ROOT, "firmware", "rp2350", "include", "solardeck_state.h"))
     m = re.search(r"#define\s+SD_CHARGE_LIMIT_MV\s+(\d+)", hdr)
@@ -124,8 +126,10 @@ def check_charger(err):
     ov = 1.5 * h["vbias_v"] * (1 + h["rov2_mohm"] / h["rov1_mohm"])
     if abs(ov - h["vbat_ov_v"]) > 0.01:
         err(f"harvester.vbat_ov_v {h['vbat_ov_v']} V != {ov:.3f} V from rov1/rov2 (BQ25504 Eq. 3)")
-    if ov * (1 + h["threshold_accuracy_pct"] / 100) > b["charge_limit_v"]:
-        err(f"harvester VBAT_OV {ov:.3f} V +{h['threshold_accuracy_pct']}% exceeds the {b['charge_limit_v']} V charge limit")
+    # Worst case: the threshold's own accuracy plus both divider resistors at tolerance.
+    worst = ov * (1 + h["threshold_accuracy_pct"] / 100) * (1 + 2 * h["resistor_tol_pct"] / 100)
+    if worst > b["charge_limit_v"]:
+        err(f"harvester VBAT_OV worst case {worst:.3f} V exceeds the {b['charge_limit_v']} V charge limit")
     alarm_mv = round(b["low_alarm_v"] * 1000)
     m = re.search(r"#define\s+SD_LOW_BATT_ALARM_MV\s+(\d+)", hdr)
     if not m or int(m.group(1)) != alarm_mv:

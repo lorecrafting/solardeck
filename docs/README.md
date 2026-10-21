@@ -17,7 +17,7 @@ Revised 2026-10-21 17:52 UTC in Claude Code by anthropic/claude-opus-5-5 (owner 
 | 7 | `FIRMWARE_INTERFACE.md` | The CM5 <-> RP2350 register contract (header is canonical) |
 | 7b | `PIN_BUDGET.md` | Every CM5 and RP2350 pin, V1 uses and V2 reservations (ADR-045; Phase 15 checks it) |
 | 8 | `MECHANICAL_FIT_AND_ENCLOSURE_WORKFLOW.md` | XY/Z budgets, tolerances, the enclosure |
-| 9 | `BOM_COST_ESTIMATE.md` | $479.10-$481.10 across 52 line items, before 11 TBD parts (panel, controller, cell, charger, gauge, protector, GNSS, GPIO expander, RTC, co-processor flash, privacy switch); a floor — AUDIT 6 H22 |
+| 9 | `BOM_COST_ESTIMATE.md` | $477.80-$479.80 across 52 line items, before 13 TBD parts (panel, controller, cell, charger, gauge, protector, GNSS, GPIO expander, RTC, co-processor flash, privacy switch, PD sink, always-on regulator); a floor — AUDIT 6 H22 |
 | 10 | `REGULATORY.md` | Certification matrix — **no certificate, no ship** |
 | 11 | `USB_ROBUSTNESS.md` | Every USB-C failure mode and the rules that close them (gate G11) |
 | 12 | `LONGEVITY_30Y.md` | 30-year failure budget, service kit, maintenance schedule, gates G7-G10 |
@@ -25,7 +25,7 @@ Revised 2026-10-21 17:52 UTC in Claude Code by anthropic/claude-opus-5-5 (owner 
 | 14 | `HARDWARE_VERIFICATION_WORKFLOW.md` | What each verification phase proves, and what it does not |
 | 15 | `DEV_KIT_BENCH.md` | The bench that turns `modelled` numbers into `measured` ones — the next step |
 | 16 | `FIRST_BOOT_CHECKLIST.md` | Bench bring-up and acceptance gates |
-| 16b | `EVT0_POWER_BOARD.md` | EVT-0 power-only board (ADR-043): pin-level capture tables, the charger hold-off register sequence, cell-dependent TBDs, PD-sink choice, open items |
+| 16b | `EVT0_POWER_BOARD.md` | EVT-0 power-only board (ADR-043, ADR-048): pin-level capture tables, Li-ion smart-pack interface and gauge topology, the charger hold-off register sequence, harvester temperature gate, cell-dependent TBDs, open items |
 | 17 | `CO_PROCESSOR_SURVEY.md` | Why RP2350, and the reader frame format |
 | 18 | `ARCHIVAL_BUILD.md` | Toolchain survival, offline reproducible build |
 | 19 | `STANDOUT_FEATURES.md` | The product pillars in full |

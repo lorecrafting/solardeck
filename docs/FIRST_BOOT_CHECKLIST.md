@@ -10,6 +10,8 @@ Revised 2026-10-21 17:22 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa t
 
 Revised 2026-10-21 17:53 UTC in Claude Code by anthropic/claude-opus-5-5 (RTC chip, jack removed, ADR-046).
 
+Revised 2026-10-21 19:45 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion smart pack, ADR-048).
+
 This step-by-step technical punch list guides the hardware engineer or field operator from unboxing the DHL Express package from Seeed Studio Fusion in Honolulu to running an authorized terminal session in pure sunlight.
 
 ---
@@ -64,7 +66,7 @@ Before inserting the CM5, initialize the RP2350B co-processor to confirm power s
 2. **Current Draw Verification:**
    * Observe current draw on bench supply.
    * Expected: **$<1\text{ mA}$** (typically 60 nA to 12 µA baseline sleep).
-   * If current hits 50 mA clamp, immediately disconnect and inspect `U_TPS62840`.
+   * If current hits 50 mA clamp, immediately disconnect and inspect the always-on buck-boost regulator (TPS63900 class, ADR-048).
 3. **Flashing the RP2350 Firmware:**
    * Hold the physical `BOOTSEL` button on the carrier board.
    * Connect your host computer to the RP2350 USB pins on the **recovery header** (`uart_swd_header`; USB-C Port 1 is the CM5's OTG / `nRPI_BOOT` port — docs/PIN_BUDGET.md §2).
@@ -108,8 +110,10 @@ Before inserting the CM5, initialize the RP2350B co-processor to confirm power s
 ## 5. First Boot & Verification Run
 
 1. **Power Application:**
-   * Connect the LiFePO4 battery pack (capacity TBD until the cell is chosen, ADR-040) to `J_BAT`.
+   * Connect the Li-ion smart pack (capacity TBD until the cell is chosen, ADR-040) to `J_BAT` through its keyed connector (ADR-048).
+   * Confirm the RP2350 reads the pack gauge's design charge voltage over the pack connector's SDA/SCL before any charge is enabled, and that a pack (or gauge-programmed test pack) reporting a different design voltage is refused: charging stays off (ADR-048).
    * Connect a USB-PD 20W charger to USB-C Port 1. Confirm charging stays **off** until the RP2350 has written the BQ25798 VREG to `battery.charge_limit_v` (charger enable pin held off, ADR-035); only then does the amber charge LED illuminate. Read VREG back over I²C before leaving the pack on charge.
+   * Verify the solar harvester's hardware temperature gate: with the pack NTC driven outside the charge-temperature window (heat or cool the NTC, or substitute a resistor), the harvester's output must switch off with no firmware involved (`harvester.temperature_gate`, AGENTS §4.1).
 2. **Cold Boot Execution:**
    * Press the physical Power button on the top edge for 1.5 seconds.
    * The RP2350 co-processor will enable the CM5 (enable net TBD — verify on CM5) and cycle the reset net of the Kaleido 4 display controller (TBD, ADR-032).

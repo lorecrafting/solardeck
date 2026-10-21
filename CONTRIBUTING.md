@@ -4,6 +4,7 @@ Written 2026-11-02 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-fl
 
 Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
 Revised 2026-10-21 17:52 UTC in Claude Code by anthropic/claude-opus-5-5 (owner decisions, ADR-046).
+Revised 2026-10-21 19:45 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion smart pack, ADR-048).
 
 SolarDeck is open hardware: a sunlight-readable 10.3″ colour E-Ink mobile workstation running
 mainline, bare-metal Linux. Contributions are welcome from hardware engineers, embedded C
@@ -93,11 +94,13 @@ issue and reference it in your PR.
 
 ## Hardware safety is not optional
 
-This project specifies a LiFePO4 pack, mains-adjacent USB-PD, an E-Ink high-voltage charge pump, and
+This project specifies a 1S Li-ion smart pack (ADR-048), mains-adjacent USB-PD, an E-Ink high-voltage charge pump, and
 sub-GHz transmitters. Changes touching those paths need a second reviewer and a stated failure mode.
 Never change a charge voltage, cutoff threshold, or waveform LUT without a written rationale in the
-ADR log and an accompanying assertion. LiFePO4 charges to 3.65 V; a 4.2 V Li-ion profile damages the
-cell and is a fire hazard.
+ADR log and an accompanying assertion. One chemistry per hardware revision: V1 charges to
+`battery.charge_limit_v` and firmware refuses a pack whose gauge reports a different design voltage.
+Overcharging a cell damages it and is a fire hazard; the protector, fuse, JEITA charging and pack NTC
+are mandatory, not optional (AGENTS §4.1).
 
 ## Commits and attribution
 

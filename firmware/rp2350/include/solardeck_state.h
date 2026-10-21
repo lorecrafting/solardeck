@@ -23,10 +23,10 @@ extern "C" {
 // ADR-035: BQ25798 CE is active-low and pulled HIGH in hardware, so the charger is off at power-up.
 // Firmware may drive CE low only once VREG reads back as this value. Must equal
 // spec_values.battery.charge_limit_v (Phase 14 checks it).
-#define SD_CHARGE_LIMIT_MV      3600
+#define SD_CHARGE_LIMIT_MV      4200
 
 // Low-battery alarm; must equal spec_values.battery.low_alarm_v (Phase 14 checks it).
-#define SD_LOW_BATT_ALARM_MV    2900
+#define SD_LOW_BATT_ALARM_MV    3400
 
 // System States
 typedef enum {
@@ -48,6 +48,8 @@ typedef struct {
     uint16_t solar_voc_mv;     // Solar panel open-circuit voltage (mV)
     uint16_t solar_vmpp_mv;    // Target MPP voltage (approx 78% Voc)
     uint16_t charger_vreg_mv;  // VREG read back from the charger; 0 until written (ADR-035)
+    bool charger_wdt_off;      // WATCHDOG read back as disabled: proves the init ran since the last charger reset
+    uint16_t pack_charge_mv;   // charge voltage reported by the pack's gauge; 0 until read (ADR-048)
 } solardeck_ctx_t;
 
 // Core Functions

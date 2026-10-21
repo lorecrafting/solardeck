@@ -5,6 +5,7 @@ Revised 2026-10-21 15:59 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / 
 Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
 Revised 2026-10-21 17:23 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, ADR-044).
 Revised 2026-10-21 17:53 UTC in Claude Code by anthropic/claude-opus-5-5 (RTC chip, jack removed, ADR-046).
+Revised 2026-10-21 19:44 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion smart pack, ADR-048).
 
 Second audit round, scoped to one question: **what breaks over 30 years, and is the current design
 built to survive it?** The existing audit asked "is the documentation true". This one asks "will the
@@ -25,7 +26,7 @@ design does, and the required change. **"Gap" means the design as written does n
 | :-- | :--- | :--- | :--- | :--- |
 | 1 | **Electrolytic dry-out** | Electrolyte loss doubles every ~10 °C; a 105 °C/2000 h part is ~8 years at 40 °C | Zero wet electrolytics; tantalum-polymer + X7R, 10–16 V on 3.3 V rails, 25–50 V on 5 V/solar (`HARDWARE_SPEC.md` §7.1, §7.5) | ✅ **Handled** — keep the 2× DC-bias margin rule, it is what makes X7R survive |
 | 2 | **Solder-joint fatigue** | −40…+85 °C cycling, CTE mismatch; DSBGA (TMUX1575 ×2) and WQFN crack first | Nothing. No corner bond, no underfill, no thermal-cycle gate | ❌ **Gap** — corner bond on DSBGA/QFN, and a 500-cycle qualification gate |
-| 3 | **Battery calendar fade** | LiFePO4 ≈2 %/yr at 25 °C, 4–6 %/yr at 40 °C → 40–60 % loss over 30 years | 3.45 V float clamp, Poron swelling relief (§7.4, 0.80 mm), 10 000-cycle target; **retention method unspecified**, cell not a user part | ❌ **Gap** — mechanical clamp + service hatch; plan on 50 % capacity at year 30 |
+| 3 | **Battery wear-out** | Li-ion loses capacity with cycles and calendar age, faster when hot; the cell is the first hard wear-out (`reliability.first_wearout_years`, modelled) | 1S Li-ion in a user-replaceable smart pack (ADR-048): screws, pull tab, keyed connector, no adhesive; pack-side gauge reports state-of-health; Poron swelling relief (§7.4, 0.80 mm) | ⚠ **Service item** — the pack is replaced over the device's life, scheduled by `solardeck-battcare` data; no cell is expected to last 30 years |
 | 4 | **Elastomer compression set** | VMQ takes a set; a TPU bumper is impact protection, not a seal | Perimeter 1.5 mm hollow-core silicone gasket, "compressed 30 %" (§4), **no gasket line item in the BOM**, no service interval | ⚠ **Gap** — P/N the gasket as a wear item at 27 % compression (`spec_values.longevity`) |
 | 5 | **Adhesive creep / yellowing** | VHB and LOCA migrate and yellow; taped cells are the classic 10-year failure | VHB 5952 used for **glass** (correct: no plastic film, §4.0); battery retention relies on cavity fit only | ⚠ **Gap** — VHB on glass is fine; a taped or untethered cell is not |
 | 6 | **NAND retention** | Client SSD unpowered retention ≈1 year at 30 °C; eMMC similar | 64 GB eMMC + 2 TB NVMe, no scrub, no archive warning | ❌ **Gap** — quarterly powered scrub; state plainly that the NVMe is not an archive |
@@ -36,8 +37,8 @@ design does, and the required change. **"Gap" means the design as written does n
 | 11 | **Internal humidity** | Sealed volume still outgasses; condensation on cold-soak | Sensirion SHT40 dew-point telemetry (§7.4.6), GORE vent, rechargeable desiccant pocket (§4.6) | ✅ **Handled** — the best-specified row in the set |
 | 12 | **Software rot** | Toolchains, signing keys, and CA certs do not live 30 years | Offline-first, no cloud dependency, source in repo; **no archival build container, no key custody, no cert expiry audit** | ❌ **Gap** — archival container + printed key shares |
 
-Four hard gaps (2, 3, 6, 12) reduce real 30-year survival; five soft ones (4, 5, 7, 9, 10) are
-paperwork plus one BOM line. Rows 1 and 11 are already better specified than most commercial
+Three hard gaps (2, 6, 12) reduce real 30-year survival; five soft ones (4, 5, 7, 9, 10) are
+paperwork plus one BOM line. Row 3 is a planned replacement, not a design gap (ADR-048). Rows 1 and 11 are already better specified than most commercial
 tablets ever are — do not touch them. Row 8 stays open until the Kaleido 4 datasheet (ADR-032).None of this is exotic: it is all materials, process, and service paperwork, which is exactly why a
 schematic/netlist audit could not see it.
 
@@ -52,7 +53,7 @@ rates at 40 °C, placement counts estimated from `HARDWARE_SPEC.md`):
 
 | Item | Years to 70–80 % of spec | Kind |
 | :--- | ---: | :--- |
-| LiFePO4 cell | 8 | service interval (10 y) |
+| Li-ion cell (smart pack) | 3 | user-replaceable pack, swapped on `solardeck-battcare` data (ADR-048) |
 | Silicone gasket | 8 | wear part in the service kit |
 | RTC backup cell | 10 | socketed |
 | Frontlight LED string (L70) | 15 | 3 h/day at 40 % |
@@ -89,7 +90,7 @@ disagree.
 ### 2.2 Serviceability as a design input
 A 30-year device is a *maintained* device. Add:
 - **Service hatch with torque map** — every wear item reachable with one driver.
-- **Service kit:** gasket set, cell, RTC cell, bumper set, stylus nibs, desiccant. All P/N'd.
+- **Service kit:** gasket set, battery pack, RTC cell, bumper set, stylus nibs, desiccant. All P/N'd.
 - **Maintenance schedule** (see §4) written into the field guide, not left to folklore.
 - **3D-printable spares** in-repo as STEP, so bumpers and grips can be remade in 2046.
 
@@ -99,7 +100,7 @@ Only two are needed. Humidity, dew point and temperature logging already exist i
 
 | Daemon | Why 30 years needs it |
 | :--- | :--- |
-| `solardeck-battcare` | Holds 50 % SOC in storage, logs capacity fade and internal resistance so a cell swap is scheduled by data, not by surprise |
+| `solardeck-battcare` | Holds 50 % SOC in storage, logs capacity fade and internal resistance so a pack swap is scheduled by data, not by surprise |
 | `solardeck-nandcare` | Quarterly powered scrub of eMMC/NVMe while charging; the only thing that prevents silent bit rot in an unpowered year |
 
 ### 2.4 Four acceptance gates
@@ -135,7 +136,8 @@ positioning change, not a cost saving.
 | Quarterly | Powered NAND scrub (`solardeck-nandcare`); capacity fade logged | automatic while charging |
 | Annually | Gasket compression check, desiccant swap, bumper inspection, torque check | user, 20 min, one driver |
 | Every 3 years | Salt/UV inspection of anodise and TPU; stylus nib; vent membrane | user |
-| Every 10 years | Battery cell, RTC cell, gasket set, bumper set | service kit |
+| On battcare notice | Li-ion smart pack swap when the gauge's state of health falls below `longevity.battery_soh_service_pct`; typically about 3 years (`longevity.battery_service_interval_years`, modelled; ADR-048) | user, screws + keyed connector |
+| Every 10 years | RTC cell, gasket set, bumper set | service kit |
 | As needed | Display module (bonded unit), USB-C receptacle | module swap |
 
 Storage rule: if the device will sit unused for months, `solardeck-battcare` parks it at

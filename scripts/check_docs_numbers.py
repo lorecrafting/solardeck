@@ -34,7 +34,7 @@ BANNED = [
     (r"\bfour focused\b|four Hotpacks|\bthe 4 specialized\b",
      "7 Hotpacks are specified (spec_values.hotpacks)"),
     (r"8-pin hermetic magnetic pogo|POGO_[A-Z]", "rear pogo bus descoped, USB-C only (B6)"),
-    (r"\b35\s*Wh\b", "pack capacity is spec_values.battery_wh.lifepo4 (null until a cell is chosen, ADR-040)"),
+    (r"\b35\s*Wh\b", "pack capacity is spec_values.battery_wh.li_ion (null until a cell is chosen, ADR-040/048)"),
     (r"\b50-item\b", "INDEX is generated; do not state a row count"),
     (r"\b4-layer\b(?!.*ADR)", "carrier PCB is 6-layer"),
     (r"7-Phase|7 Phase", "phase count lives in spec_values.verification_phases"),

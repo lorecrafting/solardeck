@@ -5,6 +5,7 @@ Revised 2026-10-21 15:59 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / 
 Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
 Revised 2026-10-21 17:22 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, ADR-044/045).
 Revised 2026-10-21 17:53 UTC in Claude Code by anthropic/claude-opus-5-5 (RTC chip, jack removed, ADR-046).
+Revised 2026-10-21 19:45 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion smart pack, ADR-048).
 
 Detailed architectural specification for campervan energy bus integration, enhanced sensor navigation (RTK, celestial plate-solving, 9-DOF IMU), grid-down doomsday survival hardware, frontlight optical engineering, and offline AI knowledgebase traversal.
 
@@ -273,12 +274,12 @@ Deferred to V2 (ADR-034).
 ### 8.6 The Hawaii Sun Problem: Why Solar Covers Are Descoped
 * **The Thermal Ceiling:** In direct tropical midday sun (Hawaii, Arizona, Mexico), ambient temperatures hit +35°C to +42°C, and dark unibody surfaces bake to **over +70°C (+158°F)**.
 * **Display Physics:** Electrophoretic microcapsules (E-Ink) undergo permanent fluid degradation and pigment sticking if operated above **+60°C**.
-* **Battery Safety:** LiFePO4 cells must terminate charging at **+45°C to +50°C** to prevent internal gas generation and electrolyte breakdown.
+* **Battery Safety:** the V1 Li-ion pack (ADR-048) must stop charging outside its charge-temperature window; the charger's JEITA zones, the pack NTC and the harvester's hardware temperature gate enforce it, and heat also speeds the pack's wear-out.
 * **The Detached Solar Workflow:**
   * Descope the integrated solar smart cover.
   * Pack a standard, lightweight folding 15W–28W USB-C solar panel (e.g. BigBlue / Anker with SunPower Maxeon cells).
   * Place the solar panel out in the scorching sun on a hot volcanic rock or vehicle roof.
-  * Run a **3-meter high-visibility USB-C cable** into the shade of a tree, awning, or tent where SolarDeck and its LiFePO4 battery operate safely at ambient temperature.
+  * Run a **3-meter high-visibility USB-C cable** into the shade of a tree, awning, or tent where SolarDeck and its battery pack operate at ambient temperature.
 
 ---
 

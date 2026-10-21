@@ -31,7 +31,7 @@ L = SPEC["longevity"]
 REQUIRED = {
     "design_life_years": int, "drop_height_m": float, "drop_peak_g": int,
     "drop_orientations": int, "thermal_cycles": int, "thermal_uv_hours": int,
-    "unpowered_months": int, "battery_capacity_retained_year30_pct": int,
+    "unpowered_months": int, "battery_soh_service_pct": int,
     "battery_service_interval_years": int, "gasket_compression_pct": int,
     "fastener_torque_nm": float, "screw_types_max": int, "usb_c_rated_cycles": int,
     "salt_fog_hours": int, "nand_scrub_interval_days": int, "storage_soc_pct": int,

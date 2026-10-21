@@ -8,6 +8,8 @@ Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 sco
 
 Revised 2026-10-21 17:23 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, pin budget; ADR-044/045).
 
+Revised 2026-10-21 19:45 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion smart pack, ADR-048).
+
 SolarDeck is sold as a *sovereign* device, so its security claims are product claims, not
 boilerplate. This document states what is actually enforced in hardware, what is enforced in
 software, and what a buyer should not assume.
@@ -20,6 +22,7 @@ software, and what a buyer should not assume.
 | Microphone cutoff | `MIC_MUTE` breaks the mics' I²S bit clock (`MIC_BCLK`, `docs/PIN_BUDGET.md`) and pulls the mic side to GND | The mic supply is not cut. Firmware cannot bridge the open switch, but the switch position is only as trustworthy as its contacts — "hard to defeat", not "impossible" |
 | Display bus isolation | Two TMUX1575 devices (fail-safe, $I_{\text{off}}$) present giga-ohm impedance when the CM5 rail is at 0 V | Isolation is per-line and switch-state dependent |
 | Airgap | Series disconnect of peripheral power gates, not an RF shield | Near-field coupling, thermal and acoustic side channels are outside the model |
+| Battery pack interlock (ADR-048) | The user-replaceable pack is input from outside the device. The RP2350, not Linux, reads the pack gauge's design charge voltage and keeps the charger's CE off unless it matches `battery.charge_limit_v`. Status: the gate logic is in firmware and host-tested (test 7); the I²C reads that feed it are not written yet (software frozen, ADR-046) | A firmware interlock, not authentication: a counterfeit or faulty pack can report any value, and a compromised OS that pushes RP2350 firmware (A/B update, `SOFTWARE_SPEC.md`) can skip the check. The backstops that need no firmware are the pack-side protector and fuse and the harvester's hardware temperature gate |
 
 **Not claimed:** no tamper-evident mesh, no secure element for disk encryption keys, no measured
 power side-channel resistance, no anti-evil-maid guarantee. Cellular and the eSIM are V2 (ADR-034); the V2 eSIM requirement is a consumer SGP.22 eUICC

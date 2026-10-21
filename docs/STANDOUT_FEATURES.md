@@ -5,6 +5,7 @@ Revised 2026-10-21 15:59 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / 
 Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
 Revised 2026-10-21 17:22 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, ADR-044/045).
 Revised 2026-10-21 17:53 UTC in Claude Code by anthropic/claude-opus-5-5 (RTC chip, jack removed, ADR-046).
+Revised 2026-10-21 19:43 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion smart pack, ADR-048).
 
 ---
 
@@ -173,7 +174,7 @@ In an era of cloud-locked, fragile, spy-by-design hardware, SolarDeck is an **in
 Consumer electronics are designed for planned obsolescence: when Apple or Lenovo releases a faster chip, your $1,500 laptop must be thrown in the trash. The RAM is soldered, the SSD is soldered, and the CPU is locked.
 
 SolarDeck is designed with **Generational Modular Longevity**:
-* The expensive components—the **10.3" Color E-Ink glass**, the **Wacom EMR digitizer**, the **custom LiFePO4 battery** (capacity TBD until the cell is chosen, ADR-040), the **precision CNC/SLS enclosure**, and the **carrier motherboard**—are built to last a decade.
+* The expensive components—the **10.3" Color E-Ink glass**, the **Wacom EMR digitizer**, the **precision CNC/SLS enclosure**, and the **carrier motherboard**—are built to last a decade. The battery is the exception: a user-replaceable Li-ion smart pack (capacity TBD until the cell is chosen, ADR-040), swapped as a service part (ADR-048).
 * The compute brain, RAM, and mass storage are **100% modular and field-upgradable in under 60 seconds with two screws**.
 
 ```
@@ -231,7 +232,7 @@ Giving developers and autonomous AI agents root access to flash co-processor sil
 * **Silicon Mask ROM:** Factory-etched into RP2350 silicon at TSMC; physically unbrickable.
 * **Dual-Bank A/B Flash & Hardware Watchdog:** Experimental firmware boots with an 8-second countdown. If new code hangs or faults, the hardware watchdog auto-rolls back to Bank A (Golden Image) in $<2.5\text{ ms}$.
 * **Current-Clamping Resistors:** All shared I/O lines incorporate 330Ω–1kΩ resistors, physically preventing pin burnout even during software logic contention.
-* **Autonomous Battery Protection:** The TI BQ25798 charger's programmable JEITA zones and a BQ29706-class protector with a back-to-back N-FET pair cut charging on cell thermals or over-voltage, independent of Linux; charging stays disabled until the RP2350 has written the LiFePO4 VREG (ADR-035).
+* **Autonomous Battery Protection:** The TI BQ25798 charger's programmable JEITA zones and the pack-side Li-ion protector with a back-to-back N-FET pair and fuse cut charging on cell thermals or over-voltage, independent of Linux; the solar harvester has its own hardware temperature gate on the pack NTC. Charging stays disabled until the RP2350 has written VREG and the pack's design charge voltage matches `battery.charge_limit_v` (ADR-035, ADR-048).
 * **Immutable Linux Rootfs with OverlayFS:** Base system is cryptographically locked with `dm-verity`; `solardeck-reset --safe` restores pristine factory OS in 3 seconds.
 
 ### 6. The "Cold Storage Vault" (Carry Up to 6+ Terabytes Off-Grid for $0 BOM)
@@ -370,7 +371,7 @@ Carrying a giant 6.7" glass smartphone alongside a 10.3" sovereign e-ink termina
 │ • 50MP OIS Camera (Travel memories)  │ • 10.3" Colour E-Ink Kaleido 4       │
 │ • Global 5G/4G + eSIM (Airalo ready) │ • Quad A76 CM5 + RP2350 Dual-Brain   │
 │ • Turn-by-Turn Google Maps Navigation│ • Neovim, Claude Code CLI, Kiwix     │
-│ • Tactile QWERTY Thumbboard & Calls  │ • LiFePO4 battery (Wh TBD, ADR-040)  │
+│ • Tactile QWERTY Thumbboard & Calls  │ • Li-ion smart pack (Wh TBD, ADR-048)│
 └──────────────────────────────────────┴──────────────────────────────────────┘
 ```
 
@@ -414,7 +415,7 @@ Carrying a giant 6.7" glass smartphone alongside a 10.3" sovereign e-ink termina
 * **Wayland Multi-Head Orchestration:** `solardeck-dockd` automatically binds high-density workspaces 1–8 to the big monitor, pins van telemetry (Victron battery, water tanks, Meshtastic chat) to the 10.3" internal screen, and locks Wacom stylus input strictly to the internal display.
 
 ### 2. Blackout Supercapacitor Emergency SOS Beacon
-* **The Zero-Battery Bootstrap:** When the main LiFePO4 battery is completely dead (0.000V) or missing, an onboard **1.0F 3.3V supercapacitor** fed by the front micro-solar strip charges in 12–15 minutes under direct sunlight.
+* **The Zero-Battery Bootstrap:** When the battery pack is flat (protector open) or missing, an onboard **1.0F 3.3V supercapacitor** fed by the front micro-solar strip charges in 12–15 minutes under direct sunlight.
 * **150ms Cold Burst:** RP2350 cold-boots, grabs last-known GNSS (MAX-M10S) coordinates from RTC NVRAM, burns an indelible distress placard onto the 10.3" screen. The distress message remains legible forever with **0.000W battery consumption**. The radio SOS burst is V2 (ADR-044).
 
 ### 3. Zero-Hardware Wacom Field Caliper & CAD Digitizer
@@ -493,12 +494,12 @@ Transforming SolarDeck from an active computer into an immortal, zero-battery am
 ```
 
 1. **Full-Width Dual-Bezel IBC Solar Array:** SunPower Maxeon Gen 7 back-contact monocrystalline strips ($51.6\text{ cm}^2$ total area across top and bottom bezels) generate **1.24W peak in direct sunlight** and **120 mW to 240 mW in indirect shade**—an **8× to 20× surplus** over the 4.5 mW to 15 mW required for RP2350 operation.
-2. **Batteryless Direct Solar Cold-Boot ("Zombie Mode"):** Even with the LiFePO4 battery missing or drained to 0.000V, sunlight charges the onboard 1.0F supercapacitor in **under 25 seconds**, cold-booting the RP2350 into the Zen Solar Suite indefinitely.
+2. **Batteryless Direct Solar Cold-Boot ("Zombie Mode"):** Even with the battery pack missing or flat (protector open), sunlight charges the onboard 1.0F supercapacitor in **under 25 seconds**, cold-booting the RP2350 into the Zen Solar Suite indefinitely.
 3. **Mind Games & Intellectual Entertainment:** Infinite E-Ink chess, Infocom interactive fiction (*Zork*), procedural daily Sudoku/Wordle, and stoic philosophy oracles run completely offline with **zero battery drain** between user actions.
 4. **Perpetual Solar Mesh Relay:** V2 (ADR-044): needs the deferred on-board LoRa radio.
 5. **Snap-On MagSafe 7.1W "Solar Armor" Backplate & 2.5m Remote Shade Tether (`SOLAR-ARMOR-V1`):**
    * Snaps via the embedded MagSafe N52 magnetic ring with a 2.0mm convective chimney to dissipate heat, harvesting **7.13W Peak** in direct tropical sun—surpassing the 5.5W full turbo compilation load of the quad-core CM5.
-   * **The Remote Shade Tether:** Features an integrated 2.5-meter Kevlar-reinforced flat ribbon cable that unspools from the backplate. The panel sits out on a sunlit boulder or vehicle roof generating 7.1W, while the operator sits comfortably in the cool shade using the tablet with **zero thermal stress on the LiFePO4 battery**. Doubles as an independent 7.1W USB-C solar charger for phones and flashlights.
+   * **The Remote Shade Tether:** Features an integrated 2.5-meter Kevlar-reinforced flat ribbon cable that unspools from the backplate. The panel sits out on a sunlit boulder or vehicle roof generating 7.1W, while the operator sits comfortably in the cool shade using the tablet with **no solar heat load on the battery pack**. Doubles as an independent 7.1W USB-C solar charger for phones and flashlights.
 
 ---
 

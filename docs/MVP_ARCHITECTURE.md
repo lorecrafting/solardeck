@@ -5,6 +5,7 @@ Revised 2026-10-21 15:59 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / 
 Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
 Revised 2026-10-21 17:22 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, ADR-044/045).
 Revised 2026-10-21 17:53 UTC in Claude Code by anthropic/claude-opus-5-5 (RTC chip, jack removed, ADR-046).
+Revised 2026-10-21 19:43 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion smart pack, ADR-048).
 
 ---
 
@@ -24,12 +25,12 @@ SolarDeck is a sovereign, general-purpose open-hardware computing platform desig
    * **Core Internal Tactical Sensor Cluster:** RV-3028-C7-class RTC (ADR-046), Bosch BMI270 + BMM350 9-DOF IMU (compass & Stellarium), Bosch BMP390 Barometer (10cm altimeter & weather storm barograph), VEML7700 / Solar ADC ambient light sensor
    * **Voice (ADR-036):** two MEMS mics, speaker with echo-cancel reference, hardware mute, and a hold-to-talk voice button (RP2350 captures into PSRAM at press while the CM5 boots)
    * **Haptics (ADR-037):** DRV2605L + frame-mounted LRA; every keystroke fires a tap and optional typewriter sound at key-down
-   * LiFePO4 battery, capacity TBD until the cell is chosen (ADR-040) (airline-compliant <100Wh)
+   * 1S Li-ion user-replaceable smart pack (ADR-048), capacity TBD until the cell is chosen (ADR-040) (airline-compliant <100Wh)
    * Lightweight, rugged SLS 3D-printed PA12 Nylon prototypes, PC/ABS production (ADR-039); ingress IP54 (V1 target), IP67 (V2 target)
 2. **Modular Expansion ("Hotpacks"):** Deferred to V2 (ADR-034).
    * **Descoped Flipper Zero Clone:** Redundant over-engineering. Operators simply attach their physical **Flipper Zero** to the rear M2.5/MagSafe anchor, plug into USB-C Port 2 or pair via Bluetooth, and control it through `qflipper-cli` and `flipperzero-protobuf` on SolarDeck's 10.3" E-Ink screen.
 3. **Descoping Note (Integrated Solar Smart Cover):**
-   * *The Hawaii / Tropical Sun Reality:* In direct tropical sun (+30°C to +40°C ambient), dark tablet surfaces hit +70°C. E-Ink microcapsules degrade above +60°C, and LiFePO4 charging must throttle above +45°C.
+   * *The Hawaii / Tropical Sun Reality:* In direct tropical sun (+30°C to +40°C ambient), dark tablet surfaces hit +70°C. E-Ink microcapsules degrade above +60°C, and Li-ion charging must stop outside the cell's charge-temperature window (JEITA, ADR-048).
    * *Decision:* The integrated solar smart cover is descoped. Operators use standard off-the-shelf folding USB-C solar panels (15W–28W) positioned on hot rocks in direct sunlight, connected via a 3-meter high-visibility USB-C cable to SolarDeck resting safely in the ambient shade.
 
 ```
@@ -48,7 +49,7 @@ SolarDeck is a sovereign, general-purpose open-hardware computing platform desig
 │ 10. SENSORS:  RV-3028-C7 RTC + BMI270/BMM350 9-DOF IMU + BMP390 Baro        │
 │ 11. AIRGAP SW: Physical Hardware RF Kill Switch (Zero EMF / 0.000 dBm Cutoff)│
 │ 12. VOICE:    2 MEMS Mics + Speaker (AEC ref) + Mute SW + Voice Button      │
-│ 13. BATTERY:  LiFePO4 1S, capacity TBD until the cell is chosen (ADR-040)   │
+│ 13. BATTERY:  Li-ion 1S smart pack (ADR-048), capacity TBD (ADR-040)        │
 │ 14. EXPAND:   2x IP68 USB-C (Monitor Sink + Host Expand with USB-to-I2C)     │
 │ 15. CHASSIS:  SLS 3D-Printed PA12 Nylon + 85A TPU Armor Corners (~510g total)│
 │ 16. HAPTICS:  DRV2605L + frame-mounted LRA (ADR-037)                        │
@@ -62,7 +63,7 @@ SolarDeck is a sovereign, general-purpose open-hardware computing platform desig
 To achieve maximum field battery life without an excessively heavy device:
 
 ### Capacity: TBD until the cell is chosen (ADR-040)
-* **Configuration:** 1S LiFePO4 only (3.2V nominal, charge limit `battery.charge_limit_v`); there is no Li-ion option (ADR-035). Protection is a BQ29706-class protector with a back-to-back N-FET pair; the gauge is a BQ27Z561-R2 characterised on the chosen cell.
+* **Configuration:** 1S Li-ion (charge limit `battery.charge_limit_v`), one chemistry per hardware revision, no selector; LiFePO4 is V2 (ADR-048). The cell ships in a user-replaceable smart pack: pack-side protector with a back-to-back N-FET pair and fuse, pack-side BQ27Z561-R2 gauge characterised on the chosen cell, keyed connector (pack+, pack−, SDA, SCL, NTC), screws and a pull tab, no adhesive. A larger pack of the same chemistry drops in; firmware refuses a pack whose design charge voltage does not match `battery.charge_limit_v`.
 * **Dimensions:** ~5.5 mm thick × 130 mm × 130 mm (occupies the flat recessed cavity coplanar with the PCBA directly behind the 10.3" e-paper display).
 * **Weight:** **~200 grams** (~7.0 oz).
 * **Total Tablet Device Weight:** **~510 grams** (1.12 lbs). For comparison:
@@ -70,7 +71,7 @@ To achieve maximum field battery life without an excessively heavy device:
   * Onyx Boox Note Air 3C: ~430 grams (with small 3,700 mAh battery)
   * Panasonic Toughbook tablet: ~1,100 grams
 * **FAA / TSA Airline Compliance:** The international limit for passenger aircraft is **100 Watt-hours (Wh)**. A 1S pack that fits this cavity sits far below it.
-* **Extreme Heat Safety:** Rated safe up to 65°C (149°F). The tablet can sit in direct sunlight or on a vehicle dashboard safely.
+* **Heat:** charging stops outside the Li-ion cell's charge-temperature window (JEITA, pack NTC, harvester temperature gate; ADR-048). An operating-temperature rating is TBD until the cell and panel are chosen; do not leave the device in direct sun on a dashboard.
 
 ### Runtime per power tier: TBD until the cell is chosen (ADR-040)
 The tier draws below are the modelled loads; runtimes are re-derived from the chosen cell.
@@ -90,7 +91,7 @@ The tier draws below are the modelled loads; runtimes are re-derived from the ch
   * **Interactive Terminal & Coding:** In Neovim and Claude Code CLI, the screen only consumes power during partial update pulses (timing TBD, ADR-032) when keys are pressed. Total system draw drops to **~1.1W–1.4W** (runtime TBD until the cell is chosen, ADR-040).
   * **Zen Reading Mode:** With the CM5 unpowered and the RP2350 flipping pages in 30ms, battery runtime is TBD until the cell is chosen (ADR-040).
   * **Ambient Desk Clock & Weather Station:** The top-bezel micro-solar strip tops up the idle co-processor outdoors only (ADR-041).
-  * **Chemical Cycle Life (10–15 Years):** Standard consumer Li-ion batteries degrade after 500 charge cycles (~2 years). In contrast, SolarDeck's LiFePO4 chemistry provides **3,000 to 5,000+ full cycles**. Because non-video workflows require charging only once every few days or weeks, the physical battery pack lasts **10 to 15+ years** before reaching 80% health.
+  * **Battery wear-out (ADR-048):** the Li-ion cell is the first hard wear-out item (`reliability.first_wearout_years`, modelled), so the pack is a user-replaceable service part, swapped when the gauge's state-of-health says so rather than promised to outlive the device.
 
 ---
 
@@ -149,7 +150,7 @@ V1 connectivity is Wi-Fi/BT on the CM5 plus phone tethering (ADR-034).
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 7. Autonomous Charger Safety (ADR-035):                                     │
 │    • TI BQ25798 charging is held off by its enable pin until the RP2350     │
-│      has written the LiFePO4 VREG (POR defaults are a Li-ion voltage).      │
+│      has written VREG and the pack's design voltage matches (ADR-048).      │
 │    • The charger watchdog is disabled before VREG is written (ADR-047).     │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -248,7 +249,7 @@ For V1, descoping the proprietary SnapDeck keyboard eliminates $25,000+ in custo
 A prototype can be 100% manufactured, clean-room assembled, QA tested, and boxed in Shenzhen, then shipped via DHL Express directly to Honolulu:
 
 * **Turnkey Box-Build Vendors:** PCBWay, Seeed Studio Fusion, Makerfab.
-* **Battery Shipping Advantage (UN3481):** Because the LiFePO4 battery is pre-installed inside the assembled enclosure, it qualifies under UN3481 (Lithium batteries contained in equipment, Section II). It ships via standard commercial air cargo without hazardous materials surcharges.
+* **Battery shipping (UN3481):** a pack installed in the enclosure ships as lithium batteries contained in equipment (UN3481); a spare pack ships as a standalone lithium-ion battery under stricter rules. Both need the pack's UN38.3 report first; status and conditions in `docs/REGULATORY.md`.
 * **Lead Time:** ~3 weeks from file submission to delivery in Honolulu.
 * **Prototype Costs Delivered to Honolulu:**
   * **Qty 1 (Single Turnkey Prototype):** **TBD — the V1 BOM is a floor until the panel, cell and power parts are priced (`docs/BOM_COST_ESTIMATE.md`)**

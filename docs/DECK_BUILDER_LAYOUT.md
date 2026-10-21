@@ -8,6 +8,8 @@ Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 sco
 
 Revised 2026-10-21 17:22 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, ADR-044/045).
 
+Revised 2026-10-21 19:45 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion smart pack, ADR-048).
+
 Purpose: classify every `BOM_COST_ESTIMATE.md` line as **snap-in (user-serviceable)** or
 **soldered (factory-welded)** so the SolarDeck quote (`90-history/HANDOFF_TO_FABLE_2026-10-19.md`) is structured around a
 user-assemblable "Deck-Builder" top layer — and to make that modularity serve the project's
@@ -41,7 +43,7 @@ If it has a human-scale interface (screw, latch, twist-on) → snap.
 | SX1262 LoRa + whip | Deferred to V2 (ADR-044); the V1 board reserves the footprint and pins (ADR-045, docs/PIN_BUDGET.md). | — |
 | Kaleido 4 panel + EMR (ADR-032) | FPC latch (pin count TBD, ADR-032) | 🟨 physical latch, delicate; health via refresh-ACK latency |
 | Speaker / dual MEMS / piezo | Fly-wires + micro connectors | ✅ audio-loop self-test |
-| Battery pack | Screw-down terminals + strap | ✅ charge/discharge curve fit (see §4) |
+| Li-ion smart pack (ADR-048) | Screws + pull tab, keyed 5–6-pin connector (pack+, pack−, SDA, SCL, NTC), no adhesive | ✅ pack gauge identity + design-voltage check before charge; charge/discharge curve fit (see §4) |
 | Solar strip | Adhesive + JST | ✅ mA from strip telemetry |
 
 ### Either-layer (both possible — quote decides)
@@ -55,12 +57,12 @@ If it has a human-scale interface (screw, latch, twist-on) → snap.
 
 | Part | Why it cannot be Lego |
 | :--- | :--- |
-| BQ25798 charger, BQ29706-class protector + back-to-back N-FETs, BQ27Z561-R2 gauge (ADR-035), TPS62840/TPS61088 rails | Power-delivery ICs: always-on rail, brownout-critical, sub-millimetre pitch |
+| BQ25798 charger, STUSB4500 PD sink, always-on buck-boost (TPS63900 class) and 5 V boost (re-selection pending) rails, harvester temperature-gate comparator (ADR-048) | Power-delivery ICs: always-on rail, brownout-critical, sub-millimetre pitch. The protector, N-FETs and BQ27Z561-R2 gauge moved onto the pack board (ADR-048) |
 | TPS22918 load-switch gates | **Safety + sleep-floor hard requirements** (air-gap cut, <25 mW floor, G6/G12) — a connector here is a failure point in the one rail that must never fail |
 | TMUX1575 bus mux pair | Display-bus isolation; a loose contact = glitch mid-refresh |
 | eSIM | Deferred to V2 (ADR-034); the V2 requirement is a consumer SGP.22 eUICC (ADR-033) |
 | u-blox MAX-M10S GNSS (ADR-038) | Module on an RP2350 UART behind a load switch; passive antenna at the top edge |
-| **Battery terminals + cells** | The cells' welded tabs are a fire-safety joint — never a snap |
+| **Cell tabs inside the pack** | The cell's welded tabs to the pack board are a fire-safety joint — never a snap; the user swaps the whole pack, never the cell |
 | Camera | Deferred to V2 (ADR-034) |
 
 ---

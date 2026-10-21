@@ -15,7 +15,7 @@ int main(void) {
     telemetry_frame_t tx_frame;
     memset(&tx_frame, 0, sizeof(tx_frame));
     tx_frame.magic = TELEMETRY_FRAME_MAGIC;
-    tx_frame.vbat_mv = 3320;        /* 3.32V LiFePO4 nominal */
+    tx_frame.vbat_mv = 3320;        /* mid-discharge sample */
     tx_frame.ibat_ma = 125;         /* +125mA charging from solar */
     tx_frame.soc_pct = 85;          /* 85% battery remaining */
     tx_frame.solar_lux = 78000;     /* 78,000 lux (bright Hawaiian sun) */

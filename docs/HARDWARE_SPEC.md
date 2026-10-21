@@ -5,6 +5,7 @@ Revised 2026-10-21 15:58 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / 
 Revised 2026-10-21 16:41 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
 Revised 2026-10-21 17:23 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, ADR-044/045).
 Revised 2026-10-21 17:53 UTC in Claude Code by anthropic/claude-opus-5-5 (RTC chip, jack removed, ADR-046).
+Revised 2026-10-21 19:43 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion smart pack, ADR-048).
 
 Detailed hardware architecture, component selection, bus topology, antenna engineering, and electrical requirements for the custom carrier board and mechanical enclosure.
 
@@ -20,14 +21,14 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
                                                         │
 ┌───────────────────────────┐                 ┌─────────┴─────────┐
 │  TI BQ25798 BUCK CHARGER  │                 │ K4 DISPLAY CTRL   │
-│  • WCH CH224K USB-PD Sink │                 └─────────▲─────────┘
-│  • 1S LiFePO4 Pack        │                           │
+│  • STUSB4500 USB-PD Sink  │                 └─────────▲─────────┘
+│  • 1S Li-ion smart pack   │                           │
 └─────────────┬─────────────┘                 ┌─────────┴─────────┐
               │ VBAT Rail                     │ TI TMUX1575 MUX   │ (8-Ch SPDT Bus Isolation)
               ▼                               └────▲─────────▲────┘
 ┌───────────────────────────┐                      │         │
-│ TI TPS62840 LOW-IQ BUCK-  │                      │         │
-│ BOOST (60nA IQ, 3.3V AON) │                      │         │
+│ LOW-IQ BUCK-BOOST (TBD,   │                      │         │
+│ TPS63900 class, 3.3V AON) │                      │         │
 └─────────────┬─────────────┘                      │         │
               │ VDD_3V3_AON                        │         │
               ▼                                    │         │
@@ -103,7 +104,7 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
   * **The 5 RP2350 Superpowers:**
     1. **Full-Screen Autonomous Framebuffering (30ms Zen Reader):** Holds two full-screen framebuffers (frame size TBD until the Kaleido 4 resolution is published, ADR-032). Pre-caches eBook pages and executes sub-30ms paper-fast page turns without waking the CM5, dropping reading power to **4.5 mW** (runtime TBD until the cell is chosen, ADR-040).
     2. **Standalone LoRa mesh node:** Deferred to V2 (ADR-044); the V1 board reserves the footprint and pins (ADR-045, docs/PIN_BUDGET.md).
-    3. **Hardware Power Master & Anti-Brownout Shield:** Continuously monitors the TI BQ27Z561-R2 fuel gauge (ADR-035); blocks CM5 boot if battery voltage is $<3.0\text{V}$, preventing inrush brownouts and eMMC filesystem corruption.
+    3. **Hardware Power Master & Anti-Brownout Shield:** Continuously monitors the pack-side TI BQ27Z561-R2 fuel gauge (ADR-035, ADR-048); blocks CM5 boot if battery voltage is $<3.0\text{V}$, preventing inrush brownouts and eMMC filesystem corruption.
     4. **Shadow Environmental Telemetry Logger:** Samples BMP390 barometric trends and TMP112 thermals every 60 seconds into a circular PSRAM buffer; dumps a 7-day weather barograph to Linux upon wake in 2ms.
     5. **Autonomous Bezel Touch Gestures:** Scans capacitive side-bezel touch traces at 10 Hz (15 µA) for instant page-flip navigation.
 * **Dual-Master Display Bus Multiplexer:** **2 × Texas Instruments TMUX1575** (each a 4-channel SPDT bus switch, giving 8 channels). TMUX1575 is only available in the 16-bump DSBGA (YCJ) package. See `docs/90-history/decisions.md` ADR-004.
@@ -162,23 +163,24 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
 
 ### 2.3 Power Subsystem & Multi-Tier Voltage Regulation
 * **Battery Chemistry & Secondary Hardware Protection:**
-  * **Chemistry:** **1S LiFePO4 only** (3.2V nominal; charge limit `battery.charge_limit_v`, below the AGENTS §4.1 ceiling of 3.65V). There is no Li-ion option (ADR-035).
-  * **Capacity:** TBD until the cell is chosen (ADR-040); `battery_wh.lifepo4` stays `null` until a buyable cell's datasheet is in hand.
-  * **No chemistry strap:** the earlier `CHEM_SEL` Li-ion/LiFePO4 strap is deleted (ADR-035); a switch that can select 4.2V is a hazard, not a feature. Every I²C charger's power-on default is a Li-ion voltage, so the BQ25798 is held off by its charge-enable pin until the RP2350 has written VREG; the charger watchdog is then disabled (never fed, ADR-047). CE is active-low (charging needs CE low *and* EN_CHG set, BQ25798 datasheet pin table) and carries a **pull-up to the always-on rail**, so the charger is off at power-up even if the firmware never runs; the RP2350 drives CE low only after VREG reads back at `battery.charge_limit_v` (`solardeck_charge_enable_allowed()`, firmware test 7).
-  * **Fuel Gauge:** TI **BQ27Z561-R2** (its datasheet names Li-ion/Li-polymer; LiFePO4 support needs TI confirmation or characterisation, ADR-047), characterised on the chosen cell (ADR-035, ADR-040).
+  * **Chemistry:** **1S Li-ion** (charge limit `battery.charge_limit_v`, the AGENTS §4.1 ceiling for this revision). One chemistry per hardware revision, no selector; LiFePO4 is deferred to V2 (ADR-048, superseding the chemistry part of ADR-035).
+  * **Replaceable smart pack (ADR-048):** the cell ships with its own protector and a pack-side gauge on a small pack board, behind a keyed 5–6-pin connector (pack+, pack−, SDA, SCL, NTC), held by screws and a pull tab, no adhesive. The pack is a user-replaceable service part and the upgrade path: a larger pack of the same chemistry drops in. Before enabling charge, firmware reads the pack gauge's design charge voltage and refuses any pack that does not match `battery.charge_limit_v`.
+  * **Capacity:** TBD until the cell is chosen (ADR-040, ADR-048); `battery_wh.li_ion` stays `null` until a buyable, certified cell's datasheet is in hand.
+  * **No chemistry strap:** the earlier `CHEM_SEL` strap is deleted (ADR-035); a chemistry selector is a hazard, not a feature. The charger's power-on VREG is not the firmware's to assume, so the BQ25798 is held off by its charge-enable pin until the RP2350 has written VREG; the charger watchdog is then disabled (never fed, ADR-047). CE is active-low (charging needs CE low *and* EN_CHG set, BQ25798 datasheet pin table) and carries a **pull-up to the always-on rail**, so the charger is off at power-up even if the firmware never runs; the RP2350 drives CE low only after VREG reads back at `battery.charge_limit_v` (`solardeck_charge_enable_allowed()`, firmware test 7) and the pack's design voltage matches it.
+  * **Fuel Gauge:** TI **BQ27Z561-R2**, **pack-side** (ADR-048): sense resistor, protector and gauge share the pack ground as in TI's reference circuit, which resolves ADR-047's gauge topology. The carrier reads it over the pack connector's SDA/SCL; it is characterised on the chosen cell (ADR-035, ADR-048).
   * **Hardware Battery PCM (Pure Silicon Secondary Protection):**
-    * A **BQ29706-class LiFePO4 protector** (3.85V OVP, 2.50V UVP) driving a **back-to-back N-FET pair** (ADR-035). The exact protector variant and FETs are chosen at schematic capture against the cell's datasheet.
+    * A **pack-side Li-ion protector** (BQ29706-class) driving a **back-to-back N-FET pair**, plus a fuse (ADR-048). Protector, fuse, JEITA charging and the pack NTC are mandatory for Li-ion, not optional (AGENTS §4.1). The protector variant, its OVP/UVP thresholds and the FETs are chosen at schematic capture against the cell's datasheet.
     * Completely autonomous from software and I2C: physically cuts off the battery pack on over-discharge or over-charge, independent of the charger.
     * Short-circuit and over-current trip thresholds: per the chosen protector variant (TBD at schematic capture).
 * **Battery Charger IC & Autonomous Hardware JEITA Thermal Protection:**
-  * Texas Instruments **BQ25798** I2C-controlled buck-boost charger (`spec_values.charger`; VREG range covers `battery.charge_limit_v`, ADR-035) paired with a dedicated **WCH CH224K** (or STMicroelectronics STUSB4500) standalone USB-PD Sink Controller ($0.45).
-  * **USB-PD 20W Power Negotiation:** The CH224K automatically advertises sink capabilities and negotiates a 9V/2.22A or 12V/1.67A (20W) power contract from any standard USB-PD charger, supplying high voltage to the BQ25798 input to recharge the pack in **1.5 to 2 hours**.
+  * Texas Instruments **BQ25798** I2C-controlled buck-boost charger (`spec_values.charger`; VREG range covers `battery.charge_limit_v`, ADR-035) paired with a dedicated **STMicroelectronics STUSB4500** standalone USB-PD sink controller (ADR-048).
+  * **USB-PD 20W Power Negotiation:** The STUSB4500 automatically advertises sink capabilities and negotiates a 9V/2.22A or 12V/1.67A (20W) power contract from any standard USB-PD charger, supplying high voltage to the BQ25798 input to recharge the pack (charge time TBD until the cell is chosen, ADR-040).
   * **JEITA Cold-Weather Lockout Ladder (programmable zones on the BQ25798):**
-    * The BQ25798 `TS` pin is biased by a precision 0.1% resistor divider (values set at schematic capture for the programmed JEITA thresholds) paired with a **10 kΩ NTC thermistor (Murata NCP18XH103F03RB, $\beta = 3950\text{K}$)** glued directly to the battery pouch cell.
+    * The BQ25798 `TS` pin is biased by a precision 0.1% resistor divider (values set at schematic capture for the programmed JEITA thresholds) paired with a **10 kΩ NTC thermistor (Murata NCP18XH103F03RB, $\beta = 3950\text{K}$)** inside the smart pack, reached through the pack connector's NTC pin (ADR-048).
     * **$T < 0^\circ\text{C}$ (Freezing Lockout):** Charger automatically terminates charging completely ($I_{\text{CHG}} = 0.000\text{ A}$), preventing catastrophic metallic lithium plating and internal micro-shorts while still powering system loads from solar/USB.
     * **$0^\circ\text{C} \le T < 10^\circ\text{C}$ (Cold Taper):** Charge current automatically throttled to $0.2\text{C}$ ($400\text{ mA}$) to protect chemistry.
     * **$10^\circ\text{C} \le T \le 45^\circ\text{C}$ (Normal Band):** Full 20W fast charging ($3.0\text{A}$).
-    * **$45^\circ\text{C} < T \le 60^\circ\text{C}$ (Heat Taper):** Charge voltage throttled from `battery.charge_limit_v` down to 3.40V.
+    * **$45^\circ\text{C} < T \le 60^\circ\text{C}$ (Heat Taper):** Charge voltage reduced below `battery.charge_limit_v` (warm-zone value set at capture from the cell datasheet).
     * **$T > 60^\circ\text{C}$ (Overheat Lockout):** Complete charger shutdown.
 * **Dual-Stage Solar Harvesting & Ambient Sensing Architecture:**
   1. *High-Power Field Solar (Fast Recharge via USB-C):* Standard USB-C Port 2 supports 5V–14V input from folding 15W–28W outdoor panels. The BQ25798's integrated dynamic input voltage management (**VINDPM / VOC-scaling MPPT**) tracks optimal solar output to recharge the pack safely in field conditions.
@@ -188,15 +190,17 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
        * Top Bezel Array: $215\text{ mm} \times 12\text{ mm}$ ($25.8\text{ cm}^2$).
        * Bottom Bezel Array: $215\text{ mm} \times 12\text{ mm}$ ($25.8\text{ cm}^2$).
        * Total Surface Area: **$51.6\text{ cm}^2$**.
-       * **Peak Solar Power:** **1.24W in direct sunlight** ($1000\text{ W/m}^2$), producing up to **350 mA charging current** directly into the LiFePO4 battery rail.
+       * **Peak Solar Power:** **1.24W in direct sunlight** ($1000\text{ W/m}^2$), producing up to **350 mA charging current** into the battery rail.
        * **Outdoor top-up only:** the strip tops up the idle co-processor outdoors; there is no indoor net-positive claim (ADR-041).
+     * **Hardware temperature gate (ADR-048):** the harvester charges the pack without the charger's CE gate, so a comparator on the pack NTC switches the harvester's output off outside the cell's charge-temperature window, with no firmware in the loop (`harvester.temperature_gate`). Its OV threshold sits below the Li-ion limit (`harvester.vbat_ov_v`, Phase 14).
      * Dedicated ultra-low-quiescent boost converter ($1.80) wired directly to the bezel solar array.
      * Cold-starts from as low as **330 mV** and continuously harvests down to **100 mV**.
      * Executes autonomous 80% Fractional Open-Circuit Voltage (FOCV) MPPT sampling, boosting micro-solar energy directly into the battery rail with >90% efficiency, topping up the idle RP2350 co-processor outdoors (ADR-041).
   3. *Batteryless Direct Solar Cold-Boot ("Zombie Mode"):*
-     * If the internal LiFePO4 battery is completely drained to 0.0V, damaged, or physically removed, SolarDeck operates in pure **Batteryless Solar Mode**.
+     * If the battery pack is flat (protector open), damaged, or physically removed, SolarDeck operates in pure **Batteryless Solar Mode**.
      * The bezel solar array charges the onboard **1.0F 3.3V supercapacitor**.
-     * Once supercapacitor voltage crosses 3.0V, the ultra-low IQ TPS62840 regulator engages, cold-booting the RP2350 co-processor in under 15 ms.
+     * Once supercapacitor voltage crosses 3.0V, the low-IQ always-on buck-boost engages, cold-booting the RP2350 co-processor in under 15 ms.
+     * **Open (ADR-048):** with the pack removed there is no pack NTC for the harvester's temperature gate; whether the supercapacitor path sits upstream of that gate is decided at capture, so this mode is unconfirmed until then.
      * The co-processor boots into the **Zen Solar Dashboard** (clock, barometer, offline text adventures, and chess), running perpetually off ambient light with zero battery required.
      * If direct sunlight provides $>2.5\text{W}$ (or via the auxiliary DC / folding panel port), the power supervisor asserts `CM5_GLOBAL_EN` to cold-boot the full Linux desktop without a battery.
   4. *Zero-BOM Ambient Lux Sensor (Solar Strip via RP2350 ADC):*
@@ -210,10 +214,10 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
   * **Zero-Compute Autonomous Operation:** The entire reverse powerbank session runs under RP2350 supervision while the power-hungry CM5 Linux brain remains **100% powered off (0.000W)**.
   * The E-Ink screen displays a live, high-contrast charging gauge updated every 10 seconds:
     `"Powering External Device: <V> @ <A> | Battery: <%> | Est: <time> remaining"`.
-  * Turns the LiFePO4 tablet into an ultra-durable, flame-safe emergency power bank for smartphones, GPS handhelds, and flashlights in off-grid emergencies.
+  * Turns the tablet into an emergency power bank for smartphones, GPS handhelds, and flashlights in off-grid emergencies.
 * **Rigid Voltage Regulators (Anti-Brownout Engineering):**
-  1. *Always-On 3.3V System Rail (`VDD_3V3_AON`):* Dedicated Texas Instruments **TPS62840** ultra-low quiescent current (**60 nA $I_Q$**) synchronous **buck** (not buck-boost; ADR-047: on a LiFePO4 cell it runs in dropout and cannot hold 3.3 V, so the always-on rail's source is an open item, `docs/EVT0_POWER_BOARD.md` §8). As drawn it supplies the always-on rail at up to 750 mA to the RP2350, 8MB PSRAM, RV-3028-C7-class RTC, and `I2C_ALWAYS_ON` sensors continuously, ensuring perpetual operation when the main CM5 5V boost converter is completely unpowered.
-  2. *Main 5.0V System Boost:* Texas Instruments **TPS61088** synchronous boost converter steps up battery voltage to a rigid 5.0V @ 3.5A rail, delivering up to 17.5W peak power for CM5 turbo compilation (CM5 peak draw TBD — verify against the CM5 datasheet), USB peripheral bus power, and display supply.
+  1. *Always-On 3.3V System Rail (`VDD_3V3_AON`):* A low-quiescent **buck-boost** (TPS63900 class, to be confirmed from its datasheet; ADR-048) replaces the buck-only TPS62840 (ADR-047), so the rail holds 3.3 V down to an empty pack. It supplies the always-on rail to the RP2350, 8MB PSRAM, RV-3028-C7-class RTC, and `I2C_ALWAYS_ON` sensors continuously, ensuring perpetual operation when the main CM5 5V boost converter is completely unpowered.
+  2. *Main 5.0V System Boost:* A synchronous boost converter (TPS61088 as drafted; re-selected from an in-production part, ADR-047, ADR-048) steps up battery voltage to a rigid 5.0V @ 3.5A rail, delivering up to 17.5W peak power for CM5 turbo compilation (CM5 peak draw TBD — verify against the CM5 datasheet), USB peripheral bus power, and display supply.
   3. *Cellular modem supply (TPS63020):* Deferred to V2 (ADR-034).
 * **Power Gating (Physical Cutoff Switches):**
   * Texas Instruments **TPS22918** ultra-low leakage load switches on peripheral power rails (GNSS receiver, Wi-Fi, audio amp, and external expansion bus). Loads are hard off when not in use.
@@ -401,10 +405,10 @@ To completely eliminate bus arbitration lockups and the hardware address collisi
     * **Rail 3 (RF Radios):** GNSS receiver, Wi-Fi/BT (LoRa is V2, ADR-044). Catches rogue radio beacons.
   * Direct telemetry to Claude Code CLI and `solardeck-telemetryd` SQLite database for empirical algorithmic power profiling.
   * **Per-gated-rail current sense (TPS22918 [- 4 TPS22918-gated rails](DECK_BUILDER_LAYOUT.md)):** each of the 4 TPS22918 peripheral load-switch rails (GNSS, Wi-Fi, audio, expansion) carries a µA-grade shunt + INA3221/ADC tap into the RP2350, so the LLM can distinguish "GNSS receiver overdraws" from "Wi-Fi radio storm" instead of only seeing RF aggregate. This is the Deck-Builder self-diagnosis contract (§4) made physical: **rail sense is the difference between a diagnosis and a guess.**
-* **Coulomb Counter & Battery Fuel Gauge (Texas Instruments BQ27Z561-R2, ADR-035):**
+* **Coulomb Counter & Battery Fuel Gauge (Texas Instruments BQ27Z561-R2, pack-side, ADR-035, ADR-048):**
   * Integrated Impedance Track™ fuel-gauge technology tracks exact milliamp-hours entering and leaving the pack (true Coulomb counting).
-  * Measures battery cell internal impedance ($R_{\text{cell}}$ in mΩ) and computes true State-of-Health (SOH %) across 3,000+ charge cycles.
-  * Enables charging optimization: signals the BQ25798 charger to reduce charge current when cell resistance rises or temperatures elevate, doubling battery operational lifespan to 10+ years.
+  * Measures battery cell internal impedance ($R_{\text{cell}}$ in mΩ) and computes true State-of-Health (SOH %) over the pack's life, so a pack swap is scheduled by data.
+  * Enables charging optimization: signals the BQ25798 charger to reduce charge current when cell resistance rises or temperatures elevate.
 * **Multi-Zone Precision Thermal Array — 6 zones (Texas Instruments TMP112 + SoC Diode - KEPT FOR THERMAL LOGS):**
   * High-precision ($\pm 0.5^\circ\text{C}$), ultra-thin SOT-563 digital temperature sensors placed at strategic thermal points. Three hard-wired TMP112s, three derived zones:
     * **Battery Zone:** Directly adhered to the pouch cell under the thermal protection sleeve for millidegree charging logs. (TMP112 #1)
@@ -464,7 +468,7 @@ their absence is the most common field failure in this product class:
 * **Two independent 5.1 kΩ ±1 % Rd resistors per sink port, one on each CC pin.** Not one shared
   resistor (reads 2.55 kΩ and is interpreted as an audio accessory), not one pin only (fails on
   C-to-C, works on C-to-A — the worst failure mode because it is intermittent).
-* **Rd present at 0 V.** The resistors are populated whether or not TUSB320/TPS25750 is powered, so a
+* **Rd present at 0 V.** The resistors are populated whether or not TUSB320/STUSB4500 is powered, so a
   flat battery still charges from a C-to-C charger. Bench check: 0 V supply, probe CC1/CC2 to GND,
   expect 5.1 kΩ ±1 %. A CC controller alone cannot satisfy this and is the cause of "my device will
   not wake up".
@@ -669,12 +673,12 @@ To provide 100% mission reliability in severe sub-zero weather, dust storms, and
   * External 25.3" E-Ink / 4K monitor serves as primary high-density code and Kiwix browser workspace.
 
 ### 2.19 Blackout Supercapacitor Emergency SOS Beacon (Zero-Battery Survival Boot)
-* **The Operational Ceiling:** In catastrophic backcountry scenarios where the main LiFePO4 battery pack is deeply discharged to 0.000V or physically damaged, standard mobile terminals cannot boot.
+* **The Operational Ceiling:** In catastrophic backcountry scenarios where the battery pack is flat (protector open), missing, or physically damaged, standard mobile terminals cannot boot.
 * **The Supercapacitor Circuit:**
   * A **1.0F 3.3V ultra-low-leakage EDLC supercapacitor** (AVX BestCap / Eaton / Cornell Dubilier, $0.95) is wired directly across the Always-On 3.3V rail fed by the dual-bezel IBC solar array via a low-drop Schottky diode (BAT54CW).
 * **Zero-Battery Survival Sequence:**
   1. **Direct Sunlight Charging:** In direct sunlight (100,000 lux), the front dual-bezel solar array generates ~280 mA (1.24W), charging the 1.0F supercapacitor from 0.0V to 3.3V in **under 25 seconds** with no battery installed.
-  2. **150ms Cold-Boot Burst:** The TI TPS62840 buck-boost asserts `POWER_GOOD`, releasing the RP2350 reset line.
+  2. **150ms Cold-Boot Burst:** The always-on buck-boost asserts `POWER_GOOD`, releasing the RP2350 reset line.
   3. **Coordinate Capture:** The RP2350 reads last-known GPS coordinates from RTC NVRAM. The radio SOS burst is V2 (ADR-044).
   4. **Indelible E-Ink Distress Stamping:** While the remaining supercapacitor energy bleeds down, the RP2350 pulses the display controller to burn an indelible high-contrast distress placard onto the 10.3" E-Ink screen: `EMERGENCY SOS | COORD: 21.3069 N, 157.8583 W | TIME: 2026-10-19 14:00 UTC | BLOOD: O-POS | ZERO-BATTERY SOLAR PLACARD`.
   5. **Bistable Permanence:** The distress text remains frozen on the screen with **0.000W power draw** indefinitely, visible to SAR teams even if the device is submerged or abandoned.
@@ -722,13 +726,13 @@ To eliminate supply-chain bottlenecks, enable budget vs. pro hardware tiers, and
 3. **RP2350 NOR Flash & PSRAM: Nested SOIC-8 / WSON-8 Footprints:**
    * Winbond 16MB SPI Flash (`W25Q128`) and APMemory 8MB PSRAM (`APS6404L`) route to nested footprints: WSON-8 flat leadless pads sit inside extended gull-wing SOIC-8 pads on identical nets.
    * Allows turnkey assembly houses to solder whichever package is in stock with zero layout changes.
-4. **USB-PD 20W Fast Charge Sink: WCH CH224K (ESSOP-10) ⟷ STUSB4500 (QFN-24) ⟷ 5.1kΩ Pull-Downs:**
-   * Dual pads for cheap Asian turnkey assembly (CH224K, $0.45) or certified Western DigiKey sourcing (STMicroelectronics STUSB4500, $1.80).
+4. **USB-PD 20W Fast Charge Sink: STUSB4500 (QFN-24) ⟷ 5.1kΩ Pull-Downs:**
+   * One STMicroelectronics STUSB4500 footprint (ADR-048); the CH224K alternate pad is dropped.
    * Two DNP 0402 pads allow omitting active PD silicon entirely and populating standard 5.1 kΩ pull-down resistors for basic 5V 3A (15W) charging.
 5. **PCIe steering bridge:** Removed. The CM5's single PCIe Gen 2 x1 lane goes directly to the M.2 Key-M NVMe socket; USB comes from the CM5's native ports (ADR-042).
 6. **Onboard LoRa SX1262:** DNP in V1; deferred to V2 (ADR-044); the V1 board reserves the footprint and pins (ADR-045, docs/PIN_BUDGET.md).
 7. **Cellular identity (eSIM / Nano-SIM):** Deferred to V2 (ADR-034); the V2 requirement is a consumer SGP.22 eUICC (ADR-033).
-8. **Battery chemistry strap:** Deleted. One chemistry, LiFePO4, charge limit `battery.charge_limit_v` (ADR-035).
+8. **Battery chemistry strap:** Deleted. One chemistry per hardware revision; V1 is Li-ion, charge limit `battery.charge_limit_v` (ADR-035, ADR-048).
 
 ### 2.23 Direct-to-Co-Processor "Instant-Ink" Low-Latency Inking Architecture
 To eliminate the seconds-long Linux resume from off/hibernate (ADR-036) and 2.5W processor power penalty when quickly taking notes, sketching field maps, or recording tactical coordinates:
@@ -742,7 +746,7 @@ To eliminate the seconds-long Linux resume from off/hibernate (ADR-036) and 2.5W
   * When the operator presses the Power key to wake Linux, the Linux kernel daemon (`solardeck-inkd`, §22 in Software Spec) ingests the cached vector strokes over SPI/UART in $<50\text{ ms}$, serializes them into standard SVG/PDF files, and triggers local OCR / LLM indexing.
 
 ### 2.24 Multi-Source Emergency Auxiliary Battery Terminal (Under M.2 Service Hatch)
-To guarantee decadal survival in remote areas where the custom internal LiFePO4 pouch battery has aged out, failed, or been physically damaged:
+To guarantee decadal survival in remote areas where the internal smart pack has aged out, failed, or been physically damaged and no spare pack is at hand:
 * **Hardware Interface:** Located inside the gasketed M.2 service hatch cavity (§4.6) is an auxiliary 2-pin JST-PH (2.0mm pitch) keyed terminal block with adjacent gold-plated solder pads.
 * **Wide-Voltage Buck Tolerance (3.9V to 14.0V DC):**
   * The terminal is wired directly into the input stage of the TI BQ25798 power path manager via an onboard Texas Instruments LM74700-Q1 ideal diode controller (reverse-polarity protected up to -36V).
@@ -790,9 +794,9 @@ The base configuration ships the 0.15 W IXYS SM141K06L bezel strip priced in `BO
   * **Total Active Area:** **$51.6\text{ cm}^2$**.
   * **Peak Output:** **1.24W** in direct sunlight ($1000\text{ W/m}^2$, ~350 mA @ 3.5V); harvests **120 mW to 240 mW** in open shade or bright overcast daylight.
 * **Direct Solar Cold-Boot ("Zombie Mode"):**
-  * When the internal LiFePO4 battery is disconnected, completely degraded, or drained to 0.0V:
+  * When the battery pack is removed, worn out, or flat (protector open):
   * Energy from the bezel solar array flows through the TI BQ25504 nano-power boost harvester into the onboard **1.0F 3.3V supercapacitor**.
-  * Reaching 3.0V takes under **25 seconds** in sunlight, triggering the TPS62840 Always-On regulator to assert `POWER_GOOD`.
+  * Reaching 3.0V takes under **25 seconds** in sunlight, triggering the always-on buck-boost to assert `POWER_GOOD`.
   * The RP2350 cold-boots into the ultra-low-power **Zen Solar Suite** (4.5 mW total draw), operating perpetually with **zero battery installed**.
   * If solar generation exceeds 2.5W (e.g. under intense sun or via the auxiliary folding panel port), the supervisor automatically enables `CM5_GLOBAL_EN` to boot the full Linux OS without a battery.
 
@@ -817,7 +821,7 @@ recheck them, and `scripts/check_cost_and_power.py` (CI Phase 14) recomputes bot
 
 Two limits this makes explicit:
 
-1. **Harvested energy charges the pack, not the rails.** The TPS25750 PD path and the TPS61088 (SMA
+1. **Harvested energy charges the pack, not the rails.** The STUSB4500/BQ25798 USB-C charge path and the TPS61088 (SMA
    inputs) push energy into the battery; at peak the CM5 draw (TBD — verify against the CM5 datasheet) exceeds the 1.7–1.8 A
    remaining budget. So "runs on sunlight" (true, via the pack) and "runs while charging from sunlight
    at full load" (false) are different claims.
@@ -853,7 +857,7 @@ To achieve massive off-grid energy generation without permanently burdening the 
   * **Peak Power:** **7.13W Peak** in direct tropical sun ($1000\text{ W/m}^2$, $V_{\text{MP}} = 7.0\text{V}, I_{\text{MP}} = 1.02\text{A}$); generates **1.42W in open shade / overcast**.
 * **Thermal Isolation & Convective Chimney:**
   * When snapped to the tablet, four perimeter standoff ribs create a **2.0mm air-gap chimney**.
-  * Hot air naturally vents out the top while drawing cool ambient air from the bottom, reducing thermal conduction to the internal LiFePO4 battery and E-Ink display by **>80%** compared to a bonded panel.
+  * Hot air naturally vents out the top while drawing cool ambient air from the bottom, reducing thermal conduction to the internal battery pack and E-Ink display by **>80%** compared to a bonded panel.
 * **Dual-Mode Connection & Remote Tethering Architecture:**
   1. **Mode A: Flush Snap-On Easel Link:**
      * A recessed 40mm ultra-flexible silicone ribbon jumper tucks flush into an internal perimeter channel, plugging directly into USB-C Port 2.
@@ -885,7 +889,6 @@ Mounting a computing terminal to a bicycle or motorcycle handlebar in direct mid
 │ Enclosure Material    │ Glass ($k=0.8$ W/m·K)   │ CNC 6061-T6 ($k=167$ W/m·K)│
 │ Heat Dissipation      │ Trapped in phone mount  │ Direct forced-air cooling │
 │ Forced Convection Air │ Negligible (glass back) │ 227x165mm unibody heatsink│
-│ Battery Chemistry     │ LiPo/NMC (+45°C limit)  │ LiFePO4 (+65°C continuous)│
 │ Internal Heat Barrier │ None (battery on PCB)   │ 0.5mm Aspen Aerogel Foil  │
 │ Result in Noon Sun    │ Shuts down in 15–20 min │ Runs 30+ hours at ~38°C   │
 └───────────────────────┴─────────────────────────┴───────────────────────────┘
@@ -897,16 +900,16 @@ Mounting a computing terminal to a bicycle or motorcycle handlebar in direct mid
 2. **Aerodynamic Forced-Air Convection ($h = 25\text{–}60\text{ W/m}^2\cdot\text{K}$):**
    * When riding at 15 to 60 km/h (9 to 37 mph), ambient wind rushes across the exposed CNC 6061-T6 aluminum rear unibody.
    * Aluminum has an exceptional thermal conductivity of **$167\text{ W/m}\cdot\text{K}$** (over **200× higher than phone glass**). The moving air acts as an active heat sink, sweeping away both the ~1.5W of internal CM5 computation heat and incident solar thermal radiation.
-3. **Internal Aerogel Thermal Shielding & LiFePO4 Chemistry:**
+3. **Internal Aerogel Thermal Shielding:**
    * **Aerogel Barrier:** A 0.5mm layer of **Aspen Aerogels Spaceloft** ($k = 0.014\text{ W/m}\cdot\text{K}$) sits directly between the CNC rear chassis and the internal battery pouch, mechanically preventing external chassis heat spikes from conducting into the cells.
-   * **Safe Operating Window:** Conventional lithium-polymer (NMC) batteries swell, degrade, and trigger fire risk above +45°C. SolarDeck's **LiFePO4 chemistry safely tolerates +65°C continuous operation**.
+   * **Charge-temperature window:** the V1 pack is Li-ion (ADR-048), so heat is managed, not tolerated: JEITA on the charger, the pack NTC and the harvester's hardware temperature gate stop charging outside the cell's window.
    * **Autonomous Path Bypass:** If ambient heat exceeds +45°C, the TI BQ25798 automatically suspends battery charging while continuing to power the CM5 processor directly via NVDC power-path management, keeping the navigation dashboard alive with zero battery degradation.
 4. **Mechanical Cockpit Mounting:**
    * Interfaces with standard **RAM Mount 1" Ball (RAM-B-238U)** or Peak Design motorcycle mounts via the 4x M2.5 threaded brass inserts and rear MagSafe N52 magnetic anchor.
 
 ### 2.30 **[DNP — Do Not Populate]** Betavoltaic Keep-Alive Bay & Li-Primary Keep-Alive (P1 Ships With the Coin Cell, Not the Tritium)
 
-The **R4 Deep-Off + Scrub** rung of the sleep ladder (§3.3.3 of SOFTWARE_SPEC.md) keeps the device at 0.000 W for *months*, which needs a low-power wake authority outside Linux: an always-on RTC tick (a scheduled LoRa beacon is V2, ADR-044). That authority's energy budget is microwatts-to-a-tenth-of-a-milliwatt, which is exactly the class only *primary* cells or betavoltaics can serve — no rechargeable chemistry has the calendar life (your own LiFePO4 holds ~10–15 y).
+The **R4 Deep-Off + Scrub** rung of the sleep ladder (§3.3.3 of SOFTWARE_SPEC.md) keeps the device at 0.000 W for *months*, which needs a low-power wake authority outside Linux: an always-on RTC tick (a scheduled LoRa beacon is V2, ADR-044). That authority's energy budget is microwatts-to-a-tenth-of-a-milliwatt, which is exactly the class only *primary* cells or betavoltaics can serve — no rechargeable chemistry has the calendar life (the V1 Li-ion pack is a replaceable wear item, ADR-048).
 
 * **P1 ships with a Li-primary keep-alive cell** (e.g. a 3V CR2-style primary in a bay, ~0.5–1%/y self-discharge → 20–40 y shelf life, a few dollars) feeding the RP2350's RTC rail. This is the *cheap, available, unlicensed* answer to a 20-year keep-alive.
 * **A betavoltaic bay is reserved (DNP):** a mechanically and electrically empty socket sized for a future tritium (H-3) betavoltaic cell (BV100-class: 3V, ~100 µW, ~50 y rated; practical useful output ≈20–40 y given the 12.3 y half-life). The bay is populated by enthusiasts or a later Rev after licensing/supply matures — **not** in the base BOM.
@@ -1026,7 +1029,7 @@ To ensure reliable, error-free operation in pitch darkness, under strict militar
 │ [INTERNAL COPLANAR CHASSIS STACKUP (X-Y ARRANGEMENT)]                       │
 │ • Front Glass + E-Ink Panel + Wacom EMR Layer: TBD (ADR-032)                │
 │ • Side-by-Side Co-Planar Layout behind Display:                             │
-│   - Left/Lower Cavity: 8.5 mm LiFePO4 Pouch Cell (142 x 90 mm, Wh TBD)      │
+│   - Left/Lower Cavity: 8.5 mm Li-ion Smart Pack (142 x 90 mm, Wh TBD)       │
 │   - Right/Upper Cavity: 1.2 mm 6-Layer PCB + 1.5 mm DF40 gap + CM5 (TBD)    │
 │ • Outer Chassis: 232.0 x 170.0 mm; cavity 12.5 mm; total thickness 14.0 mm   │
 │ • Thermal Isolation Barrier between Battery Cell and Compute Module         │
@@ -1163,7 +1166,7 @@ The 16MB Winbond W25Q128JVS QSPI NOR flash memory is partitioned into two distin
 
 ### 6.4 Autonomous Analog Battery & Thermal Protection
 * **Hardware-Autonomous Silicon Safety:** Over-temperature and over-voltage charging cutoffs do not rely on running firmware or operating system software.
-* **Dedicated NTC Analog Comparator:** The 10 kΩ NTC thermistor inside the LiFePO4 battery pouch connects directly to the `TS` (Temperature Sense) analog pin on the **Texas Instruments BQ25798** buck-boost charger.
+* **Dedicated NTC Analog Comparator:** The 10 kΩ NTC thermistor inside the smart pack reaches the carrier through the pack connector's NTC pin and feeds both the `TS` (Temperature Sense) analog pin on the **Texas Instruments BQ25798** buck-boost charger and the harvester's temperature-gate comparator (ADR-048).
 * **Instant Analog Trip:** If cell temperature exceeds 45°C during charging or 60°C during discharge, internal analog comparators within the BQ25798 silicon instantly terminate charging current and disconnect the load switch in nanoseconds. This hardware interlock operates independently of the Linux kernel, RP2350 firmware, or software state.
 
 ### 6.5 Physical Recessed Hardware Recovery Switch ("Dead-Man Recovery")
@@ -1307,7 +1310,7 @@ To prevent the physical wear, joint fatigue, thread stripping, and material degr
    * SolarDeck anchors all 12 perimeter chassis screws, 2 rear service hatch screws, and 4 rear VESA/MagSafe mounts into **heavy-duty knurled brass heat-set inserts (M2.5 and M2)** sonically welded or molded into the chassis bosses.
    * Tolerates over **500 complete teardown and reassembly cycles** at rated torque ($0.45\text{ N}\cdot\text{m}$) without thread wear, stripping, or plastic boss cracking.
 2. **Zero-Stress Battery Swelling Relief Cavity (Poron 4701-30):**
-   * Over a 10-to-20-year lifespan, all pouch-cell lithium batteries (including LiFePO4) experience gradual microscopic outgassing and volumetric expansion (up to 8% to 10% thickness increase). In rigid, unyielding enclosures, swelling batteries exert crushing perpendicular forces against the fragile 0.7mm glass backplane of E-Ink panels, causing irreversible display fractures.
+   * Over a 10-to-20-year lifespan, all pouch-cell lithium batteries experience gradual microscopic outgassing and volumetric expansion (up to 8% to 10% thickness increase). In rigid, unyielding enclosures, swelling batteries exert crushing perpendicular forces against the fragile 0.7mm glass backplane of E-Ink panels, causing irreversible display fractures.
    * SolarDeck reserves a **0.80 mm dedicated expansion clearance** behind the battery pouch, lined with **Rogers Poron 4701-30 very soft microcellular polyurethane foam**.
    * The foam maintains gentle contact when new, but compresses progressively under cell expansion, exerting **$<2.0\text{ kPa}$ back-pressure** over decades. The E-Ink glass backplane remains under zero mechanical strain.
 3. **4-Point Through-Hole Stake-Tab USB-C Receptacles (Torque-Proof Ports):**
@@ -1328,7 +1331,7 @@ To prevent the physical wear, joint fatigue, thread stripping, and material degr
    * If internal cavity humidity climbs above 65% RH with falling ambient temperature, the autonomous diagnostic engine flags a proactive notification:
      `[HUMIDITY WARNING] Internal RH at 68%. Condensation risk detected on display lens. Please remove and regenerate desiccant sachet in rear M.2 service hatch.`
 
-### 7.5 30-Year Solid-State Longevity & Chemistry Tuning
+### 7.5 30-Year Solid-State Longevity
 To guarantee that the electronics and physical components survive 10 to 30 years without chemical, mechanical, or dielectric degradation:
 
 ```
@@ -1337,9 +1340,9 @@ To guarantee that the electronics and physical components survive 10 to 30 years
 ├─────────────────────┬───────────────────────────────────────────────────────┤
 │ LONGEVITY HAZARD    │ PHYSICAL HARDWARE COUNTERMEASURE                      │
 ├─────────────────────┼───────────────────────────────────────────────────────┤
-│ **1. LiFePO4 Aging  │ Float charge at 3.45V instead of 3.65V. Sacrifices    │
-│ & Cycle Life**      │ 5% capacity to extend cycle life from 3,500 to        │
-│                     │ **10,000+ cycles (27+ years of daily cycling)**.      │
+│ **1. Li-ion Pack    │ The cell is the first hard wear-out (`reliability`,   │
+│ Wear-Out**          │ modelled). It ships as a user-replaceable smart pack  │
+│                     │ swapped on gauge data; it is not a 30-year part.      │
 ├─────────────────────┼───────────────────────────────────────────────────────┤
 │ **2. Electrolyte    │ **Zero wet electrolytic capacitors** on the PCBA.     │
 │ Drying & Leakage**  │ All bulk storage uses **Tantalum-Polymer & Ceramic**  │
@@ -1359,9 +1362,8 @@ To guarantee that the electronics and physical components survive 10 to 30 years
 └─────────────────────┴───────────────────────────────────────────────────────┘
 ```
 
-1. **Conservative LiFePO4 Voltage Clamping (The "30-Year Battery" Rule):**
-   * Standard LiFePO4 charging terminates at **3.65V/cell**. However, holding cells above 3.50V accelerates electrolyte oxidation.
-   * By programming the TI BQ25798 charger to clamp bulk float at **3.45V/cell**, we retain 95% of usable energy while dropping internal mechanical cell stress to near zero—tripling cycle life to **over 10,000 charge cycles**.
+1. **The Battery Is a Service Part, Not a 30-Year Component (ADR-048):**
+   * V1's 1S Li-ion cell wears out first (`reliability.first_wearout_years`, modelled). Rather than promise a 30-year cell, the cell ships in a user-replaceable smart pack (screws, keyed connector, no adhesive) and `solardeck-battcare` schedules the swap from the pack gauge's state-of-health data.
 2. **Zero Wet Aluminum Electrolytic Capacitors (No Drying Out):**
    * The primary failure point in vintage computers and power supplies is liquid electrolyte drying out or leaking corrosive acid after 10–15 years.
    * SolarDeck exclusively mandates **solid Tantalum-Polymer (KEMET T520) and soft-termination Ceramic MLCCs**. Solid-state dielectrics do not contain liquid, eliminating shelf-life degradation.
@@ -1396,7 +1398,7 @@ six items below are constraints from `docs/spec_values.json` → `longevity`, au
 │                     │   no tape, no connector friction alone                  │
 │                     │ • Must survive 600 g peak (1.22 m drop, 2 mm stroke)    │
 │                     │ • Poron 4701-30 swelling relief retained (§7.4.2)       │
-│                     │ • Cell is a service item: hatch access, JST, 10 years   │
+│                     │ • Pack is a user service part: screws, keyed connector  │
 ├─────────────────────┼───────────────────────────────────────────────────────┤
 │ 3. SEAL             │ • Die-cut VMQ silicone gasket, 27% compression, P/N'd   │
 │                     │   in the BOM as a wear item ($2.10)                     │
@@ -1426,12 +1428,12 @@ six items below are constraints from `docs/spec_values.json` → `longevity`, au
    * A reworkable epoxy corner bond staked at four corners of each DSBGA and each QFN/WQFN survives
      thermal cycling without full underfill, which would make a $2 switch unrepairable in year 12.
    * Qualification is a thermal-cycle gate, not an opinion: 500 cycles, joint resistance drift <10%.
-2. **Mechanically Clamped Battery Cell (No Adhesive Retention):**
+2. **Mechanically Clamped Battery Pack (No Adhesive Retention):**
    * A 130 g pouch held by tape sees ~78 N of peel demand at a 1.22 m drop. Tape-based cell retention is
      the single most common "my tablet died" failure in the consumer market, and it also blocks
      replacement.
-   * The cell sits in a stainless bracket clamped to the chassis bosses, behind the service hatch, on a
-     keyed JST connector. Swelling relief stays as specified in §7.4.2.
+   * The smart pack sits in a stainless bracket screwed to the chassis bosses, behind the service hatch,
+     with a pull tab, on the keyed pack connector (ADR-048). Swelling relief stays as specified in §7.4.2.
 3. **Die-Cut VMQ Silicone Gasket as a P/N'd Wear Item:**
    * §4 already specifies a continuous silicone gasket at 30% compression; the BOM did not contain it and
      no service interval existed. It is now a $2.10 line item at 27% compression (one number, in

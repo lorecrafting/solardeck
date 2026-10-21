@@ -10,6 +10,8 @@ void solardeck_sm_init(solardeck_ctx_t *ctx) {
 
     ctx->current_state = SOLAR_STATE_COLD_BOOT;
     ctx->charger_vreg_mv = 0; // charger stays held off by its CE pull-up until VREG is confirmed
+    ctx->charger_wdt_off = false;
+    ctx->pack_charge_mv = 0;
     ctx->tmux_cm5_selected = false;
     ctx->sys_5v_enabled = false;
     ctx->wake_pin_asserted = false;
@@ -86,7 +88,7 @@ bool solardeck_check_power_thresholds(solardeck_ctx_t *ctx, uint16_t vbat_mv) {
     if (!ctx) return false;
     ctx->vbat_mv = vbat_mv;
 
-    // LiFePO4 low-battery alarm, above the protector's hard trip so Linux can still flush.
+    // Low-battery alarm, above the pack protector's hard trip so Linux can still flush.
     if (vbat_mv <= SD_LOW_BATT_ALARM_MV) {
         solardeck_sm_transition(ctx, SOLAR_STATE_LOW_BATT_ALARM);
         return true; // Threshold triggered alarm
@@ -95,8 +97,11 @@ bool solardeck_check_power_thresholds(solardeck_ctx_t *ctx, uint16_t vbat_mv) {
     return false;
 }
 
-// ADR-035: release the charger's CE pin only after VREG reads back at the LiFePO4 limit. Any other
-// value (0 = never written; ~4200 = a Li-ion-class POR default) keeps charging off.
+// ADR-035/048: release the charger's CE pin only when all three hold. VREG alone is not enough on
+// Li-ion: the BQ25798's 1s POR VREG equals the limit, so a reset charger would pass. The watchdog field
+// comes up enabled after any charger reset, so "disabled" proves our init ran; the pack check refuses
+// a pack of another chemistry or rating.
 bool solardeck_charge_enable_allowed(const solardeck_ctx_t *ctx) {
-    return ctx && ctx->charger_vreg_mv == SD_CHARGE_LIMIT_MV;
+    return ctx && ctx->charger_vreg_mv == SD_CHARGE_LIMIT_MV && ctx->charger_wdt_off &&
+           ctx->pack_charge_mv == SD_CHARGE_LIMIT_MV;
 }

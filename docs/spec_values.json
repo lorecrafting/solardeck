@@ -16,8 +16,8 @@
     8.5
   ],
   "battery_wh": {
-    "lifepo4": null,
-    "_comment": "ADR-040: null until a buyable cell's datasheet exists; Li-ion figure deleted (LiFePO4 only)."
+    "li_ion": null,
+    "_comment": "ADR-040/048: null until a buyable, certified cell's datasheet exists."
   },
   "solar_w": {
     "bezel_strip": 0.15,
@@ -554,8 +554,8 @@
     "design_life_years": 30,
     "drop_height_m": 1.22,
     "drop_peak_g": 600,
-    "battery_capacity_retained_year30_pct": 50,
-    "battery_service_interval_years": 10,
+    "battery_soh_service_pct": 80,
+    "battery_service_interval_years": 3,
     "rtc_backup": "MS621FE rechargeable (BOM)",
     "gasket_material": "VMQ silicone",
     "gasket_compression_pct": 27,
@@ -585,8 +585,8 @@
     "unpowered_months": 12,
     "drop_orientations": 26
   },
-  "bom_total_low": 479.1,
-  "bom_total_high": 481.1,
+  "bom_total_low": 477.8,
+  "bom_total_high": 479.8,
   "cm5": {
     "_comment": "CM5 pivot (ADR-031, 2026): V1 moves from CM4 8 GB/32 GB eMMC to CM5 16 GB/64 GB eMMC wireless (CM5116064 / SC1608). 16 GB DRAM is the LLM-resident assumption: the 1-3B local model tier runs in RAM without swap/heritage modes. eMMC 64 GB holds the base image, reader cache, and full offline corpus. Wireless variant carries the Wi-Fi/BT that CM4 needed a USB dongle for — one less peripheral spine. The BOM compute row is priced at price_usd; Phase 14 totals were re-derived on 2026-10-21.",
     "sku": "CM5116064",
@@ -625,8 +625,8 @@
     "fit_total": 935,
     "mtbf_hours": 1069519,
     "mtbf_years": 122,
-    "first_wearout_years": 8,
-    "first_wearout_item": "desiccant (annual swap); first hard item is the LiFePO4 cell at 8 y",
+    "first_wearout_years": 3,
+    "first_wearout_item": "desiccant (annual swap); first hard item is the Li-ion cell at 3 y (user-replaceable pack, ADR-048)",
     "model_status": "modelled",
     "basis": "Telcordia SR-332 class FIT at 40 C, placement counts estimated from HARDWARE_SPEC (netlist has 24 of 61 lines)"
   },
@@ -722,10 +722,11 @@
   },
   "_comment_adr032": "ADR-032: ppi, display_active_mm, panel_module_outline_mm, display_stack_mm, epdc_spi_mhz, refresh timings and reader page geometry are null until E Ink publishes the 10.3\" Kaleido 4 datasheet. Gates skip them loudly; they never fall back to stand-in values.",
   "battery": {
-    "chemistry": "LiFePO4",
-    "charge_limit_v": 3.6,
-    "low_alarm_v": 2.9,
-    "_comment": "ADR-035; AGENTS §4.1 hard ceiling is 3.65 V. low_alarm_v (modelled, ADR-046): RP2350 raises power-fail here so Linux can flush; the protector trips at 2.50 V."
+    "chemistry": "Li-ion",
+    "charge_limit_v": 4.2,
+    "low_alarm_v": 3.4,
+    "pack": "replaceable smart pack: cell + protector + pack-side BQ27Z561 gauge, keyed connector (pack+, pack-, SDA, SCL, NTC); no adhesive (ADR-048)",
+    "_comment": "ADR-048: one chemistry per hardware revision, no selector. charge_limit_v is the standard Li-ion 4.20 V (AGENTS §4.1 ceiling). low_alarm_v (modelled): the RP2350 raises power-fail here so Linux can flush before the pack protector trips. Firmware refuses to charge a pack whose gauge reports a different design charge voltage."
   },
   "charger": {
     "part": "BQ25798",
@@ -735,16 +736,18 @@
     "watchdog": "disabled",
     "ship_fet": false,
     "source": "datasheet: TI BQ25798 VREG_RANGE (ADR-035)",
-    "_comment_evt0": "datasheet SLUSDV2C. watchdog: expiry returns the charger to default mode and §7.3.2 says VREG returns to the 1s POR value, so it is disabled (REG10 WATCHDOG=0), never fed. ship_fet: VBAT_UVLOZ with a ship FET is 3.25-3.55 V (§6.5), above most of the LiFePO4 plateau, so SDRV gets its 1 nF and no FET. docs/EVT0_POWER_BOARD.md §3."
+    "_comment_evt0": "datasheet SLUSDV2C. watchdog: expiry returns the charger to default mode and §7.3.2 says VREG returns to the 1s POR value, so it is disabled (REG10 WATCHDOG=0), never fed. ship_fet: VBAT_UVLOZ with a ship FET is 3.25-3.55 V (§6.5), which would block I²C on a deeply discharged pack, so SDRV gets its 1 nF and no FET (ADR-048 keeps this). docs/EVT0_POWER_BOARD.md §3."
   },
   "harvester": {
     "part": "BQ25504",
     "vbias_v": 1.25,
     "threshold_accuracy_pct": 5,
-    "rov1_mohm": 5.49,
-    "rov2_mohm": 4.53,
-    "vbat_ov_v": 3.42,
-    "source": "datasheet: TI BQ25504 SLUSAH0G VBIAS and VBAT_ACCURACY (§7.5), Eq. 3; vbat_ov_v is modelled from rov1/rov2. The harvester charges the cell without the CE gate, so Phase 14 asserts vbat_ov_v x (1 + accuracy) <= battery.charge_limit_v."
+    "rov1_mohm": 4.87,
+    "rov2_mohm": 5.23,
+    "vbat_ov_v": 3.89,
+    "source": "datasheet: TI BQ25504 SLUSAH0G VBIAS and VBAT_ACCURACY (§7.5), Eq. 3; vbat_ov_v is modelled from rov1/rov2. The harvester charges the cell without the CE gate, so Phase 14 asserts vbat_ov_v x (1 + accuracy) x (1 + 2 x resistor_tol) <= battery.charge_limit_v.",
+    "temperature_gate": "hardware: harvester output switched off outside the cell's charge-temperature window by a comparator on the pack NTC, no firmware (ADR-048)",
+    "resistor_tol_pct": 1
   },
   "power_bank": {
     "otg_max_a": 2.0,

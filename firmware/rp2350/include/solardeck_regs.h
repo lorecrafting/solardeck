@@ -79,7 +79,7 @@ extern "C" {
 #define SD_FLAG_CM5_SELECTED  (1u << 0)
 #define SD_FLAG_5V_ENABLED    (1u << 1)
 #define SD_FLAG_PWRFAIL       (1u << 2)
-#define SD_FLAG_LIFEPO4       (1u << 3)
+#define SD_FLAG_PACK_MATCH    (1u << 3)
 #define SD_FLAG_LOW_BATT      (1u << 4)
 #define SD_FLAG_CHARGING      (1u << 5)
 

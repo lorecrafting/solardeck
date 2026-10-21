@@ -8,6 +8,8 @@ Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 sco
 
 Revised 2026-10-21 18:51 UTC in Claude Code by anthropic/claude-opus-5-5 (checkpoint after ADR-044–046; Q6 added).
 
+Revised 2026-10-21 19:45 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion smart pack, ADR-048).
+
 Five internal audit rounds are done, the last against the datasheets (AUDIT 6). Further internal reading has near-zero yield; the open questions
 are judgement calls that need an outside opinion. This is the brief for that review.
 
@@ -61,14 +63,15 @@ without a full carrier spin. Which can be measured on the display eval board alo
 and the panel in the same rig? Is a two-board lash-up acceptable for a pillar claim?
 
 ### Q4 — Battery, UN38.3, and shipping
-LiFePO4 pouch, capacity TBD until the cell is chosen (ADR-040), adhesive-free mechanical retention now.
-Shortlist (2026-10-21): the best datasheet-backed cell in today's `battery_cell_mm` envelope is the
-EEMB LP7568130F, below ADR-040's expectation; the EEMB LP70103122F reaches it only with a wider,
-shorter bay. Capacities come from their datasheets; `battery_wh.lifepo4` stays null until the owner
-picks. Neither has a verified UN38.3 report. UN38.3 is the longest-lead gate in the
-programme (~$8–15 k, 6–10 weeks) and has no owner.
-**Attack:** does the chosen cell survive UN38.3, and is a pouch the right form factor for a 30-year
-serviceable device? Which test house, which schedule, and what does a failed UN38.3 cost?
+1S Li-ion in a user-replaceable smart pack (ADR-048): cell + protector + pack-side gauge, keyed
+connector, screws, no adhesive; capacity TBD until the cell is chosen (ADR-040). The LiFePO4
+shortlist (2026-10-21: EEMB LP7568130F, LP70103122F) fell below ADR-040's expectation and without
+verified UN38.3 reports, which triggered ADR-048; LiFePO4 is V2. No Li-ion cell is chosen yet, so
+`battery_wh.li_ion` stays null. UN38.3 is the longest-lead gate in the programme (~$8–15 k,
+6–10 weeks) and has no owner; a spare pack sold on its own needs it too.
+**Attack:** does the chosen pack pass UN38.3 and IEC 62133-2, and does the screw-retained pack meet
+the EU Battery Regulation's user-replaceability requirement (applicability to confirm)? Which test
+house, which schedule, and what does a failed UN38.3 cost?
 
 ### Q5 — The piezo reversal (ADR-020)
 Audit 2 descoped 4× TDK PowerHap + 2× BOS1901 to a DNP option, on the grounds that adhesively bonded

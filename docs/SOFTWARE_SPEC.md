@@ -5,6 +5,7 @@ Revised 2026-10-21 15:55 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / 
 Revised 2026-10-21 16:46 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
 Revised 2026-10-21 17:22 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, ADR-044/045).
 Revised 2026-10-21 17:53 UTC in Claude Code by anthropic/claude-opus-5-5 (RTC chip, jack removed, ADR-046).
+Revised 2026-10-21 19:44 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion smart pack, ADR-048).
 
 Software architecture, operating system configuration, custom E-ink waveform drivers, power management daemons, and application workflows.
 
@@ -548,7 +549,7 @@ Enables SolarDeck to act as an instantaneous, driverless 10.3" sunlight-readable
 * **Low-Latency Rendering:**
   * When plugged into a laptop, `solardeck-sinkd` accepts video frames via Weylus, Deskreen, or Moonlight.
   * Extracted bounding boxes are converted to 1-bit or 2-bit blue-noise dithered bitmaps on the CM5 GPU and pushed to the Kaleido 4 display controller (TBD, ADR-032) (full-frame rate `spec_values.refresh_modes.full_frame_1bit_fps`, TBD; faster for small rectangles).
-* **Host Power Ingestion:** Simultaneously draws charging power from the host laptop via the CH224K USB-PD sink controller, keeping SolarDeck charged indefinitely during long outdoor work sessions.
+* **Host Power Ingestion:** Simultaneously draws charging power from the host laptop via the STUSB4500 USB-PD sink controller (ADR-048), keeping SolarDeck charged indefinitely during long outdoor work sessions.
 
 ---
 
@@ -784,7 +785,7 @@ When invoked via CLI or local agent tool call (`solardeck-diag --json`), the eng
 1. **Power Domain & Rail Current Telemetry (TI INA3221 & BQ25798):**
    * Reads high-side voltage and current across Rail 1 (CM5 Core), Rail 2 (EPDC Display), and Rail 3 (Radios).
    * Flags current anomalies: Rail 3 idle draw $>1\text{ mA}$ in sleep (phantom leakage), or Rail 1 current $>2.8\text{ A}$ (thermal/power saturation).
-   * Reads BQ27Z561-R2 battery health: pack voltage (3.2V nominal LiFePO4), state of charge (SoC %), internal cell impedance ($R_{\text{cell}} \le 45\text{ m}\Omega$), and cycle count.
+   * Reads the pack-side BQ27Z561-R2 battery health (ADR-048): pack voltage (1S Li-ion), state of charge (SoC %), internal cell impedance ($R_{\text{cell}} \le 45\text{ m}\Omega$), and cycle count.
    * Reads BQ25798 charge registers: fault flags (thermal shutdown, watchdog timer expiration, input overvoltage).
 2. **Co-Processor & Low-Power Bus Domain (RP2350B):**
    * Pings the RP2350 over SPI/UART with a 64-byte random challenge; verifies CRC-8 return checksum in $<10\text{ms}$.
@@ -1357,13 +1358,13 @@ figure for a Kaleido 4 TCON stays `null` until it is measured on hardware (ADR-0
 
 ## 53. Battery Conservation & Aging Telemetry (`solardeck-battcare`)
 
-A LiFePO4 cell loses 2%/yr at 25 °C and 4–6%/yr at 40 °C. Over 30 years that is 40–60% of capacity, so the firmware's job is to slow it down and to make the loss visible before it becomes a surprise.
+The V1 Li-ion cell is the first hard wear-out item (`reliability.first_wearout_years`, modelled) and ships in a user-replaceable smart pack (ADR-048), so the firmware's job is to slow the fade down and to make the loss visible before it becomes a surprise.
 
 * **Storage parking:** when the device is idle on AC for >72 h with no scheduled use, charges to `spec_values.longevity.storage_soc_pct` (50%) and stops. Full charge is restored on the next user-initiated boot.
-* **Charge ceiling:** 3.45 V float (already the hardware rule, `HARDWARE_SPEC.md` §7.5.1). ~95% of usable energy, near-zero electrolyte stress.
+* **Charge ceiling:** `battery.charge_limit_v`, set and read back by the RP2350 before charging (the hardware rule, AGENTS §4.1, ADR-048).
 * **Fade tracking:** reads the BQ27Z561-R2 Impedance Track state-of-health monthly into `/var/lib/solardeck/health.jsonl`; internal resistance trend is the early-warning signal for electrolyte dry-out, not capacity alone.
-* **Service scheduling:** when retained capacity at 100% drops below `battery_capacity_retained_year30_pct` extrapolated to year 10, raises `[CELL SERVICE DUE]` naming the service kit part.
-* **Never** deep-cycles for calibration; LiFePO4 has a flat curve and a forced full cycle costs a real cycle.
+* **Service scheduling:** when the pack gauge's state of health drops below `longevity.battery_soh_service_pct`, raises `[CELL SERVICE DUE]` naming the service kit part.
+* **Never** deep-cycles for calibration; a forced full cycle costs a real cycle.
 
 **Acceptance check:** park-at-50%-after-72h, resume-full-on-boot, and a synthetic SoH regression that must emit the service notice.
 
