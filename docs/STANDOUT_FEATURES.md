@@ -291,7 +291,7 @@ A **held-call PTT path bypasses the wake-word entirely**: the mic is hot only wh
 
 ---
 
-## Pillar 8: Genius-Level Convenience Combinations ($0.00 Added BOM)
+## Pillar 8: Zero-Cost Convenience Combinations ($0.00 Added BOM)
 
 By orchestrating and cross-wiring the existing hardware components in innovative ways, SolarDeck delivers four extraordinary convenience features without adding a single cent to the Bill of Materials:
 

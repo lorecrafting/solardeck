@@ -115,13 +115,13 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
 
 ### I. The Dual-Brain Display Mux (Zero-Leakage 300-Day Reader & Mesh Node)
 * **The Problem:** Linux processors (like the CM4) draw 1.5W–3W just sitting idle, draining large batteries in hours.
-* **The Genius Fix:** A **Raspberry Pi RP2350B** microcontroller (Dual Cortex-M33 / RISC-V) with **8MB QSPI PSRAM** acts as a secondary brain. When Linux is powered completely off (0.000W), the RP2350 takes over the E-Ink display via **2× Texas Instruments TMUX1575** high-speed bus switches (4 channels each, 8 total), isolating all SPI and control signals (`SPI_MOSI`, `SPI_MISO`, `SPI_SCLK`, `SPI_CS`, `HRDY`, `RESET`).
+* **The Fix:** A **Raspberry Pi RP2350B** microcontroller (Dual Cortex-M33 / RISC-V) with **8MB QSPI PSRAM** acts as a secondary brain. When Linux is powered completely off (0.000W), the RP2350 takes over the E-Ink display via **2× Texas Instruments TMUX1575** high-speed bus switches (4 channels each, 8 total), isolating all SPI and control signals (`SPI_MOSI`, `SPI_MISO`, `SPI_SCLK`, `SPI_CS`, `HRDY`, `RESET`).
 * **30ms Zen Reading:** Double-buffers full 1872×1404 page images in PSRAM, handling reading page turns at ~4.5 mW (**300+ days battery life**).
 * **24/7 Meshtastic Repeater:** Directly interfaces with the Semtech SX1262 LoRa radio, autonomously relaying encrypted emergency mesh packets across off-grid networks for **80+ days** without ever waking the Linux SoC.
 
 ### II. Seamless Auto-Ramping: Page-Turn Suspend to Instant Turbo (< 0.3s)
 * **The Problem:** Developers want Kindle-like battery life for reading, but instant, uncompromised speed when they start coding.
-* **The Genius Fix:** SolarDeck implements bi-stable **Page-Turn Suspend-to-RAM (S2idle)**:
+* **The Fix:** SolarDeck implements bi-stable **Page-Turn Suspend-to-RAM (S2idle)**:
   * While reading documentation or eBooks, the CPU wakes for **80ms** to render a page turn, then drops into 15 mW deep sleep while you read. **Battery life: 80 to 90 DAYS (nearly 3 months).**
   * The millisecond you touch a key or stylus, a hardware GPIO interrupt wakes the system in **under 300 milliseconds**.
   * The Linux CPU governor instantly turbocharges all four Cortex-A72 cores to **1.8 GHz**, unfreezing your Neovim buffers, Claude Code terminal, and tmux panes with zero perceptible lag.
@@ -135,7 +135,7 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
 
 ### IV. Hardware Airgap Switch: Zero EMF & Sovereign Privacy
 * **The Problem:** Software "airplane mode" on phones is a soft setting easily bypassed by baseband firmware, malware, or carrier updates.
-* **The Genius Fix:** A recessed, physical slide switch on the chassis side.
+* **The Fix:** A recessed, physical slide switch on the chassis side.
 * **True Electrical Cutoff:** The switch physically pulls the enable lines of our **TI TPS22918** power gates to hard ground, cutting all power to the Quectel LTE modem, Semtech LoRa transceiver, Broadcom Wi-Fi/BT chip, GPS engine, and microphone down to **0.000V**.
 * **Zero Phantom Bleed:** Built-in **Texas Instruments TXU0104 ($I_{\text{off}}$)** buffers place all digital signal lines into high-impedance (Hi-Z), preventing parasitic back-powering through internal chip diodes.
 * Emits **0.000 dBm RF radiation**. Completely undetectable by spectrum analyzers, 100% flight safe, and extends continuous active reading/sketching battery life to **35 to 42 hours**.
@@ -148,13 +148,13 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
 
 ### VI. Modular Backpack Isolation (Keeping the Core Pure)
 * **The Problem:** Cramming every RF hacking tool onto the main motherboard causes thermal throttling, RF desensitization (desense), and massive PCB layer costs.
-* **The Genius Fix:** The core tablet carries only essential daily communication (Worldwide LTE with soldered MFF2 eSIM, 915MHz LoRa Meshtastic, and GNSS).
+* **The Fix:** The core tablet carries only essential daily communication (Worldwide LTE with soldered MFF2 eSIM, 915MHz LoRa Meshtastic, and GNSS).
 * High-power tactical tools—**Flipper Zero suite (Sub-GHz CC1101, NFC, RFID, IR blaster)** and **Sky-Scan Wideband SDR (Airplane ADS-B 1090MHz, NOAA Weather Satellites 137MHz, Marine AIS)**—are isolated in rear snap-on Hotpacks connecting over the IP68-sealed USB-C Port 2 expansion interface (no spring-loaded pogo pins; see §7).
 * The core tablet stays slim (~510g), cool, and lasts for days. When you want to sniff radio protocols or track aircraft overhead, you snap on the backpack and Linux launches the SIGINT stack instantly.
 
 ### VII. Self-Observant Hardware: The LLM Evolutionary Feedback Loop
 * **The Problem:** Once standard hardware is manufactured, it is completely deaf and blind to its own physical operating stress. You cannot optimize what you cannot measure, and Rev 2 redesigns rely on human guesswork.
-* **The Genius Fix:** SolarDeck embeds a dedicated physical telemetry suite costing under $3.50:
+* **The Fix:** SolarDeck embeds a dedicated physical telemetry suite costing under $3.50:
   * **3-Rail Current Ammeter (TI INA3221):** Breaks down exact milliwatts between Compute, Display, and Wireless subsystems.
   * **Coulomb Counter (TI BQ27441-G1):** Measures internal battery impedance and State-of-Health to double pack life to 10+ years.
   * **Thermal Triad (Dual TMP112 + SoC):** Dynamically compensates E-ink waveform Look-Up Tables (LUTs) across winter cold and summer heat.
@@ -163,13 +163,13 @@ If SolarDeck is to be legendary, engineering must relentlessly focus on and mast
 
 ### VIII. Thermal Viscosity Assist (No Video Engine in V1)
 * **The Problem:** E-Ink is slow, and not only because of the bus. Electrophoretic particle mobility ($\mu$) is inversely proportional to fluid viscosity ($\eta$): $\mu \propto 1/\eta(T)$. In a cold room the microcapsule fluid thickens and the same drive pulse moves pigment more slowly.
-* **The Genius Fix:** A copper thermal plane couples waste heat from the CM4 shield into the panel backplane, holding it at **30°C–33°C**. Viscosity drops >40%, particles accelerate **$1.8\times$** under identical pulses, and `eink-refreshd` widens DU pulse width below 15°C instead of pretending the panel is fast.
+* **The Fix:** A copper thermal plane couples waste heat from the CM4 shield into the panel backplane, holding it at **30°C–33°C**. Viscosity drops >40%, particles accelerate **$1.8\times$** under identical pulses, and `eink-refreshd` widens DU pulse width below 15°C instead of pretending the panel is fast.
 * **Honest Throughput:** the IT8951 is fed over 32 MHz SPI, so a full 1872×1404 1-bit frame costs ~82 ms (~6 fps); small rectangles (caret, line, clock digits) run 15–25 fps. That is why the daemon is rectangle-driven. There is no MIPI-DSI video path and no cinema mode (ADR-005) — video decodes at ~6 fps dithered, or not at all.
 * **Battery Lifespan:**
   * *High-motion screen work (dithering + repeated partial refresh):* ~1.6–2.2W, **16 to 20 hours**.
   * *Writing, Coding, Reading, Ambient Clock:* E-Ink consumes **0.000 Watts** to hold a static image. Active terminal coding gives **24 to 32 hours**, Zen reading **300+ days**, and ambient desk-clock with micro-solar is indefinite. LiFePO4 yields 3,000–5,000 cycles, **10 to 15+ years**.
 
-### IX. Genius Convenience Combinations ($0.00 Added BOM)
+### IX. Zero-Cost Convenience Combinations ($0.00 Added BOM)
 1. **The 32 Wh LiFePO4 Survival Powerbank (15W Reverse Boost):**
    * Utilizing the bidirectional synchronous boost engine in the **TI BQ25895** buck charger, SolarDeck outputs **5.1V @ 3.1A (15.8W)** backwards through USB-C Port 1 or 2 to fast-charge external smartphones, flashlights, or radios.
    * **Linux Stays 100% Asleep (0.000W):** The RP2350 co-processor manages power delivery and displays a live, crisp battery percentage and output wattage on the E-Ink screen. Never carry a separate powerbank again.
