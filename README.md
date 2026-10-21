@@ -7,7 +7,7 @@
 > 
 >
 > **Status (2026-10-20): reference architecture, not yet fabricable.** Specs and BOM are complete and
-> internally consistent; schematic capture covers 20 of 62 core BOM parts (32%) and the PCB is unrouted.
+> internally consistent; schematic capture covers 30 of 62 core BOM parts (48%) and the PCB is unrouted.
 > Read `docs/AUDIT_2026-10-20.md` before quoting or ordering anything.
 >
 > *Open-Hardware Linux • AI Coding Terminal • 12MP Rear Camera • Wacom Stylus Slate • Meshtastic LoRa Node • Worldwide 4G LTE with Soldered eSIM • 300-Day Ambient Desk Clock • External USB-C / Bluetooth Keyboard • Hardware Airgap Switch • IP67 Rugged Enclosure.*
@@ -340,7 +340,7 @@ Three properties make SolarDeck a *30-year object* rather than a gadget — and 
 │   ├── FIRST_BOOT_CHECKLIST.md# Unboxing to first prompt bring-up checklist & power rail checks
 │   ├── HANDOFF_TO_FABLE.md    # Turnkey Seeed Studio Fusion & manufacturing handoff package
 │   └── 90-history/decisions.md# ADR-001..026: what was descoped and why
-├── hardware/                  # NOTE: partial capture (20/62 parts), unrouted PCB -- see AUDIT
+├── hardware/                  # NOTE: partial capture (30/62 parts), unrouted PCB -- see AUDIT
 │   ├── solardeck-carrier.*    # KiCad 8 schematics, PCB layout, and netlists
 │   ├── verify_schematics.py   # Netlist structure checks (Phase 1)
 │   ├── audit_hardware_traps.py# 8-rule electrical trap audit (Phase 2)
