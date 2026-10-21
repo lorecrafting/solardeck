@@ -718,7 +718,7 @@
     "burnish_rail_idle_proof": "rail current ~0 via INA3221",
     "charge_gradient_delta_c": "T_battery - T_display threshold, modelled",
     "powercycle_hold_ms": 500,
-    "baseband_retry_polls": "N consecutive LoRa RSSI polls below baseline, modelled"
+    "baseband_retry_polls": "N consecutive radio RSSI polls below baseline, modelled (applies to the V2 modem and LoRa, ADR-034/044)"
   },
   "_comment_adr032": "ADR-032: ppi, display_active_mm, panel_module_outline_mm, display_stack_mm, epdc_spi_mhz, refresh timings and reader page geometry are null until E Ink publishes the 10.3\" Kaleido 4 datasheet. Gates skip them loudly; they never fall back to stand-in values.",
   "battery": {
@@ -750,8 +750,9 @@
     "_comment": "ADR-039"
   },
   "pins": {
-    "_comment": "ADR-045 pin budget; docs/PIN_BUDGET.md is the readable copy. Phase 15 checks function per datasheet mux, uniqueness, cross-domain isolation, TMUX channel count, expander size and firmware PIN_* defines.",
+    "_comment": "ADR-045 pin budget; docs/PIN_BUDGET.md is the readable copy. buffer_channels = 2x TXU0104 (BOM I/O Isolators). Phase 15 checks function per datasheet mux, PWM slices, uniqueness, cross-domain isolation, TMUX and buffer channel counts, expander size and firmware PIN_* defines.",
     "tmux_channels": 8,
+    "buffer_channels": 8,
     "aon_expander_pins": 16,
     "rp2350b": {
       "0": {
@@ -822,7 +823,7 @@
         "net": "LINK_MISO",
         "fn": "spi1_tx",
         "use": "v1",
-        "iso": "fw_hiz"
+        "iso": "buffer"
       },
       "12": {
         "net": "CM5_PWR_BUT",
@@ -846,14 +847,14 @@
         "net": "WAKE_GPIO17",
         "fn": "sio",
         "use": "v1",
-        "iso": "low_when_off",
+        "iso": "buffer",
         "fw": "PIN_GPIO17_WAKE"
       },
       "16": {
         "net": "PWRFAIL_GPIO16",
         "fn": "sio",
         "use": "v1",
-        "iso": "low_when_off",
+        "iso": "buffer",
         "fw": "PIN_GPIO16_PWRFAIL"
       },
       "17": {
@@ -874,7 +875,8 @@
       "20": {
         "net": "GNSS_UART_TX",
         "fn": "uart1_tx",
-        "use": "v1"
+        "use": "v1",
+        "iso": "buffer"
       },
       "21": {
         "net": "GNSS_UART_RX",
@@ -920,19 +922,19 @@
         "net": "AUD_LINK_BCLK",
         "fn": "pio",
         "use": "v1",
-        "iso": "fw_hiz"
+        "iso": "buffer"
       },
       "30": {
         "net": "AUD_LINK_WS",
         "fn": "pio",
         "use": "v1",
-        "iso": "fw_hiz"
+        "iso": "buffer"
       },
       "31": {
         "net": "AUD_LINK_SD",
         "fn": "pio",
         "use": "v1",
-        "iso": "fw_hiz"
+        "iso": "buffer"
       },
       "32": {
         "net": "VOICE_BTN",
@@ -982,12 +984,12 @@
       },
       "41": {
         "net": "LED_R",
-        "fn": "sio",
+        "fn": "pwm",
         "use": "v1"
       },
       "42": {
         "net": "LED_G",
-        "fn": "sio",
+        "fn": "pwm",
         "use": "v1"
       },
       "43": {
@@ -997,18 +999,18 @@
       },
       "44": {
         "net": "LED_B",
-        "fn": "sio",
+        "fn": "pwm",
         "use": "v1"
       },
       "45": {
-        "net": "PIEZO",
-        "fn": "sio",
-        "use": "v1"
-      },
-      "46": {
         "net": "LORA_RXEN",
         "fn": "sio",
         "use": "v2"
+      },
+      "46": {
+        "net": "PIEZO",
+        "fn": "pwm",
+        "use": "v1"
       },
       "47": {
         "net": "LORA_TXEN",
@@ -1187,22 +1189,22 @@
       },
       "18": {
         "net": "AUD_LINK_BCLK",
-        "fn": "i2s0_sclk",
+        "fn": "i2s1_sclk",
         "use": "v1"
       },
       "19": {
         "net": "AUD_LINK_WS",
-        "fn": "i2s0_ws",
+        "fn": "i2s1_ws",
         "use": "v1"
       },
       "20": {
         "net": "AUD_LINK_SD",
-        "fn": "i2s0_sdi",
+        "fn": "i2s1_sdi",
         "use": "v1"
       },
       "21": {
         "net": "SPK_SDO",
-        "fn": "i2s0_sdo",
+        "fn": "i2s1_sdo",
         "use": "v1"
       },
       "22": {

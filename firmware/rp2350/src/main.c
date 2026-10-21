@@ -41,7 +41,7 @@ int main(void) {
     // ADC setup for solar monitoring
     adc_init();
     adc_gpio_init(PIN_SOLAR_ADC);
-    adc_select_input(0);
+    adc_select_input(PIN_SOLAR_ADC - ADC_BASE_PIN);
 
     solardeck_sm_init(&ctx);
 #else

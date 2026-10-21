@@ -65,7 +65,7 @@ Before inserting the CM5, initialize the RP2350B co-processor to confirm power s
    * If current hits 50 mA clamp, immediately disconnect and inspect `U_TPS62840`.
 3. **Flashing the RP2350 Firmware:**
    * Hold the physical `BOOTSEL` button on the carrier board.
-   * Connect a USB-C data cable from your host computer to **USB-C Port 1**.
+   * Connect your host computer to the RP2350 USB pins on the **recovery header** (`uart_swd_header`; USB-C Port 1 is the CM5's OTG / `nRPI_BOOT` port — docs/PIN_BUDGET.md §2).
    * Release `BOOTSEL`. The host PC will mount a mass storage volume named `RPI-RP2`.
    * Drag and drop `firmware/rp2350/build/solardeck_rp2350.uf2` into the volume.
    * The volume will automatically unmount, and the onboard green status LED (`D1`) will begin a 1 Hz heartbeat blink.

@@ -42,7 +42,8 @@ void solardeck_sm_transition(solardeck_ctx_t *ctx, solardeck_state_t next_state)
             break;
 
         case SOLAR_STATE_LOW_BATT_ALARM:
-            ctx->pwrfail_pin_asserted = true; // Signal CM5 emergency sync
+            // Signal the CM5 to flush only if it is powered; never drive a line into an off CM5.
+            ctx->pwrfail_pin_asserted = ctx->sys_5v_enabled;
             ctx->tmux_cm5_selected = false;
             ctx->current_state = SOLAR_STATE_LOW_BATT_ALARM;
             break;
@@ -73,11 +74,9 @@ bool solardeck_trigger_s2idle_wake(solardeck_ctx_t *ctx) {
         return false;
     }
 
-    // Assert GPIO17 wake pulse
-    ctx->wake_pin_asserted = true;
-
-    // Transition to CM5 active: enable 5V rail and switch TMUX to CM5
+    // Power the CM5 first, then pulse GPIO17: never drive a line into an unpowered CM5.
     solardeck_sm_transition(ctx, SOLAR_STATE_CM5_ACTIVE);
+    ctx->wake_pin_asserted = ctx->sys_5v_enabled;
 
     // Simulate / record hardware wake time in microseconds (<300,000 us = <300ms spec)
     ctx->last_wake_elapsed_us = 42000; // Typically 42ms for GPIO trigger to CM5 kernel resume

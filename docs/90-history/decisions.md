@@ -787,10 +787,11 @@ isolation into the unpowered CM5 domain, the TMUX channel count and the firmware
 The firmware's solar ADC pin was invalid (GPIO 26; the RP2350B ADC is GPIO 40–47) and moved to 40.
 
 **Consequences the budget forced.**
-- **Mic routing (ADR-036 open item): option (a).** The RP2350 owns both mics and is the I²S clock
-  master; it streams audio to the CM5's I2S0 in target mode, and the speaker amp shares those clocks.
-  USB audio was ruled out because the only free CM5 USB port is the V2 modem's, and the OTG port is
-  the CM5 re-flash path on USB-C port 1.
+- **Mic routing (ADR-036 open item): the budget assumes option (a); owner to confirm.** The RP2350
+  owns both mics and is the I²S clock master; it streams audio to the CM5's I2S1 (the clock-target
+  instance; I2S0 is master-only), and the speaker amp and headphone DAC share those clocks. USB audio
+  does not fit: the only free CM5 USB port is the V2 modem's, and the OTG port is the CM5 re-flash
+  path on USB-C port 1.
 - **V1 needs an always-on I²C GPIO expander.** Checked against every signal-bearing V1 BOM part plus
   the notification LED and piezo, V1 alone needs more lines than the RP2350B's 48. Slow enable and
   interrupt lines move to a 16-bit expander on the RP2350's bus (a TBD BOM row); the RP2350 keeps

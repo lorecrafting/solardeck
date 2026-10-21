@@ -17,7 +17,7 @@ does not exist in the header. Prose cannot drift from code in either direction.
 
 | Property | Value | Why |
 | :--- | :--- | :--- |
-| Bus | SPI, **CM5 is master** (SPI3, GPIO 4–7), RP2350 is slave (SPI1, GPIO 8–11) — `docs/PIN_BUDGET.md` | The CM5 is often off; it must be the side that initiates. The RP2350 drives its data-out line only while the CM5 is powered |
+| Bus | SPI, **CM5 is master** (SPI3, GPIO 4–7), RP2350 is slave (SPI1, GPIO 8–11) — `docs/PIN_BUDGET.md` | The CM5 is often off; it must be the side that initiates. The RP2350 muxes its data-out pin (GPIO 11) to SPI only in `CM5_ACTIVE`; an unpowered CM5 leaves chip-select at 0 V, which would otherwise select it |
 | Frame | **64 bytes fixed**, little-endian, fixed offsets | No variable-length parsing on a device that wakes in 30 ms |
 | Integrity | **CRC-16/CCITT-FALSE** over bytes `0x00..0x3D`, stored at `0x3E` | A single bit flip must not become a state change |
 | Identity | `magic0='S'`, `magic1='D'`, `proto=1` | A driver that reads the wrong magic refuses to bind |

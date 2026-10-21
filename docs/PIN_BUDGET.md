@@ -7,30 +7,33 @@ Every signal on both processors is assigned before schematic capture, so V1 can 
 fits without a re-spin of the pinout (ADR-045). **The data is `spec_values.pins`; this page is the
 readable copy.** Phase 15 (`scripts/check_firmware_interface.py`) fails if:
 
+- a table row here differs from the spec in net, function, scope or isolation;
+- two PWM outputs share an RP2350 PWM slice (one counter and divider per slice);
+
 - a pin uses a function its datasheet mux does not offer there (RP2350 datasheet Table 3; CM5
   datasheet GPIO table). A CM5 function outside the table already verified counts as a failure;
 - a net is assigned to two pins, or a pin appears twice (the RP2350 and its expander share one net list);
-- a net driven by the always-on RP2350 into the CM5 domain has no isolation rule (below);
+- a net from the always-on RP2350 into the CM5 domain has no hardware isolation rule (below), or the
+  buffered lines exceed `pins.buffer_channels`;
 - the TMUX lines on the two sides do not pair within `pins.tmux_channels`;
 - a `PIN_*` define in `firmware/rp2350/include/solardeck_state.h` disagrees with the budget;
-- a row here is missing from the spec, or the reverse.
 
 Green means the budget is internally consistent. It does not mean the schematic matches it; there is
 no wired schematic yet (AUDIT 6 X8).
 
 ## 1. Rules
 
-1. **No back-powering.** The RP2350 is always on; the CM5 is often unpowered. A net that crosses into
-   the CM5 domain needs one of these isolation rules:
+1. **No back-powering, in hardware.** The RP2350 is always on; the CM5 is often unpowered. A net that
+   crosses into the CM5 domain needs one of these isolation rules:
    - `tmux`: the line goes through the TMUX1575 pair (I_off protected).
+   - `buffer`: the RP2350 drives it through one of the two TXU0104 I_off buffers (BOM "I/O Isolators",
+     `pins.buffer_channels`), which go high-impedance when the CM5 rail is at 0 V (HARDWARE_SPEC §2.13). The same buffers protect the UART into the switched-off GNSS.
    - `rp_input`: the RP2350 only receives on it.
-   - `fw_hiz`: the RP2350 drives it only in `CM5_ACTIVE` and leaves it high-impedance in every other
-     state.
    - `od`: open-drain, with the pull-up on the CM5 rail.
-   - `low_when_off`: the RP2350 holds it at 0 V while the CM5 is off.
 
-   The firmware state machine must honour `fw_hiz` and `low_when_off` before the first board is
-   powered. Today it only tracks state flags.
+   Firmware tri-stating is not an isolation rule: a hang, a debugger halt or a brown-out restart leaves
+   pins driven. Firmware still keeps these lines idle while the CM5 is off (defence in depth); for
+   `LINK_MISO` an unpowered CM5 leaves `LINK_CS` at 0 V, which selects an active-low SPI target.
 2. **V2 parts are DNP, never absent.** Every V2 row gets its footprint, pull resistors and test pad on
    the V1 board, unpopulated. High-speed V2 lanes run to their footprint and stop: no stubs, no branches.
 3. **Shared buses are one net with several users.** The RP-side SPI0 bus (GPIO 4, 6, 7) serves the
@@ -72,16 +75,16 @@ field update path yet (FIRMWARE_INTERFACE §6).
 | RP2350 8 | `LINK_MOSI` | spi1_rx | V1 | rp_input | CM5↔RP2350 link, RP2350 is SPI target (FIRMWARE_INTERFACE §1) |
 | RP2350 9 | `LINK_CS` | spi1_csn | V1 | rp_input | link chip select from the CM5 |
 | RP2350 10 | `LINK_SCK` | spi1_sck | V1 | rp_input | link clock from the CM5 |
-| RP2350 11 | `LINK_MISO` | spi1_tx | V1 | fw_hiz | link data to the CM5; driven only in CM5_ACTIVE |
+| RP2350 11 | `LINK_MISO` | spi1_tx | V1 | buffer | link data to the CM5, through a TXU0104 |
 | RP2350 12 | `CM5_PWR_BUT` | sio | V1 | od | open-drain into CM5 PWR_BUT: request a clean shutdown |
 | RP2350 13 | `TMUX_SEL` | sio | V1 |  | TMUX select: high = CM5 drives the display |
 | RP2350 14 | `EN_5V_SYS` | sio | V1 |  | enables the CM5 5 V supply |
-| RP2350 15 | `WAKE_GPIO17` | sio | V1 | low_when_off | interrupt to CM5 GPIO17; held low while the CM5 is off |
-| RP2350 16 | `PWRFAIL_GPIO16` | sio | V1 | low_when_off | power-fail warning to CM5 GPIO16; held low while the CM5 is off |
+| RP2350 15 | `WAKE_GPIO17` | sio | V1 | buffer | interrupt to CM5 GPIO17, through a TXU0104 |
+| RP2350 16 | `PWRFAIL_GPIO16` | sio | V1 | buffer | power-fail warning to CM5 GPIO16, through a TXU0104 |
 | RP2350 17 | `CHG_CE_N` | sio | V1 |  | BQ25798 CE, active-low, hardware pull-up keeps charging off (ADR-035); direct, never via the expander |
 | RP2350 18 | `EXP_INT_N` | sio | V1 |  | always-on GPIO expander interrupt; wakes the RP2350 |
 | RP2350 19 | `FRONTLIGHT_CTRL` | sio | V1 |  | TPS61163 frontlight EasyScale/enable (timed one-wire, so direct) |
-| RP2350 20 | `GNSS_UART_TX` | uart1_tx | V1 |  | to MAX-M10S RXD (UART1) |
+| RP2350 20 | `GNSS_UART_TX` | uart1_tx | V1 | buffer | to MAX-M10S RXD (UART1), through a TXU0104 (GNSS rail may be off) |
 | RP2350 21 | `GNSS_UART_RX` | uart1_rx | V1 |  | from MAX-M10S TXD (UART1) |
 | RP2350 22 | `LORA_BUSY` | sio | V2 |  | SX1262 busy |
 | RP2350 23 | `GNSS_PPS` | sio | V1 |  | GNSS time pulse, disciplines the RTC |
@@ -90,9 +93,9 @@ field update path yet (FIRMWARE_INTERFACE §6).
 | RP2350 26 | `MIC_BCLK` | pio | V1 |  | PIO I²S clock to both SPH0645 mics |
 | RP2350 27 | `MIC_WS` | pio | V1 |  | PIO I²S word select (L/R mic) |
 | RP2350 28 | `MIC_SD` | pio | V1 |  | PIO I²S data from both mics |
-| RP2350 29 | `AUD_LINK_BCLK` | pio | V1 | fw_hiz | PIO I²S clock to the CM5 (audio link; RP2350 is clock master) |
-| RP2350 30 | `AUD_LINK_WS` | pio | V1 | fw_hiz | audio link word select |
-| RP2350 31 | `AUD_LINK_SD` | pio | V1 | fw_hiz | audio link mic data to the CM5 |
+| RP2350 29 | `AUD_LINK_BCLK` | pio | V1 | buffer | PIO I²S clock to the CM5 (audio link; RP2350 is clock master), through a TXU0104 |
+| RP2350 30 | `AUD_LINK_WS` | pio | V1 | buffer | audio link word select |
+| RP2350 31 | `AUD_LINK_SD` | pio | V1 | buffer | audio link mic data to the CM5 |
 | RP2350 32 | `VOICE_BTN` | sio | V1 |  | hold-to-talk voice button (ADR-036) |
 | RP2350 33 | `PWR_BTN` | sio | V1 |  | power button |
 | RP2350 34 | `ROCKER_UP` | sio | V1 |  | 5-way rocker: reader page turns with Linux off |
@@ -102,12 +105,12 @@ field update path yet (FIRMWARE_INTERFACE §6).
 | RP2350 38 | `ROCKER_PRESS` | sio | V1 |  | 5-way rocker centre press |
 | RP2350 39 | `LORA_DIO1` | sio | V2 |  | SX1262 IRQ (DIO1); wakes the RP2350 |
 | RP2350 40 | `SOLAR_ADC` | adc | V1 |  | solar strip voltage (ADC0) |
-| RP2350 41 | `LED_R` | sio | V1 |  | notification LED, PWM |
-| RP2350 42 | `LED_G` | sio | V1 |  | notification LED, PWM |
+| RP2350 41 | `LED_R` | pwm | V1 |  | notification LED, PWM (slice 8) |
+| RP2350 42 | `LED_G` | pwm | V1 |  | notification LED, PWM (slice 9) |
 | RP2350 43 | `LUX_ADC` | adc | V1 |  | ambient light (ADC3, the BOM's "ADC Channel 3" lux row) |
-| RP2350 44 | `LED_B` | sio | V1 |  | notification LED, PWM |
-| RP2350 45 | `PIEZO` | sio | V1 |  | standby alert piezo, PWM |
-| RP2350 46 | `LORA_RXEN` | sio | V2 |  | module RF switch, receive (E22 class) |
+| RP2350 44 | `LED_B` | pwm | V1 |  | notification LED, PWM (slice 10) |
+| RP2350 45 | `LORA_RXEN` | sio | V2 |  | module RF switch, receive (E22 class) |
+| RP2350 46 | `PIEZO` | pwm | V1 |  | standby alert piezo, PWM (slice 11, alone) |
 | RP2350 47 | `LORA_TXEN` | sio | V2 |  | module RF switch, transmit |
 
 ## 4. Always-on GPIO expander (I²C, on the RP2350's bus)
@@ -138,8 +141,8 @@ pull resistor that holds the load off until firmware drives it.
 
 | GPIO | Net | Function | Scope | Isolation | Purpose |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| CM5 0 | `ID_SD` | id_sd | spare |  | HAT EEPROM ID pins; free with force_eeprom_read=0, kept as spares |
-| CM5 1 | `ID_SC` | id_sc | spare |  |  |
+| CM5 0 | `ID_SD` | id_sd | RESERVED |  | HAT EEPROM ID pins; free with force_eeprom_read=0, kept as spares |
+| CM5 1 | `ID_SC` | id_sc | RESERVED |  |  |
 | CM5 2 | `I2C_HOST_SDA` | i2c1_sda | V1 |  | host I²C: touch, Wacom, DRV2605L, V2 NFC (1.8 kΩ pull-ups on module) |
 | CM5 3 | `I2C_HOST_SCL` | i2c1_scl | V1 |  |  |
 | CM5 4 | `LINK_CS` | spi3_csn0 | V1 |  | CM5↔RP2350 link (SPI3 master) |
@@ -156,10 +159,10 @@ pull resistor that holds the load off until firmware drives it.
 | CM5 15 | `DEBUG_UART_RX` | uart0_rx | V1 |  |  |
 | CM5 16 | `PWRFAIL_GPIO16` | gpio | V1 |  | power-fail warning from the RP2350 |
 | CM5 17 | `WAKE_GPIO17` | gpio | V1 |  | interrupt from the RP2350 |
-| CM5 18 | `AUD_LINK_BCLK` | i2s0_sclk | V1 |  | I2S0 in target mode, clocked by the RP2350 |
-| CM5 19 | `AUD_LINK_WS` | i2s0_ws | V1 |  |  |
-| CM5 20 | `AUD_LINK_SD` | i2s0_sdi | V1 |  | mic audio from the RP2350 |
-| CM5 21 | `SPK_SDO` | i2s0_sdo | V1 |  | audio out to the MAX98357A speaker amp and the PCM5102A headphone DAC, both on the link clocks |
+| CM5 18 | `AUD_LINK_BCLK` | i2s1_sclk | V1 |  | I2S1, the CM5's clock-target I²S, clocked by the RP2350 (I2S0 is master-only) |
+| CM5 19 | `AUD_LINK_WS` | i2s1_ws | V1 |  |  |
+| CM5 20 | `AUD_LINK_SD` | i2s1_sdi | V1 |  | mic audio from the RP2350 |
+| CM5 21 | `SPK_SDO` | i2s1_sdo | V1 |  | audio out to the MAX98357A speaker amp and the PCM5102A headphone DAC, both on the link clocks |
 | CM5 22 | `TOUCH_INT` | gpio | V1 |  | capacitive touch interrupt |
 | CM5 23 | `TOUCH_RST` | gpio | V1 |  | touch reset |
 | CM5 24 | `PEN_INT` | gpio | V1 |  | Wacom EMR interrupt |
@@ -172,24 +175,24 @@ pull resistor that holds the load off until firmware drives it.
 - **V1 does not fit on the RP2350 without the expander.** Checked against every signal-bearing part in
   the V1 BOM (5-way rocker, lux ADC, motion sensor, CC controller, headphone detect, frontlight) and
   the HARDWARE_SPEC notification LED and piezo, V1 needs more lines than the RP2350B has. With the
-  expander, V1 uses 43 of 48 RP2350 GPIO and 9 of 16 expander lines.
-  V2 LoRa and the LTE modem's control take the rest. The RP2350's own pins are then full and the
-  expander has 2 spare.
+  expander V1 fits, and V2 LoRa and the LTE modem's control take the rest: the RP2350's own pins are
+  then full and the expander has a few lines spare (the Scope column is the count).
 - **The CM5 is full in V1.** All 28 GPIO are assigned; GPIO 0/1 are the only spares. The audio link is
   what makes this fit: the RP2350 owns the microphones and is the audio clock master, so the speaker
-  amp, the headphone DAC and the mic stream share one I²S0 port on the CM5 in target mode.
-- **The TMUX carries six of its eight channels:** SPI clock, data in, data out, chip select, ready and
-  reset. Two are spare.
+  amp, the headphone DAC and the mic stream share the CM5's I2S1, its clock-target I²S (I2S0 is master-only).
+- **The TMUX carries the display lines only:** SPI clock, data in, data out, chip select, ready and
+  reset, within `pins.tmux_channels`.
 - **USB decides the V2 modem's port.** The modem needs a USB 2.0 pair; USB 3.0 port 1 is the only one
   left once port 1 (OTG, re-flash) and port 2 (host) are assigned. This is why the mic stream uses I²S
-  rather than USB audio (ADR-045 closes the ADR-036 open item).
+  rather than USB audio. **This is an assumption, not an owner decision:** the budget assumes ADR-036
+  option (a) over I²S because no CM5 USB port is free; the owner confirms it before capture.
 
 ## 7. Assumptions to check at capture
 
 - The Kaleido 4 controller interface is assumed SPI plus ready and reset, like the IT8951. The real
   controller reference (ADR-032, under NDA) may need different lines.
 - The SX1262 module's `RXEN`/`TXEN` assume an Ebyte E22-class module. A bare SX1262 uses DIO2 for the
-  RF switch and frees GPIO 46 and 47.
+  RF switch and frees GPIO 45 and 47.
 - SPI3 on CM5 GPIO 4–7 needs its device-tree overlay confirmed on the CM5 at bring-up.
 - GNSS PPS on GPIO 23 assumes the MAX-M10S `TIMEPULSE` output is used.
 - The 32.768 kHz crystal (BOM "RTC 32kHz Crystal") needs an oscillator to reach the RP2350: its clock
@@ -197,3 +200,5 @@ pull resistor that holds the load off until firmware drives it.
   oscillator part feeding one of them (moving that signal to the expander) and the RP2350's internal
   low-power oscillator disciplined by GNSS PPS.
 - The DNP quad piezo haptic array (ADR-020) is not budgeted; fitting it needs its own driver on I²C.
+- The TRRS jack's headset microphone has no input in the budget. Either it is dropped (output-only
+  jack) or it needs an ADC or codec input; decide with the headphone DAC choice.

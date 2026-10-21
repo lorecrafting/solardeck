@@ -17,7 +17,7 @@ software, and what a buyer should not assume.
 | Control | Mechanism | Limits |
 | :--- | :--- | :--- |
 | Radio cutoff | The airgap slide switch cuts the series enable net of the TPS22918 radio gate | The GNSS rail is cut; the CM5's on-module Wi-Fi/BT is held off by tying its `WL_nDisable`/`BT_nDisable` pins low (CM5 datasheet §2.1.1–2.1.2), not by a rail cut. Residual emissions are what gate G5 measures |
-| Microphone cutoff | `MIC_MUTE` shunts the mics' I²S bit clock (`MIC_BCLK`, `docs/PIN_BUDGET.md`) to GND | The mic supply is not cut, so a hostile firmware could re-enable it if it can drive that GPIO — treat as "hard to do silently", not "impossible" |
+| Microphone cutoff | `MIC_MUTE` breaks the mics' I²S bit clock (`MIC_BCLK`, `docs/PIN_BUDGET.md`) and pulls the mic side to GND | The mic supply is not cut. Firmware cannot bridge the open switch, but the switch position is only as trustworthy as its contacts — "hard to defeat", not "impossible" |
 | Display bus isolation | Two TMUX1575 devices (fail-safe, $I_{\text{off}}$) present giga-ohm impedance when the CM5 rail is at 0 V | Isolation is per-line and switch-state dependent |
 | Airgap | Series disconnect of peripheral power gates, not an RF shield | Near-field coupling, thermal and acoustic side channels are outside the model |
 

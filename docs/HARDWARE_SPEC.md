@@ -555,7 +555,7 @@ To guarantee true 0.000V electrical isolation and zero phantom leakage across al
    * Each TPS22918 load switch includes an internal discharge transistor that connects the output rail (`VOUT`) to GND through a 470 Ω resistor whenever the switch is disabled.
    * Floating pins and residual capacitor charges are forcibly drained to true 0.000V within 50 microseconds.
 2. **$I_{\text{off}}$ Partial-Power-Down Protection on All Inter-Domain Lines:**
-   * All digital lines crossing between power tiers (UART to GNSS and I2S to microphone) pass through Texas Instruments **TXU0104** or **SN74LVC1G125** buffers featuring **$I_{\text{off}}$ circuitry**.
+   * All digital lines the always-on RP2350 drives into a switchable domain (the CM5 link, wake and power-fail lines, the audio link and the UART to the GNSS; `isolation = buffer` in docs/PIN_BUDGET.md) pass through Texas Instruments **TXU0104** or **SN74LVC1G125** buffers featuring **$I_{\text{off}}$ circuitry**.
    * When either $V_{CCA}$ or $V_{CCB}$ is 0V, the device automatically forces all I/O lines into a high-impedance (Hi-Z) state, guaranteeing leakage current **$I_{\text{leak}} < 1\text{ µA}$**.
 3. **Display Bus Multiplexer Isolation (TMUX1575):**
    * The high-speed SPI bus to the Kaleido 4 display controller (TBD, ADR-032) is isolated by **2× TI TMUX1575** (4 channels each, 8 total — ADR-004; suitability to be re-checked against that controller's host interface). Its fail-safe inputs tolerate up to 5.5V independent of supply voltage, completely preventing display signals from back-powering the CM5 when it is off.
@@ -761,7 +761,7 @@ To guarantee decadal survival in remote areas where the custom internal LiFePO4 
 To deliver mathematically verifiable, physical airgapped privacy for tactical operations, secure negotiations, and sovereign computing:
 * **Switch Mechanism:** A heavy-duty, IP67 sealed 3-position miniature slide switch located on the top chassis flank:
   1. **Position 1: NORMAL (Green Index):** All microphones and radio load switches operate normally under Linux kernel software power management.
-  2. **Position 2: MIC MUTE (Yellow Index):** Mechanically shunts the I²S bit clock (`MIC_BCLK`, RP2350 GPIO 26) of both Knowles MEMS microphones to ground (GND) through a physical break switch. Without a clock signal, the MEMS charge pump cannot oscillate; audio eavesdropping is physically and electrically impossible (0.000V signal level). The radios remain operational.
+  2. **Position 2: MIC MUTE (Yellow Index):** Mechanically breaks the I²S bit clock (`MIC_BCLK`, RP2350 GPIO 26) between the RP2350 and both Knowles MEMS microphones, and a pull-down holds the microphone side at GND. The switch never shorts the driven RP2350 pin. Without a clock signal, the MEMS charge pump cannot oscillate; audio eavesdropping is physically and electrically impossible (0.000V signal level). The radios remain operational.
   3. **Position 3: FULL BLACKOUT (Red Index):** Mechanically disconnects power (`VCC`) to both microphones and de-asserts the hardware gate on the u-blox MAX-M10S GNSS receiver to 0.000V and pulls the CM5's `WL_nDisable`/`BT_nDisable` low.
 * **Diagnostic Sense Line (`PRIVACY_STAT`):** An auxiliary sense pin informs the RP2350 and Linux kernel of the physical switch position, allowing the OS to display a permanent hardware padlock icon on the 10.3" E-Ink screen with zero CPU overhead.
 

@@ -84,14 +84,14 @@ treat `docs/AUDIT_2026-10-20.md` as the current statement of what is measured, m
 | **USB Host / Peripherals** | `docs/HARDWARE_SPEC.md` §2.4 | CM5 native USB 3 (no external host controller, ADR-042) | PCIe Gen 2 x1 to the M.2 NVMe socket |
 | **Cellular & SIM** | `docs/90-history/decisions.md` ADR-034 | Deferred to V2 (ADR-034); the V2 eSIM requirement is a consumer SGP.22 eUICC (ADR-033) | — |
 | **GNSS** | `docs/90-history/decisions.md` ADR-038 | u-blox MAX-M10S | RP2350 UART behind a load switch; passive antenna at top edge |
-| **Off-Grid Radio Mesh** | `docs/HARDWARE_SPEC.md` §2.4 | Semtech SX1262 (LoRa) | Dedicated SPI to RP2350 (Meshtastic) |
+| **Off-Grid Radio Mesh** | `docs/90-history/decisions.md` ADR-044 | V1: paired Meshtastic node over BLE; on-board SX1262 is V2 | Footprint and pins reserved (`docs/PIN_BUDGET.md`) |
 | **Local NFC & Security** | `docs/90-history/decisions.md` ADR-034 | Deferred to V2 (ADR-034) | — |
-| **Audio & Speech Input** | `docs/HARDWARE_SPEC.md` §2.7 | Dual MEMS mics + MAX98357A + hardware mute (ADR-036) | PDM Dual-Mic + I2S Class-D Amp |
+| **Audio & Speech Input** | `docs/HARDWARE_SPEC.md` §2.7 | Dual MEMS mics + MAX98357A + hardware mute (ADR-036) | I²S mics on the RP2350, I²S link to the CM5 + Class-D amp (`docs/PIN_BUDGET.md`) |
 | **Secondary Monitor Sink** | `docs/HARDWARE_SPEC.md` §2.4 | CM5 USB device mode (TBD — verify on CM5) | USB-C Port 1 (`g_webcam` / `dummy_hcd`)|
 | **Universal Mechanical Mount** | `docs/HARDWARE_SPEC.md` §3 | M2.5 Threaded + MagSafe | Mechanical Heat-Set & N52 Magnets |
 | **EDC Phone & Cyberdeck Dock** | `docs/STANDOUT_FEATURES.md` §9 | Clicks Communicator / Jelly| Bluetooth PAN (`bnep0`) & Chin-Dock |
 | **External 4K Video & Campervan Dock**| `docs/HARDWARE_SPEC.md` §2.18 | CM5 HDMI0 + TPD4E05U06 | Micro-HDMI 4K60 / Sway Multi-Head |
-| **Blackout Supercap Emergency Beacon** | `docs/HARDWARE_SPEC.md` §2.19 | 1.0F Supercap + RP2350 | Bat-Free Solar Cold-Boot & LoRa SOS|
+| **Blackout Supercap Emergency Beacon** | `docs/HARDWARE_SPEC.md` §2.19 | 1.0F Supercap + RP2350 | Bat-Free Solar Cold-Boot; LoRa SOS is V2 (ADR-044)|
 | **Sovereign Voice & Barge-In Pipeline**| `docs/HARDWARE_SPEC.md` §2.20 | Dual MEMS + RP2350 (PSRAM capture while the CM5 boots) | Hold-to-talk button; opt-in wake word with measured cost (ADR-036) + AEC |
 | **Zero-Hardware Wacom Field Caliper** | `docs/HARDWARE_SPEC.md` §2.21 | Wacom EMR + Goodix Touch | 10mm Hover + Mutual Cap Centroid |
 | **Thermal Night-Vision Hotpack** | `docs/OFFGRID_TACTICAL_SENSORS.md` §8.7| V2 (ADR-034) | — |
@@ -109,7 +109,7 @@ treat `docs/AUDIT_2026-10-20.md` as the current statement of what is measured, m
 | **Multi-Source Emergency Battery** | `docs/HARDWARE_SPEC.md` §2.24 | JST-PH 3.9V–14V DC Terminal | Boots from 18650, AA, or 12V Car Battery|
 | **3-Position Hardware Privacy Switch**| `docs/HARDWARE_SPEC.md` §2.25 | Physical Slide Switch | NORMAL, MIC_MUTE, FULL_BLACKOUT |
 | **Blackout Indexing Pips & Chamfer**| `docs/HARDWARE_SPEC.md` §3.5 | Tactile Pips + 45° Corner | Blind Night-Vision / Blackout Operation|
-| **Secret Knock & Anti-Theft Tripwire**| `docs/SOFTWARE_SPEC.md` §23 | `solardeck-tripwired` | 4µA BMA400 Knock Wake & LoRa Camp Alarm|
+| **Secret Knock & Anti-Theft Tripwire**| `docs/SOFTWARE_SPEC.md` §23 | `solardeck-tripwired` | 4µA BMA400 Knock Wake; LoRa camp alarm is V2 (ADR-044)|
 | **Autonomous Solar Tracking HUD**| `docs/SOFTWARE_SPEC.md` §24 | `solardeck-sunaim` | Sun Azimuth Fusion HUD & Peak Watt Reticle|
 | **Bistable "Black Box" Crash QR** | `docs/SOFTWARE_SPEC.md` §25 | `solardeck-blackboxd` | 0.000W Permanent Panic QR & Phone Triage|
 | **Offline Ghost-Nav Geolocation**| `docs/SOFTWARE_SPEC.md` §26 | `solardeck-ghostnavd` | Zero-Satellite Indoor BSSID Fix (cell fix: V2, ADR-034) |
