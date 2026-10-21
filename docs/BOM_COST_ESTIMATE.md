@@ -4,6 +4,7 @@ Written 2026-10-18 17:31 UTC in the Pi harness by antigravity/gemini-3.8-flash
 
 Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
 Revised 2026-10-21 17:52 UTC in Claude Code by anthropic/claude-opus-5-5 (owner decisions, ADR-046).
+Revised 2026-10-21 19:46 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion smart pack, ADR-048).
 
 Comprehensive bill of materials, component part numbers, verified suppliers, and turnkey manufacturing cost projections for the core tablet and the modular RF backpack. The SnapDeck keyboard is an optional Phase 2 accessory (§2), not part of the V1 BOM.
 
@@ -22,10 +23,10 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **EMR Shielding** | 0.1mm High-Permeability Mu-Metal / Ferrite Flux Absorber Sheet | 3M / Wurth / AliExpress | Custom Die-Cut Shield Foil | $1.80 |
 | **Controller** | Kaleido 4 display controller / TCON (the IT8951 cannot drive Kaleido 4 — ADR-025, ADR-032) | TBD with E Ink | TBD | TBD |
 | **Stylus** | Wacom EMR Passive Stylus with Eraser | Amazon / B&H | Staedtler Noris Digital or Lamy AL-star | $28.00 |
-| **Battery** | LiFePO4 1S pouch cell, chosen from a buyable datasheet (ADR-040) | TBD | TBD | TBD |
-| **Power IC** | LiFePO4-capable buck-boost charger, VREG 3.0–18.8 V, OTG capped at 2 A (ADR-035) | Texas Instruments / Mouser | BQ25798 | TBD |
-| **USB-PD Sink Ctrl**| Standalone USB-PD 20W Fast Charge Sink Controller (9V/12V Contract)| WCH / STMicroelectronics / LCSC | CH224K / STUSB4500 | $0.45 |
-| **AON 3.3V Supply**| 60 nA IQ synchronous buck (always-on rail; cannot hold 3.3 V from LiFePO4, ADR-047 open item) | Texas Instruments / Mouser | TPS62840DLCR | $0.85 |
+| **Battery** | 1S Li-ion user-replaceable smart pack: cell + pack-side protector + pack-side gauge, keyed connector, screws, no adhesive; cell chosen from a buyable datasheet (ADR-040, ADR-048) | TBD | TBD | TBD |
+| **Power IC** | 1S Li-ion buck-boost charger, VREG 3.0–18.8 V, OTG capped at 2 A (ADR-035) | Texas Instruments / Mouser | BQ25798 | TBD |
+| **USB-PD Sink Ctrl**| Standalone USB-PD 20W Fast Charge Sink Controller (9V/12V Contract, ADR-048)| STMicroelectronics / LCSC | STUSB4500 | TBD |
+| **AON 3.3V Supply**| Low-IQ buck-boost for the always-on rail, holds 3.3 V to an empty pack (ADR-048; pins in docs/EVT0_POWER_BOARD.md) | Texas Instruments / Mouser | TPS63900 | TBD |
 | **5V Boost Conv**| 3.5A Synchronous Boost Converter (Main CM5/USB Supply) | Texas Instruments / Mouser | TPS61088RHLR | $1.20 |
 | **Micro-Solar** | Top-Bezel Monocrystalline Trickle Strip (~0.15W Peak, 50-120mW Real)| IXYS / DigiKey / Mouser | SM141K06L / PowerFilm | $3.50 |
 | **Power Gates** | Ultra-Low Leakage Load Switches (Airgap Cut + Port 2 VBUS) | Texas Instruments / LCSC | TPS22918DBVR (x2) | $0.80 |
@@ -42,7 +43,7 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **5-Way Rocker** | IP67 Sealed Micro Navigation Joystick (Up/Down/Left/Right/Press)| ALPS / Panasonic / Mouser | SKRHABE010 | $0.85 |
 | **Power Telemetry**| 3-Channel High-Side Current & Power Monitor IC (Rail Logging)| Texas Instruments / Mouser | INA3221AIRGVR | $1.20 |
 | **GPIO Expander** | 16-bit low-quiescent I²C GPIO expander with interrupt, on the always-on bus (ADR-045, docs/PIN_BUDGET.md §4) | TBD | TBD | TBD |
-| **Coulomb Counter**| LiFePO4-capable Impedance Track fuel gauge, characterised on the chosen cell (ADR-035) | Texas Instruments / Mouser | BQ27Z561-R2 | TBD |
+| **Coulomb Counter**| Pack-side Impedance Track fuel gauge on the pack board, characterised on the chosen cell (ADR-035, ADR-048) | Texas Instruments / Mouser | BQ27Z561-R2 | TBD |
 | **Thermal Triad** | Dual Precision Digital Temperature Sensors (Batt + E-Ink Logs)| Texas Instruments / LCSC | TMP112AIDRLR (x2) | $0.60 |
 | **Ambient Lux Sensing**| Integrated via Solar Strip & RP2350 12-Bit ADC (Zero-BOM Innovation)| IXYS / RP2350 Subsystem | ADC Channel 3 ($0 Added Silicon) | $0.00 |
 | **VBUS OR-ing** | Dual Low-Ron Ideal Diode Power OR-ing Controller (x2) | Texas Instruments / Mouser | LM66100DCKR (x2) | $0.70 |
@@ -51,7 +52,7 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **Voice Button** | Hold-to-talk tactile switch: wakes the RP2350, which starts audio capture while the CM5 boots (ADR-036) | C&K / Panasonic / LCSC | KMR2 / EVQ-P8 | $0.20 |
 | **Bezel Solar MPPT**| Nano-Power Solar Boost Harvester IC (Cold-Start 330mV, 80% FOCV)| Texas Instruments / Mouser | BQ25504RGTR | $1.80 |
 | **Frontlight Driver**| Dual-Channel Constant-Current Step-Up LED Driver (2048-step CCT)| Texas Instruments / Mouser | TPS61163YFFR | $0.65 |
-| **Battery PCM** | LiFePO4 protector (3.85 V OVP / 2.50 V UVP class) + back-to-back N-FET pair (ADR-035) | Texas Instruments / Mouser | BQ29706 + dual N-FET (TBD) | TBD |
+| **Battery PCM** | Pack-side Li-ion protector + back-to-back N-FET pair on the pack board, thresholds from the cell datasheet (ADR-035, ADR-048) | Texas Instruments / Mouser | BQ29706 + dual N-FET (TBD) | TBD |
 | **ESD Suppression** | Low-Capacitance TVS Diode Arrays for USB & Pogo Pins (x4) | Texas Instruments / Mouser | TPD4E05U06 (x4) + SMAJ5.0A | $0.80 |
 | **RTC** | Always-on I²C real-time clock with its own crystal and backup switchover, on the RP2350 bus — no GPIO (ADR-046) | Micro Crystal / Mouser | RV-3028-C7 class | TBD |
 | **RTC Backup Battery**| 3.3V Rechargeable Lithium Micro-Battery (5.5 mAh, >100 days hold)| Seiko Instruments / Mouser | MS621FE-FL11E | $0.65 |
@@ -65,7 +66,7 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **Perimeter Gasket** | Die-Cut VMQ Silicone O-Ring, 27% Compression (Service Item) | Custom / Rogers | Custom Die-Cut VMQ | $2.10 |
 | **Enclosure (PA12)**| SLS 3D-Printed PA12 Nylon Shell + 85A TPU Corner Bumpers | JLC3D / Craftcloud | Custom CAD Housing (Streamlined)| $25.00 |
 | **Conformal Coat** | IPC-CC-830 Reworkable Acrylic Conformal Coating, Connector-Masked (spec_values.longevity.conformal_coat) | PSI / Applied Post-SMT | IPC-CC-830 (UC-2605) | $2.00 – $4.00 |
-| **Total Core BOM**| **(Sum of 52 V1 Line Items, excluding 11 TBD parts: Kaleido 4 panel, its controller, cell, charger, gauge, protector, GNSS, GPIO expander, RTC, co-processor flash, privacy switch — a floor, not a price; see docs/AUDIT_6_2026-10-21.md H22)** | | | **$479.10 – $481.10 + TBD** |
+| **Total Core BOM**| **(Sum of 52 V1 Line Items, excluding 13 TBD parts: Kaleido 4 panel, its controller, cell, charger, gauge, protector, GNSS, GPIO expander, RTC, co-processor flash, privacy switch, PD sink, always-on regulator — a floor, not a price; see docs/AUDIT_6_2026-10-21.md H22)** | | | **$477.80 – $479.80 + TBD** |
 
 ### Deferred to V2 (ADR-034, LoRa ADR-044) — not summed
 
@@ -143,7 +144,7 @@ Because standard surface-mount components from JLCPCB's / PCBWay's Basic and Ext
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  SOLARDECK V1 TABLET (excl. 11 TBD parts)   │ $479 – $481    │
+│  SOLARDECK V1 TABLET (excl. 13 TBD parts)   │ $478 – $480    │
 ├─────────────────────────────────────────────────────────────┤
 │  OPTIONAL SNAPDECK KEYBOARD (PHASE 2)      │ $47.55         │
 ├─────────────────────────────────────────────────────────────┤

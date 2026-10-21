@@ -86,7 +86,7 @@ bool solardeck_check_power_thresholds(solardeck_ctx_t *ctx, uint16_t vbat_mv) {
     if (!ctx) return false;
     ctx->vbat_mv = vbat_mv;
 
-    // LiFePO4 low-battery alarm, above the protector's hard trip so Linux can still flush.
+    // Low-battery alarm, above the pack protector's hard trip so Linux can still flush.
     if (vbat_mv <= SD_LOW_BATT_ALARM_MV) {
         solardeck_sm_transition(ctx, SOLAR_STATE_LOW_BATT_ALARM);
         return true; // Threshold triggered alarm
@@ -95,7 +95,7 @@ bool solardeck_check_power_thresholds(solardeck_ctx_t *ctx, uint16_t vbat_mv) {
     return false;
 }
 
-// ADR-035: release the charger's CE pin only after VREG reads back at the LiFePO4 limit. Any other
+// ADR-035: release the charger's CE pin only after VREG reads back at the Li-ion limit (ADR-048). Any other
 // value (0 = never written; ~4200 = a Li-ion-class POR default) keeps charging off.
 bool solardeck_charge_enable_allowed(const solardeck_ctx_t *ctx) {
     return ctx && ctx->charger_vreg_mv == SD_CHARGE_LIMIT_MV;

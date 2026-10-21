@@ -4,6 +4,7 @@ Written 2026-10-20 12:05 UTC in the Pi harness by openrouter/deepseek/deepseek-v
 Revised 2026-10-21 15:59 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
 Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
 Revised 2026-10-21 17:23 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, pin budget; ADR-044/045).
+Revised 2026-10-21 19:44 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion smart pack, ADR-048).
 
 Audit 3 found that no regulatory dimension existed anywhere in the repo. This file is that dimension.
 **Rule: no certificate row at `filed` or `granted` = no shipment.** A prototype may exist without these;
@@ -27,9 +28,10 @@ Statuses: `not started` → `scoped` → `tested` → `filed` → `granted`.
 | Sub-GHz (CC1101) (V2) | Same as above, per band | Hotpack 2 (V2, ADR-034) | not started | TBD | Hotpack carries its own antenna → its own filing |
 | EMC | **FCC Part 15B**, **EN 55032** | End product | not started | TBD | Radiated + conducted; e-paper drive lines and the boost converter are the emitters |
 | Safety | **EN 62368-1** / UL 62368-1 | End product | not started | TBD | Includes the battery and the PD path |
-| Battery | **UN 38.3** transport test | Pack, shipped separately | not started | TBD | Required to ship a LiFePO4 pack at all, air or ground |
-| Battery | **IEC 62133-2** | Pack | not started | TBD | The BQ29706-class protector is protection, not certification |
-| Battery | **EU 2023/1542** battery passport + carbon label | Pack | not started | TBD | Applies from 2027; a 30-year product will live inside this regime |
+| Battery | **UN 38.3** transport test | Li-ion smart pack (ADR-048), installed and as a spare | not started | TBD | Required to ship the Li-ion pack at all, air or ground; a user-replaceable pack is also sold and shipped on its own |
+| Battery | **IEC 62133-2** | Li-ion smart pack (ADR-048) | not started | TBD | The pack-side protector, fuse and NTC are protection, not certification |
+| Battery | **EU Battery Regulation (EU) 2023/1542**: user removability and replaceability of portable batteries | Li-ion smart pack + enclosure (ADR-048) | not started | TBD | Applicability and dates to confirm. The screw-retained, keyed, adhesive-free pack is designed toward it |
+| Battery | **EU 2023/1542** battery passport + carbon label | Pack | not started | TBD | Applicability to portable batteries and dates to confirm (see the row above) |
 | Materials | **RoHS / REACH** declarations | All V1 line items | not started | TBD | Collect supplier declarations now — 2046 sourcing is easier with them |
 | Materials | **WEEE** registration + **Prop 65** | End product | not started | TBD | Per-country registration for sale |
 | Export | **ECCN / EAR** classification | End product | not started | TBD | Crypto (LUKS, WireGuard) may trigger classification review; cellular adds to it in V2 |

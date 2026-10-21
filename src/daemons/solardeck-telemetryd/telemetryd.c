@@ -42,8 +42,8 @@ bool telemetry_parse_frame(const uint8_t *buf, size_t len, telemetry_frame_t *ou
         return false;
     }
 
-    /* Plausibility check for LiFePO4 battery voltage (2.0V to 4.0V) */
-    if (f->vbat_mv < 2000 || f->vbat_mv > 4200) {
+    /* Plausibility check for a 1S Li-ion pack (ADR-048), with headroom above 4.2 V for ADC error */
+    if (f->vbat_mv < 2000 || f->vbat_mv > 4400) {
         return false;
     }
 

@@ -4,6 +4,7 @@ Written 2026-10-20 14:40 UTC in the Pi harness by openrouter/deepseek/deepseek-v
 
 Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
 Revised 2026-10-21 17:22 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, ADR-044/045).
+Revised 2026-10-21 19:44 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion smart pack, ADR-048).
 
 Read this document when: adding a sensor, an actuator, a repair hatch, or a gate. It is the single
 cross-reference that ties **failure family → design countermeasure → telemetry detector → heal
@@ -25,7 +26,7 @@ not additive to 100%.
 | 1 | **Connector/contact corrosion & fretting** | 30–40% | Oxide films, vibration micro-movement | §21.5 burnish + IP67 gasketed bulkheads + TPS22918 rail isolation (`spec_values.longevity.conformal_coat` reworkable acrylic covers exposed pads) | `thermal_zones` + `sht40_humidity` (SOFTWARE_SPEC §3.3.1); per-rail sense on gated rails | §21.5 load-switch pulse + burnish cycle | hw bench: burnish measured; corrosion modelled (`DEV_KIT_BENCH.md`) |
 | 2 | **Humidity & ingress** | 15–20% | Silver migration, dendrite growth, lens fog | IP54 (V1 target; IP67 is the V2 target, ADR-039) + SHT40 RH/dew-point alarm + desiccant sachet with status (§21.1/21.3) | `sht40_humidity`, `dew_point_*`, `module_health` registers | water-lock daemon (airgap to 0 V) | salt-fog 96 h (ASTM B117) + G9 UV/weather |
 | 3 | **Thermal cycling fatigue** | 15–20% | Solder joint cracks, delamination, glue creep | Thermal zones + background waveform temp tuning + §21.5 charge-cut | `thermal_zones` (6 zones) + `battery_health.cell_esr_mohm` | waveform temp tuning (Tier 1) + charge management | G8: 500 cycles −40…+85 °C, <10% joint resistance drift |
-| 4 | **Battery cell aging** | 10–15% | Capacity fade, ESR rise | BQ27Z561-R2 SOH tracking (ADR-035), charge management, 30-year budget (`LONGEVITY_30Y.md` §1) | `battery_health.*` (SOH, ESR, cycles) | `solardeck-battcare` (50% SOC storage, swap scheduling) | G10 storage survival + swap by data (§4 schedule) |
+| 4 | **Battery cell aging** | 10–15% | Capacity fade, ESR rise | Pack-side BQ27Z561-R2 SOH tracking (ADR-035, ADR-048), charge management, user-replaceable Li-ion smart pack as the first wear-out item (`LONGEVITY_30Y.md` §1, ADR-048) | `battery_health.*` (SOH, ESR, cycles) | `solardeck-battcare` (50% SOC storage, swap scheduling) | G10 storage survival + swap by data (§4 schedule) |
 | 5 | **Soaking/wet conditions** | 5–10% | USB-C port electrolyte, gasket failure | IP68 ports, water-lock daemon, airgap to 0 V | `module_health` + rail current (port drain detection) | water-lock (airgap) | G7 drop + salt-fog (port closure integrity) |
 | 6 | **Shock & drop impact** | ~5% | BGA/corner-bond crack, mount fatigue | Corner bond on DSBGA/QFN (reworkable, §7.6.1), M2.5 inserts, TPU bumpers | BMA400 motion (impact logging) | none (passive) | G7: 1.22 m, 26 drops, MIL-STD-810H 516.8 IV, functional after |
 | 7 | **NAND / bit-rot (storage death)** | ~5% | Silent write decay over unpowered years | `solardeck-nandcare` quarterly powered scrub while charging | eMMC SMART, NAND scrub status | NAND scrub (rewrite) | G10 storage survival + `nand_scrub_interval_days` compliance |

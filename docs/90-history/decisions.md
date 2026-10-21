@@ -878,3 +878,45 @@ built pin by pin from the datasheets (ADR-043 step 2).
   Li-ion BQ297xx variant would not.
 - The gauge's I²C address and the RTC's address need verification; the gauge datasheet names
   Li-ion/Li-polymer, so LiFePO4 support needs TI confirmation or chemistry characterisation (ADR-040).
+
+---
+
+## ADR-048 — V1 uses Li-ion in a replaceable smart pack; LiFePO4 moves to V2 (2026-10-21)
+
+Written 2026-10-21 19:36 UTC in Claude Code by anthropic/claude-opus-5-5. Owner: "descope LiFePO4 in favour of
+normal lithium for V1 … can it be designed so it's easily upgradable or replaceable?" Supersedes the
+chemistry parts of ADR-035 and ADR-040; amends ADR-047's open items.
+
+**Trigger.** The cell shortlist found the best datasheet-backed LiFePO4 pouch that fits the battery
+envelope well below ADR-040's expectation, quote-only and without verified UN38.3 reports; LiFePO4
+also left the always-on rail in dropout and the gauge without a listed chemistry (ADR-047).
+
+**Decision.**
+- **Chemistry: 1S Li-ion**, charge limit `battery.charge_limit_v` (4.20 V), one chemistry per hardware
+  revision, no selector. The CE hold-off gate (ADR-035) stays: charging is off until VREG reads back at
+  the limit. **LiFePO4 is deferred to V2.**
+- **Replaceable smart pack.** The cell ships with its own protector and a pack-side BQ27Z561 gauge on a
+  small pack board, behind a keyed 5–6-pin connector (pack+, pack−, SDA, SCL, NTC), held by screws
+  and a pull tab, no adhesive. The pack is a service part and an upgrade path: a larger pack of the
+  same chemistry drops in. Before enabling charge, firmware reads the pack gauge's design charge
+  voltage and refuses any pack that does not match `battery.charge_limit_v`.
+- **The pack-side gauge resolves ADR-047's gauge topology** (sense, protector and gauge share the pack
+  ground, as in TI's reference circuit).
+- **Always-on rail:** a low-quiescent buck-boost (TPS63900 class, to be confirmed from its datasheet)
+  replaces the buck-only TPS62840, so the rail holds 3.3 V to an empty pack.
+- **Solar strip stays in V1** (owner), with a **hardware temperature gate**: a comparator on the pack
+  NTC switches the harvester's output off outside the charge-temperature window, no firmware. Its OV
+  threshold is re-derived below the Li-ion limit (`harvester`, Phase 14).
+- **USB-C power controller: STUSB4500.** The 5 V boost is re-selected from an in-production part.
+- **ADR-047's "protector OVP below the charger's POR VREG" is withdrawn for Li-ion:** the BQ25798's 1s
+  POR VREG equals the Li-ion limit, so a charger reset no longer overcharges the right pack. The
+  protector's OVP sits above the limit with the usual Li-ion margin (`docs/EVT0_POWER_BOARD.md` §4),
+  and the hold-off now guards against a wrong pack and reset charge settings.
+- **Pack keying is per chemistry.** The solar harvester never sees the firmware's pack check, so a pack
+  of another chemistry must not mate with the V1 connector (keyed differently in V2).
+
+**Costs.** Cycle life falls to typical Li-ion ratings, so the pack becomes the first wear-out item
+(`reliability`, modelled) and a routine replacement over the device's life. Li-ion has less thermal
+margin than LiFePO4: the protector, fuse, JEITA charging and pack NTC are mandatory, not optional.
+The EU Battery Regulation's user-replaceability requirement for portable batteries is a further reason
+for the pack design; its exact applicability is to be confirmed (REGULATORY).

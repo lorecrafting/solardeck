@@ -23,10 +23,10 @@ extern "C" {
 // ADR-035: BQ25798 CE is active-low and pulled HIGH in hardware, so the charger is off at power-up.
 // Firmware may drive CE low only once VREG reads back as this value. Must equal
 // spec_values.battery.charge_limit_v (Phase 14 checks it).
-#define SD_CHARGE_LIMIT_MV      3600
+#define SD_CHARGE_LIMIT_MV      4200
 
 // Low-battery alarm; must equal spec_values.battery.low_alarm_v (Phase 14 checks it).
-#define SD_LOW_BATT_ALARM_MV    2900
+#define SD_LOW_BATT_ALARM_MV    3400
 
 // System States
 typedef enum {

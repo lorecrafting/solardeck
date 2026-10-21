@@ -48,8 +48,8 @@ int main(void) {
     assert(ctx.solar_vmpp_mv == 1950); // 78% of 2500 = 1950 mV
     printf("  ✓ Solar MPPT sampling verified (Voc=%u mV -> Vmpp=%u mV)\n", ctx.solar_voc_mv, ctx.solar_vmpp_mv);
 
-    // 6. Test LiFePO4 Critical Low Battery Shutdown (<150ms warning)
-    bool alarm = solardeck_check_power_thresholds(&ctx, 3200); // Normal nominal
+    // 6. Critical low-battery alarm
+    bool alarm = solardeck_check_power_thresholds(&ctx, SD_LOW_BATT_ALARM_MV + 300); // healthy pack
     assert(alarm == false);
 
     alarm = solardeck_check_power_thresholds(&ctx, SD_LOW_BATT_ALARM_MV - 50);
@@ -57,9 +57,9 @@ int main(void) {
     assert(ctx.current_state == SOLAR_STATE_LOW_BATT_ALARM);
     assert(ctx.pwrfail_pin_asserted == true);
     assert(ctx.tmux_cm5_selected == false);
-    printf("  ✓ LiFePO4 safety cutoff & powerfail alarm verified (<150ms response)\n");
+    printf("  ✓ Low-battery alarm raises power-fail\n");
 
-    // 7. Charger hold-off (ADR-035): CE may be released only at the LiFePO4 VREG.
+    // 7. Charger hold-off (ADR-035): CE may be released only at the battery's VREG.
     solardeck_sm_init(&ctx);
     assert(solardeck_charge_enable_allowed(&ctx) == false);   // never written
     ctx.charger_vreg_mv = 4208;                                 // a Li-ion-class POR default

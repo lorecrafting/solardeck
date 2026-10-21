@@ -42,7 +42,7 @@ MODEL = [
 
 # (name, years, note, consumable?)  -- consumables are serviced, not limiters
 WEAROUT = [
-    ("LiFePO4 cell (capacity to 70 %)", 8, "10-year service interval", False),
+    ("Li-ion cell (capacity to 80 %)", 3, "user-replaceable pack, modelled from typical 500-1000 cycle ratings (ADR-048)", False),
     ("Silicone gasket (compression set)", 8, "wear part, in the service kit", False),
     ("RTC backup cell (CR2032/MS621FE)", 10, "socketed, service interval", False),
     ("Frontlight LED string (L70)", 15, "3 h/day at 40 % brightness", False),
