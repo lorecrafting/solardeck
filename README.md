@@ -155,15 +155,29 @@ rather than restating values.
 | Certification | Not started ([`docs/REGULATORY.md`](docs/REGULATORY.md)). |
 
 **What's waiting on what:**
-1. **Kaleido 4 (E Ink).** Resolution, outline, controller and waveform timings are `null` until E Ink's
-   datasheet exists; the chassis and display circuit wait on it. Next action: ask E Ink for it under NDA.
-2. **A real LiFePO4 cell.** Capacity and runtime are re-derived from its datasheet (ADR-040).
-3. **Bench numbers.** Linux resume time, wake-word power on the RP2350, CM5 heat in the shell and
-   charge termination with the protector in circuit all come from the dev-kit bench.
+1. **Kaleido 4 (E Ink).** Announced 2026-10-15 with no public sizes, resolution or sampling programme;
+   the only announced device uses E Ink's T2000 controller. A 10.3″ Kaleido 4 is not confirmed. A sales
+   inquiry went to E Ink on 2026-10-21. Resolution, outline, controller and waveform timings stay `null`
+   until the datasheet exists (ADR-032); the chassis outline and display circuit wait on it.
+2. **The Wacom/EMR digitizer.** Wacom is OEM-only under NDA; Hanvon Ugee sells custom EMR modules to
+   businesses. Ask for a quote once the panel size is confirmed.
+3. **A real LiFePO4 cell (ADR-040).** Shortlist done: in the current battery envelope the best cell
+   with a public datasheet holds 16 Wh; about 21 Wh needs a wider, shorter battery bay. Owner choice
+   pending; `battery_wh.lifepo4` stays `null` until then.
+4. **Bench numbers.** Linux resume time, wake-word power, CM5 heat and charge termination come from the
+   dev-kit bench, bought once the panel and digitizer are available.
 
-**Next step:** the dev-kit bench (CM5 IO board, a 10.3″ IT8951 module as the display stand-in, Pico 2,
-a BQ25798 evaluation board and a real LiFePO4 cell), then a power-only board before the full carrier
-(ADR-043): [`docs/DEV_KIT_BENCH.md`](docs/DEV_KIT_BENCH.md).
+**Kaleido 4 day-one list** (the day E Ink's datasheet and drawing arrive):
+- Fill `ppi`, `display_active_mm`, `panel_module_outline_mm`, `display_stack_mm`, `epdc_spi_mhz`,
+  `refresh_modes` and the reader geometry in `docs/spec_values.json` from the datasheet, tagged `datasheet`.
+- Run `python3 scripts/verify_all.py`: the panel-fit, page-cache and enclosure checks stop skipping and
+  will say what no longer fits.
+- Choose the display controller (ADR-032), then check its host interface against `docs/PIN_BUDGET.md`
+  (the budget assumes SPI plus ready and reset).
+- Freeze the chassis outline (ADR-039) and the battery bay, then capture the carrier schematic.
+
+**Meanwhile:** the power-only board (EVT-0, ADR-043) does not depend on the panel; its capture-ready
+design is [`docs/EVT0_POWER_BOARD.md`](docs/EVT0_POWER_BOARD.md).
 
 ---
 
