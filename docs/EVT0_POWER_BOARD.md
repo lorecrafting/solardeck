@@ -68,8 +68,13 @@ anything about the panel.
 2. **Protector FETs are low-side** (BQ29706 drives low-side N-FETs, datasheet §9.1, Fig. 9-1).
    The gauge's sense resistor sits on the cell side of the FETs and the gauge's VSS is `GND_CELL`,
    so the gauge stays powered when the protector opens. TI's gauge example (BQ27Z561 Fig. 7-1) uses
-   high-side FETs; the cell-side placement here keeps the same SRP/SRN polarity
-   (SRP on the cell side reads charge current as positive, §6.4.2.1).
+   high-side FETs, so two things are **open before capture** (§8): (a) moving the sense resistor to
+   the low side inverts the current sign relative to Fig. 7-1, so the SRP/SRN orientation must be
+   re-derived from the TRM's sign convention and confirmed on the first charge at bring-up; (b) with
+   the gauge's VSS on `GND_CELL` and its I²C pulled up to an AON rail referenced to board `GND`, the
+   two grounds separate when the protector opens, which can push the gauge's I²C pins outside their
+   absolute-maximum range. Resolve (b) by moving the protector FETs or the gauge so both share one
+   ground, or by isolating its I²C; do not capture this topology as drawn.
 3. **No input OR-ing on EVT-0.** One USB-C sink receptacle feeds VBUS; VAC1/VAC2 tie to VBUS and
    ACDRV1/2 to GND (BQ25798 pin table). The BQ25798 has its own two-input mux (§7.3.5) which the
    carrier may use instead of the BOM's LM66100 pair (open item 9).
@@ -89,7 +94,7 @@ Source: SLUSDV2C Table 5-1 (pins), §7.3.2 (PROG), §7.3.4.3 (ILIM_HIZ), §8.2.2
 
 | Pin | Name | Net | Passives / notes |
 | :-- | :-- | :-- | :-- |
-| 1 | STAT | `CHG_STAT` | 10 kΩ pull-up to `REGN` (pin table; §7.3.4.1 allows REGN for STAT); test point |
+| 1 | STAT | `CHG_STAT` | 10 kΩ pull-up to `VDD_3V3_AON` (open drain; not REGN, which is about 5 V and would drive the RP2350/Pico pin above its rail); test point |
 | 2, 3 | VBUS | `VBUS_IN` | 2 × 10 µF + 0.1 µF, the 0.1 µF closest to the pins; rated ≥ 25 V (§8.2.2.3) |
 | 4 | BTST1 | — | 47 nF, ≥ 10 V, BTST1 to SW1 |
 | 5 | REGN | `REGN` | 4.7 µF, 10 V, to GND. Feeds only STAT, TS and ILIM_HIZ dividers (§7.3.4.1) |
@@ -424,6 +429,11 @@ Rules that follow from the datasheet:
 
 ## 4. TBD until the cell is chosen (ADR-040)
 
+**Protector constraint (not cell-dependent):** the protector's overvoltage trip must sit above
+`battery.charge_limit_v` and below the charger's 1s POR VREG, so that a charger reset with CE low is
+stopped in hardware (ADR-047). A BQ29706-class LiFePO4 variant satisfies this; a Li-ion BQ297xx variant
+does not. Verify the chosen variant's OVP in its datasheet before capture.
+
 Formulas and where they come from; no numbers until the cell datasheet is in hand.
 
 | Item | Where it is set | Formula / rule | Source |
@@ -520,7 +530,9 @@ prove is `HARDWARE_VERIFICATION_WORKFLOW.md`. Steps specific to this board:
 8. `EN_5V_SYS` high: 5 V rail into an electronic load; load steps up to the CM5 peak once known.
    With EN low, measure `5V_SYS` (open item 10).
 9. Load switches: off-state leakage on `3V3_GNSS` and `5V_LOAD`.
-10. Floor: every load off, host idle, DMM in J_IBAT. This is the power-tree part of G12, not the
+10. Floor: every load off, host idle, DMM in J_IBAT. J_IBAT does not see the gauge's and protector's
+    own current (they sit on `CELL_P` ahead of it); measure those separately or at the cell terminals
+    before calling the floor `measured`. This is the power-tree part of G12, not the
     device floor.
 11. Harvester: supply plus series resistor into `SOLAR_IN`; confirm charging stops at VBAT_OV, below
     `battery.charge_limit_v`.
@@ -529,6 +541,10 @@ prove is `HARDWARE_VERIFICATION_WORKFLOW.md`. Steps specific to this board:
 ---
 
 ## 8. Open items
+
+**Host header voltage (bring-up):** power the Pico 2 from `VDD_3V3_AON` with its own regulator
+disabled (`3V3_EN` low, external 3.3 V on its `3V3` pin), so its I/O never sits above the AON rail
+and back-feeds the gauge, charger and INA3221 through their input clamps.
 
 1. **AON rail source.** This package feeds the TPS62840 and TPS61088 from VSYS (§1.2); HARDWARE_SPEC
    §2.3 says VBAT. Owner to confirm.

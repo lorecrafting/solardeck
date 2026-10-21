@@ -147,5 +147,6 @@ co-processor. The capture package, the charger hold-off register sequence and th
 bring-up order are in [`EVT0_POWER_BOARD.md`](EVT0_POWER_BOARD.md) (§3 and §7); this file does not
 repeat them. EVT-0 reuses this bench's instruments: the µA-resolution DMM (§4) for the battery-side
 floor, the real LiFePO4 cell for termination, and the Pico 2 as the host. It cannot start until
-the open items in its §8 that block capture are decided (AON rail source, CE behaviour with a flat
-cell, PD sink and port roles).
+the open items in its §8 that block capture are decided: AON rail source and its regulation (the
+TPS62840 cannot make 3.3 V from LiFePO4), CE behaviour with a flat cell, PD sink and port roles, the
+harvester's missing temperature gate, and the gauge's sense polarity and ground (ADR-047).

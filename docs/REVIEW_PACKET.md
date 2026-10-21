@@ -11,11 +11,11 @@ Revised 2026-10-21 18:51 UTC in Claude Code by anthropic/claude-opus-5-5 (checkp
 Five internal audit rounds are done, the last against the datasheets (AUDIT 6). Further internal reading has near-zero yield; the open questions
 are judgement calls that need an outside opinion. This is the brief for that review.
 
-State of the repo at this checkpoint (2026-10-21): **16 verification phases green, run locally before
-every push** (no hosted CI, ADR-046), 84 catalogued features with **0 measured**, 52 V1 BOM lines with
-40 placeholder parts in an unwired schematic, every CM5/RP2350 pin budgeted and checked
-(`docs/PIN_BUDGET.md`), no fabrication files, software frozen until hardware exists, and a reliability
-model saying MTBF ≈ 122 years against a first hard wear-out at 8 years.
+State of the repo at this checkpoint (2026-10-21): every verification phase green, run locally before
+every push (no hosted CI, ADR-046); **nothing measured** (`docs/STATUS.md`); the schematic is an unwired
+placeholder; every CM5/RP2350 pin is budgeted and checked (`docs/PIN_BUDGET.md`); no fabrication files;
+software frozen until hardware exists; the reliability model (`spec_values.reliability`) puts random
+failure far beyond the first hard wear-out.
 
 ---
 
@@ -23,7 +23,7 @@ model saying MTBF ≈ 122 years against a first hard wear-out at 8 years.
 
 1. `docs/AUDIT_6_2026-10-21.md` — the repo checked against the datasheets; blockers and decisions.
 2. `docs/STATUS.md` — the honest evidence page. Note `measured: 0`.
-3. `docs/90-history/decisions.md` — ADR-001…046. **This is the highest-signal document in the repo**:
+3. `docs/90-history/decisions.md` — ADR-001…047. **This is the highest-signal document in the repo**:
    it records decisions reversed by evidence, the V1 scope cut (ADR-034, ADR-044) and the pin budget (ADR-045).
 4. `docs/LONGEVITY_30Y.md` §1b — the reliability arithmetic.
 5. `docs/FIRMWARE_INTERFACE.md` + `firmware/rp2350/include/solardeck_regs.h` — the only artifact that
@@ -62,8 +62,10 @@ and the panel in the same rig? Is a two-board lash-up acceptable for a pillar cl
 
 ### Q4 — Battery, UN38.3, and shipping
 LiFePO4 pouch, capacity TBD until the cell is chosen (ADR-040), adhesive-free mechanical retention now.
-Shortlist (2026-10-21): the best datasheet-backed cell in today's envelope is about 16 Wh (EEMB
-LP7568130F); about 21 Wh (EEMB LP70103122F) needs a wider, shorter bay. Neither has a verified UN38.3 report. UN38.3 is the longest-lead gate in the
+Shortlist (2026-10-21): the best datasheet-backed cell in today's `battery_cell_mm` envelope is the
+EEMB LP7568130F, below ADR-040's expectation; the EEMB LP70103122F reaches it only with a wider,
+shorter bay. Capacities come from their datasheets; `battery_wh.lifepo4` stays null until the owner
+picks. Neither has a verified UN38.3 report. UN38.3 is the longest-lead gate in the
 programme (~$8–15 k, 6–10 weeks) and has no owner.
 **Attack:** does the chosen cell survive UN38.3, and is a pouch the right form factor for a 30-year
 serviceable device? Which test house, which schedule, and what does a failed UN38.3 cost?

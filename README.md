@@ -162,7 +162,8 @@ rather than restating values.
 2. **The Wacom/EMR digitizer.** Wacom is OEM-only under NDA; Hanvon Ugee sells custom EMR modules to
    businesses. Ask for a quote once the panel size is confirmed.
 3. **A real LiFePO4 cell (ADR-040).** Shortlist done: in the current battery envelope the best cell
-   with a public datasheet holds 16 Wh; about 21 Wh needs a wider, shorter battery bay. Owner choice
+   with a public datasheet holds less than ADR-040 expected; matching that needs a wider, shorter
+   battery bay (`docs/REVIEW_PACKET.md` Q4). Owner choice
    pending; `battery_wh.lifepo4` stays `null` until then.
 4. **Bench numbers.** Linux resume time, wake-word power, CM5 heat and charge termination come from the
    dev-kit bench, bought once the panel and digitizer are available.
