@@ -174,7 +174,7 @@ In an era of cloud-locked, fragile, spy-by-design hardware, SolarDeck is an **in
 Consumer electronics are designed for planned obsolescence: when Apple or Lenovo releases a faster chip, your $1,500 laptop must be thrown in the trash. The RAM is soldered, the SSD is soldered, and the CPU is locked.
 
 SolarDeck is designed with **Generational Modular Longevity**:
-* The expensive components—the **10.3" Color E-Ink glass**, the **Wacom EMR digitizer**, the **precision CNC/SLS enclosure**, and the **carrier motherboard**—are built to last a decade. The battery is the exception: a user-replaceable Li-ion smart pack (capacity TBD until measured on the bench (pack: `battery_wh.li_ion`), ADR-040), swapped as a service part (ADR-048).
+* The expensive components—the **10.3" Color E-Ink glass**, the **Wacom EMR digitizer**, the **precision CNC/SLS enclosure**, and the **carrier motherboard**—are built to last a decade. The battery is the exception: a user-replaceable Li-ion smart pack (capacity `battery_wh.li_ion`, ADR-049), swapped as a service part (ADR-048).
 * The compute brain, RAM, and mass storage are **100% modular and field-upgradable in under 60 seconds with two screws**.
 
 ```

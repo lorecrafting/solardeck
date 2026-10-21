@@ -51,10 +51,10 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **Recovery Sw** | Single Sub-Miniature IP67 Pinhole Micro-Tactile Switch | C&K / Panasonic / LCSC | KMR2 / EVQ-P8 | $0.20 |
 | **Voice Button** | Hold-to-talk tactile switch: wakes the RP2350, which starts audio capture while the CM5 boots (ADR-036) | C&K / Panasonic / LCSC | KMR2 / EVQ-P8 | $0.20 |
 | **Harvester Gate** | Hardware temperature gate for the solar harvester: dual open-drain comparator + load switch (ADR-048, ADR-049, docs/EVT0_POWER_BOARD.md §2.7.1). DigiKey 2026-10-21 qty 1 (1.86 + 0.63) | Texas Instruments / DigiKey | TLV7042DDFR + TPS22916CNYFPR | $2.49 |
-| **Pack Connector** | Keyed, locking 6-position pack connector: header + receptacle + 6 crimps (ADR-049, docs/EVT0_POWER_BOARD.md §2.3). DigiKey 2026-10-21 qty 1 (0.85 + 0.49 + 6 × 0.22) | Hirose / DigiKey | DF63-6P-3.96DSA + DF63-6S-3.96C + DF63A-2022SCF | $2.66 |
+| **Pack Connector** | Keyed, locking 6-position pack connector: header + receptacle + 6 crimps (ADR-049, docs/EVT0_POWER_BOARD.md §2.3); the priced crimp is 20–22 AWG, the 8 A rating needs 18 AWG (open item 20). DigiKey 2026-10-21 qty 1 (0.85 + 0.49 + 6 × 0.22) | Hirose / DigiKey | DF63-6P-3.96DSA + DF63-6S-3.96C + DF63A-2022SCF | $2.66 |
 | **Bezel Solar MPPT**| Nano-Power Solar Boost Harvester IC (cold start and MPPT per SLUSAH0G §7.5, docs/EVT0_POWER_BOARD.md §2.7)| Texas Instruments / Mouser | BQ25504RGTR | $1.80 |
 | **Frontlight Driver**| Dual-Channel Constant-Current Step-Up LED Driver (2048-step CCT)| Texas Instruments / Mouser | TPS61163YFFR | $0.65 |
-| **Battery PCM** | Pack-side high-side Li-ion protector + common-drain N-FET pair + 20 A Nano2 fuse on the pack board (ADR-049, docs/EVT0_POWER_BOARD.md §2.2); fuse rating final with the pack. DigiKey 2026-10-21 qty 1 (0.63 + 1.04 + 6.92) | Texas Instruments / Littelfuse / DigiKey | BQ298216RUGR + CSD83325L + 0456020.ER | $8.59 |
+| **Battery PCM** | Pack-side high-side Li-ion protector + common-drain N-FET pair on the pack board (ADR-049, docs/EVT0_POWER_BOARD.md §2.2). The pack fuse is not priced: its rating must sit below the FET and connector ratings, which the Nano2 family cannot (EVT-0 open item 20). DigiKey 2026-10-21 qty 1 (0.63 + 1.04) | Texas Instruments / DigiKey | BQ298216RUGR + CSD83325L | $1.67 |
 | **ESD Suppression** | Low-Capacitance TVS Diode Arrays for USB & Pogo Pins (x4) | Texas Instruments / Mouser | TPD4E05U06 (x4) + SMAJ5.0A | $0.80 |
 | **RTC** | Always-on I²C real-time clock with its own crystal and backup switchover, on the RP2350 bus at 0x52 — no GPIO (ADR-046). DigiKey 2026-10-21 qty 1; 0 in stock at DigiKey/Mouser/LCSC, Mouser expects April 2027 | Micro Crystal / DigiKey | RV-3028-C7 32.768KHZ 1PPM-TA-QC | $2.41 |
 | **RTC Backup Battery**| 3.3V Rechargeable Lithium Micro-Battery (5.5 mAh, >100 days hold)| Seiko Instruments / Mouser | MS621FE-FL11E | $0.65 |
@@ -68,7 +68,7 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **Perimeter Gasket** | Die-Cut VMQ Silicone O-Ring, 27% Compression (Service Item) | Custom / Rogers | Custom Die-Cut VMQ | $2.10 |
 | **Enclosure (PA12)**| SLS 3D-Printed PA12 Nylon Shell + 85A TPU Corner Bumpers | JLC3D / Craftcloud | Custom CAD Housing (Streamlined)| $25.00 |
 | **Conformal Coat** | IPC-CC-830 Reworkable Acrylic Conformal Coating, Connector-Masked (spec_values.longevity.conformal_coat) | PSI / Applied Post-SMT | IPC-CC-830 (UC-2605) | $2.00 – $4.00 |
-| **Total Core BOM**| **(Sum of 53 V1 Line Items, excluding 3 TBD parts: Kaleido 4 panel, its controller, the battery pack — a floor, not a price; distributor prices at qty 1, before tariffs; see docs/AUDIT_6_2026-10-21.md H22)** | | | **$531.68 – $533.68 + TBD** |
+| **Total Core BOM**| **(Sum of 53 V1 Line Items, excluding 3 TBD parts: Kaleido 4 panel, its controller, the battery pack — a floor, not a price; distributor prices at qty 1, before tariffs; see docs/AUDIT_6_2026-10-21.md H22)** | | | **$524.76 – $526.76 + TBD** |
 
 ### Deferred to V2 (ADR-034, LoRa ADR-044) — not summed
 
@@ -146,7 +146,7 @@ Because standard surface-mount components from JLCPCB's / PCBWay's Basic and Ext
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  SOLARDECK V1 TABLET (excl. 3 TBD parts)    │ $532 – $534    │
+│  SOLARDECK V1 TABLET (excl. 3 TBD parts)    │ $525 – $527    │
 ├─────────────────────────────────────────────────────────────┤
 │  OPTIONAL SNAPDECK KEYBOARD (PHASE 2)      │ $47.55         │
 ├─────────────────────────────────────────────────────────────┤

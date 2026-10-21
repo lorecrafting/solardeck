@@ -178,8 +178,7 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
   * **JEITA Cold-Weather Lockout Ladder (programmable zones on the BQ25798):**
     * The BQ25798 `TS` pin is biased by a precision 0.1% resistor divider (values set at schematic capture for the programmed JEITA thresholds) paired with a **10 kΩ NTC thermistor (Murata NCP18XH103F03RB, $\beta = 3950\text{K}$)** inside the smart pack, reached through the pack connector's NTC pin (ADR-048).
     * **$T < 0^\circ\text{C}$ (Freezing Lockout):** Charger automatically terminates charging completely ($I_{\text{CHG}} = 0.000\text{ A}$), preventing catastrophic metallic lithium plating and internal micro-shorts while still powering system loads from solar/USB.
-    * **$0^\circ\text{C} \le T < 10^\circ\text{C}$ (Cold Taper):** Charge current automatically throttled to $0.2\text{C}$ ($400\text{ mA}$) to protect chemistry.
-    * **$10^\circ\text{C} \le T \le 45^\circ\text{C}$ (Normal Band):** Full 20W fast charging ($3.0\text{A}$).
+    * **Cold and normal bands:** charge current per `docs/EVT0_POWER_BOARD.md` §4 (ICHG row): within the cell's limits (`battery.cell_max_charge_a` per cell, 0.3C from 0 to 20 °C) and below the pack protector's OCC trip; zone edges and currents set at capture from the EEMB datasheet (ADR-049).
     * **$45^\circ\text{C} < T \le 60^\circ\text{C}$ (Heat Taper):** Charge voltage reduced below `battery.charge_limit_v` (warm-zone value set at capture from the cell datasheet).
     * **$T > 60^\circ\text{C}$ (Overheat Lockout):** Complete charger shutdown.
 * **Dual-Stage Solar Harvesting & Ambient Sensing Architecture:**
@@ -203,7 +202,7 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
   * Turns the tablet into an emergency power bank for smartphones, GPS handhelds, and flashlights in off-grid emergencies.
 * **Rigid Voltage Regulators (Anti-Brownout Engineering):**
   1. *Always-On 3.3V System Rail (`VDD_3V3_AON`):* A low-quiescent **TPS63900 buck-boost** (TI SLVSET3D; pins in `docs/EVT0_POWER_BOARD.md` §2.5; ADR-048) holds the rail at 3.3 V down to an empty pack. It supplies the always-on rail to the RP2350, 8MB PSRAM, RV-3028-C7-class RTC, and `I2C_ALWAYS_ON` sensors continuously, ensuring perpetual operation when the main CM5 5V boost converter is completely unpowered.
-  2. *Main 5.0V System Boost:* A synchronous boost converter (TPS61088 as drafted; re-selected from an in-production part, ADR-047, ADR-048) steps up battery voltage to a rigid 5.0V @ 3.5A rail, delivering up to 17.5W peak power for CM5 turbo compilation (CM5 peak draw TBD — verify against the CM5 datasheet), USB peripheral bus power, and display supply.
+  2. *Main 5.0V System Boost:* a **TI TPS61022** with true output disconnect (ADR-049, `docs/EVT0_POWER_BOARD.md` §2.6) steps up battery voltage to the 5 V rail for the CM5 (`cm5.supply_design_a`), port 2 (`usb.port2_current_limit_a`) and the display supply. Its output at the bottom of the pack's range is below the modelled budget (`pack.rail_5v_a`), and the display supply is not budgeted yet (EVT-0 open item 20).
   3. *Cellular modem supply (TPS63020):* Deferred to V2 (ADR-034).
 * **Power Gating (Physical Cutoff Switches):**
   * Texas Instruments **TPS22918** ultra-low leakage load switches on peripheral power rails (GNSS receiver, Wi-Fi, audio amp, and external expansion bus). Loads are hard off when not in use.
@@ -742,7 +741,7 @@ To deliver mathematically verifiable, physical airgapped privacy for tactical op
   1. **NORMAL (Green Index):** all microphones and radio load switches operate under software power management.
   2. **MIC MUTE (Yellow Index, centre):** the bit clock is gated off, so the MEMS microphones cannot run. The radios remain operational.
   3. **FULL BLACKOUT (Red Index):** as MIC MUTE, plus the microphone supply, GNSS and CM5 Wi-Fi/BT are off.
-* **Fail-safe:** an open or broken switch reads as MIC MUTE (both nets pulled high): microphones off, radios on.
+* **Fail-safe, and its limit:** an open or broken switch reads as MIC MUTE (both nets pulled high): microphones off, radios on. FULL BLACKOUT needs pole B to make contact, so a failed pole B leaves the radios on and reads as MIC MUTE, indistinguishable from the centre position. The OS therefore shows radio power from the radios' own state, not only from the switch; a part whose blackout position is sensed positively (an on-on-on 3-pole switch behind a gasket) would close this (ADR-049).
 * **Sense lines (`PRIVACY_MUTE`, `PRIVACY_BLACKOUT_N`, always-on expander EXP 2 and EXP 7, `docs/PIN_BUDGET.md`):** the same two nets report the position (low/high NORMAL, high/high MIC MUTE, high/low FULL BLACKOUT), allowing the OS to display a permanent hardware padlock icon on the 10.3" E-Ink screen with zero CPU overhead.
 * **Parts still to choose at capture:** the single-channel bus switch in `MIC_BCLK` and the microphone supply switch.
 
@@ -796,8 +795,8 @@ recheck them, and `scripts/check_cost_and_power.py` (CI Phase 14) recomputes bot
 
 Two limits this makes explicit:
 
-1. **Harvested energy charges the pack, not the rails.** The STUSB4500/BQ25798 USB-C charge path and the TPS61088 (SMA
-   inputs) push energy into the battery; at peak the CM5 draw (TBD — verify against the CM5 datasheet) exceeds the 1.7–1.8 A
+1. **Harvested energy charges the pack, not the rails.** The STUSB4500/BQ25798 USB-C charge path (port 1, the only
+   input) pushes energy into the battery; at peak the CM5 draw (TBD — verify against the CM5 datasheet) exceeds the 1.7–1.8 A
    remaining budget. So "runs on sunlight" (true, via the pack) and "runs while charging from sunlight
    at full load" (false) are different claims.
 2. **No cell inherits an endurance claim.** The CSV 7.6 Wh cell is a placeholder, and every multi-day
@@ -947,7 +946,7 @@ To eliminate $25,000 in custom injection tooling risk and 6 months of bespoke ZM
   * **The Problem Solved:** Cantilevering a phone below the bottom bezel creates a 227mm lever arm that exhausts wrists.
   * **The Overlap Solution:** A 3D-printed SLS PA12 snap cradle clips the Clicks Communicator **over the front face of the lower bezel/screen**, suspended 1.0mm above the E-Ink glass with 0.5mm Poron foam cushioning.
   * **Ergonomics:** Hands grip the rigid lower chassis of SolarDeck. The tablet mass (`mass_g`) is cradled directly between your palms with **zero rotational wrist torque**, creating a balanced handheld terminal (like a Steam Deck or Nintendo DS).
-  * **Dual-Screen Hybrid:** Top 10.3" E-Ink runs Wayland terminal/code (shifted via `solardeck-chin-dock`); bottom 4.03" AMOLED runs live color Google Maps, telemetry widgets, and tactile QWERTY thumb keys. Wired 3cm flat U-cable bridges into USB-C Port 2 for sub-1ms typing and reverse charging (capped at `power_bank.otg_max_a`, ADR-035).
+  * **Dual-Screen Hybrid:** Top 10.3" E-Ink runs Wayland terminal/code (shifted via `solardeck-chin-dock`); bottom 4.03" AMOLED runs live color Google Maps, telemetry widgets, and tactile QWERTY thumb keys. Wired 3cm flat U-cable bridges into USB-C Port 2 for sub-1ms typing and reverse charging (capped at `usb.port2_current_limit_a`, ADR-049).
 
 
 ### 3.4 Phase 2 SnapDeck Footprint Preservation

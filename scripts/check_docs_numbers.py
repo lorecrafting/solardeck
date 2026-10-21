@@ -133,6 +133,20 @@ def check_numbers(path, text, err):
             err(f"{path}: '{n} registers' contradicts spec_values.telemetry.module_health_registers={SPEC['telemetry']['module_health_registers']}")
 
 
+def check_spec_keys(path, text, err):
+    """A backticked `key.sub` naming a spec_values section must resolve, so deleted keys cannot dangle."""
+    for m in re.finditer(r"`(?:spec_values\.)?([a-z0-9_]+(?:\.[a-z0-9_]+)+)`", text):
+        parts = m.group(1).split(".")
+        if parts[0] not in SPEC or parts[-1] in ("db", "json", "md", "py", "sh"):
+            continue
+        node = SPEC
+        for p in parts:
+            if not (isinstance(node, dict) and p in node):
+                err(f"{path}:{text[:m.start()].count(chr(10)) + 1}: `{m.group(1)}` is not a key in spec_values.json")
+                break
+            node = node[p]
+
+
 def check_links(path, text, err):
     for target in re.findall(r"\]\((?!https?:|#)([^)#]+)", text):
         resolved = os.path.normpath(os.path.join(os.path.dirname(os.path.join(ROOT, path)), target))
@@ -162,6 +176,7 @@ def main():
         if rel.startswith(HISTORICAL):
             continue
         check_numbers(rel, text, errors.append)
+        check_spec_keys(rel, text, errors.append)
         for pattern, why in BANNED:
             m = re.search(pattern, text)
             if m:

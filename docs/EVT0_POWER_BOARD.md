@@ -157,9 +157,9 @@ pulsed ≤ 100 µs) in `PACK+`:
 - OCC at 3–5 A caps the BQ25798 charge current (ICHG, §4) below 3 A.
 - The FETs' 52 A / 100 µs pulse rating is shorter than the SCD delay; confirm the SCD current and
   delay against the FET SOA before the pack is built (open item 17).
-- **Fuse (ADR-049):** Littelfuse 456 Nano2 family in `CELL_P`; its rating needs the pack's
-  short-circuit current, which the cell datasheet does not give (EEMB RFQ). Breaking capacity ≥ that
-  current. A Dexerials SFJ self-control protector would need a second protector (ABLIC S-8244 class)
+- **Fuse: open (item 20).** It sits in `CELL_P`; its rating must be below the FET and connector
+  ratings and its breaking capacity at least the pack's short-circuit current (not in the cell
+  datasheet; EEMB RFQ). The Littelfuse 456 Nano2 family starts at 20 A, too high. A Dexerials SFJ self-control protector would need a second protector (ABLIC S-8244 class)
   to fire its heater; the BQ2980 has no fuse output, so it is not used.
 
 ### 2.3 Pack board — BQ27Z561 gauge (WCSP-12) and pack connector
@@ -523,7 +523,7 @@ Formulas and where they come from. The cell is the EEMB LP7545135 (`battery.cell
 | Gauge data flash | pack gauge | Design Capacity, Design Voltage, Device Chemistry, Cell Low Voltage (bqStudio), and the charge-voltage parameter step 6a reads (open item 16) | SLUSCY0C §7.2.2.1 |
 | Gauge chemistry ID | pack gauge | the Li-ion ID that matches the chosen cell (bqCHEM in bqStudio) | SLUSCY0C §7.1, §7.2.2.1 |
 | R_SENSE | gauge sense | 1–3 mΩ and ≤ 100 mV / I_peak (coulomb counter range ±100 mV) | SLUSCY0C §6.4.2.1, §7.4.1 |
-| Pack fuse rating | pack, `CELL_P` | Littelfuse 456 Nano2 (§2.2): above `pack.peak_a` with derating, breaking capacity ≥ the pack's short-circuit current, fast enough to clear a short the protector fails to stop | 456 datasheet Rev GD; short-circuit current from EEMB (RFQ) |
+| Pack fuse rating | pack, `CELL_P` | above `pack.peak_a`, below the FET and connector ratings, breaking capacity ≥ the pack's short-circuit current, fast enough to clear a short the protector fails to stop (open item 20) | fuse datasheet; short-circuit current from EEMB (RFQ) |
 
 ---
 
@@ -647,9 +647,8 @@ Items closed by ADR-048 keep their numbers so references stay valid.
     (SLUSAH0G §7.5); the `SOLAR_ADC` divider waits for the strip part.
 12. **Closed in topology (ADR-048).** The harvester's thermal window is the hardware gate in §2.7.1;
     its parts are open item 18.
-13. **Closed (ADR-049).** 5 V boost is the TPS61022 (§2.6). Its output at the bottom of the pack's
-    range is thin against `pack.rail_5v_a` (modelled); measure at step 8, and if it falls short cap
-    port 2 or the CM5 load in firmware before choosing a bigger boost.
+13. **Part picked (ADR-049), capacity open.** The TPS61022 (§2.6) delivers about 3.9 A at VIN 3.0 V
+    (modelled), below `pack.rail_5v_a`; see item 20.
 14. **INA3221 shunts** need each rail's maximum current (§2.9).
 15. **`J_PACK` sixth pin and gauge INT.** ADR-048 allows 5–6 pins. This package uses the sixth for
     `NTC_GATE`, because the charger's TS bias (REGN) is off on battery alone without firmware (§2.3).
@@ -682,6 +681,17 @@ Items closed by ADR-048 keep their numbers so references stay valid.
     or external watchdog timer gating an open-drain pull-down on CE; part not chosen, no datasheet
     in hand). (a) alone is a firmware promise; (b) closes it in hardware.
     Bench: §7 step 5b.
+20. **Pack current path (found in review, ADR-049).** The parts do not yet agree on one current
+    limit. Modelled 5 V load (`pack.rail_5v_a`, CM5 + port 2, display supply not yet budgeted)
+    gives `pack.peak_a` at `battery.low_alarm_v`, under the DF63 contact's 18 AWG rating and the
+    CSD83325L's 8 A, but the same load at 3.0 V is about 7.8 A and at the protector's UVP about
+    9.4 A. The protector's OCD on the shared 1 mΩ sense trips only at 13–15 A, and a 20 A fuse would
+    not open, so a sustained 9–13 A fault is carried by 8 A parts. The TPS61022 also falls short of
+    `pack.rail_5v_a` near 3.0 V. Resolve together before the pack or carrier is built: firmware
+    sheds port 2 and shuts the CM5 down at `battery.low_alarm_v`; budget the display supply; pick
+    a sense resistor or protector variant whose OCD sits below the 8 A parts, and a fuse below them
+    too; use 18 AWG crimps or two contacts per power line; re-check the boost. Phase 14 checks only
+    the alarm-voltage case.
 
 ### 8.1 Existing docs contradicted by the datasheets (not edited here)
 

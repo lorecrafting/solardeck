@@ -946,8 +946,7 @@ plus contradictions in the privacy switch, the solar "zombie mode" and the USB-C
   port 2 limit (`pack.rail_5v_a`); `pack.peak_a` is that load at `battery.low_alarm_v`. Phase 14
   checks the cells (with `pack.discharge_margin`), the connector and the protector OVP against it.
 - **EVT-0 parts:** TPS61022 5 V boost (true output disconnect, closes open item 10; the TPS61088
-  is dropped); BQ298216 high-side protector + CSD83325L FETs; Littelfuse 456 Nano2 fuse (rating
-  with the pack's short-circuit current); TLV7042 + TPS22916CN harvester gate (the LM66100 cannot
+  is dropped); BQ298216 high-side protector + CSD83325L FETs; the pack fuse stays open (below); TLV7042 + TPS22916CN harvester gate (the LM66100 cannot
   gate: active-low CE against VIN and body-diode conduction when off); Hirose DF63 6-pin pack
   connector; NXP PCAL6416A GPIO expander at 0x20/0x21.
 - **Datasheet facts:** gauge 0x55 and RTC 0x52 confirmed. The pack check reads `ChargingVoltage()`,
@@ -976,6 +975,15 @@ plus contradictions in the privacy switch, the solar "zombie mode" and the USB-C
 - **Not done:** KiCad capture of EVT-0 (owner: not now; the capture spec is the input when the
   board is ordered). The placeholder schematic and production CSVs still list superseded parts
   (`hardware/production/NOT_FOR_FAB.md`); the first real capture replaces them (ADR-034).
+
+- **Found in review, left open (EVT-0 open item 20):** the pack current path does not yet agree on
+  one limit. Phase 14 checks the modelled load at the alarm voltage only; below it the same load
+  exceeds the 8 A FETs and connector, the protector's OCD (13–15 A) and any Nano2 fuse (≥ 20 A) would
+  not stop a 9–13 A fault, and the TPS61022 falls short near 3.0 V. The fuse is therefore unpriced.
+  The privacy switch's FULL BLACKOUT depends on pole B making contact; a failed pole B reads as
+  MIC MUTE (HARDWARE_SPEC §2.25).
+- **Phase 10** now fails on a backticked spec key that does not exist, and on the stale 510 g mass
+  and 142 × 90 envelope.
 
 **Delta.** BOM: 53 rows, 3 TBD (panel, controller, battery pack); total in `bom_total_low/high`.
 Stock risks: TPS63900, TPS61022 and RV-3028-C7 had no distributor stock on 2026-10-21 (Mouser

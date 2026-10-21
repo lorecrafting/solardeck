@@ -73,6 +73,8 @@ Hirose DF63 connector, screws, no adhesive (ADR-049). EEMB claims UN38.3 and IEC
 but publishes no report; pack-level reports are requested. LiFePO4 is V2. UN38.3 is the longest-lead
 gate in the programme (~$8–15 k, 6–10 weeks) and has no owner; a spare pack sold on its own needs it
 too. TI's gauge ships with a 4.4 V charge-voltage default, so pack programming is a safety step.
+The pack current path is still open (`docs/EVT0_POWER_BOARD.md` open item 20): the protector's OCD
+and any off-the-shelf pack fuse sit above the 8 A FET and connector ratings.
 **Attack:** does the chosen pack pass UN38.3 and IEC 62133-2, and does the screw-retained pack meet
 the EU Battery Regulation's user-replaceability requirement (applicability to confirm)? Which test
 house, which schedule, and what does a failed UN38.3 cost?

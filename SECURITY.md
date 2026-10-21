@@ -18,7 +18,7 @@ software, and what a buyer should not assume.
 
 | Control | Mechanism | Limits |
 | :--- | :--- | :--- |
-| Radio cutoff | FULL BLACKOUT on the single 3-position privacy switch (HARDWARE_SPEC §2.25) cuts the series enable net of the TPS22918 GNSS gate | The GNSS rail is cut; the CM5's on-module Wi-Fi/BT is held off by tying its `WL_nDisable`/`BT_nDisable` pins low (CM5 datasheet §2.1.1–2.1.2), not by a rail cut. Residual emissions are what gate G5 measures |
+| Radio cutoff | FULL BLACKOUT on the single 3-position privacy switch (HARDWARE_SPEC §2.25) holds the TPS22918 GNSS gate off. A pole-B contact that fails open leaves the radios on and reads as MIC MUTE (§2.25) | The GNSS rail is cut; the CM5's on-module Wi-Fi/BT is held off by tying its `WL_nDisable`/`BT_nDisable` pins low (CM5 datasheet §2.1.1–2.1.2), not by a rail cut. Residual emissions are what gate G5 measures |
 | Microphone cutoff | MIC MUTE gates off the mics' I²S bit clock (`MIC_BCLK`, `docs/PIN_BUDGET.md`) through a hardware gate driven by the switch, and pulls the mic side to GND; FULL BLACKOUT also cuts the mic supply. An open switch reads as MIC MUTE | In MIC MUTE the mic supply is not cut. Firmware cannot drive the gate, but the switch position is only as trustworthy as its contacts — "hard to defeat", not "impossible" |
 | Display bus isolation | Two TMUX1575 devices (fail-safe, $I_{\text{off}}$) present giga-ohm impedance when the CM5 rail is at 0 V | Isolation is per-line and switch-state dependent |
 | Airgap | Series disconnect of peripheral power gates, not an RF shield | Near-field coupling, thermal and acoustic side channels are outside the model |

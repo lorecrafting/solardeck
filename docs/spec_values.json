@@ -586,8 +586,8 @@
     "unpowered_months": 12,
     "drop_orientations": 26
   },
-  "bom_total_low": 531.68,
-  "bom_total_high": 533.68,
+  "bom_total_low": 524.76,
+  "bom_total_high": 526.76,
   "cm5": {
     "_comment": "CM5 pivot (ADR-031, 2026): V1 moves from CM4 8 GB/32 GB eMMC to CM5 16 GB/64 GB eMMC wireless (CM5116064 / SC1608). 16 GB DRAM is the LLM-resident assumption: the 1-3B local model tier runs in RAM without swap/heritage modes. eMMC 64 GB holds the base image, reader cache, and full offline corpus. Wireless variant carries the Wi-Fi/BT that CM4 needed a USB dongle for — one less peripheral spine. The BOM compute row is priced at price_usd; Phase 14 totals were re-derived on 2026-10-21.",
     "sku": "CM5116064",
@@ -756,8 +756,8 @@
     "protector_uvp_v": 2.5,
     "connector": "Hirose DF63, 6 positions, 3.96 mm",
     "connector_contact_a": 8.0,
-    "fuse": "Littelfuse 456 Nano2 family; rating TBD with the pack's short-circuit current (EEMB RFQ)",
-    "_comment": "ADR-049. boost_efficiency (modelled assumption). rail_5v_a (modelled) = cm5.supply_design_a + usb.port2_current_limit_a, the 5 V rail's worst case. peak_a (modelled) = rail_5v_a x 5 V / (boost_efficiency x battery.low_alarm_v): pack current at full 5 V load at the alarm voltage. discharge_margin (design rule): the cells' continuous rating must exceed peak_a by this factor. protector_* (datasheet): TI SLUSCS3L Rev L §4, BQ298216 OVP 4.300 V +/-25 mV, UVP 2.500 V. connector_contact_a (datasheet): Hirose DF63 catalog 5/2025 p.4, 8 A at 18 AWG, 6 positions. Phase 14 checks all four relations."
+    "fuse": "Littelfuse 456 Nano2 family considered; rating and part open (EVT-0 open item 20)",
+    "_comment": "ADR-049. boost_efficiency (modelled assumption). rail_5v_a (modelled) = cm5.supply_design_a + usb.port2_current_limit_a, the 5 V rail's worst case. peak_a (modelled) = rail_5v_a x 5 V / (boost_efficiency x battery.low_alarm_v): pack current at full 5 V load at the alarm voltage. discharge_margin (design rule): the cells' continuous rating must exceed peak_a by this factor. protector_* (datasheet): TI SLUSCS3L Rev L §4, BQ298216 OVP 4.300 V +/-25 mV, UVP 2.500 V. connector_contact_a (datasheet): Hirose DF63 catalog 5/2025 p.4, 8 A at 18 AWG, 6 positions. Phase 14 checks all four relations. LIMITS (EVT-0 open item 20): peak_a is evaluated at battery.low_alarm_v; below it, down to protector_uvp_v, the same load draws more, so firmware must shed port 2 and shut the CM5 down at the alarm. rail_5v_a omits the display supply. connector_contact_a is the 18 AWG rating."
   },
   "charger": {
     "part": "BQ25798",
