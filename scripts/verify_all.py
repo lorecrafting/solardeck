@@ -13,7 +13,7 @@ Every doc that mentions a phase count is checked against docs/spec_values.json b
   Phase  4: Host daemon contract tests (eink-refreshd, solardeck-telemetryd)
   Phase  5: OpenSCAD mechanical envelope
   Phase  6: SMT PCBA & centroid package integrity
-  Phase  7: Seeed Studio Fusion turnkey assets
+  Phase  7: Fabrication guard: no Gerbers or turnkey bundles until the PCB is routed (ADR-046)
   Phase  8: OS provisioning script (setup_solardeck_os.sh --test)
   Phase  9: Documentation presence and attribution (links are checked in Phase 10)
   Phase 10: Single source of truth (docs/spec_values.json) consistency
@@ -33,8 +33,8 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import time
-import zipfile
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.chdir(PROJECT_ROOT)
@@ -133,19 +133,30 @@ def verify_docs_present():
     return True
 
 
-def verify_seeed_turnkey():
+FAB_BUNDLE = re.compile(r"\.(zip|gbr|drl)$", re.I)
+
+
+def fab_guard_errors(prod):
+    """ADR-046: no fabrication bundle may exist while NOT_FOR_FAB.md does (the PCB is unrouted)."""
+    if not os.path.isfile(os.path.join(prod, "NOT_FOR_FAB.md")):
+        return ["hardware/production/NOT_FOR_FAB.md is missing; remove it only with real KiCad Gerbers"]
+    return [f"fab bundle {f} present while NOT_FOR_FAB.md stands" for f in sorted(os.listdir(prod))
+            if FAB_BUNDLE.search(f)]
+
+
+def verify_fab_guard():
     t0 = time.time()
-    print(f"▶ {Colors.BOLD}Phase 7: Seeed Studio Fusion turnkey assets...{Colors.END} ", end="", flush=True)
+    print(f"▶ {Colors.BOLD}Phase 7: Fabrication guard (no fab bundles until the PCB is routed)...{Colors.END} ",
+          end="", flush=True)
     prod = os.path.join(PROJECT_ROOT, "hardware", "production")
-    for f in ("solardeck_gerbers.zip", "seeed_fusion_bom.csv", "solardeck_chassis.stl",
-              "SEEED_FUSION_BOX_BUILD_INSTRUCTIONS.md"):
-        assert os.path.isfile(os.path.join(prod, f)), f"missing {f}"
-    with zipfile.ZipFile(os.path.join(prod, "solardeck_gerbers.zip")) as zf:
-        names = zf.namelist()
-        for r in ("solardeck-carrier-Edge.Cuts.gbr", "solardeck-carrier-F.Cu.gbr",
-                  "solardeck-carrier-B.Cu.gbr", "solardeck-carrier.drl"):
-            assert r in names, f"gerber zip missing {r}"
-    assert os.path.getsize(os.path.join(prod, "solardeck_chassis.stl")) > 1000, "empty STL"
+    errors = fab_guard_errors(prod)
+    with tempfile.TemporaryDirectory() as td:  # red control: a planted Gerber must be caught
+        open(os.path.join(td, "NOT_FOR_FAB.md"), "w").close()
+        open(os.path.join(td, "board-F.Cu.gbr"), "w").close()
+        assert fab_guard_errors(td), "fab guard missed a planted Gerber"
+    if errors:
+        print(f"{Colors.RED}[FAIL]{Colors.END} ({'; '.join(errors)})")
+        return False
     print(f"{Colors.GREEN}[PASS]{Colors.END} ({(time.time() - t0) * 1000:.1f}ms)")
     return True
 
@@ -177,7 +188,7 @@ PHASES = [
      lambda: run_step("Phase 5: OpenSCAD mechanical envelope", [sys.executable, "hardware/enclosure/verify_enclosure.py"])),
     ("SMT PCBA & centroid package integrity",
      lambda: run_step("Phase 6: SMT PCBA & centroid package", [sys.executable, "hardware/production/verify_manufacturing_package.py"])),
-    ("Seeed Studio Fusion turnkey assets", verify_seeed_turnkey),
+    ("Fabrication guard (no fab bundles until the PCB is routed)", verify_fab_guard),
     ("OS provisioning script",
      lambda: run_step("Phase 8: OS provisioning (setup_solardeck_os.sh --test)", ["bash", "tools/provision/setup_solardeck_os.sh", "--test"])),
     ("Documentation presence & attribution", verify_docs_present),

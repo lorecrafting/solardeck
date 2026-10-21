@@ -25,6 +25,9 @@ extern "C" {
 // spec_values.battery.charge_limit_v (Phase 14 checks it).
 #define SD_CHARGE_LIMIT_MV      3600
 
+// Low-battery alarm; must equal spec_values.battery.low_alarm_v (Phase 14 checks it).
+#define SD_LOW_BATT_ALARM_MV    2900
+
 // System States
 typedef enum {
     SOLAR_STATE_COLD_BOOT = 0,
@@ -44,7 +47,6 @@ typedef struct {
     uint16_t vbat_mv;          // Battery voltage (mV)
     uint16_t solar_voc_mv;     // Solar panel open-circuit voltage (mV)
     uint16_t solar_vmpp_mv;    // Target MPP voltage (approx 78% Voc)
-    uint32_t last_wake_elapsed_us; // Wake latency measurement
     uint16_t charger_vreg_mv;  // VREG read back from the charger; 0 until written (ADR-035)
 } solardeck_ctx_t;
 

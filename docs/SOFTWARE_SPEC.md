@@ -4,6 +4,7 @@ Written 2026-10-18 06:45 UTC in the Pi harness by antigravity/gemini-3.8-flash
 Revised 2026-10-21 15:55 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
 Revised 2026-10-21 16:46 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
 Revised 2026-10-21 17:22 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, ADR-044/045).
+Revised 2026-10-21 17:53 UTC in Claude Code by anthropic/claude-opus-5-5 (RTC chip, jack removed, ADR-046).
 
 Software architecture, operating system configuration, custom E-ink waveform drivers, power management daemons, and application workflows.
 
@@ -106,8 +107,8 @@ While the main CM5 is powered completely off (0.000W), the **RP2350 co-processor
    * Utilizes the onboard **8MB QSPI PSRAM** to double-buffer pre-rendered page images (page geometry TBD, ADR-032; `spec_values.reader.page_*`).
    * When reading books, the CM5 pre-renders pages into PSRAM and sleeps. The RP2350 handles page-turn taps and side-bezel touch gestures autonomously, updating the Kaleido 4 display controller (TBD, ADR-032) (flip time `spec_values.reader.page_flip_ms`, TBD) while the CM5 remains dead (**~4.5 mW total power**; battery life TBD until the cell is chosen, ADR-040).
 2. **Standalone LoRa Mesh Repeater:** Deferred to V2 (ADR-044); the V1 board reserves the footprint and pins (ADR-045, docs/PIN_BUDGET.md). V1 uses a paired Meshtastic node over BLE while Linux is up.
-3. **1-Second TCXO Clock Tick & Weather Barograph:**
-   * Receives a 1Hz square-wave hardware interrupt (`INT/SQW`) from the high-precision DS3231 TCXO RTC.
+3. **1-Second RTC Clock Tick & Weather Barograph:**
+   * Receives a 1Hz hardware interrupt (`INT`) from the RV-3028-C7-class RTC (ADR-046).
    * Updates time digits and samples the Bosch BMP390 barometer and TMP112 thermals every 60 seconds into a rolling 7-day circular buffer in PSRAM.
 4. **Motion & Pick-Up-To-Wake Interrupt:**
    * Configures the Bosch BMA400 accelerometer in 3.5 µA autonomous motion-detect mode, starting Linux (seconds, §3.1) upon pick-up or frame tap.
@@ -748,7 +749,7 @@ fi
 
 Governs the zero-battery supercapacitor cold-boot survival sequence:
 1. When supercapacitor reaches 3.3V, RP2350 executes emergency bootstrap from ROM.
-2. Ingests the last-valid fix from the u-blox MAX-M10S GNSS on its own UART (ADR-038) and the DS3231 timestamp from battery-backed NVRAM.
+2. Ingests the last-valid fix from the u-blox MAX-M10S GNSS on its own UART (ADR-038) and the RTC timestamp from the battery-backed RTC.
 3. Radio distress burst: V2 (ADR-044); V1 uses a paired Meshtastic node over BLE.
 4. Renders indelible high-contrast distress placard onto the 10.3" bi-stable screen before voltage drops below 2.0V.
 5. Once drawn, the distress message remains visible on the E-Ink display indefinitely with **0.000W battery consumption**.
@@ -787,7 +788,7 @@ When invoked via CLI or local agent tool call (`solardeck-diag --json`), the eng
    * Reads BQ25798 charge registers: fault flags (thermal shutdown, watchdog timer expiration, input overvoltage).
 2. **Co-Processor & Low-Power Bus Domain (RP2350B):**
    * Pings the RP2350 over SPI/UART with a 64-byte random challenge; verifies CRC-8 return checksum in $<10\text{ms}$.
-   * Queries 8MB PSRAM memory test pattern registers and checks DS3231/RV-3028 RTC synchronization drift ($|\Delta t| < 500\text{ms}$).
+   * Queries 8MB PSRAM memory test pattern registers and checks RV-3028-C7-class RTC synchronization drift ($|\Delta t| < 500\text{ms}$).
    * Reads 12-bit ADC raw voltages from the top-bezel IXYS micro-solar strip and supercapacitor rail.
 3. **Display & Waveform Controller Domain (Kaleido 4 display controller, TBD, ADR-032):**
    * Reads the controller's device info: validates panel geometry (against `spec_values.panel_sku.resolution_px`, TBD), engine firmware version, and Look-Up Table (LUT) integrity.
@@ -798,7 +799,7 @@ When invoked via CLI or local agent tool call (`solardeck-diag --json`), the eng
      * `0x60`: Bosch BMP390 Barometer (verifies chip ID `0x60`, pressure sanity $300\text{–}1100\text{ hPa}$).
      * `0x44`: Sensirion SHT40 Precision Humidity & Temperature (verifies RH sanity $0\text{–}100\%$, computes Dew Point $T_d$).
      * `0x12`: Bosch BMA400 Accelerometer (executes internal electrostatic self-test deflection).
-     * `0x68`: Maxim DS3231 RTC (reads oscillator stop flag `OSF`; checks battery backup coin-cell voltage).
+     * RV-3028-C7-class RTC (address per its datasheet, ADR-046; reads its oscillator/backup status flags; checks the MS621FE backup-cell voltage).
      * `0x5D` / `0x14`: Goodix Touch Controller (reads mutual-capacitance baseline calibration frame).
 5. **RF & Wireless Mesh Domain (u-blox MAX-M10S):**
    * **Cellular Modem:** V2 (ADR-034).
@@ -952,7 +953,7 @@ Leveraging the ultra-low-power Bosch BMA400 accelerometer running continuously a
 Maximizes solar harvesting efficiency from both the top-bezel micro-solar strip and external folding USB-C solar panels:
 
 ### 24.1 Sensor Fusion Pipeline
-* Combines astronomical ephemeris calculated from **DS3231 RTC UTC time** and **u-blox MAX-M10S GNSS coordinates** (RP2350 UART, ADR-038) with the **Bosch BMM350 3-axis magnetometer** (compass azimuth) and **BMI270/BMA400 accelerometer** (chassis pitch/roll angle).
+* Combines astronomical ephemeris calculated from **RTC UTC time** and **u-blox MAX-M10S GNSS coordinates** (RP2350 UART, ADR-038) with the **Bosch BMM350 3-axis magnetometer** (compass azimuth) and **BMI270/BMA400 accelerometer** (chassis pitch/roll angle).
 * Computes instantaneous true solar azimuth $\theta_{\text{sun}}$ and solar elevation angle $\alpha_{\text{sun}}$ with sub-degree accuracy.
 
 ### 24.2 Wayland & E-Ink Aiming HUD
@@ -1020,7 +1021,7 @@ A passive tactical near-field signal countermeasure tool designed to detect unau
 
 ### 27.2 E-Ink Tactical Signal Radar & Audio Tone
 * **Waterfall & Proximity Meter:** Renders an analog signal strength bar or 360° tactical sweep on the 10.3" E-Ink screen. As the operator approaches a hidden tracker concealed on a vehicle chassis or backpack, the signal indicator climbs.
-* **Autonomous Alerting:** Emits a subtle tactile vibration pulse or quiet headphone chirp when a moving BLE emitter maintains persistent proximity across $>300\text{ meters}$, warning the operator of potential physical trailing.
+* **Autonomous Alerting:** Emits a subtle tactile vibration pulse or quiet speaker chirp when a moving BLE emitter maintains persistent proximity across $>300\text{ meters}$, warning the operator of potential physical trailing.
 
 ---
 

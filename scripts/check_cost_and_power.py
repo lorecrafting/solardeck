@@ -114,6 +114,10 @@ def check_charger(err):
     m = re.search(r"#define\s+SD_CHARGE_LIMIT_MV\s+(\d+)", hdr)
     if not m or int(m.group(1)) != limit_mv:
         err(f"firmware SD_CHARGE_LIMIT_MV ({m.group(1) if m else 'missing'}) != battery.charge_limit_v ({limit_mv} mV)")
+    alarm_mv = round(b["low_alarm_v"] * 1000)
+    m = re.search(r"#define\s+SD_LOW_BATT_ALARM_MV\s+(\d+)", hdr)
+    if not m or int(m.group(1)) != alarm_mv:
+        err(f"firmware SD_LOW_BATT_ALARM_MV ({m.group(1) if m else 'missing'}) != battery.low_alarm_v ({alarm_mv} mV)")
     return c["part"], c["vreg_min_v"], c["vreg_max_v"], b["chemistry"], b["charge_limit_v"]
 
 

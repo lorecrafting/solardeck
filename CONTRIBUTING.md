@@ -3,6 +3,7 @@
 Written 2026-11-02 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-0731
 
 Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
+Revised 2026-10-21 17:52 UTC in Claude Code by anthropic/claude-opus-5-5 (owner decisions, ADR-046).
 
 SolarDeck is open hardware: a sunlight-readable 10.3″ colour E-Ink mobile workstation running
 mainline, bare-metal Linux. Contributions are welcome from hardware engineers, embedded C
@@ -45,10 +46,9 @@ restates numbers.
    Anything unlabelled is assumed aspirational.
 5. **Delete superseded text.** Do not leave "descoped" text next to its own full specification.
    Move the reasoning to `docs/90-history/decisions.md` as an ADR and delete the stale section.
-6. **Generated files, generated correctly.** Netlists, Gerbers, BOM exports, bundles,
-   `docs/INDEX.md`, `docs/STATUS.md` are generated. Regenerate from source in the same commit
-   (`python3 scripts/gen_status.py` after doc changes; `python3 hardware/export_production_zip.py`
-   after schematic changes). Never hand-edit them.
+6. **Generated files, generated correctly.** Netlists, BOM exports and `docs/STATUS.md` are
+   generated. Regenerate from source in the same commit (`python3 scripts/gen_status.py` after doc
+   changes). Never hand-edit them. No Gerbers or fab bundles until the PCB is routed (ADR-046).
 
 ## Categories of contribution
 

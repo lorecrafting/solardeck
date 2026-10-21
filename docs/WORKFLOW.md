@@ -1,6 +1,7 @@
 # WORKFLOW.md — How SolarDeck Changes Actually Happen
 
 Written 2026-10-20 05:05 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017
+Revised 2026-10-21 17:52 UTC in Claude Code by anthropic/claude-opus-5-5 (owner decisions, ADR-046).
 
 This is the operating procedure for humans and agents working in this repo. `AGENTS.md` is the short
 version that points here. The rules below were written *after* the 2026-10-20 audit, and each one
@@ -67,7 +68,7 @@ class: C2 beats C1, C3 beats C4.
 ```
 INTENT ──► DECISION ──► CLAIM ──► ARTIFACT ──► VERIFICATION ──► LEDGER
    │           │           │          │              │             │
-   └─ blocked ─┴─ ADR ─────┴─ JSON ───┴─ source ─────┴─ phase ─────┴─ INDEX/HANDOFF
+   └─ blocked ─┴─ ADR ─────┴─ JSON ───┴─ source ─────┴─ phase ─────┴─ REVIEW/AUDIT
 ```
 
 ### 3.1 INTENT — say what and why, in one paragraph
@@ -110,8 +111,7 @@ regenerated from source in the same commit; never hand-edited; never the only co
 - **The banner is load-bearing:** "internally consistent — NOT a design sign-off" means exactly that.
   Never quote a green run as evidence a board works.
 
-### 3.6 LEDGER — INDEX, HANDOFF, CHANGELOG
-- `docs/INDEX.md` is generated; do not hand-edit rows.
+### 3.6 LEDGER — REVIEW PACKET, AUDIT, CHANGELOG
 - `docs/REVIEW_PACKET.md` and the latest `docs/AUDIT_*` are the reviewer's entry point; update them at each stable checkpoint.
 - `CHANGELOG.md` for behaviour changes, not for doc churn.
 - **Exit:** the next contributor can start from `docs/README.md` and not need the previous chat.
@@ -186,7 +186,7 @@ becomes debt the moment a number appears without its source.
 ### Never
 - Invent a measurement, dimension, or datasheet value.
 - Close a blocker without an artifact or a phase that fails when the blocker returns.
-- Hand-edit a generated file (netlist, gerber, BOM export, bundle, INDEX).
+- Hand-edit a generated file (netlist, BOM export, STATUS).
 - Restate a number that already lives in `spec_values.json`.
 - Leave "descoped" prose next to the full spec of the descoped thing.
 - Bypass a failing phase by lowering its threshold — raise the artifact or downgrade the claim.
@@ -208,8 +208,8 @@ becomes debt the moment a number appears without its source.
 
 | When | What | Output |
 | :--- | :--- | :--- |
-| Every commit | `verify_all.py`, Phase 9/10 green | green run |
-| Every stable checkpoint | HANDOFF rewrite + INDEX regen | committed handoff |
+| Every push | `verify_all.py`, all phases green, run locally (pre-push hook; no hosted CI, ADR-046) | green run |
+| Every stable checkpoint | REVIEW_PACKET + latest AUDIT updated | committed packet |
 | Every release | full every phase + bundle diff review | release notes |
 | Every quarter, or after 3 surprise findings | **audit pass** in the shape of `AUDIT_2026-10-20.md`: what is measured vs modelled vs aspirational, what artifact is missing, what claim is unsupported | audit doc + fix plan |
 | Any descope | ADR | decision log entry |

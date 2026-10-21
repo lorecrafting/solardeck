@@ -1,6 +1,7 @@
 # SolarDeck Documentation — Read This First
 
 Written 2026-10-20 04:13 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017
+Revised 2026-10-21 17:52 UTC in Claude Code by anthropic/claude-opus-5-5 (owner decisions, ADR-046).
 
 ## Read in this order
 
@@ -16,7 +17,7 @@ Written 2026-10-20 04:13 UTC in the Pi harness by openrouter/deepseek/deepseek-v
 | 7 | `FIRMWARE_INTERFACE.md` | The CM5 <-> RP2350 register contract (header is canonical) |
 | 7b | `PIN_BUDGET.md` | Every CM5 and RP2350 pin, V1 uses and V2 reservations (ADR-045; Phase 15 checks it) |
 | 8 | `MECHANICAL_FIT_AND_ENCLOSURE_WORKFLOW.md` | XY/Z budgets, tolerances, the enclosure |
-| 9 | `BOM_COST_ESTIMATE.md` | $481.75-$483.75 across 53 line items, before 8 TBD parts (panel, controller, cell, charger, gauge, protector, GNSS, GPIO expander); a floor — AUDIT 6 H22 |
+| 9 | `BOM_COST_ESTIMATE.md` | $479.10-$481.10 across 52 line items, before 11 TBD parts (panel, controller, cell, charger, gauge, protector, GNSS, GPIO expander, RTC, co-processor flash, privacy switch); a floor — AUDIT 6 H22 |
 | 10 | `REGULATORY.md` | Certification matrix — **no certificate, no ship** |
 | 11 | `USB_ROBUSTNESS.md` | Every USB-C failure mode and the rules that close them (gate G11) |
 | 12 | `LONGEVITY_30Y.md` | 30-year failure budget, service kit, maintenance schedule, gates G7-G10 |
@@ -31,7 +32,6 @@ Written 2026-10-20 04:13 UTC in the Pi harness by openrouter/deepseek/deepseek-v
 | 21 | `DECK_BUILDER_LAYOUT.md` | Who can build what: snap-in vs soldered vs fab |
 | 22 | `REVIEW_PACKET.md` | What to ask an external reviewer, and in what order |
 | 23 | `90-history/decisions.md` | Why things were chosen or dropped (the ADR log) |
-| — | `INDEX.md` | Cross-reference table: claim → file § (hand-maintained; stale — AUDIT 6 §4) |
 | — | `90-history/HANDOFF_TO_FABLE_2026-10-19.md` | The 2026-10-19 reviewer checklist, kept as history (ADR-043) |
 | — | `AUDIT_2026-10-20.md`, `AUDIT_2026-10-20_3.md`, `AUDIT_4_2026-10-20.md`, `AUDIT_5_2026-10-20.md` | Earlier audits (repo checked against itself). Historical; AUDIT 6 §5 corrects three of their verdicts. |
 

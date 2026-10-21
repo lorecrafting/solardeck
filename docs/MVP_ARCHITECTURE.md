@@ -4,6 +4,7 @@ Written 2026-10-18 17:35 UTC in the Pi harness by antigravity/gemini-3.8-flash
 Revised 2026-10-21 15:59 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
 Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
 Revised 2026-10-21 17:22 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, ADR-044/045).
+Revised 2026-10-21 17:53 UTC in Claude Code by anthropic/claude-opus-5-5 (RTC chip, jack removed, ADR-046).
 
 ---
 
@@ -20,7 +21,7 @@ SolarDeck is a sovereign, general-purpose open-hardware computing platform desig
    * Standalone GNSS: **u-blox MAX-M10S** on an RP2350 UART behind a load switch, passive antenna at the top edge; tracking power `spec_values.gnss.tracking_mw` (ADR-038)
    * Dual-brain ultra-low-power supervisor (RP2350B + 8MB PSRAM) with **2× TI TMUX1575 (4-channel each, 8 total) display bus isolation** for 4.5 mW 30ms Zen reading and desk clock modes
    * Rear camera: deferred to V2 (ADR-034)
-   * **Core Internal Tactical Sensor Cluster:** High-precision DS3231 RTC, Bosch BMI270 + BMM350 9-DOF IMU (compass & Stellarium), Bosch BMP390 Barometer (10cm altimeter & weather storm barograph), VEML7700 / Solar ADC ambient light sensor
+   * **Core Internal Tactical Sensor Cluster:** RV-3028-C7-class RTC (ADR-046), Bosch BMI270 + BMM350 9-DOF IMU (compass & Stellarium), Bosch BMP390 Barometer (10cm altimeter & weather storm barograph), VEML7700 / Solar ADC ambient light sensor
    * **Voice (ADR-036):** two MEMS mics, speaker with echo-cancel reference, hardware mute, and a hold-to-talk voice button (RP2350 captures into PSRAM at press while the CM5 boots)
    * **Haptics (ADR-037):** DRV2605L + frame-mounted LRA; every keystroke fires a tap and optional typewriter sound at key-down
    * LiFePO4 battery, capacity TBD until the cell is chosen (ADR-040) (airline-compliant <100Wh)
@@ -44,7 +45,7 @@ SolarDeck is a sovereign, general-purpose open-hardware computing platform desig
 │ 7. MESH/GNSS: BLE Meshtastic node (LoRa V2, ADR-044) + MAX-M10S (ADR-038)   │
 │ 8. NFC:       Deferred to V2 (ADR-034)                                      │
 │ 9. ANTENNAS:  passive GNSS (top edge); LoRa SMA boss plugged (V2, ADR-045)  │
-│ 10. SENSORS:  DS3231 RTC + BMI270/BMM350 9-DOF IMU + BMP390 Baro            │
+│ 10. SENSORS:  RV-3028-C7 RTC + BMI270/BMM350 9-DOF IMU + BMP390 Baro        │
 │ 11. AIRGAP SW: Physical Hardware RF Kill Switch (Zero EMF / 0.000 dBm Cutoff)│
 │ 12. VOICE:    2 MEMS Mics + Speaker (AEC ref) + Mute SW + Voice Button      │
 │ 13. BATTERY:  LiFePO4 1S, capacity TBD until the cell is chosen (ADR-040)   │
@@ -97,13 +98,10 @@ The tier draws below are the modelled loads; runtimes are re-derived from the ch
 
 V1 connectivity is Wi-Fi/BT on the CM5 plus phone tethering (ADR-034).
 
-### 3.1 Cellular Modem, SIM/eSIM, NFC & Audio Jack
+### 3.1 Cellular Modem, SIM/eSIM, NFC & Headphone Jack
 * **Cellular modem, nano-SIM tray and soldered eSIM:** Deferred to V2 (ADR-034); the V2 requirement is a consumer SGP.22 eUICC (ADR-033).
 * **NFC:** Deferred to V2 (ADR-034).
-* **Bottom-Edge 3.5mm TRRS Audio Jack:**
-  * IP67 sealed 3.5mm jack with TI PCM5102A 32-bit I2S stereo DAC + mic input.
-  * Mechanical switch automatically mutes the internal 1W speaker upon headphone insertion.
-  * Allows private, zero-EMF, zero-latency listening to AI speech synthesis, audiobooks, and radio decoding even in 100% Hardware Airgap Mode.
+* **3.5 mm headphone jack:** Removed from V1 (ADR-046): use USB-C or Bluetooth audio; one less aperture for the IP54 target.
 
 ### 3.2 Antenna Architecture & Reception Optimization
 1. **LoRa Mesh:** Deferred to V2 (ADR-044); the V1 board reserves the footprint and pins (ADR-045, docs/PIN_BUDGET.md). V1 mesh is a paired external Meshtastic node over Bluetooth LE.
@@ -169,7 +167,7 @@ To enable clean voice interaction with Claude Code and dictation:
    * Two I2S digital MEMS microphones (Knowles **SPH0645LM4H-B** or InvenSense `ICS-43434`), with the speaker output looped back as the echo-cancel reference for barge-in.
    * Mounted inside molded silicone acoustic boots to decouple chassis vibrations.
    * **Voice button:** hold-to-talk is always available and costs nothing in standby; the RP2350 starts capturing into PSRAM at press while the CM5 boots, so no words are lost. A hands-free wake word is opt-in, with its measured battery cost shown.
-3. **Physical Privacy:** Hardware slide switch physically disconnects VDD power to the microphones.
+3. **Physical Privacy:** The single 3-position privacy switch (normal / mic mute / full blackout, HARDWARE_SPEC §2.25) cuts the microphones in hardware.
 
 ---
 

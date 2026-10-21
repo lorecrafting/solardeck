@@ -7,6 +7,7 @@ Revised 2026-10-21 16:03 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / 
 Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
 
 Revised 2026-10-21 17:23 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, pin budget; ADR-044/045).
+Revised 2026-10-21 17:52 UTC in Claude Code by anthropic/claude-opus-5-5 (owner decisions, ADR-046).
 
 **Read `docs/WORKFLOW.md` before your first change.** It is the operating procedure: claim tags,
 change classes, the intent→ledger lifecycle, the 13 non-negotiables from the audit, and the
@@ -50,7 +51,7 @@ Fabrication status is **not** implied by a green CI run. See `docs/AUDIT_6_2026-
 │   ├── spec_values.json       # Single source of truth for every quantitative claim
 │   ├── AUDIT_6_2026-10-21.md  # Latest audit: what is measured/modelled/aspirational, and what is broken
 │   ├── AUDIT_2026-10-20.md    # Earlier audit (historical)
-│   ├── INDEX.md               # Generated cross-reference table
+│   ├── PIN_BUDGET.md          # Every CM5/RP2350 pin, V1 and V2 (ADR-045)
 │   ├── MVP_ARCHITECTURE.md    # Dual-brain split, power tiers, state transitions
 │   ├── HARDWARE_SPEC.md       # Carrier board, buses, pinouts, RF, power
 │   ├── SOFTWARE_SPEC.md       # Kernel, E-Ink pipeline, power profiles, daemons
@@ -63,9 +64,9 @@ Fabrication status is **not** implied by a green CI run. See `docs/AUDIT_6_2026-
 │   ├── REVIEW_PACKET.md       # Reviewer checklist before any purchase
 │   └── 90-history/decisions.md             # ADR-001…019, why things were dropped
 ├── hardware/                  # KiCad 8 (partial capture), netlist, trap audits
-│   ├── verify_schematics.py, audit_hardware_traps.py, export_production_zip.py
+│   ├── verify_schematics.py, audit_hardware_traps.py
 │   ├── enclosure/             # solardeck_chassis.scad + verify_enclosure.py
-│   └── production/            # generated bundles + verify_manufacturing_package.py
+│   └── production/            # NOT_FOR_FAB placeholder CSVs + verify_manufacturing_package.py
 ├── firmware/rp2350/           # Bare-metal C (Pico SDK): state machine, ADC, RTC, wake
 ├── src/daemons/, src/dts/     # eink-refreshd, telemetryd, device-tree overlay
 ├── config/                    # sway, waybar, foot, mako, gammastep
@@ -97,12 +98,12 @@ supply that class's evidence. Non-trivial logic ships with one runnable `assert`
 ladder: YAGNI → reuse → stdlib → native platform → existing dependency → one line → minimum code.
 
 ### 3.5 Verification
-`python3 scripts/verify_all.py` before every push. Green means *internally consistent*, never
+`python3 scripts/verify_all.py` before every push; there is no hosted CI (ADR-046), and `git config core.hooksPath .githooks` makes the pre-push hook run it for you. Green means *internally consistent*, never
 design-approved. If the suite cannot catch your change, the assertion you add is part of the change.
 Never lower a threshold to pass; raise the artifact or downgrade the claim.
 
 ### 3.6 Generated files
-Netlists, gerbers, BOM exports, bundles, `docs/INDEX.md` and BOM tables are generated. Regenerate from
+Netlists, BOM exports, `docs/STATUS.md` and BOM tables are generated. Regenerate from
 source in the same commit. Never hand-edit them.
 
 ### 3.7 Self-review

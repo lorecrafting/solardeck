@@ -4,6 +4,7 @@ Written 2026-10-19 12:12 UTC in the Pi harness by antigravity/gemini-3.8-flash
 Revised 2026-10-21 15:59 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
 Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
 Revised 2026-10-21 17:22 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, ADR-044/045).
+Revised 2026-10-21 17:53 UTC in Claude Code by anthropic/claude-opus-5-5 (RTC chip, jack removed, ADR-046).
 
 Detailed architectural specification for campervan energy bus integration, enhanced sensor navigation (RTK, celestial plate-solving, 9-DOF IMU), grid-down doomsday survival hardware, frontlight optical engineering, and offline AI knowledgebase traversal.
 
@@ -310,7 +311,7 @@ The following custom software utilities and daemons leverage SolarDeck's bi-stab
    * Utilizes the 65 mm Knowles dual-MEMS microphone array to compute the Time Difference of Arrival (TDoA) of sudden sharp transients (gunshots, distant engine revs, whistles, shouting).
    * Renders a 360-degree tactical compass HUD with an arrow pointing toward the bearing of the sound source.
 5. **`solardeck-sundial` (Optical Solar Heading & Astronomical Compass):**
-   * Samples micro-solar strip voltage via the RP2350 12-bit ADC alongside MAX-M10S GNSS coordinates and DS3231 TCXO time.
+   * Samples micro-solar strip voltage via the RP2350 12-bit ADC alongside MAX-M10S GNSS coordinates and RTC time.
    * Rotating the tablet until the micro-solar strip reaches peak voltage calculates **True Geographic North** geometrically from the sun's position, completely immune to magnetic vehicle distortion.
 6. **`solardeck-survey` (BLE Laser Distance Room Sketcher & Clinometer):**
    * Connects via BLE to laser distance measurers (Bosch GLM, Leica DISTO) to automatically sketch real-time floor plans with Wacom EMR in CAD/SVG.
@@ -343,6 +344,6 @@ The following custom software utilities and daemons leverage SolarDeck's bi-stab
     * Displays the 6-digit code on the zero-power e-ink screen where it can be read without casting a glow in dark rooms.
 15. **`solardeck-drone` (Microclimate Generative Ambient Sound Synthesizer):**
     * Runs a lightweight Pure Data (Pd) or SuperCollider sound engine.
-    * Maps barometric pressure drops and solar cloud shadow variations into soothing, real-time generative ambient soundscapes through the micro-speaker or 3.5mm jack.
+    * Maps barometric pressure drops and solar cloud shadow variations into soothing, real-time generative ambient soundscapes through the micro-speaker.
 16. **`solardeck-bioacoustics` (Ultrasonic Bat & Pest Spectrogram Detector):**
     * Samples high-frequency acoustic data from the Knowles MEMS array up to 48–96 kHz to heterodyne and visualize bat echolocation and pest activity on an e-paper spectrogram.
