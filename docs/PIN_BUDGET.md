@@ -2,6 +2,7 @@
 
 Written 2026-10-21 17:20 UTC in Claude Code by anthropic/claude-opus-5-5 (ADR-044, ADR-045).
 Revised 2026-10-21 17:26 UTC in Claude Code by anthropic/claude-opus-5-5 (checked against the V1 BOM; always-on GPIO expander).
+Revised 2026-10-21 17:52 UTC in Claude Code by anthropic/claude-opus-5-5 (owner decisions, ADR-046).
 
 Every signal on both processors is assigned before schematic capture, so V1 can be drawn once and V2
 fits without a re-spin of the pinout (ADR-045). **The data is `spec_values.pins`; this page is the
@@ -64,7 +65,7 @@ field update path yet (FIRMWARE_INTERFACE §6).
 
 | GPIO | Net | Function | Scope | Isolation | Purpose |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| RP2350 0 | `PSRAM_CS` | qmi_cs1 | V1 |  | 8 MB PSRAM chip select (QMI CS1n exists only on GPIO 0/8/19/47) |
+| RP2350 0 | `PSRAM_CS` | qmi_cs1 | V1 |  | 8 MB PSRAM chip select (QMI CS1n exists only on GPIO 0/8/19/47); the flash uses the dedicated QSPI pins |
 | RP2350 1 | `LORA_NSS` | sio | V2 |  | SX1262 chip select on the shared RP-side SPI0 bus |
 | RP2350 2 | `EPDC_HRDY_RP` | sio | V1 | tmux | display controller ready, RP2350 side of the TMUX |
 | RP2350 3 | `EPDC_RST_RP` | sio | V1 | tmux | display controller reset, RP2350 side |
@@ -88,7 +89,7 @@ field update path yet (FIRMWARE_INTERFACE §6).
 | RP2350 21 | `GNSS_UART_RX` | uart1_rx | V1 |  | from MAX-M10S TXD (UART1) |
 | RP2350 22 | `LORA_BUSY` | sio | V2 |  | SX1262 busy |
 | RP2350 23 | `GNSS_PPS` | sio | V1 |  | GNSS time pulse, disciplines the RTC |
-| RP2350 24 | `I2C_AON_SDA` | i2c0_sda | V1 |  | always-on I²C: charger, gauge, expander, sensors, CC controller |
+| RP2350 24 | `I2C_AON_SDA` | i2c0_sda | V1 |  | always-on I²C: charger, gauge, expander, RTC, sensors, CC controller |
 | RP2350 25 | `I2C_AON_SCL` | i2c0_scl | V1 |  | always-on I²C clock |
 | RP2350 26 | `MIC_BCLK` | pio | V1 |  | PIO I²S clock to both SPH0645 mics |
 | RP2350 27 | `MIC_WS` | pio | V1 |  | PIO I²S word select (L/R mic) |
@@ -129,7 +130,6 @@ pull resistor that holds the load off until firmware drives it.
 | EXP 4 | `GAUGE_INT` | gpio | V1 |  | BQ27Z561-R2 alert |
 | EXP 5 | `IMU_INT` | gpio | V1 |  | BMA400 motion interrupt (wake on pick-up) |
 | EXP 6 | `CC_INT_N` | gpio | V1 |  | TUSB320 port 1 CC interrupt |
-| EXP 7 | `HP_DET` | gpio | V1 |  | headphone jack detect (the jack also mutes the amp in hardware) |
 | EXP 8 | `SENSOR_ALERT_N` | gpio | V1 |  | wired-OR TMP112 / INA3221 alerts |
 | EXP 9 | `LORA_NRESET` | gpio | V2 |  | SX1262 reset |
 | EXP 10 | `LORA_PWR_EN` | gpio | V2 |  | LoRa load switch |
@@ -162,7 +162,7 @@ pull resistor that holds the load off until firmware drives it.
 | CM5 18 | `AUD_LINK_BCLK` | i2s1_sclk | V1 |  | I2S1, the CM5's clock-target I²S, clocked by the RP2350 (I2S0 is master-only) |
 | CM5 19 | `AUD_LINK_WS` | i2s1_ws | V1 |  |  |
 | CM5 20 | `AUD_LINK_SD` | i2s1_sdi | V1 |  | mic audio from the RP2350 |
-| CM5 21 | `SPK_SDO` | i2s1_sdo | V1 |  | audio out to the MAX98357A speaker amp and the PCM5102A headphone DAC, both on the link clocks |
+| CM5 21 | `SPK_SDO` | i2s1_sdo | V1 |  | audio out to the MAX98357A speaker amp, on the link clocks |
 | CM5 22 | `TOUCH_INT` | gpio | V1 |  | capacitive touch interrupt |
 | CM5 23 | `TOUCH_RST` | gpio | V1 |  | touch reset |
 | CM5 24 | `PEN_INT` | gpio | V1 |  | Wacom EMR interrupt |
@@ -173,19 +173,18 @@ pull resistor that holds the load off until firmware drives it.
 ## 6. What the budget shows
 
 - **V1 does not fit on the RP2350 without the expander.** Checked against every signal-bearing part in
-  the V1 BOM (5-way rocker, lux ADC, motion sensor, CC controller, headphone detect, frontlight) and
+  the V1 BOM (5-way rocker, lux ADC, motion sensor, CC controller, frontlight) and
   the HARDWARE_SPEC notification LED and piezo, V1 needs more lines than the RP2350B has. With the
   expander V1 fits, and V2 LoRa and the LTE modem's control take the rest: the RP2350's own pins are
   then full and the expander has a few lines spare (the Scope column is the count).
 - **The CM5 is full in V1.** All 28 GPIO are assigned; GPIO 0/1 are the only spares. The audio link is
   what makes this fit: the RP2350 owns the microphones and is the audio clock master, so the speaker
-  amp, the headphone DAC and the mic stream share the CM5's I2S1, its clock-target I²S (I2S0 is master-only).
+  amp and the mic stream share the CM5's I2S1, its clock-target I²S (I2S0 is master-only).
 - **The TMUX carries the display lines only:** SPI clock, data in, data out, chip select, ready and
   reset, within `pins.tmux_channels`.
 - **USB decides the V2 modem's port.** The modem needs a USB 2.0 pair; USB 3.0 port 1 is the only one
   left once port 1 (OTG, re-flash) and port 2 (host) are assigned. This is why the mic stream uses I²S
-  rather than USB audio. **This is an assumption, not an owner decision:** the budget assumes ADR-036
-  option (a) over I²S because no CM5 USB port is free; the owner confirms it before capture.
+  rather than USB audio (owner decision, ADR-046).
 
 ## 7. Assumptions to check at capture
 
@@ -195,10 +194,7 @@ pull resistor that holds the load off until firmware drives it.
   RF switch and frees GPIO 45 and 47.
 - SPI3 on CM5 GPIO 4–7 needs its device-tree overlay confirmed on the CM5 at bring-up.
 - GNSS PPS on GPIO 23 assumes the MAX-M10S `TIMEPULSE` output is used.
-- The 32.768 kHz crystal (BOM "RTC 32kHz Crystal") needs an oscillator to reach the RP2350: its clock
-  input (GPIN) exists only on GPIO 12, 14, 20 and 22, all assigned. Decide at capture between an RTC
-  oscillator part feeding one of them (moving that signal to the expander) and the RP2350's internal
-  low-power oscillator disciplined by GNSS PPS.
-- The DNP quad piezo haptic array (ADR-020) is not budgeted; fitting it needs its own driver on I²C.
-- The TRRS jack's headset microphone has no input in the budget. Either it is dropped (output-only
-  jack) or it needs an ADC or codec input; decide with the headphone DAC choice.
+
+Resolved by ADR-046: timekeeping is an I²C RTC chip on the always-on bus (no clock-input pin needed);
+the headphone jack and DAC are out of V1; the quad piezo array stays off the board; the RP2350B's
+firmware flash sits on its dedicated QSPI pins.

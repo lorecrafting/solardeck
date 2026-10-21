@@ -13,7 +13,7 @@ Every doc that mentions a phase count is checked against docs/spec_values.json b
   Phase  4: Host daemon contract tests (eink-refreshd, solardeck-telemetryd)
   Phase  5: OpenSCAD mechanical envelope
   Phase  6: SMT PCBA & centroid package integrity
-  Phase  7: Seeed Studio Fusion turnkey assets
+  Phase  7: Fabrication guard: no Gerbers or turnkey bundles until the PCB is routed (ADR-046)
   Phase  8: OS provisioning script (setup_solardeck_os.sh --test)
   Phase  9: Documentation presence and attribution (links are checked in Phase 10)
   Phase 10: Single source of truth (docs/spec_values.json) consistency
@@ -25,7 +25,7 @@ Every doc that mentions a phase count is checked against docs/spec_values.json b
   Phase 16: Reliability model, obsolescence policy, design-for-test
 
 NOTE: a green run means "the artifacts are internally consistent". It does NOT mean the design is
-fabricable -- the schematic is still a partial capture and the production bundles are placeholders.
+fabricable -- the schematic is still a partial capture and there are no fabrication files (ADR-046).
 See docs/AUDIT_6_2026-10-21.md.
 """
 
@@ -33,8 +33,8 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import time
-import zipfile
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.chdir(PROJECT_ROOT)
@@ -133,19 +133,32 @@ def verify_docs_present():
     return True
 
 
-def verify_seeed_turnkey():
+# KiCad/Protel Gerber, drill, bundle and print extensions.
+FAB_BUNDLE = re.compile(r"\.(zip|gbr|drl|xln|g[tb][losp]|gko|gm\d+|g\d+|stl|step|stp)$", re.I)
+
+
+def fab_guard_errors(prod):
+    """ADR-046: no fabrication bundle may exist while NOT_FOR_FAB.md does (the PCB is unrouted)."""
+    if not os.path.isfile(os.path.join(prod, "NOT_FOR_FAB.md")):
+        return ["hardware/production/NOT_FOR_FAB.md is missing; remove it only with real KiCad Gerbers"]
+    return [f"fab bundle {os.path.relpath(os.path.join(d, f), prod)} present while NOT_FOR_FAB.md stands"
+            for d, _, files in os.walk(prod) for f in sorted(files) if FAB_BUNDLE.search(f)]
+
+
+def verify_fab_guard():
     t0 = time.time()
-    print(f"▶ {Colors.BOLD}Phase 7: Seeed Studio Fusion turnkey assets...{Colors.END} ", end="", flush=True)
+    print(f"▶ {Colors.BOLD}Phase 7: Fabrication guard (no fab bundles until the PCB is routed)...{Colors.END} ",
+          end="", flush=True)
     prod = os.path.join(PROJECT_ROOT, "hardware", "production")
-    for f in ("solardeck_gerbers.zip", "seeed_fusion_bom.csv", "solardeck_chassis.stl",
-              "SEEED_FUSION_BOX_BUILD_INSTRUCTIONS.md"):
-        assert os.path.isfile(os.path.join(prod, f)), f"missing {f}"
-    with zipfile.ZipFile(os.path.join(prod, "solardeck_gerbers.zip")) as zf:
-        names = zf.namelist()
-        for r in ("solardeck-carrier-Edge.Cuts.gbr", "solardeck-carrier-F.Cu.gbr",
-                  "solardeck-carrier-B.Cu.gbr", "solardeck-carrier.drl"):
-            assert r in names, f"gerber zip missing {r}"
-    assert os.path.getsize(os.path.join(prod, "solardeck_chassis.stl")) > 1000, "empty STL"
+    errors = fab_guard_errors(prod)
+    with tempfile.TemporaryDirectory() as td:  # red control: a planted Gerber must be caught
+        open(os.path.join(td, "NOT_FOR_FAB.md"), "w").close()
+        os.mkdir(os.path.join(td, "gerbers"))
+        open(os.path.join(td, "gerbers", "board.gtl"), "w").close()
+        assert fab_guard_errors(td), "fab guard missed a planted Gerber"
+    if errors:
+        print(f"{Colors.RED}[FAIL]{Colors.END} ({'; '.join(errors)})")
+        return False
     print(f"{Colors.GREEN}[PASS]{Colors.END} ({(time.time() - t0) * 1000:.1f}ms)")
     return True
 
@@ -177,7 +190,7 @@ PHASES = [
      lambda: run_step("Phase 5: OpenSCAD mechanical envelope", [sys.executable, "hardware/enclosure/verify_enclosure.py"])),
     ("SMT PCBA & centroid package integrity",
      lambda: run_step("Phase 6: SMT PCBA & centroid package", [sys.executable, "hardware/production/verify_manufacturing_package.py"])),
-    ("Seeed Studio Fusion turnkey assets", verify_seeed_turnkey),
+    ("Fabrication guard (no fab bundles until the PCB is routed)", verify_fab_guard),
     ("OS provisioning script",
      lambda: run_step("Phase 8: OS provisioning (setup_solardeck_os.sh --test)", ["bash", "tools/provision/setup_solardeck_os.sh", "--test"])),
     ("Documentation presence & attribution", verify_docs_present),
@@ -199,18 +212,14 @@ PHASES = [
 
 
 def verify_pipeline_metadata():
-    """AUDIT 5 fixes A/B: the docstring phase list and the CI workflow job name must not drift
-    from the real PHASES list (that is how the old 7-vs-9 / 11-vs-16 drift happened twice)."""
+    """AUDIT 5 fixes A/B: the docstring phase list must not drift from the real PHASES list (that is
+    how the old 7-vs-9 / 11-vs-16 drift happened twice). There is no hosted CI to check (ADR-046)."""
     t0 = time.time()
-    print(f"▶ {Colors.BOLD}Phase metadata consistency (docstring + CI name)...{Colors.END} ", end="", flush=True)
+    print(f"▶ {Colors.BOLD}Phase metadata consistency (docstring)...{Colors.END} ", end="", flush=True)
     try:
         expected = list(range(1, len(PHASES) + 1))
         nums = [int(x) for x in re.findall(r"Phase\s+(\d+):", __doc__ or "")]
         assert nums == expected, f"docstring phase list {nums} != {expected}"
-        yml = open(os.path.join(PROJECT_ROOT, ".github/workflows/verify.yml"), encoding="utf-8").read()
-        m = re.search(r"(\d+)-Phase System Verification", yml)
-        assert m and int(m.group(1)) == len(PHASES), \
-            f"workflow job name phase count != {len(PHASES)}"
     except AssertionError as e:
         print(f"{Colors.RED}[FAIL]{Colors.END} ({e})")
         return False
@@ -238,7 +247,7 @@ def main():
     if not failures:
         print(f"{Colors.BOLD}{Colors.GREEN}  ✅ ALL {len(PHASES)} PHASES PASSED IN {total_time:.1f}ms{Colors.END}")
         print(f"{Colors.BOLD}{Colors.YELLOW}  Artifacts are internally consistent -- NOT a design sign-off.{Colors.END}")
-        print(f"{Colors.BOLD}{Colors.YELLOW}  Schematic is a partial capture; production bundles are placeholders.{Colors.END}")
+        print(f"{Colors.BOLD}{Colors.YELLOW}  Schematic is a partial capture; there are no fabrication files (ADR-046).{Colors.END}")
         print(f"{Colors.BOLD}{Colors.YELLOW}  See docs/AUDIT_6_2026-10-21.md before ordering anything.{Colors.END}")
         print(f"{Colors.BOLD}{'=' * 72}{Colors.END}\n")
         return 0

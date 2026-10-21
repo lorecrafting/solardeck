@@ -64,7 +64,7 @@
   "standout_pillars": 7,
   "engineering_pillars": 9,
   "verification_phases": 16,
-  "core_bom_line_items": 53,
+  "core_bom_line_items": 52,
   "schematic_coverage_baseline": 40,
   "pcb_thickness_mm": 1.0,
   "rear_wall_mm": 1.5,
@@ -556,7 +556,7 @@
     "drop_peak_g": 600,
     "battery_capacity_retained_year30_pct": 50,
     "battery_service_interval_years": 10,
-    "rtc_backup": "socketed CR2032",
+    "rtc_backup": "MS621FE rechargeable (BOM)",
     "gasket_material": "VMQ silicone",
     "gasket_compression_pct": 27,
     "fastener_torque_nm": 0.45,
@@ -585,8 +585,8 @@
     "unpowered_months": 12,
     "drop_orientations": 26
   },
-  "bom_total_low": 481.75,
-  "bom_total_high": 483.75,
+  "bom_total_low": 479.1,
+  "bom_total_high": 481.1,
   "cm5": {
     "_comment": "CM5 pivot (ADR-031, 2026): V1 moves from CM4 8 GB/32 GB eMMC to CM5 16 GB/64 GB eMMC wireless (CM5116064 / SC1608). 16 GB DRAM is the LLM-resident assumption: the 1-3B local model tier runs in RAM without swap/heritage modes. eMMC 64 GB holds the base image, reader cache, and full offline corpus. Wireless variant carries the Wi-Fi/BT that CM4 needed a USB dongle for — one less peripheral spine. The BOM compute row is priced at price_usd; Phase 14 totals were re-derived on 2026-10-21.",
     "sku": "CM5116064",
@@ -689,10 +689,10 @@
     "solar_strip_wh_per_day": 0.45
   },
   "keepalive": {
-    "_comment": "R4 deep-off keep-alive authority, HARDWARE_SPEC.md 2.30. E=modelled.",
+    "_comment": "R4 deep-off keep-alive authority, HARDWARE_SPEC.md 2.30. E=modelled. rtc_load_uw is null: the 165 uW figure was the DS3231; re-derive from the RV-3028-class datasheet (ADR-046).",
     "li_primary_self_discharge_pct_per_year": 1,
     "li_primary_shelf_life_y": 25,
-    "rtc_load_uw": 165,
+    "rtc_load_uw": null,
     "betavoltaic_uw": 100,
     "betavoltaic_useful_y": 30,
     "bay_reserved": "DNP"
@@ -724,7 +724,8 @@
   "battery": {
     "chemistry": "LiFePO4",
     "charge_limit_v": 3.6,
-    "_comment": "ADR-035; AGENTS §4.1 hard ceiling is 3.65 V."
+    "low_alarm_v": 2.9,
+    "_comment": "ADR-035; AGENTS §4.1 hard ceiling is 3.65 V. low_alarm_v (modelled, ADR-046): RP2350 raises power-fail here so Linux can flush; the protector trips at 2.50 V."
   },
   "charger": {
     "part": "BQ25798",
@@ -1051,11 +1052,6 @@
       },
       "6": {
         "net": "CC_INT_N",
-        "fn": "gpio",
-        "use": "v1"
-      },
-      "7": {
-        "net": "HP_DET",
         "fn": "gpio",
         "use": "v1"
       },

@@ -10,9 +10,9 @@ Rewritten 2026-10-21 16:05 UTC and revised 16:55 and 17:30 UTC in Claude Code by
 
 > [!WARNING]
 > **Status (2026-10-21): concept / reference architecture. Nothing here is ready to build or buy.**
-> Schematic capture covers 40 of 53 core BOM parts and has no wired connectivity; the PCB is unrouted;
-> production files are placeholders; nothing has been measured. V1 scope and parts were re-decided on
-> 2026-10-21 (ADR-031 to ADR-045). The display, Kaleido 4, is not yet released, so its size,
+> Schematic capture covers 40 of 52 core BOM parts and has no wired connectivity; the PCB is unrouted;
+> there are no fabrication files (ADR-046); nothing has been measured. V1 scope and parts were re-decided on
+> 2026-10-21 (ADR-031 to ADR-046). The display, Kaleido 4, is not yet released, so its size,
 > resolution and controller are unknown. See [Where things stand](#where-things-stand) and
 > [`docs/AUDIT_6_2026-10-21.md`](docs/AUDIT_6_2026-10-21.md) before quoting any number.
 
@@ -171,7 +171,10 @@ a BQ25798 evaluation board and a real LiFePO4 cell), then a power-only board bef
 
 ```sh
 python3 scripts/verify_all.py   # 16 phases; green = internally consistent, NOT a design sign-off
+git config core.hooksPath .githooks   # once per clone: the suite runs before every push (no hosted CI)
 ```
+
+Software is frozen until there is hardware to run it on (ADR-046); current work is hardware and the spec.
 
 - Start with [`docs/README.md`](docs/README.md) (reading order and claim vocabulary), then
   [`docs/WORKFLOW.md`](docs/WORKFLOW.md) (how changes are made) and [`AGENTS.md`](AGENTS.md) (hard
@@ -183,7 +186,7 @@ python3 scripts/verify_all.py   # 16 phases; green = internally consistent, NOT 
 | Path | Contents |
 | :--- | :--- |
 | `docs/` | Specs, audits, ADRs, the single source of truth |
-| `hardware/` | KiCad sources (partial), enclosure OpenSCAD, production-bundle scripts |
+| `hardware/` | KiCad sources (partial), enclosure OpenSCAD; `production/` is NOT FOR FAB (ADR-046) |
 | `firmware/rp2350/` | Co-processor firmware and host tests |
 | `src/daemons/`, `src/dts/` | Linux daemons and the CM5 device-tree overlay (not yet ported to RP1) |
 | `tools/provision/` | OS provisioning script |

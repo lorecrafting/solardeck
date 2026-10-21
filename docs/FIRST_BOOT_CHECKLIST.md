@@ -8,6 +8,8 @@ Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 sco
 
 Revised 2026-10-21 17:22 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, ADR-044/045).
 
+Revised 2026-10-21 17:53 UTC in Claude Code by anthropic/claude-opus-5-5 (RTC chip, jack removed, ADR-046).
+
 This step-by-step technical punch list guides the hardware engineer or field operator from unboxing the DHL Express package from Seeed Studio Fusion in Honolulu to running an authorized terminal session in pure sunlight.
 
 ---
@@ -77,7 +79,7 @@ Before inserting the CM5, initialize the RP2350B co-processor to confirm power s
    * Confirm the banner appears:
      ```
      [SOLARDECK-RP2350] Co-Processor Initialized.
-     [RTC] DS3231 TCXO detected: VALID.
+     [RTC] RV-3028-C7 detected: VALID.
      [PSRAM] APS6404L 8MB QSPI test: PASSED (0 errors).
      [INA3221] Voltage Monitor: VBAT=3302mV, ISYS=4.2mA.
      ```

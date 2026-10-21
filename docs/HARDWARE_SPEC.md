@@ -4,6 +4,7 @@ Written 2026-10-18 17:38 UTC in the Pi harness by antigravity/gemini-3.8-flash
 Revised 2026-10-21 15:58 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
 Revised 2026-10-21 16:41 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
 Revised 2026-10-21 17:23 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, ADR-044/045).
+Revised 2026-10-21 17:53 UTC in Claude Code by anthropic/claude-opus-5-5 (RTC chip, jack removed, ADR-046).
 
 Detailed hardware architecture, component selection, bus topology, antenna engineering, and electrical requirements for the custom carrier board and mechanical enclosure.
 
@@ -110,10 +111,10 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
   * Between them the two devices completely isolate all 6 EPDC control and data lines: `SPI_MOSI`, `SPI_MISO`, `SPI_SCLK`, `SPI_CS`, `HRDY` (status flag), and `RESET`.
   * These six lines are the IT8951 bench stand-in's SPI host interface. Whether the TMUX1575 pair suits the Kaleido 4 display controller's host interface must be re-checked once that controller is known (TBD, ADR-032).
   * **Zero-Leakage Isolation Safety:** When the CM5 is powered down to 0.000V, the TMUX1575 completely disconnects CM5 lines to eliminate parasitic back-powering and pin leakage ($I_{\text{leak}} < 10\text{ nA}$), allowing the RP2350 to update the display in deep sleep while drawing only **4.5 mW total system power**.
-* **Real-Time Clock (RTC):** Maxim **DS3231** temperature-compensated crystal oscillator (TCXO).
-  * Drift: < 2 minutes per year ($\pm 2$ ppm).
+* **Real-Time Clock (RTC):** Micro Crystal **RV-3028-C7-class** I²C RTC on the RP2350's `I2C_ALWAYS_ON` bus, with its own crystal and backup switchover; no separate RTC crystal on the board (ADR-046). The DS3231 footprint is a DNP fallback (§2.22).
+  * Drift and current draw: per the RV-3028-C7 datasheet; not yet in `spec_values.json`.
   * **Rechargeable Micro-Battery Power Reservoir:** Powered by a high-reliability SMT **Seiko MS621FE** rechargeable 3.0V 5.5 mAh Lithium Micro-Battery ($0.65) paired with a reverse-blocking Schottky diode and trickle charge circuit.
-  * **Zero Maintenance & 100+ Day Lifespan:** Charges whenever the tablet is powered; maintains TCXO clock, alarms, and NVRAM registers for **over 100 days** when the main battery is completely removed or depleted, eliminating the 1970 UNIX epoch clock reset bug without coin-cell leakage.
+  * **Zero Maintenance & 100+ Day Lifespan:** Charges whenever the tablet is powered; maintains the RTC clock, alarms, and registers for **over 100 days** when the main battery is completely removed or depleted, eliminating the 1970 UNIX epoch clock reset bug without coin-cell leakage.
 
 ### 2.2 Display & Digitizer Assembly
 * **Display Panel:** 10.3-inch E Ink **Kaleido 4** colour panel, the only panel (ADR-032). V1 waits for its release.
@@ -211,7 +212,7 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
     `"Powering External Device: <V> @ <A> | Battery: <%> | Est: <time> remaining"`.
   * Turns the LiFePO4 tablet into an ultra-durable, flame-safe emergency power bank for smartphones, GPS handhelds, and flashlights in off-grid emergencies.
 * **Rigid Voltage Regulators (Anti-Brownout Engineering):**
-  1. *Always-On 3.3V System Rail (`VDD_3V3_AON`):* Dedicated Texas Instruments **TPS62840** ultra-low quiescent current (**60 nA $I_Q$**) synchronous buck-boost converter. Powered directly from VBAT (2.5V–4.35V), it supplies a stable, ultra-clean 3.3V rail at up to 750 mA to the RP2350, 8MB PSRAM, DS3231 RTC, and `I2C_ALWAYS_ON` sensors continuously, ensuring perpetual operation when the main CM5 5V boost converter is completely unpowered.
+  1. *Always-On 3.3V System Rail (`VDD_3V3_AON`):* Dedicated Texas Instruments **TPS62840** ultra-low quiescent current (**60 nA $I_Q$**) synchronous buck-boost converter. Powered directly from VBAT (2.5V–4.35V), it supplies a stable, ultra-clean 3.3V rail at up to 750 mA to the RP2350, 8MB PSRAM, RV-3028-C7-class RTC, and `I2C_ALWAYS_ON` sensors continuously, ensuring perpetual operation when the main CM5 5V boost converter is completely unpowered.
   2. *Main 5.0V System Boost:* Texas Instruments **TPS61088** synchronous boost converter steps up battery voltage to a rigid 5.0V @ 3.5A rail, delivering up to 17.5W peak power for CM5 turbo compilation (CM5 peak draw TBD — verify against the CM5 datasheet), USB peripheral bus power, and display supply.
   3. *Cellular modem supply (TPS63020):* Deferred to V2 (ADR-034).
 * **Power Gating (Physical Cutoff Switches):**
@@ -298,18 +299,13 @@ Deferred to V2 (ADR-034). No forward-facing camera exists either (ADR-006); stan
 * **Dual-MEMS Noise-Cancelling Acoustic Array (Broadside Beamforming):**
   * **Sensors:** Dual matched Knowles **SPH0645LM4H-B** (or InvenSense ICS-43434) high-SNR I2S digital MEMS microphones.
   * **Acoustic Geometry:** Spaced **65 mm apart** along the top front bezel inside molded acoustic elastomer isolation boots with hydrophobic ePTFE dust/wind acoustic grilles.
-  * **Bus Architecture:** Connected to the RP2350 (PIO I²S, stereo L/R on one data line, `MIC_SD`), which streams the audio to the CM5's I2S0 (ADR-045, docs/PIN_BUDGET.md).
+  * **Bus Architecture:** Connected to the RP2350 (PIO I²S, stereo L/R on one data line, `MIC_SD`), which streams the audio to the CM5's I2S1, its clock-target I²S (ADR-045, ADR-046, docs/PIN_BUDGET.md).
   * **Acoustic Beamforming & Wind Rejection:** Processed in Linux via PipeWire / WebRTC audio processing DSP (`solardeck-beamformd`). Computes differential phase delay between Left and Right microphones, forming an elliptical 60° directional voice pickup cone targeted at the operator's face while attenuating 18–24 dB of ambient wind gusts, road noise, and office chatter. Yields clean, near-studio 16 kHz voice streams for 99%+ accuracy in local Whisper and Claude Code voice prompts.
-* **Physical Privacy Switch:** Hardware slide switch that physically breaks VDD to both microphones simultaneously (hardware-guaranteed un-hackable mute).
-* **Hold-to-Talk Voice Button (ADR-036):** Always available and costs nothing in standby; the mics are live only while it is held. At press the RP2350 starts capturing audio into PSRAM while the CM5 boots, and Linux transcribes the buffer, so no words are lost to boot time. Routing the mics so the RP2350 can capture with the CM5 off is TBD at schematic capture.
+* **Physical Privacy Switch:** The MIC MUTE and FULL BLACKOUT positions of the single 3-position privacy switch (§2.25) stop both microphones in hardware: MIC MUTE breaks their I²S clock, FULL BLACKOUT also cuts their supply. Firmware cannot bridge the open switch; the mic supply stays on in MIC MUTE (SECURITY.md).
+* **Hold-to-Talk Voice Button (ADR-036):** Always available and costs nothing in standby; the mics are live only while it is held. At press the RP2350 starts capturing audio into PSRAM while the CM5 boots, and Linux transcribes the buffer, so no words are lost to boot time. The RP2350 owns both mics, so it can capture with the CM5 off (ADR-046).
 * **Hands-Free Wake Word (opt-in, ADR-036):** Off by default and shown with its measured battery cost. Runs on the CM5 when Linux is up and on the RP2350 when Linux is off; RP2350 wake-word power is TBD (bench).
 * **Primary Audio Output (Linux Master):** Maxim Integrated / Analog Devices **MAX98357A** I2S Class-D amplifier driving an internal 1W sealed acoustic chamber micro-box speaker. The speaker feed is also taken as the echo-cancel reference for voice capture (ADR-036).
-* **High-Fidelity 3.5mm TRRS Audio Jack (Bottom Edge):**
-  * **Connector:** IP67 water/dust sealed 3.5mm TRRS jack (**CUI Devices SJ2-35984A-SMT-TR** / Wurth Elektronik) mounted on the bottom chassis edge.
-  * **Pinout Standard:** CTIA Standard (Tip = Left Audio, Ring 1 = Right Audio, Ring 2 = Ground, Sleeve = Microphone In).
-  * **DAC / Headphone Amp:** High-performance, low-power 32-bit I2S Stereo DAC (**Texas Instruments PCM5102A**) with ground-centered charge-pump outputs (zero DC blocking capacitors required, 112 dB SNR).
-  * **Hardware Auto-Mute Switch:** The 3.5mm jack features an isolated mechanical detection switch pin. When a headphone plug is inserted, it automatically asserts `SD_MODE` LOW on the internal MAX98357A Class-D amplifier, instantly silencing the internal speaker with zero software latency.
-  * **Sovereign Private Listening:** Fully operational in Hardware Airgap Mode (where Bluetooth is powered to 0.000V), allowing developers to listen to audiobooks, podcasts, local AI speech synthesis, or decode radio AFSK audio packets with zero electromagnetic RF radiation.
+* **3.5 mm headphone jack and headphone DAC:** Removed from V1 (ADR-046): use USB-C or Bluetooth audio; one less aperture for the IP54 target.
 * **Standby Alert Piezo (Co-Processor Master):** SMT **5.0mm micro-piezo acoustic buzzer** (75 dB @ 10cm, $0.25) driven by an RP2350 PWM output (`PIEZO`, GPIO 45, docs/PIN_BUDGET.md).
   * Sounds immediate chime tones for RTC alarms and barometric storm alerts without cold-booting Linux (draws < 2 mW during chirp).
 
@@ -370,7 +366,8 @@ To completely eliminate bus arbitration lockups and the hardware address collisi
 │                    SOLARDECK DUAL-BUS I2C ARCHITECTURE                      │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 1. `I2C_ALWAYS_ON` BUS (RP2350 Master, 100 kHz, 3.3V Low-Power):           │
-│    • 0x68: Maxim DS3231 TCXO Real-Time Clock (DNP Fallback Footprint)        │
+│    • 0x52: RV-3028-C7-class RTC (populated, ADR-046; datasheet address)     │
+│    • 0x68: Maxim DS3231 TCXO Real-Time Clock (DNP Fallback Footprint)       │
 │    • 0x55?: TI BQ27Z561-R2 Fuel Gauge (address: verify in the TI TRM)       │
 │    • 0x6B: TI BQ25798 Charger, programmed by the RP2350 (ADR-035)           │
 │    • 0x40: TI INA3221 3-Channel System Power Ammeter                        │
@@ -481,7 +478,7 @@ header under the M.2 service hatch, and a signed microSD recovery image. A charg
 diagnostic message (`USB_NO_DATA_LINES`), not a brick.
 
 ### 2.12 Physical Hardware Airgap Switch (Stealth / Zero-EMF Zen Reader Mode)
-For true sovereign privacy, commercial flight compliance, sensitive compartmented facilities (SCIFs), and zero-distraction reading, SolarDeck incorporates a recessed, physical 2-position slide switch on the chassis side (`RADIO ACTIVE` vs. `AIRGAP STEALTH`):
+For true sovereign privacy, commercial flight compliance, sensitive compartmented facilities (SCIFs), and zero-distraction reading, SolarDeck uses the FULL BLACKOUT position of the single 3-position privacy switch (§2.25); the diagram below shows NORMAL (`RADIO ACTIVE`) against FULL BLACKOUT (`AIRGAP STEALTH`):
 
 ```
                    ┌───────────────────────────────────────────┐
@@ -560,13 +557,13 @@ To guarantee true 0.000V electrical isolation and zero phantom leakage across al
 3. **Display Bus Multiplexer Isolation (TMUX1575):**
    * The high-speed SPI bus to the Kaleido 4 display controller (TBD, ADR-032) is isolated by **2× TI TMUX1575** (4 channels each, 8 total — ADR-004; suitability to be re-checked against that controller's host interface). Its fail-safe inputs tolerate up to 5.5V independent of supply voltage, completely preventing display signals from back-powering the CM5 when it is off.
 4. **Physical Line-Breaker for Microphones:**
-   * The physical airgap switch cuts `VDD_MIC` and shunts `I2S_CLK` and `I2S_DATA` to GND.
+   * The privacy switch breaks `MIC_BCLK` (MIC MUTE and FULL BLACKOUT) and cuts the mic supply (FULL BLACKOUT); it never shorts a driven pin (§2.25).
 
 #### Summary of SolarDeck Tiered Power Domains
 
 | Operating Tier | Active Brain | Display Driver | Powered Subsystems | Total Power Draw | Battery Runtime |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Tier 0: Dormant Standby** | RP2350 (10 µA sleep) | Display OFF (Static) | Internal 32kHz RTC, BQ27Z561-R2 (CM5 0V, Radios 0V, Hi-Z)| **< 0.1 mW** | TBD until the cell is chosen (ADR-040) |
+| **Tier 0: Dormant Standby** | RP2350 (10 µA sleep) | Display OFF (Static) | RV-3028-C7-class RTC, BQ27Z561-R2 (CM5 0V, Radios 0V, Hi-Z)| **< 0.1 mW** | TBD until the cell is chosen (ADR-040) |
 | **Tier 1: Ambient Clock & Zen Reader**| RP2350 (12MHz Cortex-M33)| Display ctrl (PSRAM Double-Buf)| 8MB PSRAM, BMA400, BMP390 (30ms Page Turns) | **~4.5 mW** | TBD until the cell is chosen (ADR-040) |
 | **Tier 2: LoRa Mesh Node** | V2 (ADR-044) | — | — | — | — |
 | **Tier 3: Paper-Feel Scribe Slate** | CM5 (1 core @ 600 MHz) | Display ctrl (DU 1-bit Buffer) | Wacom EMR (240 Hz, Hover-gated), eMMC | **~0.60 W** | TBD until the cell is chosen (ADR-040) |
@@ -718,10 +715,10 @@ To eliminate supply-chain bottlenecks, enable budget vs. pro hardware tiers, and
 ```
 
 1. **Audio Wake AI: dedicated voice-chip footprint (e.g. Syntiant NDP120):** V2 path (ADR-036). In V1 the opt-in wake word runs on the CM5 or the RP2350 (RP2350 power TBD, bench).
-2. **Real-Time Clock: Maxim DS3231MZ+ (SOIC-8) ⟷ Micro Crystal RV-3028-C7 (DFN-8):**
+2. **Real-Time Clock: Micro Crystal RV-3028-C7 (DFN-8, populated, ADR-046) ⟷ Maxim DS3231MZ+ (SOIC-8, DNP fallback):**
    * **Concentric Footprint:** An 8-pad DFN footprint is nested directly in the center of the SOIC-8 pads on the same I2C lines (`SDA`, `SCL`, `INT`, `VBAT`).
-   * **DS3231MZ+ Option:** Internal TCXO with $\pm 2\text{ ppm}$ precision for celestial plate-solving star navigation ($1.2\text{ }\mu\text{A}$ draw).
-   * **RV-3028-C7 Option:** Extreme-low-power RTC drawing only **45 nano-amperes (0.045 µA)**—giving 15+ years of timekeeping on a coin cell while dodging Maxim supply-chain lead times.
+   * **DS3231MZ+ (DNP fallback):** Internal TCXO with $\pm 2\text{ ppm}$ precision for celestial plate-solving star navigation ($1.2\text{ }\mu\text{A}$ draw).
+   * **RV-3028-C7 (populated, ADR-046):** Extreme-low-power RTC that dodges Maxim supply-chain lead times; current draw and drift per its datasheet, not yet in `spec_values.json`.
 3. **RP2350 NOR Flash & PSRAM: Nested SOIC-8 / WSON-8 Footprints:**
    * Winbond 16MB SPI Flash (`W25Q128`) and APMemory 8MB PSRAM (`APS6404L`) route to nested footprints: WSON-8 flat leadless pads sit inside extended gull-wing SOIC-8 pads on identical nets.
    * Allows turnkey assembly houses to solder whichever package is in stock with zero layout changes.
@@ -759,10 +756,10 @@ To guarantee decadal survival in remote areas where the custom internal LiFePO4 
 
 ### 2.25 3-Position Hardware Privacy & Stealth Disconnect Switch
 To deliver mathematically verifiable, physical airgapped privacy for tactical operations, secure negotiations, and sovereign computing:
-* **Switch Mechanism:** A heavy-duty, IP67 sealed 3-position miniature slide switch located on the top chassis flank:
+* **Switch Mechanism:** A sealed (IP67-rated part) 3-position miniature slide switch on the left chassis flank beside the 5-way rocker (§3 layout); it is the only privacy/airgap switch (ADR-046):
   1. **Position 1: NORMAL (Green Index):** All microphones and radio load switches operate normally under Linux kernel software power management.
   2. **Position 2: MIC MUTE (Yellow Index):** Mechanically breaks the I²S bit clock (`MIC_BCLK`, RP2350 GPIO 26) between the RP2350 and both Knowles MEMS microphones, and a pull-down holds the microphone side at GND. The switch never shorts the driven RP2350 pin. Without a clock signal, the MEMS charge pump cannot oscillate; audio eavesdropping is physically and electrically impossible (0.000V signal level). The radios remain operational.
-  3. **Position 3: FULL BLACKOUT (Red Index):** Mechanically disconnects power (`VCC`) to both microphones and de-asserts the hardware gate on the u-blox MAX-M10S GNSS receiver to 0.000V and pulls the CM5's `WL_nDisable`/`BT_nDisable` low.
+  3. **Position 3: FULL BLACKOUT (Red Index):** Mechanically disconnects power (`VCC`) to both microphones and also breaks `MIC_BCLK` as in MIC MUTE, so no clock is driven into unpowered mics, de-asserts the hardware gate on the u-blox MAX-M10S GNSS receiver to 0.000V and pulls the CM5's `WL_nDisable`/`BT_nDisable` low.
 * **Diagnostic Sense Line (`PRIVACY_STAT`):** An auxiliary sense pin informs the RP2350 and Linux kernel of the physical switch position, allowing the OS to display a permanent hardware padlock icon on the 10.3" E-Ink screen with zero CPU overhead.
 
 ### 2.26 Hardware USB Data-Line Shield & Forensic Isolation ("Juice-Jacking" Defense)
@@ -913,7 +910,7 @@ The **R4 Deep-Off + Scrub** rung of the sleep ladder (§3.3.3 of SOFTWARE_SPEC.m
 
 * **P1 ships with a Li-primary keep-alive cell** (e.g. a 3V CR2-style primary in a bay, ~0.5–1%/y self-discharge → 20–40 y shelf life, a few dollars) feeding the RP2350's RTC rail. This is the *cheap, available, unlicensed* answer to a 20-year keep-alive.
 * **A betavoltaic bay is reserved (DNP):** a mechanically and electrically empty socket sized for a future tritium (H-3) betavoltaic cell (BV100-class: 3V, ~100 µW, ~50 y rated; practical useful output ≈20–40 y given the 12.3 y half-life). The bay is populated by enthusiasts or a later Rev after licensing/supply matures — **not** in the base BOM.
-* **Why not tritium in P1 (honest answer):** (1) power-budget mismatch — the keep-alive load (DS3231 RTC alone ≈165 µW) exceeds a single 100 µW cell's *continuous* output, so even with tritium you need the same trickle→buffer→burst topology a coin cell provides; (2) tritium is a controlled nuclear material (US NRC / UK ONR) — owning a sealed microsource is tolerated, but *shipping and selling it as a product* is licensing paperwork hostile to an open-hardware supply chain; (3) cost — NanoTritium-class cells run hundreds to thousands of dollars per unit against a ≈$400 whole-BOM budget; (4) it is never the actual bottleneck — the embedded NAND already holds the hibernation image and the RTC real-time clock keeps the schedule; a 40-year-lifetime problem is served by a 40-year-primary that costs $2. The betavoltaic bay exists so the *century* claim (ADT-019, HARDWARE_SPEC §5) is physically reachable later without a board respin.
+* **Why not tritium in P1 (honest answer):** (1) power budget unproven — the keep-alive load (`spec_values.keepalive.rtc_load_uw`) is null until re-derived for the RV-3028-C7-class RTC (ADR-046), so whether one cell's continuous output (`keepalive.betavoltaic_uw`) can carry it is open, and the trickle→buffer→burst topology a coin cell provides is assumed until then; (2) tritium is a controlled nuclear material (US NRC / UK ONR) — owning a sealed microsource is tolerated, but *shipping and selling it as a product* is licensing paperwork hostile to an open-hardware supply chain; (3) cost — NanoTritium-class cells run hundreds to thousands of dollars per unit against a ≈$400 whole-BOM budget; (4) it is never the actual bottleneck — the embedded NAND already holds the hibernation image and the RTC real-time clock keeps the schedule; a 40-year-lifetime problem is served by a 40-year-primary that costs $2. The betavoltaic bay exists so the *century* claim (ADT-019, HARDWARE_SPEC §5) is physically reachable later without a board respin.
 * **Budget:** keep-alive envelope below ≈0.2 mW average (RTC tick; the scheduled LoRa RX slot it was sized with is V2, ADR-044); the bay's voltage rail and buffer-cap pad are spec'd on the carrier. See `docs/spec_values.json` → `keepalive.*` for the numbers the checker enforces.
 
 ---
@@ -1022,9 +1019,9 @@ To ensure reliable, error-free operation in pitch darkness, under strict militar
 │ • 10.3" E Ink Kaleido 4 Panel (ADR-032) + Wacom EMR Digitizer              │
 │ • 0.1mm Mu-Metal / Ferrite Magnetic Shielding Layer (Behind Digitizer)      │
 │ • Top Bezel: IXYS Micro-Solar Strip + GNSS Antenna (NFC is V2, ADR-034)     │
-│ • Bottom Edge: IP67 3.5mm TRRS Audio Jack + Recessed Recovery + USB-C Port 1│
+│ • Bottom Edge: Recessed Recovery + USB-C Port 1 (jack removed, ADR-046)     │
 │ • Right Flank: Magnetic Precision Stylus Clamping (N52 Array + Align Groove)│
-│ • Left Flank: 5-Way Tactical Navigation Rocker (ALPS SKRH) + Airgap Switch  │
+│ • Left Flank: 5-Way Tactical Navigation Rocker (ALPS SKRH) + Privacy Switch │
 │                                                                             │
 │ [INTERNAL COPLANAR CHASSIS STACKUP (X-Y ARRANGEMENT)]                       │
 │ • Front Glass + E-Ink Panel + Wacom EMR Layer: TBD (ADR-032)                │

@@ -802,3 +802,45 @@ The firmware's solar ADC pin was invalid (GPIO 26; the RP2350B ADC is GPIO 40–
 **Costs.** Board area and enclosure volume for parts V1 does not ship. High-speed V2 lanes must end
 at their footprint with no stubs. V2 still needs its own certification (cellular, LoRa, NFC); a
 reserved footprint is not a certified radio.
+
+---
+
+## ADR-046 — Owner decisions after the pin budget; software frozen until hardware exists (2026-10-21)
+
+Written 2026-10-21 17:52 UTC in Claude Code by anthropic/claude-opus-5-5. Owner: "do all of them";
+"don't re-enable CI … do all the checks locally before pushing"; "we probably don't need to do any
+software right now since we don't have any hardware".
+
+**Decisions.**
+- **Mic routing (closes the ADR-036 open item):** the RP2350 owns both mics and is the audio clock
+  master; it streams I²S to the CM5's I2S1. ADR-045 recorded this as an assumption; it is now decided.
+- **Privacy switch:** one 3-position slide switch (normal / mic mute / full blackout), as
+  HARDWARE_SPEC §2.25 and SECURITY describe. The BOM's 2-position part was wrong; the new part is TBD.
+- **Timekeeping:** an I²C RTC chip with its own crystal (RV-3028-C7 class) on the always-on bus
+  replaces the bare 32.768 kHz crystal, which the RP2350 could not drive and whose clock-input pins are
+  all assigned. The DS3231 stays only as the DNP fallback footprint.
+- **Co-processor flash:** a 16 MB QSPI NOR (W25Q128JV class) is added. The RP2350B has no internal
+  flash, so the BOM had nowhere to store its firmware. 16 MB holds two firmware slots plus reader
+  content.
+- **Headphone jack and DAC removed from V1** (not deferred): one less aperture against IP54, two fewer
+  parts, no headset-mic input to budget. Audio out is the speaker, USB-C or Bluetooth.
+- **Quad piezo array stays off the board** unless bench tests show the LRA cannot give the typewriter
+  feel (ADR-037). It needs no RP2350 pins, so adding it later costs nothing.
+- **No fab bundles until the PCB is routed.** The synthetic Gerbers, turnkey zips, Seeed/PCBWay quote
+  guides, the hand-generated chassis STL and `hardware/export_production_zip.py` are deleted;
+  `hardware/production/NOT_FOR_FAB.md` stands and Phase 7 fails if a Gerber or bundle appears while it
+  does.
+- **No hosted CI.** The repo will go private and there is no CI budget. `verify_all.py` runs locally
+  before every push through `.githooks/pre-push` (`git config core.hooksPath .githooks`).
+- **Low-battery alarm in the spec:** `battery.low_alarm_v` (modelled) replaces the firmware's 2900 mV
+  literal; Phase 14 checks `SD_LOW_BATT_ALARM_MV` against it. The simulated 42 ms wake time and its
+  "< 300 ms" test are deleted: they asserted a constant, and the CM5 has no fast resume (ADR-036).
+- **`docs/INDEX.md` deleted.** It was hand-maintained, stale and duplicated `docs/README.md`.
+- **Software is frozen** until there is hardware to run it on. No new work on daemons, the OS image,
+  SOFTWARE_SPEC features or firmware features. What stays live: the firmware header constants that
+  encode hardware decisions (pins, charge limit, alarm), the charger safety gate and its test, and the
+  verification suite. Firmware is not cross-compiled yet; that starts with the RP2350 minimum-system
+  board (ADR-043).
+
+**Costs.** Three more TBD BOM rows (privacy switch, RTC, flash) until quoted. Without hosted CI, a
+contributor who skips the hook can push red; the hook is the only gate.

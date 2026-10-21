@@ -17,7 +17,6 @@ void solardeck_sm_init(solardeck_ctx_t *ctx) {
     ctx->vbat_mv = 3300;
     ctx->solar_voc_mv = 0;
     ctx->solar_vmpp_mv = 0;
-    ctx->last_wake_elapsed_us = 0;
 }
 
 void solardeck_sm_transition(solardeck_ctx_t *ctx, solardeck_state_t next_state) {
@@ -78,8 +77,6 @@ bool solardeck_trigger_s2idle_wake(solardeck_ctx_t *ctx) {
     solardeck_sm_transition(ctx, SOLAR_STATE_CM5_ACTIVE);
     ctx->wake_pin_asserted = ctx->sys_5v_enabled;
 
-    // Simulate / record hardware wake time in microseconds (<300,000 us = <300ms spec)
-    ctx->last_wake_elapsed_us = 42000; // Typically 42ms for GPIO trigger to CM5 kernel resume
     ctx->wake_pin_asserted = false;    // Pulse de-asserted
 
     return true;
@@ -89,11 +86,8 @@ bool solardeck_check_power_thresholds(solardeck_ctx_t *ctx, uint16_t vbat_mv) {
     if (!ctx) return false;
     ctx->vbat_mv = vbat_mv;
 
-    // LiFePO4 cutoff: 2900 mV (alarm). The PCM hard-trips at 2500 mV; 2.80-2.90V is where
-    // the SoC has enough headroom left to write state and enter the deep-sleep path.
-    const uint16_t cutoff_mv = 2900; // LiFePO4 is the only chemistry (ADR-035)
-
-    if (vbat_mv <= cutoff_mv) {
+    // LiFePO4 low-battery alarm, above the protector's hard trip so Linux can still flush.
+    if (vbat_mv <= SD_LOW_BATT_ALARM_MV) {
         solardeck_sm_transition(ctx, SOLAR_STATE_LOW_BATT_ALARM);
         return true; // Threshold triggered alarm
     }

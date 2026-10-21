@@ -4,6 +4,7 @@ Written 2026-10-18 17:42 UTC in the Pi harness by antigravity/gemini-3.8-flash
 Revised 2026-10-21 15:59 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
 Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
 Revised 2026-10-21 17:22 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, ADR-044/045).
+Revised 2026-10-21 17:53 UTC in Claude Code by anthropic/claude-opus-5-5 (RTC chip, jack removed, ADR-046).
 
 ---
 
@@ -154,7 +155,7 @@ In an era of cloud-locked, fragile, spy-by-design hardware, SolarDeck is an **in
 
 ### The Three Hardening Anchors:
 1. **Physical Hardware Airgap Switch (0.000 dBm / Zero Phantom Bleed):**
-   * A recessed 2-position slide switch cuts the u-blox MAX-M10S GNSS rail to **0.000V** and pulls the CM5's `WL_nDisable` / `BT_nDisable` low, disabling the on-module Wi-Fi/BT (docs/PIN_BUDGET.md). (No cellular modem in V1, ADR-034; no on-board LoRa in V1, ADR-044.)
+   * The FULL BLACKOUT position of the single 3-position privacy switch (HARDWARE_SPEC §2.25) cuts the u-blox MAX-M10S GNSS rail to **0.000V** and pulls the CM5's `WL_nDisable` / `BT_nDisable` low, disabling the on-module Wi-Fi/BT (docs/PIN_BUDGET.md). (No cellular modem in V1, ADR-034; no on-board LoRa in V1, ADR-044.)
    * Digital lines are isolated via **TI TXU0104** buffers, eliminating parasitic back-powering through silicon clamping diodes.
    * 100% immune to software baseband exploits; completely invisible to RF spectrum analyzers.
 2. **Off-Grid Mesh and GNSS:**
@@ -471,7 +472,7 @@ Transforming SolarDeck from an active computer into an immortal, zero-battery am
 ├─────────────────────┬───────────────────────┬───────────────────────────────┤
 │ APPLICATION         │ HARDWARE SUBSYSTEM    │ OPERATIONAL ENERGY            │
 ├─────────────────────┼───────────────────────┼───────────────────────────────┤
-│ 1. Living Wall Clock│ RP2350 + DS3231 RTC   │ 4.5 mW (Refreshes once/min;   │
+│ 1. Living Wall Clock│ RP2350 + RV-3028 RTC  │ 4.5 mW (Refreshes once/min;   │
 │    & Barometer HUD  │ + Bosch BMP390 Baro   │ 0.000W static holding power). │
 ├─────────────────────┼───────────────────────┼───────────────────────────────┤
 │ 2. Infinite Chess   │ Micro-Max / Toledo C  │ 0.000W between moves;         │

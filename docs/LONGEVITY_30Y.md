@@ -4,6 +4,7 @@ Written 2026-10-20 06:10 UTC in the Pi harness by openrouter/deepseek/deepseek-v
 Revised 2026-10-21 15:59 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
 Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
 Revised 2026-10-21 17:23 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, ADR-044).
+Revised 2026-10-21 17:53 UTC in Claude Code by anthropic/claude-opus-5-5 (RTC chip, jack removed, ADR-046).
 
 Second audit round, scoped to one question: **what breaks over 30 years, and is the current design
 built to survive it?** The existing audit asked "is the documentation true". This one asks "will the
@@ -28,7 +29,7 @@ design does, and the required change. **"Gap" means the design as written does n
 | 4 | **Elastomer compression set** | VMQ takes a set; a TPU bumper is impact protection, not a seal | Perimeter 1.5 mm hollow-core silicone gasket, "compressed 30 %" (§4), **no gasket line item in the BOM**, no service interval | ⚠ **Gap** — P/N the gasket as a wear item at 27 % compression (`spec_values.longevity`) |
 | 5 | **Adhesive creep / yellowing** | VHB and LOCA migrate and yellow; taped cells are the classic 10-year failure | VHB 5952 used for **glass** (correct: no plastic film, §4.0); battery retention relies on cavity fit only | ⚠ **Gap** — VHB on glass is fine; a taped or untethered cell is not |
 | 6 | **NAND retention** | Client SSD unpowered retention ≈1 year at 30 °C; eMMC similar | 64 GB eMMC + 2 TB NVMe, no scrub, no archive warning | ❌ **Gap** — quarterly powered scrub; state plainly that the NVMe is not an archive |
-| 7 | **RTC backup cell** | Lithium coin cells leak; rechargeables lose capacity | DS3231 + Seiko MS621FE rechargeable (in BOM), **no documented replacement interval** | ⚠ **Gap** — a 10-year service item, not a redesign |
+| 7 | **RTC backup cell** | Lithium coin cells leak; rechargeables lose capacity | RV-3028-C7-class RTC (ADR-046) + Seiko MS621FE rechargeable (in BOM), **no documented replacement interval** | ⚠ **Gap** — a 10-year service item, not a redesign |
 | 8 | **Display aging** | Charge trapping in capsules; Kaleido colour-filter dye fades under UV | 395 nm UV cut-off in the LOCA (§7.5.3), acid-etched glass, no glued film | ❓ **Unknown** — the only panel is the Kaleido 4 (ADR-032); its colour-filter dye lifespan is `null` (`spec_values.panel_sku.kaleido4_dye_lifespan_years`) until E Ink publishes it |
 | 9 | **Connector cycles** | USB-C rated ~10 k cycles; daily charging for 30 years ≈ 11 k | IP68 mid-mount receptacles, 4 through-hole stake tabs, >50 N, **10 000 cycles** | ⚠ **Gap** — raise to ≥20 k cycles and state strain relief |
 | 10 | **Fastener/insert creep** | Brass inserts in PA12 creep; over-torque strips the thread | 12 × M2.5 into knurled brass inserts, 500 teardowns, **0.45 N·m**, no threadlocker, screw types uncounted | ⚠ **Gap** — lock the torque in one place, add low-strength threadlocker, cap screw types |

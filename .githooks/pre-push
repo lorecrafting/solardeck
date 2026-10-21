@@ -1,0 +1,4 @@
+#!/bin/sh
+# Local stand-in for CI (ADR-046): every push runs the full verification suite.
+# Enable once per clone: git config core.hooksPath .githooks
+exec python3 scripts/verify_all.py

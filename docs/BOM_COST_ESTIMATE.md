@@ -3,6 +3,7 @@
 Written 2026-10-18 17:31 UTC in the Pi harness by antigravity/gemini-3.8-flash
 
 Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
+Revised 2026-10-21 17:52 UTC in Claude Code by anthropic/claude-opus-5-5 (owner decisions, ADR-046).
 
 Comprehensive bill of materials, component part numbers, verified suppliers, and turnkey manufacturing cost projections for the core tablet and the modular RF backpack. The SnapDeck keyboard is an optional Phase 2 accessory (§2), not part of the V1 BOM.
 
@@ -15,6 +16,7 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **Compute** | Raspberry Pi Compute Module 5 (16GB RAM, 64GB eMMC, Wi-Fi/BT) — ADR-031 | Raspberry Pi approved resellers | CM5116064 (SC1608) | $375.00 |
 | **Co-Processor** | Dual Cortex-M33 / RISC-V Microcontroller (Power Master) | DigiKey / Mouser / LCSC | Raspberry Pi RP2350B | $1.25 |
 | **Co-Proc PSRAM** | 8MB Ultra-Low-Power QSPI PSRAM (Page Double-Buffer) | Mouser / LCSC | APMemory APS6404L-3SQR-SN | $0.75 |
+| **Co-Proc Flash** | 16 MB QSPI NOR flash: RP2350B firmware (two slots) + reader content; the RP2350B has no internal flash (ADR-046) | Winbond / LCSC | W25Q128JV class | TBD |
 | **Bus Multiplexer**| Display Bus Isolator, 2 × 4-channel SPDT switch (ADR-004) | Texas Instruments / Mouser | TMUX1575YCJR (x2) | $0.55 |
 | **Display Panel** | 10.3" E Ink Kaleido 4 (colour) + Capacitive Touch + Wacom EMR — ADR-032 | E Ink (sole source) | Kaleido 4 10.3" (P/N on release) | TBD |
 | **EMR Shielding** | 0.1mm High-Permeability Mu-Metal / Ferrite Flux Absorber Sheet | 3M / Wurth / AliExpress | Custom Die-Cut Shield Foil | $1.80 |
@@ -31,8 +33,6 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **Wi-Fi/BT Antenna**| Dual-Band (2.4/5GHz) Balanced Dipole FPC with U.FL | Molex / Mouser | 1461530100 | $1.20 |
 | **GNSS Antenna** | Passive Internal FPC GPS/GLONASS Antenna (for MAX-M10S; integrated LNA) | Molex / Taoglas / LCSC | 1461860100 | $0.90 |
 | **Audio** | Dual-MEMS Acoustic Array (2x SPH0645) + I2S Class-D Amp + Speaker| Knowles / Maxim Integrated / PUI Audio | SPH0645LM4H (x2) + MAX98357A + AS03008MR | $5.10 |
-| **Headphone Jack** | IP67 Sealed 3.5mm TRRS Audio Jack (Stereo Out + Mic In + Sw)| CUI Devices / Wurth Elektronik | SJ2-35984A-SMT-TR | $0.85 |
-| **Headphone DAC** | Low-Power 32-bit I2S Stereo Headphone DAC & Ground-Centered Amp| Texas Instruments / Mouser | PCM5102A / MAX97220A | $1.10 |
 | **Mechanical Mount**| Universal M2.5 Brass Heat-Set Inserts (x4) + MagSafe Magnetic Array | McMaster / LCSC / Custom | M2.5 Inserts + N52 Ring | $0.90 |
 | **Passives/Ports**| 2x IP68 USB-C Ports, 1,000µF Poly Caps, SMD Passives | LCSC / JLCPCB SMT Library | Standard SMD 0402/0603 | $9.40 |
 | **USB-C CC Ctrl** | Type-C Configuration Channel Dual-Role DRP Controller | Texas Instruments / Mouser | TUSB320RWBR | $0.65 |
@@ -53,19 +53,19 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **Frontlight Driver**| Dual-Channel Constant-Current Step-Up LED Driver (2048-step CCT)| Texas Instruments / Mouser | TPS61163YFFR | $0.65 |
 | **Battery PCM** | LiFePO4 protector (3.85 V OVP / 2.50 V UVP class) + back-to-back N-FET pair (ADR-035) | Texas Instruments / Mouser | BQ29706 + dual N-FET (TBD) | TBD |
 | **ESD Suppression** | Low-Capacitance TVS Diode Arrays for USB & Pogo Pins (x4) | Texas Instruments / Mouser | TPD4E05U06 (x4) + SMAJ5.0A | $0.80 |
-| **RTC 32kHz Crystal**| Precision 32.768 kHz Tuning Fork Crystal for RP2350 RTC | Citizen / Epson / Mouser | CM200S 32.768kHz | $0.25 |
+| **RTC** | Always-on I²C real-time clock with its own crystal and backup switchover, on the RP2350 bus — no GPIO (ADR-046) | Micro Crystal / Mouser | RV-3028-C7 class | TBD |
 | **RTC Backup Battery**| 3.3V Rechargeable Lithium Micro-Battery (5.5 mAh, >100 days hold)| Seiko Instruments / Mouser | MS621FE-FL11E | $0.65 |
 | **JEITA Resistors** | 0.1% Precision Resistors for the BQ25798 TS NTC network (values per BQ25798 datasheet) | Yageo / Panasonic 0603 | Precision Thin-Film (x2)| $0.15 |
 | **CM5 Retention** | CNC Aluminum CM5 Retention Bracket & Thermal Interface Pad | Custom CNC / Laird | Custom Bracket + Tflex | $1.80 |
 | **RF Pi-Matching** | Precision 0402 RF Inductors & C0G/NP0 Capacitors (5 nets) | Murata / TDK / LCSC | 0402 Precision RF Kit | $0.40 |
 | **Solar Aerogel** | 0.5mm Die-Cut Pyrogel Aerogel / Kapton Thermal Barrier | Aspen Aerogels / 3M | Pyrogel Insulation Strip | $0.60 |
-| **Airgap Switch** | Sub-Miniature 2-Position Gold Contact Slide Switch | C&K / E-Switch / LCSC | JS202011CQN | $0.45 |
+| **Privacy Switch** | Sealed (IP67-rated) sub-miniature 3-position slide switch, multi-pole: normal / mic mute / full blackout (HARDWARE_SPEC §2.25, ADR-046) | C&K / E-Switch | TBD (3-position) | TBD |
 | **GORE Vent** | ePTFE Pressure Equalization Vent Plug | W. L. Gore / Amphenol | PMF100396 | $1.50 |
 | **Haptic Engine** | Wideband Haptic Driver + frame-mounted Z-Axis LRA, core part (ADR-037; piezo array = DNP) | Texas Instruments / Vybronics | DRV2605L + 8mm Z-Axis LRA | $2.35 |
 | **Perimeter Gasket** | Die-Cut VMQ Silicone O-Ring, 27% Compression (Service Item) | Custom / Rogers | Custom Die-Cut VMQ | $2.10 |
 | **Enclosure (PA12)**| SLS 3D-Printed PA12 Nylon Shell + 85A TPU Corner Bumpers | JLC3D / Craftcloud | Custom CAD Housing (Streamlined)| $25.00 |
 | **Conformal Coat** | IPC-CC-830 Reworkable Acrylic Conformal Coating, Connector-Masked (spec_values.longevity.conformal_coat) | PSI / Applied Post-SMT | IPC-CC-830 (UC-2605) | $2.00 – $4.00 |
-| **Total Core BOM**| **(Sum of 53 V1 Line Items, excluding 8 TBD parts: Kaleido 4 panel, its controller, cell, charger, gauge, protector, GNSS, GPIO expander — a floor, not a price; see docs/AUDIT_6_2026-10-21.md H22)** | | | **$481.75 – $483.75 + TBD** |
+| **Total Core BOM**| **(Sum of 52 V1 Line Items, excluding 11 TBD parts: Kaleido 4 panel, its controller, cell, charger, gauge, protector, GNSS, GPIO expander, RTC, co-processor flash, privacy switch — a floor, not a price; see docs/AUDIT_6_2026-10-21.md H22)** | | | **$479.10 – $481.10 + TBD** |
 
 ### Deferred to V2 (ADR-034, LoRa ADR-044) — not summed
 
@@ -143,7 +143,7 @@ Because standard surface-mount components from JLCPCB's / PCBWay's Basic and Ext
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  SOLARDECK V1 TABLET (excl. 8 TBD parts)   │ $482 – $484    │
+│  SOLARDECK V1 TABLET (excl. 11 TBD parts)   │ $479 – $481    │
 ├─────────────────────────────────────────────────────────────┤
 │  OPTIONAL SNAPDECK KEYBOARD (PHASE 2)      │ $47.55         │
 ├─────────────────────────────────────────────────────────────┤
