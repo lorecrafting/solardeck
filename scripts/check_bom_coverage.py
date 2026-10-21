@@ -21,6 +21,36 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROD = os.path.join(ROOT, "hardware", "production")
 
 
+def live_docs():
+    """README + docs/*.md, excluding point-in-time records (AUDIT_*, 90-history)."""
+    out = [os.path.join(ROOT, "README.md")]
+    for base, _, files in os.walk(os.path.join(ROOT, "docs")):
+        for f in files:
+            if f.endswith(".md") and not f.startswith("AUDIT_"):
+                p = os.path.join(base, f)
+                if "/90-history/" not in p:
+                    out.append(p)
+    return out
+
+
+def coverage_prose_mismatches(coverage, total):
+    """Live prose restating the schematic coverage must agree with the netlist.
+    AUDIT 5 finding: '20 of 61' vs '24 of 61' drifted twice because nothing checked."""
+    out = []
+    for path in live_docs():
+        text = open(path, encoding="utf-8").read()
+        for m in re.finditer(r"(\d+)\s*/\s*(\d+)\s+parts?\)", text):
+            if (int(m.group(1)), int(m.group(2))) != (coverage, total):
+                out.append(f"{os.path.relpath(path, ROOT)}: '{m.group(0).strip()}' != {coverage}/{total}")
+        for m in re.finditer(r"(\d+)\s+of\s+(\d+)\s+core BOM", text):
+            if (int(m.group(1)), int(m.group(2))) != (coverage, total):
+                out.append(f"{os.path.relpath(path, ROOT)}: '{m.group(0).strip()}' != {coverage}/{total}")
+        for m in re.finditer(r"reports\s+(\d+)\s*/\s*(\d+)", text):
+            if (int(m.group(1)), int(m.group(2))) != (coverage, total):
+                out.append(f"{os.path.relpath(path, ROOT)}: '{m.group(0).strip()}' != {coverage}/{total}")
+    return out
+
+
 def designators(path):
     with open(path) as f:
         rows = csv.DictReader(f)
@@ -52,6 +82,7 @@ def main():
     total = spec["core_bom_line_items"]
     if coverage < baseline:
         errors.append(f"schematic coverage regressed: {coverage} < baseline {baseline}")
+    errors.extend(prose_mismatch for prose_mismatch in coverage_prose_mismatches(coverage, total))
 
     if errors:
         for e in errors:
