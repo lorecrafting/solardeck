@@ -3,6 +3,7 @@
 Written 2026-10-21 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-0731
 Revised 2026-10-21 15:59 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
 Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
+Revised 2026-10-21 17:22 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, ADR-044/045).
 
 Status: **investigation record** — no design change committed by this document alone. Open question:
 does the max-tier (ESP32-P4) or a bigger PSRAM on the RP2350 enter V1? See `docs/90-history/decisions.md`
@@ -50,8 +51,8 @@ one charge are TBD until the cell is chosen (ADR-040); re-derive the column from
 | ESP32-P4 light sleep | 1.3 mW | TBD (ADR-040) | The *honest* P4 advantage: it stays interactive longer |
 | ESP32-C6 active, no RF | ~6 mW | TBD (ADR-040) | The floor you'd actually live in if the C6 ran the mesh |
 | Opt-in wake-word tier (§17.2, ADR-036) | TBD (bench) | TBD (ADR-040) | The rung that matters — where a *snappier* max tier would slot in |
-| LoRa repeater | 13.5 mW | TBD (ADR-040) | |
-| R4 keepalive + LoRa beacon | 0.2 mW | TBD (ADR-040) | The current deep-off floor; battery-bound, not power-bound |
+| LoRa repeater | 13.5 mW | TBD (ADR-040) | Not a V1 mode: on-board LoRa is V2 (ADR-044) |
+| R4 keepalive + LoRa beacon | 0.2 mW | TBD (ADR-040) | The deep-off floor; battery-bound, not power-bound. The LoRa beacon is V2 (ADR-044) |
 
 **The sobering edit:** every sub-mW cell turns into "years" — but the LiFePO4 has only ~18 y of useful
 shelf life and a hard 8 y first wear-out (`spec_values.reliability.first_wearout_years`). **No

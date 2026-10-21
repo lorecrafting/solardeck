@@ -6,6 +6,8 @@ Revised 2026-10-21 16:01 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / 
 
 Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
 
+Revised 2026-10-21 17:22 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, ADR-044/045).
+
 This step-by-step technical punch list guides the hardware engineer or field operator from unboxing the DHL Express package from Seeed Studio Fusion in Honolulu to running an authorized terminal session in pure sunlight.
 
 ---
@@ -63,7 +65,7 @@ Before inserting the CM5, initialize the RP2350B co-processor to confirm power s
    * If current hits 50 mA clamp, immediately disconnect and inspect `U_TPS62840`.
 3. **Flashing the RP2350 Firmware:**
    * Hold the physical `BOOTSEL` button on the carrier board.
-   * Connect a USB-C data cable from your host computer to **USB-C Port 1**.
+   * Connect your host computer to the RP2350 USB pins on the **recovery header** (`uart_swd_header`; USB-C Port 1 is the CM5's OTG / `nRPI_BOOT` port — docs/PIN_BUDGET.md §2).
    * Release `BOOTSEL`. The host PC will mount a mass storage volume named `RPI-RP2`.
    * Drag and drop `firmware/rp2350/build/solardeck_rp2350.uf2` into the volume.
    * The volume will automatically unmount, and the onboard green status LED (`D1`) will begin a 1 Hz heartbeat blink.
@@ -123,7 +125,7 @@ Before inserting the CM5, initialize the RP2350B co-processor to confirm power s
      - `i2c_bus`: All 7 core sensors responding (`0x60`, `0x44`, `0x12`, `0x68`, `0x5D`, `0x40`, `0x6B`).
      - `environmental`: SHT40 internal humidity $<30\%$ (desiccant active).
      - `audio`: Dual MEMS mics, speaker echo-cancel reference and hardware mute switch functional.
-     - `rf`: SX1262 LoRa SPI response and MAX-M10S GNSS UART response (ADR-038).
+     - `rf`: MAX-M10S GNSS UART response (ADR-038). No on-board LoRa in V1 (ADR-044).
      - `storage`: NVMe/eMMC write speed $>250\text{ MB/s}$.
 
 ---
@@ -131,7 +133,7 @@ Before inserting the CM5, initialize the RP2350B co-processor to confirm power s
 ### 5b. Sleep Gate (ADR-036)
 
 The CM5 (BCM2712) has no RAM-retaining low-power state (ADR-031, AUDIT 6 X4), so `sleep_ladder` R2
-is `null`: ambient modes (clock, reader, LoRa) run on the RP2350 with the CM5 off, and Linux resumes
+is `null`: ambient modes (clock, reader) run on the RP2350 with the CM5 off, and Linux resumes
 from off/hibernate in seconds. Nothing in CI measures either. Run this gate before accepting any
 power claim:
 

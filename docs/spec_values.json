@@ -64,7 +64,7 @@
   "standout_pillars": 7,
   "engineering_pillars": 9,
   "verification_phases": 16,
-  "core_bom_line_items": 55,
+  "core_bom_line_items": 53,
   "schematic_coverage_baseline": 40,
   "pcb_thickness_mm": 1.0,
   "rear_wall_mm": 1.5,
@@ -95,7 +95,7 @@
       },
       {
         "id": "P5",
-        "name": "Field hardening: airgap, LoRa mesh, GNSS, IP54 (V1) / IP67 (V2), rain-lock",
+        "name": "Field hardening: airgap, GNSS, IP54 (V1) / IP67 (V2), rain-lock; LoRa in V2",
         "status": "aspirational"
       },
       {
@@ -585,8 +585,8 @@
     "unpowered_months": 12,
     "drop_orientations": 26
   },
-  "bom_total_low": 497.55,
-  "bom_total_high": 499.55,
+  "bom_total_low": 481.75,
+  "bom_total_high": 483.75,
   "cm5": {
     "_comment": "CM5 pivot (ADR-031, 2026): V1 moves from CM4 8 GB/32 GB eMMC to CM5 16 GB/64 GB eMMC wireless (CM5116064 / SC1608). 16 GB DRAM is the LLM-resident assumption: the 1-3B local model tier runs in RAM without swap/heritage modes. eMMC 64 GB holds the base image, reader cache, and full offline corpus. Wireless variant carries the Wi-Fi/BT that CM4 needed a USB dongle for — one less peripheral spine. The BOM compute row is priced at price_usd; Phase 14 totals were re-derived on 2026-10-21.",
     "sku": "CM5116064",
@@ -602,9 +602,7 @@
     "insolation_kwh_m2_day": 4.28,
     "derate": 0.7,
     "solar_strip_w": 0.15,
-    "rp2350_idle_mw": 4.5,
-    "lora_repeater_mw_low": 12,
-    "lora_repeater_mw_high": 15
+    "rp2350_idle_mw": 4.5
   },
   "usb": {
     "sink_cc_rd_ohm": 5100,
@@ -624,9 +622,9 @@
     "hotpacks_must_include_rd_pair": true
   },
   "reliability": {
-    "fit_total": 1005,
-    "mtbf_hours": 995025,
-    "mtbf_years": 114,
+    "fit_total": 935,
+    "mtbf_hours": 1069519,
+    "mtbf_years": 122,
     "first_wearout_years": 8,
     "first_wearout_item": "desiccant (annual swap); first hard item is the LiFePO4 cell at 8 y",
     "model_status": "modelled",
@@ -720,7 +718,7 @@
     "burnish_rail_idle_proof": "rail current ~0 via INA3221",
     "charge_gradient_delta_c": "T_battery - T_display threshold, modelled",
     "powercycle_hold_ms": 500,
-    "baseband_retry_polls": "N consecutive LoRa RSSI polls below baseline, modelled"
+    "baseband_retry_polls": "N consecutive radio RSSI polls below baseline, modelled (applies to the V2 modem and LoRa, ADR-034/044)"
   },
   "_comment_adr032": "ADR-032: ppi, display_active_mm, panel_module_outline_mm, display_stack_mm, epdc_spi_mhz, refresh timings and reader page geometry are null until E Ink publishes the 10.3\" Kaleido 4 datasheet. Gates skip them loudly; they never fall back to stand-in values.",
   "battery": {
@@ -750,5 +748,501 @@
     "v2_target": "IP67",
     "status": "aspirational",
     "_comment": "ADR-039"
+  },
+  "pins": {
+    "_comment": "ADR-045 pin budget; docs/PIN_BUDGET.md is the readable copy. buffer_channels = 2x TXU0104 (BOM I/O Isolators). Phase 15 checks function per datasheet mux, PWM slices, uniqueness, cross-domain isolation, TMUX and buffer channel counts, expander size and firmware PIN_* defines.",
+    "tmux_channels": 8,
+    "buffer_channels": 8,
+    "aon_expander_pins": 16,
+    "rp2350b": {
+      "0": {
+        "net": "PSRAM_CS",
+        "fn": "qmi_cs1",
+        "use": "v1"
+      },
+      "1": {
+        "net": "LORA_NSS",
+        "fn": "sio",
+        "use": "v2"
+      },
+      "2": {
+        "net": "EPDC_HRDY_RP",
+        "fn": "sio",
+        "use": "v1",
+        "iso": "tmux"
+      },
+      "3": {
+        "net": "EPDC_RST_RP",
+        "fn": "sio",
+        "use": "v1",
+        "iso": "tmux"
+      },
+      "4": {
+        "net": "RP_SPI0_RX",
+        "fn": "spi0_rx",
+        "use": "v1",
+        "iso": "tmux"
+      },
+      "5": {
+        "net": "EPDC_CS_RP",
+        "fn": "spi0_csn",
+        "use": "v1",
+        "iso": "tmux"
+      },
+      "6": {
+        "net": "RP_SPI0_SCK",
+        "fn": "spi0_sck",
+        "use": "v1",
+        "iso": "tmux"
+      },
+      "7": {
+        "net": "RP_SPI0_TX",
+        "fn": "spi0_tx",
+        "use": "v1",
+        "iso": "tmux"
+      },
+      "8": {
+        "net": "LINK_MOSI",
+        "fn": "spi1_rx",
+        "use": "v1",
+        "iso": "rp_input"
+      },
+      "9": {
+        "net": "LINK_CS",
+        "fn": "spi1_csn",
+        "use": "v1",
+        "iso": "rp_input"
+      },
+      "10": {
+        "net": "LINK_SCK",
+        "fn": "spi1_sck",
+        "use": "v1",
+        "iso": "rp_input"
+      },
+      "11": {
+        "net": "LINK_MISO",
+        "fn": "spi1_tx",
+        "use": "v1",
+        "iso": "buffer"
+      },
+      "12": {
+        "net": "CM5_PWR_BUT",
+        "fn": "sio",
+        "use": "v1",
+        "iso": "od"
+      },
+      "13": {
+        "net": "TMUX_SEL",
+        "fn": "sio",
+        "use": "v1",
+        "fw": "PIN_TMUX_SEL_CM5_NRP"
+      },
+      "14": {
+        "net": "EN_5V_SYS",
+        "fn": "sio",
+        "use": "v1",
+        "fw": "PIN_EN_5V_SYS"
+      },
+      "15": {
+        "net": "WAKE_GPIO17",
+        "fn": "sio",
+        "use": "v1",
+        "iso": "buffer",
+        "fw": "PIN_GPIO17_WAKE"
+      },
+      "16": {
+        "net": "PWRFAIL_GPIO16",
+        "fn": "sio",
+        "use": "v1",
+        "iso": "buffer",
+        "fw": "PIN_GPIO16_PWRFAIL"
+      },
+      "17": {
+        "net": "CHG_CE_N",
+        "fn": "sio",
+        "use": "v1"
+      },
+      "18": {
+        "net": "EXP_INT_N",
+        "fn": "sio",
+        "use": "v1"
+      },
+      "19": {
+        "net": "FRONTLIGHT_CTRL",
+        "fn": "sio",
+        "use": "v1"
+      },
+      "20": {
+        "net": "GNSS_UART_TX",
+        "fn": "uart1_tx",
+        "use": "v1",
+        "iso": "buffer"
+      },
+      "21": {
+        "net": "GNSS_UART_RX",
+        "fn": "uart1_rx",
+        "use": "v1"
+      },
+      "22": {
+        "net": "LORA_BUSY",
+        "fn": "sio",
+        "use": "v2"
+      },
+      "23": {
+        "net": "GNSS_PPS",
+        "fn": "sio",
+        "use": "v1"
+      },
+      "24": {
+        "net": "I2C_AON_SDA",
+        "fn": "i2c0_sda",
+        "use": "v1"
+      },
+      "25": {
+        "net": "I2C_AON_SCL",
+        "fn": "i2c0_scl",
+        "use": "v1"
+      },
+      "26": {
+        "net": "MIC_BCLK",
+        "fn": "pio",
+        "use": "v1"
+      },
+      "27": {
+        "net": "MIC_WS",
+        "fn": "pio",
+        "use": "v1"
+      },
+      "28": {
+        "net": "MIC_SD",
+        "fn": "pio",
+        "use": "v1"
+      },
+      "29": {
+        "net": "AUD_LINK_BCLK",
+        "fn": "pio",
+        "use": "v1",
+        "iso": "buffer"
+      },
+      "30": {
+        "net": "AUD_LINK_WS",
+        "fn": "pio",
+        "use": "v1",
+        "iso": "buffer"
+      },
+      "31": {
+        "net": "AUD_LINK_SD",
+        "fn": "pio",
+        "use": "v1",
+        "iso": "buffer"
+      },
+      "32": {
+        "net": "VOICE_BTN",
+        "fn": "sio",
+        "use": "v1"
+      },
+      "33": {
+        "net": "PWR_BTN",
+        "fn": "sio",
+        "use": "v1"
+      },
+      "34": {
+        "net": "ROCKER_UP",
+        "fn": "sio",
+        "use": "v1"
+      },
+      "35": {
+        "net": "ROCKER_DOWN",
+        "fn": "sio",
+        "use": "v1"
+      },
+      "36": {
+        "net": "ROCKER_LEFT",
+        "fn": "sio",
+        "use": "v1"
+      },
+      "37": {
+        "net": "ROCKER_RIGHT",
+        "fn": "sio",
+        "use": "v1"
+      },
+      "38": {
+        "net": "ROCKER_PRESS",
+        "fn": "sio",
+        "use": "v1"
+      },
+      "39": {
+        "net": "LORA_DIO1",
+        "fn": "sio",
+        "use": "v2"
+      },
+      "40": {
+        "net": "SOLAR_ADC",
+        "fn": "adc",
+        "use": "v1",
+        "fw": "PIN_SOLAR_ADC"
+      },
+      "41": {
+        "net": "LED_R",
+        "fn": "pwm",
+        "use": "v1"
+      },
+      "42": {
+        "net": "LED_G",
+        "fn": "pwm",
+        "use": "v1"
+      },
+      "43": {
+        "net": "LUX_ADC",
+        "fn": "adc",
+        "use": "v1"
+      },
+      "44": {
+        "net": "LED_B",
+        "fn": "pwm",
+        "use": "v1"
+      },
+      "45": {
+        "net": "LORA_RXEN",
+        "fn": "sio",
+        "use": "v2"
+      },
+      "46": {
+        "net": "PIEZO",
+        "fn": "pwm",
+        "use": "v1"
+      },
+      "47": {
+        "net": "LORA_TXEN",
+        "fn": "sio",
+        "use": "v2"
+      }
+    },
+    "aon_expander": {
+      "0": {
+        "net": "GNSS_EN",
+        "fn": "gpio",
+        "use": "v1"
+      },
+      "1": {
+        "net": "PORT2_VBUS_EN",
+        "fn": "gpio",
+        "use": "v1"
+      },
+      "2": {
+        "net": "AIRGAP_SENSE",
+        "fn": "gpio",
+        "use": "v1"
+      },
+      "3": {
+        "net": "CHG_INT_N",
+        "fn": "gpio",
+        "use": "v1"
+      },
+      "4": {
+        "net": "GAUGE_INT",
+        "fn": "gpio",
+        "use": "v1"
+      },
+      "5": {
+        "net": "IMU_INT",
+        "fn": "gpio",
+        "use": "v1"
+      },
+      "6": {
+        "net": "CC_INT_N",
+        "fn": "gpio",
+        "use": "v1"
+      },
+      "7": {
+        "net": "HP_DET",
+        "fn": "gpio",
+        "use": "v1"
+      },
+      "8": {
+        "net": "SENSOR_ALERT_N",
+        "fn": "gpio",
+        "use": "v1"
+      },
+      "9": {
+        "net": "LORA_NRESET",
+        "fn": "gpio",
+        "use": "v2"
+      },
+      "10": {
+        "net": "LORA_PWR_EN",
+        "fn": "gpio",
+        "use": "v2"
+      },
+      "11": {
+        "net": "LTE_PWR_EN",
+        "fn": "gpio",
+        "use": "v2"
+      },
+      "12": {
+        "net": "LTE_RESET_N",
+        "fn": "gpio",
+        "use": "v2"
+      },
+      "13": {
+        "net": "LTE_W_DISABLE_N",
+        "fn": "gpio",
+        "use": "v2"
+      }
+    },
+    "cm5_gpio": {
+      "0": {
+        "net": "ID_SD",
+        "fn": "id_sd",
+        "use": "reserved"
+      },
+      "1": {
+        "net": "ID_SC",
+        "fn": "id_sc",
+        "use": "reserved"
+      },
+      "2": {
+        "net": "I2C_HOST_SDA",
+        "fn": "i2c1_sda",
+        "use": "v1"
+      },
+      "3": {
+        "net": "I2C_HOST_SCL",
+        "fn": "i2c1_scl",
+        "use": "v1"
+      },
+      "4": {
+        "net": "LINK_CS",
+        "fn": "spi3_csn0",
+        "use": "v1"
+      },
+      "5": {
+        "net": "LINK_MISO",
+        "fn": "spi3_miso",
+        "use": "v1"
+      },
+      "6": {
+        "net": "LINK_MOSI",
+        "fn": "spi3_mosi",
+        "use": "v1"
+      },
+      "7": {
+        "net": "LINK_SCK",
+        "fn": "spi3_sclk",
+        "use": "v1"
+      },
+      "8": {
+        "net": "EPDC_CS_CM5",
+        "fn": "spi0_ce0",
+        "use": "v1",
+        "iso": "tmux"
+      },
+      "9": {
+        "net": "EPDC_MISO_CM5",
+        "fn": "spi0_miso",
+        "use": "v1",
+        "iso": "tmux"
+      },
+      "10": {
+        "net": "EPDC_MOSI_CM5",
+        "fn": "spi0_mosi",
+        "use": "v1",
+        "iso": "tmux"
+      },
+      "11": {
+        "net": "EPDC_SCK_CM5",
+        "fn": "spi0_sclk",
+        "use": "v1",
+        "iso": "tmux"
+      },
+      "12": {
+        "net": "EPDC_HRDY_CM5",
+        "fn": "gpio",
+        "use": "v1",
+        "iso": "tmux"
+      },
+      "13": {
+        "net": "EPDC_RST_CM5",
+        "fn": "gpio",
+        "use": "v1",
+        "iso": "tmux"
+      },
+      "14": {
+        "net": "DEBUG_UART_TX",
+        "fn": "uart0_tx",
+        "use": "v1"
+      },
+      "15": {
+        "net": "DEBUG_UART_RX",
+        "fn": "uart0_rx",
+        "use": "v1"
+      },
+      "16": {
+        "net": "PWRFAIL_GPIO16",
+        "fn": "gpio",
+        "use": "v1"
+      },
+      "17": {
+        "net": "WAKE_GPIO17",
+        "fn": "gpio",
+        "use": "v1"
+      },
+      "18": {
+        "net": "AUD_LINK_BCLK",
+        "fn": "i2s1_sclk",
+        "use": "v1"
+      },
+      "19": {
+        "net": "AUD_LINK_WS",
+        "fn": "i2s1_ws",
+        "use": "v1"
+      },
+      "20": {
+        "net": "AUD_LINK_SD",
+        "fn": "i2s1_sdi",
+        "use": "v1"
+      },
+      "21": {
+        "net": "SPK_SDO",
+        "fn": "i2s1_sdo",
+        "use": "v1"
+      },
+      "22": {
+        "net": "TOUCH_INT",
+        "fn": "gpio",
+        "use": "v1"
+      },
+      "23": {
+        "net": "TOUCH_RST",
+        "fn": "gpio",
+        "use": "v1"
+      },
+      "24": {
+        "net": "PEN_INT",
+        "fn": "gpio",
+        "use": "v1"
+      },
+      "25": {
+        "net": "PEN_RST",
+        "fn": "gpio",
+        "use": "v1"
+      },
+      "26": {
+        "net": "HAPTIC_TRIG",
+        "fn": "gpio",
+        "use": "v1"
+      },
+      "27": {
+        "net": "NFC_IRQ",
+        "fn": "gpio",
+        "use": "v2"
+      }
+    },
+    "cm5_ctrl": {
+      "PWR_BUT": {
+        "net": "CM5_PWR_BUT",
+        "use": "v1"
+      }
+    }
   }
 }

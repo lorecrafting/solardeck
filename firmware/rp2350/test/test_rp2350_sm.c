@@ -69,6 +69,13 @@ int main(void) {
     assert(solardeck_charge_enable_allowed(&ctx) == true);
     printf("  ✓ Charger stays off until VREG reads back at %u mV\n", SD_CHARGE_LIMIT_MV);
 
+    // 8. No line is driven into an unpowered CM5 (PIN_BUDGET rule 1, defence in depth).
+    solardeck_sm_init(&ctx);
+    solardeck_sm_transition(&ctx, SOLAR_STATE_ZEN_READER);
+    solardeck_check_power_thresholds(&ctx, 2850);
+    assert(ctx.pwrfail_pin_asserted == false);
+    printf("  ✓ Power-fail line stays low while the CM5 is unpowered\n");
+
     printf("✓ All RP2350 State Machine self-tests passed successfully!\n");
     return 0;
 }

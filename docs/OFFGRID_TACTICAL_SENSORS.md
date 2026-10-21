@@ -3,6 +3,7 @@
 Written 2026-10-19 12:12 UTC in the Pi harness by antigravity/gemini-3.8-flash
 Revised 2026-10-21 15:59 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
 Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
+Revised 2026-10-21 17:22 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, ADR-044/045).
 
 Detailed architectural specification for campervan energy bus integration, enhanced sensor navigation (RTK, celestial plate-solving, 9-DOF IMU), grid-down doomsday survival hardware, frontlight optical engineering, and offline AI knowledgebase traversal.
 
@@ -72,7 +73,7 @@ While standard single-band GPS provides 3 to 5 meter accuracy, SolarDeck's senso
 ```
 
 ### 2.1 Centimeter-Level RTK & Galileo HAS (Multi-Band GNSS)
-* **The RTK Upgrade Option:** The carrier board expansion header accommodates high-precision dual-frequency GNSS modules (**u-blox ZED-F9P** or **Quectel LC29H**). By tracking carrier phase cycles across L1, L2, and L5 bands alongside local RTCM differential corrections (via LoRa, or NTRIP over Wi-Fi/tethering), horizontal position accuracy drops to **1.4 centimeters**.
+* **The RTK Upgrade Option:** The carrier board expansion header accommodates high-precision dual-frequency GNSS modules (**u-blox ZED-F9P** or **Quectel LC29H**). By tracking carrier phase cycles across L1, L2, and L5 bands alongside local RTCM differential corrections (via a paired Meshtastic node, or NTRIP over Wi-Fi/tethering), horizontal position accuracy drops to **1.4 centimeters**.
 * **Galileo HAS (High Accuracy Service):** The European Galileo constellation transmits free, open-access correction parameters directly from orbit on the **E6 carrier (1278.75 MHz)**. This provides **sub-20 cm accuracy worldwide** without requiring ground base stations, internet access, or local radios.
 
 ### 2.2 9-DOF Celestial & Orientation IMU (Sensor-Driven Stargazing)
@@ -321,7 +322,7 @@ The following custom software utilities and daemons leverage SolarDeck's bi-stab
    * Delivers 0% glare under blinding open-ocean sunlight.
    * Hardware water-lock isolates capacitive touch against splashing waves while allowing the Wacom EMR stylus to plot course bearings; draws only 1.2W vs 25W for standard marine MFDs.
 8. **`solardeck-gcs` (Sunlight UAV & Weather Balloon Ground Control Station):**
-   * Runs **QGroundControl** over 915 MHz LoRa or telemetry radios using MAVLink.
+   * Runs **QGroundControl** over USB telemetry radios using MAVLink (on-board LoRa is V2, ADR-044).
    * Serves as an outdoor daylight ground station for tracking autonomous drones, search-and-rescue quadcopters, and high-altitude meteorological balloons.
 9. **`solardeck-bench` (Outdoor Logic Analyzer, Oscilloscope & Bus Pirate):**
    * Pairs with open-source USB logic analyzers via `sigrok` and `PulseView` on USB-C Port 2.
@@ -334,7 +335,7 @@ The following custom software utilities and daemons leverage SolarDeck's bi-stab
 11. **`solardeck-slate` (Low-Latency Wacom Vector Field Notebook):**
     * Direct-to-DRM canvas hooking into Wacom EMR (<18ms latency) for sketching circuit schematics, physics math, or tactical maps, with 1-click export to vector SVG or Obsidian.
 12. **`solardeck-courier` (Autonomous Bi-Stable LoRa Pager & Bulletin Board):**
-    * While Linux is unpowered, the RP2350 receives Meshtastic messages over LoRa at 12 mW and prints them to the E-Ink screen. Because E-Ink is bi-stable, messages remain legibly stamped on the display forever without consuming battery.
+    * V2 (ADR-044); V1 uses a paired Meshtastic node over BLE.
 13. **`solardeck-airgap-tx` (Optical QR Fountain Code Bridge):**
     * V2 (ADR-034): ingestion needs the deferred rear camera.
 14. **`solardeck-vault-totp` (Bi-Stable Airgapped 2FA & Password Vault):**

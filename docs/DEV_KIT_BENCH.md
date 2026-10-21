@@ -6,6 +6,8 @@ Revised 2026-10-21 16:02 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / 
 
 Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
 
+Revised 2026-10-21 17:22 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, ADR-044/045).
+
 Purpose: buy the minimum bench hardware that proves the three make-or-break gate claims (G1, G2,
 G12) and the LiFePO4 charge path (ADR-035) as **measured** values, before any PCB fabrication money is spent. This is the physical
 companion to `HARDWARE_VERIFICATION_WORKFLOW.md` — that file owns the *method*, this file owns
@@ -50,7 +52,7 @@ exist on real silicon" for a bench total that is TBD (§2) before a ~$1.5 k PCB 
 | | **Bench total** | | | **TBD** (CM5 IO board and items 9–11 TBD) | | Shipped total TBD (2–3 vendors, HI freight) |
 
 **What is deliberately NOT on the bench:** the panel's Wacom EMR (pen arbiter comes later, after the
-core gates pass), the audio array, LoRa (standard radio — board-stage), and the solar strip
+core gates pass), the audio array, LoRa (V2, ADR-044), and the solar strip
 (0.15 W trickle is a charge-tree question, not a gate). LTE, camera and NFC are V2 (ADR-034) and have no
 bench item.
 
@@ -82,7 +84,7 @@ design has been through a DFM-for-hand pass. Here is the honest ladder:
      *DFM-for-hand-assembly* pads at quoting time; JLCPCB/Seeed will happily fab enlarged-pad
      variants.
    - **Castellated SMD modules** (KiCad 8 feature, already referenced in `HARDWARE_SPEC.md:793` for
-     the SX1262): each IC gets a castellated footprint with a sacrificial trace ring — a
+     the V2 SX1262 footprint, ADR-045): each IC gets a castellated footprint with a sacrificial trace ring — a
      hand-solder pattern that drags tin across pads and is then cleaned off. This is the *right*
      hand-assembly answer for the RF/co-proc parts.
    - **Precision tools, when you do it:** hot-air rework station (~$120–250, the solder sucker +

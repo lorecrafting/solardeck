@@ -6,13 +6,13 @@ heal itself for decades.**
 
 *Written 2026-10-18 17:35 UTC in the Pi harness by antigravity/gemini-3.8-flash.
 Revised 2026-10-20 14:40 UTC in the Pi harness by openrouter/deepseek/deepseek-v4-flash-0731.
-Rewritten 2026-10-21 16:05 UTC and revised 16:55 UTC in Claude Code by anthropic/claude-opus-5-5.*
+Rewritten 2026-10-21 16:05 UTC and revised 16:55 and 17:30 UTC in Claude Code by anthropic/claude-opus-5-5.*
 
 > [!WARNING]
 > **Status (2026-10-21): concept / reference architecture. Nothing here is ready to build or buy.**
-> Schematic capture covers 40 of 55 core BOM parts and has no wired connectivity; the PCB is unrouted;
+> Schematic capture covers 40 of 53 core BOM parts and has no wired connectivity; the PCB is unrouted;
 > production files are placeholders; nothing has been measured. V1 scope and parts were re-decided on
-> 2026-10-21 (ADR-031 to ADR-043). The display, Kaleido 4, is not yet released, so its size,
+> 2026-10-21 (ADR-031 to ADR-045). The display, Kaleido 4, is not yet released, so its size,
 > resolution and controller are unknown. See [Where things stand](#where-things-stand) and
 > [`docs/AUDIT_6_2026-10-21.md`](docs/AUDIT_6_2026-10-21.md) before quoting any number.
 
@@ -36,8 +36,8 @@ SolarDeck is one open-hardware slate that does three jobs:
   ([`docs/LONGEVITY_30Y.md`](docs/LONGEVITY_30Y.md)) as a design goal, not a warranty.
 
 The trick that makes all three fit in one device is **two brains sharing one screen**. A small
-always-on RP2350 co-processor runs the clock, dashboard, page-flip reader, GPS and LoRa mesh radio
-while the Linux computer is off. Linux wakes in seconds when you need a real computer, then goes back
+always-on RP2350 co-processor runs the clock, dashboard, page-flip reader, GPS and the voice-button
+microphones while the Linux computer is off. Linux wakes in seconds when you need a real computer, then goes back
 off.
 
 **Who it is for:** developers who want an outdoor AI terminal, field users who want an off-grid
@@ -68,10 +68,10 @@ panel's refresh time.
                  ┌──────────────────────────── SolarDeck ────────────────────────────┐
   USB-C PD ────► │ charger + LiFePO4 ──► always-on rail ──► RP2350 co-processor       │ ◄── bezel solar strip
                  │                            │        clock · dashboard · reader       │
-                 │                      load switches   GPS · LoRa mesh · voice button │
+                 │                      load switches   GPS · mics · voice button      │
                  │                            ▼                      │                 │
                  │        Raspberry Pi CM5 · Linux · Sway            │                 │
-                 │        Wi-Fi/BT · mics · speaker · NVMe ──┐       │                 │
+                 │        Wi-Fi/BT · speaker · NVMe ─────────┐       │                 │
                  │                                           ▼       ▼                 │
                  │                          bus switch ─► display controller (TBD) ─► 10.3″ Kaleido 4 + Wacom EMR
                  └─────────────────────────────────────────────────────────────────────┘
@@ -98,7 +98,7 @@ is in [`docs/STANDOUT_FEATURES.md`](docs/STANDOUT_FEATURES.md).
 | P2 | **Typewriter-on-paper** | Instant haptic and audio feedback per keystroke; ink with no flashing while you type | aspirational |
 | P3 | **Sunlight-readable, solar-topped** | Readable in direct sun; outdoors the bezel strip tops up the idle co-processor | aspirational |
 | P4 | **Field-ready form** | Thin slate, desk easel, modular grips (`chassis_mm`, `mass_g`) | modelled |
-| P5 | **Field hardening** | Hardware airgap switch, LoRa mesh, GPS, IP54 in V1 (IP67 in V2), rain-lock touch cutoff | aspirational |
+| P5 | **Field hardening** | Hardware airgap switch, GPS, IP54 in V1 (IP67 in V2), rain-lock touch cutoff | aspirational |
 | P6 | **Modular upgrade bridge** | Socketed compute module, RAM by module swap, M.2 NVMe | specified |
 | P7 | **Voice-first control** | Hold-to-talk button, opt-in hands-free wake word, barge-in | aspirational |
 
@@ -137,10 +137,10 @@ rather than restating values.
 | Battery | LiFePO4 1S; cell chosen from a real datasheet before capacity is claimed — ADR-040 (`battery_wh`) |
 | Charging & power | BQ25798 charger, BQ29706-class protector, BQ27Z561-R2 gauge, USB-PD sink, power bank capped at 2 A — ADR-035 (`charger`, `battery`) |
 | Solar | Bezel strip + BQ25504 harvester, outdoor top-up only — ADR-041 (`solar_w`) |
-| Radios | Wi-Fi/BT on the CM5, SX1262 LoRa on an external SMA, u-blox MAX-M10S GPS — ADR-038 (`gnss`) |
+| Radios | Wi-Fi/BT on the CM5, u-blox MAX-M10S GPS on the RP2350 — ADR-038 (`gnss`). Mesh via a paired Meshtastic node over Bluetooth — ADR-044 |
 | Storage | eMMC + M.2 NVMe on the CM5's PCIe lane + microSD; USB 3 native on the CM5 — ADR-042 |
 | Enclosure | PA12 prototypes, PC/ABS production, IP54 in V1 — ADR-039 (`chassis_mm`, `ingress`) |
-| **V2** | LTE, nano-SIM and SGP.22 eSIM (ADR-033), NFC, rear camera, Hotpacks — ADR-034 |
+| **V2** | LTE, nano-SIM and SGP.22 eSIM (ADR-033), NFC, rear camera, Hotpacks — ADR-034; on-board LoRa — ADR-044. The V1 board reserves footprints and pins for all of them — ADR-045, [`docs/PIN_BUDGET.md`](docs/PIN_BUDGET.md) |
 
 ---
 

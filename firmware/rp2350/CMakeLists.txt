@@ -5,6 +5,10 @@ set(CMAKE_C_STANDARD 11)
 
 # Check if Pico SDK is provided
 if (DEFINED ENV{PICO_SDK_PATH})
+    # RP2350B (QFN-80): the ADC is GPIO 40-47 only on this package (docs/PIN_BUDGET.md).
+    set(PICO_PLATFORM rp2350-arm-s)
+    set(PICO_BOARD solardeck)
+    set(PICO_BOARD_HEADER_DIRS ${CMAKE_CURRENT_LIST_DIR}/boards)
     include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
     pico_sdk_init()
 

@@ -24,7 +24,7 @@ typedef struct {
     int16_t  temp_c_x10;    /* Temperature in 0.1°C (e.g. 265 = 26.5°C) */
     uint16_t pwr_compute_mw;/* Compute rail power in mW (INA3221 CH1) */
     uint16_t pwr_display_mw;/* Display rail power in mW (INA3221 CH2) */
-    uint16_t pwr_rf_mw;     /* RF modem & LoRa rail power in mW (INA3221 CH3) */
+    uint16_t pwr_rf_mw;     /* radio rail power in mW (INA3221 CH3; GNSS in V1) */
     uint8_t  airgap_active; /* 1 if Airgap Stealth Switch is engaged, 0 if normal */
     uint8_t  crc8;          /* CRC-8 over payload */
 } telemetry_frame_t;

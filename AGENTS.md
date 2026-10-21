@@ -6,6 +6,8 @@ Revised 2026-10-21 16:03 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / 
 
 Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
 
+Revised 2026-10-21 17:23 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, pin budget; ADR-044/045).
+
 **Read `docs/WORKFLOW.md` before your first change.** It is the operating procedure: claim tags,
 change classes, the intent→ledger lifecycle, the 13 non-negotiables from the audit, and the
 definition of done. This file is the map and the hard rules; that file is the method.
@@ -25,7 +27,7 @@ running mainline bare-metal Linux. Open hardware; CERN-OHL-S-2.0 + MIT, see `LIC
 | **Dual-brain compute** | Raspberry Pi CM5, CM5116064 only (BCM2712 quad Cortex-A76, 16 GB RAM, 64 GB eMMC, on-module Wi-Fi/BT; ADR-031) running Linux; RP2350B co-processor at 10 µA sleep / 4.5 mW reader mode handling RTC, ADC solar sampling, PSRAM frame cache, voice-button audio capture and CM5 power-on. The CM5 has no RAM-retaining sleep: ambient modes are instant on the RP2350, Linux resumes from off/hibernate in seconds (ADR-036). Bus isolation via a pair of TI TMUX1575 4-channel switches (two devices = 8 channels). | `docs/MVP_ARCHITECTURE.md` |
 | **Display** | 10.3" E Ink Kaleido 4 (colour), the only panel (ADR-032). Resolution, PPI, outline and display controller are TBD until E Ink's datasheet (`spec_values.panel_sku`). The IT8951 cannot drive Kaleido 4; IT8951 + Kaleido 3/Carta is only the bench stand-in for the refresh software (ADR-025). Frame rates are per-rectangle, not per-screen; colour motion is unsupported. All figures: `spec_values.refresh_modes`. On-top Wacom EMR variants require the pen/refresh arbiter. | `docs/HARDWARE_SPEC.md` §2.2, `docs/SOFTWARE_SPEC.md` §51–52 |
 | **Power** | LiFePO4 (Wh TBD until the cell is chosen, ADR-040), BQ25798 charger + BQ29706-class protector + BQ27Z561-R2 gauge (ADR-035) + USB-PD sink, 0.15 W solar bezel strip that tops up the idle co-processor outdoors only (ADR-041; larger harvest is an accessory), TPS62840 always-on rail, TPS22918 peripheral load switches | `docs/HARDWARE_SPEC.md` §3 |
-| **Comms** | Wi-Fi/BT on the CM5 (phone tethering for internet), SX1262 LoRa on the RP2350, u-blox MAX-M10S GNSS on an RP2350 UART (ADR-038), USB-C only (the pogo bus is descoped). LTE, SIM/eSIM and NFC are V2 (ADR-034). | `docs/HARDWARE_SPEC.md` §2.5 |
+| **Comms** | Wi-Fi/BT on the CM5 (phone tethering for internet; mesh through a paired Meshtastic node over BLE), u-blox MAX-M10S GNSS on an RP2350 UART (ADR-038), USB-C only (the pogo bus is descoped). LTE, SIM/eSIM and NFC are V2 (ADR-034); on-board LoRa is V2 (ADR-044). Every pin, V1 and V2: `docs/PIN_BUDGET.md` (ADR-045). | `docs/HARDWARE_SPEC.md` §2.5 |
 | **Ergonomics** | External USB-C/BT keyboard only — no keyboard firmware in this repo (ADR-001). Rear M2.5 inserts + MagSafe anchor array for grips, tripods, easel arms. | `docs/MECHANICAL_FIT_AND_ENCLOSURE_WORKFLOW.md` |
 
 Fabrication status is **not** implied by a green CI run. See `docs/AUDIT_6_2026-10-21.md`.
@@ -118,8 +120,8 @@ attribution before you call the task done.
    (`docs/FIRST_BOOT_CHECKLIST.md` §5b).
 3. **Waveform DC balance.** Any LUT change must keep net DC bias ≈ 0 V across refresh cycles. Fast-mode
    bursts need a forced balanced cycle; pigment burn-in is permanent (`docs/SOFTWARE_SPEC.md` §52).
-4. **RF limits.** The SX1262 (and any add-on transmitter) respects regional ISM bands and EIRP (915 MHz NA, 868 MHz EU). No
-   transmission config ships without the region.
+4. **RF limits.** Any transmitter this repo configures — the V2 SX1262, a Hotpack, or an external Meshtastic node set up over
+   BLE (ADR-044) — respects regional ISM bands and EIRP (915 MHz NA, 868 MHz EU). No transmission config ships without the region.
 5. **Input validation at trust boundaries** and error handling that prevents data loss are never
    simplified away.
 

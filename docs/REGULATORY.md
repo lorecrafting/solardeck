@@ -3,6 +3,7 @@
 Written 2026-10-20 12:05 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017
 Revised 2026-10-21 15:59 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
 Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
+Revised 2026-10-21 17:23 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, pin budget; ADR-044/045).
 
 Audit 3 found that no regulatory dimension existed anywhere in the repo. This file is that dimension.
 **Rule: no certificate row at `filed` or `granted` = no shipment.** A prototype may exist without these;
@@ -16,11 +17,12 @@ Statuses: `not started` → `scoped` → `tested` → `filed` → `granted`.
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | Cellular (V2) | **PTCRB / GCF** carrier conformance | V2 modem (ADR-034) | not started | TBD | V2 only: no cellular radio in V1. Reuse the module's certs; cite the certificate numbers, don't re-test the radio |
 | Cellular (V2) | Carrier approval (per operator) | V2 end product | not started | TBD | V2 only (ADR-034). Needs IMEI allocation + a carrier contact |
-| Radio (V1) | **RF exposure (Wi-Fi/BT, LoRa)** | V1 end product | not started | TBD | Run the FCC §1.1307(b)(3) exemption for each transmitter at its real separation; LoRa at up to +22 dBm conducted near the body may need SAR, not just MPE (AUDIT 6 H18) |
+| Radio (V1) | **RF exposure (Wi-Fi/BT)** | V1 end product | not started | TBD | Run the FCC §1.1307(b)(3) exemption for the CM5 radio at its real separation behind the shell |
+| Radio (V2) | **RF exposure (LoRa)** | V2 end product | not started | TBD | V2 only (ADR-044). LoRa at up to +22 dBm conducted near the body may need SAR, not just MPE (AUDIT 6 H18) |
 | Cellular (V2) | **LTE SAR / MPE** | V2 end product | not started | TBD | V2 only (ADR-034). A modem antenna near the palm must be *assessed*, not assumed |
 | Wi-Fi / BT | Module cert reuse (CM5) + antenna rules | CM5 | not started | TBD | The CM5's modular grant (TBD — verify on CM5) covers the module; the **antenna** and the enclosure change the RF environment |
-| LoRa 915 MHz | **FCC Part 15.247** (DTS) or 15.231 | SX1262 + antenna | not started | TBD | 902–928 MHz, ≤ +30 dBm EIRP, 50 Ω matched, no external gain |
-| LoRa 868 MHz | **EN 300 220** + ERC/REC 70-03 | SX1262 + antenna | not started | TBD | 1 % duty cycle in most sub-bands; firmware must enforce it per region |
+| LoRa 915 MHz (V2) | **FCC Part 15.247** (DTS) or 15.231 | SX1262 + antenna (V2, ADR-044) | not started | TBD | 902–928 MHz, ≤ +30 dBm EIRP, 50 Ω matched, no external gain |
+| LoRa 868 MHz (V2) | **EN 300 220** + ERC/REC 70-03 | SX1262 + antenna (V2, ADR-044) | not started | TBD | 1 % duty cycle in most sub-bands; firmware must enforce it per region |
 | GNSS | None as an intentional radiator | u-blox MAX-M10S + passive antenna | not started | TBD | Receive-only (ADR-038): no intentional-radiator certification; covered by the end-product EMC rows |
 | Sub-GHz (CC1101) (V2) | Same as above, per band | Hotpack 2 (V2, ADR-034) | not started | TBD | Hotpack carries its own antenna → its own filing |
 | EMC | **FCC Part 15B**, **EN 55032** | End product | not started | TBD | Radiated + conducted; e-paper drive lines and the boost converter are the emitters |

@@ -22,7 +22,7 @@ int main(void) {
     tx_frame.temp_c_x10 = 265;      /* 26.5°C */
     tx_frame.pwr_compute_mw = 1200; /* 1.2W CM5 CPU */
     tx_frame.pwr_display_mw = 45;   /* 45mW E-Ink idle */
-    tx_frame.pwr_rf_mw = 15;        /* 15mW LoRa standby */
+    tx_frame.pwr_rf_mw = 15;        /* sample radio-rail reading */
     tx_frame.airgap_active = 0;     /* Normal mode */
 
     /* Compute CRC */

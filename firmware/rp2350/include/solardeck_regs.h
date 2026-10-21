@@ -59,8 +59,8 @@ extern "C" {
 
 /* Events raised by the RP2350, write-1-to-clear by the CM5. */
 #define REG_EVENTS            0x18  /* SD_EVENT_* bitfield */
-#define REG_LORA_RX_LEN       0x1A  /* uint8, bytes queued in the LoRa RX ring */
-#define REG_LORA_RX_HEAD      0x1B  /* uint8, ring head index */
+#define REG_LORA_RX_LEN       0x1A  /* reserved for V2 LoRa (ADR-044); reads 0 in V1 */
+#define REG_LORA_RX_HEAD      0x1B  /* reserved for V2 LoRa (ADR-044); reads 0 in V1 */
 
 /* Ownership of the EPDC bus. Must agree with the TMUX select pin, never instead of it. */
 #define REG_EPDC_OWNER        0x1C  /* SD_OWNER_* */
@@ -85,7 +85,7 @@ extern "C" {
 
 #define SD_WAKE_NONE          0
 #define SD_WAKE_BUTTON        1
-#define SD_WAKE_LORA          2
+#define SD_WAKE_LORA          2   /* reserved for V2 LoRa (ADR-044) */
 #define SD_WAKE_RTC           3
 #define SD_WAKE_PEN           4
 #define SD_WAKE_PWRFAIL       5
@@ -104,7 +104,7 @@ extern "C" {
 #define SD_EVENT_WAKE_REQ     (1u << 0)
 #define SD_EVENT_PWRFAIL      (1u << 1)
 #define SD_EVENT_BUTTON       (1u << 2)
-#define SD_EVENT_LORA_RX      (1u << 3)
+#define SD_EVENT_LORA_RX      (1u << 3)  /* reserved for V2 LoRa (ADR-044) */
 #define SD_EVENT_TAMPER       (1u << 4)
 
 #define SD_OWNER_CM5          0

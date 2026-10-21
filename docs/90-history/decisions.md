@@ -733,3 +733,72 @@ Written 2026-10-21 16:37 UTC in Claude Code by anthropic/claude-opus-5-5.
 - `HANDOFF_TO_FABLE.md` moves to `90-history/`; `INDEX.md` gets a generator or stops being called
   generated.
 - Contact E Ink for the Kaleido 4 datasheet, drawing and controller reference under NDA (ADR-032).
+
+---
+
+## ADR-044 — LoRa moves to V2; V1 talks to an external Meshtastic node over Bluetooth (2026-10-21)
+
+Written 2026-10-21 17:20 UTC in Claude Code by anthropic/claude-opus-5-5. Amends ADR-034 (V1 scope)
+and ADR-038 (GNSS rationale). Owner decision: "Should we descope LoRa from V1?" → yes.
+
+**Trigger.** LoRa was the last intentional radiator in V1 besides the CM5's pre-certified Wi-Fi/BT.
+It brings Part 15.247 / EN 300 220 testing, a possible SAR evaluation at +22 dBm near the body
+(AUDIT 6 H18), an SMA aperture against the IP54 target, and firmware-enforced regional duty cycles.
+None of that serves V1's identity (voice, typing, reading).
+
+**Decision.**
+- The SX1262 module, its SMA bulkhead and its antenna leave the V1 BOM. Mesh in V1 is a **CM5 software
+  feature**: pair any external Meshtastic node over Bluetooth LE.
+- The V1 board keeps the V2 radio as a reservation (ADR-045): DNP module footprint, its RP2350 pins in
+  the pin budget, a top-edge antenna keep-out and the SMA boss in the enclosure model, plugged.
+- `power.lora_repeater_mw_*` and the "80+ days repeating" claim are deleted. The LoRa regulatory rows
+  move to V2. The register-map entries for LoRa stay at their offsets, marked reserved, so the
+  64-byte frame does not change.
+- **GNSS stays on the RP2350 in V1.** ADR-038's reason ("so the LoRa node has position with Linux
+  off") is replaced: the RP2350 keeps time and logs position with Linux off, the PPS line disciplines
+  its RTC, and the V2 radio inherits it.
+- **RF limits (AGENTS §4.4) still bind V1.** The Meshtastic client sets an external node's region
+  and transmit power, so the client refuses to configure a node without a region.
+
+**Because.** It removes one certification and one aperture from V1 at no cost to the core features,
+and users who need a mesh today already carry a Meshtastic node.
+
+---
+
+## ADR-045 — V1 is a platform board with V2 reservations; the pin budget is enforced (2026-10-21)
+
+Written 2026-10-21 17:20 UTC in Claude Code by anthropic/claude-opus-5-5. Owner question: can the V1
+schematic and mechanics be drawn with the full V2 feature set in mind?
+
+**Decision.** Yes. The V1 carrier board and enclosure are drawn once, for V2. V2 parts are DNP
+footprints, not omissions:
+
+| V2 feature | Reserved on the V1 board / enclosure |
+| :--- | :--- |
+| LTE modem | M.2 Key-B socket on CM5 USB 3.0 port 1; modem load switch and control on the always-on GPIO expander; supply headroom for the modem's peak current, sized when the modem is chosen; antenna keep-outs and windows in the shell |
+| SIM / eSIM | nano-SIM tray footprint and an MFF2 SGP.22 eUICC footprint (ADR-033), both on the modem's SIM bus |
+| LoRa | SX1262 module footprint on the RP-side SPI0 bus, RP2350 GPIO 1, 22, 39, 46, 47 and two expander lines; top-edge SMA boss, plugged (ADR-044) |
+| NFC | coil area behind the rear shell; controller footprint on the CM5 host I²C; interrupt on CM5 GPIO 27 |
+| Camera | CSI connector footprint on CM5 MIPI 1; lens boss in the rear shell, plugged |
+
+**The pin budget** (`spec_values.pins`, readable copy `docs/PIN_BUDGET.md`) assigns every GPIO on
+both processors to a V1 or V2 use. Phase 15 checks it against the datasheet mux tables, uniqueness,
+isolation into the unpowered CM5 domain, the TMUX channel count and the firmware's `PIN_*` defines.
+The firmware's solar ADC pin was invalid (GPIO 26; the RP2350B ADC is GPIO 40–47) and moved to 40.
+
+**Consequences the budget forced.**
+- **Mic routing (ADR-036 open item): the budget assumes option (a); owner to confirm.** The RP2350
+  owns both mics and is the I²S clock master; it streams audio to the CM5's I2S1 (the clock-target
+  instance; I2S0 is master-only), and the speaker amp and headphone DAC share those clocks. USB audio
+  does not fit: the only free CM5 USB port is the V2 modem's, and the OTG port is the CM5 re-flash
+  path on USB-C port 1.
+- **V1 needs an always-on I²C GPIO expander.** Checked against every signal-bearing V1 BOM part plus
+  the notification LED and piezo, V1 alone needs more lines than the RP2350B's 48. Slow enable and
+  interrupt lines move to a 16-bit expander on the RP2350's bus (a TBD BOM row); the RP2350 keeps
+  buses, PWM, ADC and direct-wake inputs. At V2 the RP2350's pins are full and the expander has two
+  spare. The CM5 has two spare GPIO (0/1) in V1 and V2.
+- **CM5↔RP2350 link on CM5 SPI3** (GPIO 4–7), not through the TMUX.
+
+**Costs.** Board area and enclosure volume for parts V1 does not ship. High-speed V2 lanes must end
+at their footprint with no stubs. V2 still needs its own certification (cellular, LoRa, NFC); a
+reserved footprint is not a certified radio.
