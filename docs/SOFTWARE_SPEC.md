@@ -1411,10 +1411,18 @@ Client eMMC/NVMe retains data for roughly a year unpowered at 30 °C — a devic
 
 ## 55. Zero-Kernel Reader Tier & Pre-Rendered Library (`solardeck-readerd`)
 
-A reading mode that needs no Linux at all: the RP2350 drives the IT8951 directly from the 8MB PSRAM
+A reading mode that needs no Linux at all: the RP2350 drives the IT8951 directly from PSRAM
 double-buffer while the CM4 is unpowered, so books display at **0.000 W** between page turns and the
 whole tier sits at `spec_values.reader.native_read_mw` (~4.5 mW). Reading is not "the CM4 asleep" — it
 is the CM4 absent, exactly like the Zen modes in §3.2.
+
+**Frame format matters (CO_PROCESSOR_SURVEY.md §5):** mono book frames are pre-rendered **1-bit
+dithered** (`spec_values.reader.page_bytes_1bit` = 328,536 B), so the 8 MB PSRAM cache holds **12
+pages double-buffered** (`double_buffer_pages_1bit`) or **25 single-buffered**
+(`single_buffer_pages_1bit`) — the same silicon that naively fits only two 8-bit frames. 8-bit frames
+(reserved for Kaleido colour/photo pages) stay `page_bytes_8bit`. The page-format keys are asserted
+against page geometry and cache size in `check_docs_numbers.py`, so a panel or PSRAM change cannot
+silently invalidate the cache model.
 
 ### 55.1 The pre-rendered page-flip engine
 * **What lives where:** the CM4 renders pages *before* the reader session starts and transfers them to

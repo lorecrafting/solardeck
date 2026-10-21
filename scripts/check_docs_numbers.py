@@ -85,6 +85,18 @@ def check_geometry(err):
         err(f"geometry: chassis {h}mm leaves <0.8mm wall around a {SPEC['chassis_cavity_depth_mm']}mm cavity")
     if not (cw < w and cd < d):
         err(f"geometry: battery cell {cw}x{cd}mm exceeds chassis {w}x{d}mm")
+    # reader frame math (CO_PROCESSOR_SURVEY.md §5): 1-bit counts are derived from page geometry
+    # and the PSRAM size — guard them so a geometry change cannot silently invalidate the cache model.
+    r = SPEC["reader"]
+    if r["page_bytes_8bit"] != r["page_width_px"] * r["page_height_px"]:
+        err("reader: page_bytes_8bit != page_width*height")
+    if r["page_bytes_1bit"] != r["page_bytes_8bit"] // 8:
+        err("reader: page_bytes_1bit != page_bytes_8bit / 8")
+    mb = r["page_cache_psram_mb"] * 1024 * 1024
+    if r["double_buffer_pages_1bit"] * 2 * r["page_bytes_1bit"] > mb:
+        err("reader: 1-bit double-buffer (x2) exceeds PSRAM cache")
+    if r["single_buffer_pages_1bit"] * r["page_bytes_1bit"] > mb:
+        err("reader: 1-bit single-buffer exceeds PSRAM cache")
 
 
 def check_numbers(path, text, err):
