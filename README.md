@@ -28,7 +28,7 @@ It also fixes future-you's problems. The slate is **built to self-diagnose and s
 
 *(See [`docs/STANDOUT_FEATURES.md`](docs/STANDOUT_FEATURES.md) for the full architectural specification, latency budgets, and acceptance gates.)*
 
-If SolarDeck is to be legendary, engineering must relentlessly focus on and master these seven non-negotiable capabilities:
+These are the seven non-negotiable capabilities the engineering is built around:
 
 1. **The "Dual-Brain" Instant Handoff (<400ms Glass-to-Glass):**
    * *Never off, yet never dies:* Sips ~110 µW as a perpetual indoor solar desk clock and 300-day Zen reader on the RP2350 co-processor.
