@@ -149,7 +149,7 @@ Numbers live in [`docs/spec_values.json`](docs/spec_values.json); this table nam
 | Voice | Two MEMS mics owned by the co-processor, speaker, hold-to-talk button, mute switch — ADR-036, ADR-046 |
 | Haptics | DRV2605L + frame-mounted LRA, plus typewriter sound — ADR-037 |
 | Battery | 1S Li-ion in a user-replaceable smart pack (protection + gauge in the pack); capacity claimed only from a real datasheet — ADR-048 (`battery`, `battery_wh`) |
-| Charging & power | BQ25798 charger, STUSB4500 USB-C PD sink, buck-boost always-on rail, power bank capped at 2 A — ADR-035, ADR-048 |
+| Charging & power | BQ25798 charger, STUSB4500 USB-C PD sink, buck-boost always-on rail, power bank on USB-C port 2 — ADR-035, ADR-048, ADR-049 |
 | Solar | Bezel strip with a hardware temperature gate; outdoor top-up only — ADR-041, ADR-048 (`solar_w`) |
 | Radios | Wi-Fi/BT on the CM5, u-blox MAX-M10S GPS on the co-processor — ADR-038 (`gnss`) |
 | Storage | eMMC + M.2 NVMe + microSD; native USB 3 — ADR-042 |

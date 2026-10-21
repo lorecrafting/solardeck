@@ -174,7 +174,7 @@ In an era of cloud-locked, fragile, spy-by-design hardware, SolarDeck is an **in
 Consumer electronics are designed for planned obsolescence: when Apple or Lenovo releases a faster chip, your $1,500 laptop must be thrown in the trash. The RAM is soldered, the SSD is soldered, and the CPU is locked.
 
 SolarDeck is designed with **Generational Modular Longevity**:
-* The expensive components—the **10.3" Color E-Ink glass**, the **Wacom EMR digitizer**, the **precision CNC/SLS enclosure**, and the **carrier motherboard**—are built to last a decade. The battery is the exception: a user-replaceable Li-ion smart pack (capacity TBD until the cell is chosen, ADR-040), swapped as a service part (ADR-048).
+* The expensive components—the **10.3" Color E-Ink glass**, the **Wacom EMR digitizer**, the **precision CNC/SLS enclosure**, and the **carrier motherboard**—are built to last a decade. The battery is the exception: a user-replaceable Li-ion smart pack (capacity TBD until measured on the bench (pack: `battery_wh.li_ion`), ADR-040), swapped as a service part (ADR-048).
 * The compute brain, RAM, and mass storage are **100% modular and field-upgradable in under 60 seconds with two screws**.
 
 ```
@@ -270,8 +270,8 @@ An on-screen **held-call PTT target** behaves like the voice button when Linux i
 
 By orchestrating and cross-wiring the existing hardware components in innovative ways, SolarDeck delivers four extraordinary convenience features without adding a single cent to the Bill of Materials:
 
-### 1. The Survival Powerbank (Reverse OTG, ADR-035)
-* Utilizing the OTG boost mode of the **TI BQ25798** charger, SolarDeck sources USB power backwards through USB-C Port 1 or 2 to charge external smartphones, flashlights, or radios, capped at `power_bank.otg_max_a` (2 A).
+### 1. The Survival Powerbank (USB-C Port 2, ADR-049)
+* SolarDeck sources 5 V from USB-C Port 2 through its current-limited switch to charge external smartphones, flashlights, or radios, capped at `usb.port2_current_limit_a`.
 * **Linux Stays 100% Asleep (0.000W):** The RP2350 co-processor manages power delivery and displays a live, crisp battery percentage and output wattage on the E-Ink screen. Never carry a separate powerbank again.
 
 ### 2. The Solar Micro-Strip as a Free Ambient Light Sensor ($0.00 Cost)

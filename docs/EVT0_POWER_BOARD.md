@@ -2,6 +2,7 @@
 
 Written 2026-10-21 19:12 UTC in Claude Code by anthropic/claude-opus-5-5 (EVT-0 power board, ADR-043).
 Revised 2026-10-21 19:42 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion smart pack, ADR-048).
+Revised 2026-10-21 21:20 UTC in Claude Code by anthropic/claude-opus-5-5 (part picks, cell and verified datasheet facts, ADR-049).
 
 **Status: capture spec only. No schematic, layout or netlist exists for this board.** Every pin
 assignment below comes from a datasheet that was open when it was written (Appendix A lists them
@@ -53,7 +54,7 @@ anything about the panel.
                 |  I2C 0x6B   |   |     +----------+   +--TPS22918--> 3V3_GNSS
                 +-------------+   |     +----------+
                    BAT |          +---->| 5 V boost|-5V_SYS-+--> dummy load
-                       |                | (TBD, U6)|        +-TPS22918-> 5V_LOAD
+                       |                | TPS61022 |        +-TPS22918-> 5V_LOAD
   bezel strip          |                +----------+
   -> BQ25504 -[U11]--->+ PACK_P      (U11 on only inside the window, §2.7.1)
                        |
@@ -61,9 +62,9 @@ anything about the panel.
                        |
  ==== J_PACK, keyed: PACK+  PACK-(GND)  SDA  SCL  NTC  NTC_GATE ====
  smart pack (§2.3):
-   PACK+ -- protector FETs (high side) -- fuse -- CELL+ ; BQ27Z561 BAT/BAT_SNS
+   PACK+ -- CSD83325L (high side, BQ298216) -- fuse -- CELL+ ; BQ27Z561 BAT/BAT_SNS
    PACK- -- R_SENSE (SRN side | SRP side) -- CELL-     ; BQ27Z561 VSS = CELL-
-   1S Li-ion cell between CELL+ and CELL-
+   2 x EEMB LP7545135 in parallel (1S2P) between CELL+ and CELL-
 ```
 
 ### 1.2 Topology decisions in this package (owner to confirm)
@@ -83,9 +84,9 @@ anything about the panel.
    the gauge reports as charge (§6.4.2.1); no sign re-derivation is needed. This closes ADR-047's
    gauge polarity and ground items. A low-side protector (the BQ29706 drives low-side FETs,
    SLUSBU9I Fig. 9-1) would reopen them, so the pack protector must drive high-side FETs.
-3. **No input OR-ing on EVT-0.** One USB-C sink receptacle feeds VBUS; VAC1/VAC2 tie to VBUS and
-   ACDRV1/2 to GND (BQ25798 pin table). The BQ25798 has its own two-input mux (§7.3.5) which the
-   carrier may use instead of the BOM's LM66100 pair (open item 9).
+3. **No input OR-ing, here or on the carrier.** One USB-C sink receptacle feeds VBUS; VAC1/VAC2 tie
+   to VBUS and ACDRV1/2 to GND (BQ25798 pin table). Port 1 is the device's only power input
+   (ADR-049), so the carrier needs no OR-ing either.
 
 ---
 
@@ -141,11 +142,25 @@ Source: SLUSDV2C Table 5-1 (pins), §7.3.2 (PROG), §7.3.4.3 (ILIM_HIZ), §8.2.2
 
 ### 2.2 Pack protector (on the pack board)
 
-Not on the EVT-0 board: the protector ships in the pack (ADR-048) and is chosen with the cell. Part
-**TBD** (open item 17); no protector datasheet for a high-side 1S Li-ion part is in hand, so no pin
-table here. Requirements: drives back-to-back FETs in `PACK+` as SLUSCY0C Fig. 7-1 (§1.2 item 2),
-Li-ion 1S thresholds, and the OVP rule in §4. A pack fuse is mandatory (ADR-048), rating with the
-cell (§4).
+Not on the EVT-0 board: the protector ships in the pack (ADR-048), built by the pack vendor to this
+reference. **Picked (ADR-049): TI BQ298216** (SLUSCS3L Rev L, March 2025; active) with a
+**CSD83325L** common-drain N-FET pair (SLPS494C; 12 V, 11.9 mΩ max at 4.5 V, 8 A continuous, 52 A
+pulsed ≤ 100 µs) in `PACK+`:
+
+- High-side CHG/DSG drive (SLUSCS3L Figs 8-6, 8-13, 8-14), as §1.2 item 2 requires.
+- OVP `pack.protector_ovp_v` ± `pack.protector_ovp_acc_mv` (§4): its minimum clears the charger's
+  worst-case VREG (Phase 14). UVP `pack.protector_uvp_v`. 0 V charge disabled on this variant
+  (alternate BQ298012: same OVP, 2.75 V UVP, 0 V charge enabled). BQ298217/218 fail the OVP floor.
+- **It senses current in a resistor in `PACK−`**, which is where the gauge's R_SENSE sits. Sharing
+  one 1 mΩ R_SENSE puts OCD at about 13–15 A, SCD at 27–33 A and OCC at 3–5 A; no TI document
+  shows the BQ2980 and BQ27Z561 sharing a sense resistor (open item 17).
+- OCC at 3–5 A caps the BQ25798 charge current (ICHG, §4) below 3 A.
+- The FETs' 52 A / 100 µs pulse rating is shorter than the SCD delay; confirm the SCD current and
+  delay against the FET SOA before the pack is built (open item 17).
+- **Fuse (ADR-049):** Littelfuse 456 Nano2 family in `CELL_P`; its rating needs the pack's
+  short-circuit current, which the cell datasheet does not give (EEMB RFQ). Breaking capacity ≥ that
+  current. A Dexerials SFJ self-control protector would need a second protector (ABLIC S-8244 class)
+  to fire its heater; the BQ2980 has no fuse output, so it is not used.
 
 ### 2.3 Pack board — BQ27Z561 gauge (WCSP-12) and pack connector
 
@@ -173,11 +188,14 @@ Reference Manual SLUUC54C (rev. March 2024) for the address (§10.2), commands a
 - **I²C at pack removal:** SDA and SCL have internal pull-downs; with both low the gauge
   auto-calibrates and sleeps (§7.4.1). The board's pull-ups (§2.12) are its only pull-ups.
 
-**`J_PACK` — keyed, locking, 6 positions** (ADR-048: 5–6 pins; screws and pull tab, no adhesive):
+**`J_PACK` — Hirose DF63, 6 positions, 3.96 mm, locking** (ADR-049; catalog 5/2025 p. 4:
+`pack.connector_contact_a` per contact at 18 AWG, above `pack.peak_a`, Phase 14). Through-hole and
+bulky; Molex Micro-Fit 3.0 (43045) is the alternate. Neither family has coded variants, so a V2
+pack's keying must come from a different position count or family, or a key in the bay (open item 15):
 
 | Pos | Net | Notes |
 | :-- | :-- | :-- |
-| 1 | `PACK+` | to `J_IBAT`, then `PACK_P`; contact rating ≥ the pack's peak current (connector part TBD, with the cell) |
+| 1 | `PACK+` | to `J_IBAT`, then `PACK_P`; contact rating ≥ `pack.peak_a` |
 | 2 | `PACK−` | board `GND` |
 | 3 | SDA | `I2C_AON_SDA` |
 | 4 | SCL | `I2C_AON_SCL` |
@@ -249,14 +267,23 @@ The rail holds 3.3 V to an empty pack (ADR-048).
   VSYSMAX_REG_ACC maximum (SLUSDV2C §6.5), inside that range. Output > 400 mA for VI ≥ 2.0 V
   (SLVSET3D §1). Orderable: TPS63900DSKR (orderable addendum).
 
-### 2.6 U6 — 5 V boost (part TBD, re-selection open)
+### 2.6 U6 — TI TPS61022 5 V boost (RWU, VQFN-HR 2 × 2 mm; ADR-049)
 
-The TPS61088 is dropped (ADR-048): its datasheet SLVSCM8D and product page were unavailable, so it
-cannot be shown to be in production. The replacement is re-selected from an in-production part with
-a datasheet in hand; its pin table is **TBD** until then. Requirements carried over: `EN_5V_SYS`
-with a pull-down so the rail is off while the host is in reset; output disconnected (or a load
-switch added) when EN is low (open item 10); input range covering VSYS; current limit sized to the
-CM5 peak once known (open item 13).
+Source: SLVSDX7D (July 2021; product ACTIVE, TPS61022RWUR in production). Pin table to be copied
+from SLVSDX7D at capture; the deciding facts:
+
+- **True output disconnect** in shutdown ("the output is disconnected from input power supply",
+  §7.3.2): `5V_SYS` is hard off with EN low, so no load switch is needed for the hard-off rule
+  (AGENTS §4.2; closes open item 10). Shutdown current 0.25 µA typ, VOUT leakage 3 µA max (§6.5).
+- **EN has no internal pull-down** stated: fit 100 kΩ to GND on `EN_5V_SYS` (design value) so the
+  rail is off while the host is in reset.
+- Valley current limit 6.5 A minimum at VIN 3.6 V (§6.5). With Eq. 1–3 at the datasheet's 90 %,
+  1 µH and 1 MHz, about 3.9 A out at VIN 3.0 V (modelled), against `pack.rail_5v_a`: thin at the
+  bottom of the pack's range; measure at EVT-0 step 8.
+- VIN 0.5–5.5 V, 1.8 V to start; output OVP 5.5–6.0 V, at or below the CM5's 6.0 V absolute maximum.
+- θJA 108 °C/W (50.9 on TI's EVM, §6.4): about 1.4 W dissipated at 12.5 W out, so copper area matters.
+- Alternate TPS61236P only with VOUT ≥ 5.15 V (its VIN max is VOUT − 0.6 V). Rejected: TPS61378-Q1
+  (4 A peak limit), TPS61178 (external P-FET for disconnect, VIN ≥ 2.7 V).
 
 ### 2.7 U7 — BQ25504 bezel harvester (RGT, VQFN-16)
 
@@ -296,18 +323,22 @@ could charge a frozen pack. A hardware gate, no firmware:
 
 - **Sensor:** the pack's `NTC_GATE` thermistor (`J_PACK` pos. 6) to `GND`, biased by a resistor
   from `VDD_3V3_AON`.
-- **Window comparator U12:** two comparators compare `NTC_GATE` with a cold and a hot threshold
+- **Window comparator U12 = TI TLV7042** (SLVSE13J; dual, open-drain, built-in hysteresis
+  3/10/25 mV min/typ/max, 315 nA typ / 750 nA max per channel, inputs to VCC + 0.1 V; ADR-049).
+  Pull-up on `HARV_EN` ≥ 100 kΩ so its low level stays under U11's VIL. Two comparators compare `NTC_GATE` with a cold and a hot threshold
   taken from a divider on the same `VDD_3V3_AON`, so the window is ratiometric and the rail's
   tolerance cancels. Outputs open-drain, wired-AND on `HARV_EN` with one pull-up to `VDD_3V3_AON`:
   `HARV_EN` is high only inside the cell's charge-temperature window. Thresholds are the
-  `NTC_GATE` voltages at the window edges, with hysteresis (§4). Part **TBD**: no comparator
-  datasheet is in hand (open item 18); it must run from `VDD_3V3_AON` with rail-to-rail inputs,
-  and its supply current counts in the battery-side floor (§7 step 10).
-- **Switch U11** between `HARV_OUT` (VIN) and `PACK_P` (VOUT), ON = `HARV_EN`. Part **TBD**
-  (open item 18); a TPS22918 is a candidate, with its QOD pin **left floating** (SLVSD76C
-  §8.3.2, third option), because QOD tied to VOUT would discharge the pack through RPD while off.
-  Whether a candidate blocks `PACK_P` → `HARV_OUT` current when off must come from its datasheet;
-  SLVSD76C does not state reverse-current blocking, so it is not assumed. With U11 off the
+  `NTC_GATE` voltages at the window edges, with hysteresis (§4). Its supply current
+  counts in the battery-side floor (§7 step 10). Alternate: Microchip MCP6547 (open drain,
+  1 µA max).
+- **Switch U11** between `HARV_OUT` (VIN) and `PACK_P` (VOUT), ON = `HARV_EN`.
+  **TI TPS22916CN** (SLVSDO5F; ADR-049): active-high ON (VIH 1 V), 1–5.5 V, 2 A, off-state leakage
+  from the pack side 300 nA max. **Only the CN variant**: the B/C variants switch a 150 Ω discharge
+  onto VOUT when off (Table 8-2), which would drain the pack. When ON its reverse blocking trips only
+  near −500 mA, so a small current can flow from the pack back into the BQ25504's VBAT pin; measure
+  at EVT-0 step 11. The LM66100 does not fit: its CE is active-low against VIN, and it conducts
+  forward through its body diode when disabled (SLVSEZ8A). With U11 off the
   harvester charges its 100 µF to VBAT_OV and stops (`harvester.vbat_ov_v`).
 - **Not a chemistry check:** the gate does not see §3.2 step 6a, so a wrong-chemistry pack inside
   the window still takes solar charge up to `harvester.vbat_ov_v`. Only that pack's own protector
@@ -432,7 +463,7 @@ bits 15:8 first without naming their address. **Bench check before step 5:** wit
 | 1 | REG48 (0x48) | PN_2:0 | must read 011b | it is a BQ25798 (Table 7-70); stop otherwise |
 | 2 | REG0A (0x0A) | CELL_1:0 | must read 0h (1s) | `battery.charge_limit_v` is inside the 1s VREG range of 3.0–4.99 V (Table 7-2); other CELL settings ignore the write |
 | 3 | REG10 (0x10) | WATCHDOG_2:0 | 000b (disable) | the first write puts the charger in host mode and starts the watchdog (§7.4.1), so the first write disables it. Reset value 0x85 becomes 0x80 |
-| 4 | §4 | ICHG, IPRECHG, ITERM, VSYSMIN, JEITA | cell values | TBD until the cell is chosen (§4) |
+| 4 | §4 | ICHG, IPRECHG, ITERM, VSYSMIN, JEITA | cell values | from the EEMB LP7545135 datasheet and the pack build (§4) |
 | 5 | REG01 (0x01–0x02) | VREG_10:0 | VREG_10:0 = 0x1A4 | `battery.charge_limit_v` / 10 mV, offset 0 mV (Table 7-15). Bytes: 0x01, 0xA4 |
 | 6 | REG01 | VREG_10:0 | read back | firmware sets `charger_vreg_mv` from this read; `solardeck_charge_enable_allowed()` (firmware test 7) |
 | 6a | pack gauge 0x55, `ChargingVoltage()` (0x30/0x31) | charge voltage, mV | read; must equal `battery.charge_limit_v` | ADR-048: refuse any pack built for another chemistry or limit; leave `CHG_CE_N` high and report. `ChargingVoltage()` is the only charge-voltage value readable while the pack is SEALED (SLUUC54C §12.1.20; data flash is not, §8.3.1). It follows temperature (§9.5), so compare it only while the gauge reports the standard-temperature range, and require ≤ the limit in every range. Not "Design Voltage", a gauging parameter |
@@ -461,7 +492,7 @@ Rules that follow from the datasheet:
 
 ---
 
-## 4. TBD until the cell is chosen (ADR-040, ADR-048)
+## 4. Cell-dependent values (ADR-040, ADR-048; cell chosen in ADR-049)
 
 **Protector OVP rule (not cell-dependent).** ADR-047's rule "OVP above the limit and below the
 charger's 1s POR VREG" cannot be met for Li-ion: the POR VREG equals the limit (§3.2). It is
@@ -472,11 +503,11 @@ VREG equals the limit, so it sits below that OVP by the same margin. It is a bac
 for a charger fault, not for a charger reset. Verify in the protector's datasheet before the pack
 is built.
 
-Formulas and where they come from; no numbers until the cell datasheet is in hand.
+Formulas and where they come from. The cell is the EEMB LP7545135 (`battery.cell_*`, ADR-049); register values are computed at capture from these rules.
 
 | Item | Where it is set | Formula / rule | Source |
 | :-- | :-- | :-- | :-- |
-| ICHG | REG03, 50–5000 mA in 10 mA steps | ≤ the cell's maximum charge current, and ≤ (ILIM × V_BUS × efficiency) / VREG minus system load | SLUSDV2C Table 7-16 |
+| ICHG | REG03, 50–5000 mA in 10 mA steps | ≤ `battery.cells_parallel` × `battery.cell_max_charge_a` (0.3C per cell from 0 to 20 °C, JEITA), < 3 A (the BQ298216 OCC trip with the shared sense resistor, §2.2), and ≤ (ILIM × V_BUS × efficiency) / VREG minus system load | SLUSDV2C Table 7-16 |
 | IPRECHG, VBAT_LOWV | REG08 | precharge current and the precharge→fast threshold (a fraction of VREG) per the cell's low-voltage charge rule | Table 7-19 |
 | ITERM | REG09, 40–1000 mA | the cell's cut-off current at CV | Table 7-20 |
 | VRECHG | REG0A | recharge offset below VREG | Table 7-21 |
@@ -485,14 +516,14 @@ Formulas and where they come from; no numbers until the cell datasheet is in han
 | JEITA zones | REG17 (JEITA_VSET, ISETH, ISETC), REG18 (TS_COOL, TS_WARM) | current and voltage per zone from the cell datasheet; the HARDWARE_SPEC §2.3 ladder is a placeholder until then | Tables 7-33, 7-34 |
 | NTC part | pack NTC, `NTC_GATE` | its R–T curve must be the one used in Eq. 2/3 (TI assumes 103AT) | §7.3.9.5.1 |
 | Harvester gate thresholds | U12 divider, bias resistor | `NTC_GATE` voltage at the window edges T1/T5 (the same window as the charger's TS), ratiometric to `VDD_3V3_AON`; hysteresis from the comparator datasheet | NTC curve + comparator datasheet (none in hand) |
-| L1 saturation | U1 inductor | ≥ max(IIN, ICHG, IBATDIS, IOTG) + IRIPPLE/2 and ≥ 2 A; IOTG = `power_bank.otg_max_a` | §8.2.2.2, Eq. 4–6 |
-| Protector part | pack | Li-ion 1S, drives high-side FETs (§1.2 item 2); OVP per the rule above; UVP above the cell's minimum discharge voltage and below `battery.low_alarm_v` | protector datasheet (none in hand) |
+| L1 saturation | U1 inductor | ≥ max(IIN, ICHG, IBATDIS) + IRIPPLE/2 and ≥ 2 A; OTG is not used (ADR-049) | §8.2.2.2, Eq. 4–6 |
+| Protector part | pack | BQ298216 (§2.2): OVP per the rule above (Phase 14); UVP `pack.protector_uvp_v`, below `battery.low_alarm_v`; confirm it is above the cell's discharge cut-off in the EEMB datasheet | SLUSCS3L §4 |
 | 0 V charging | pack protector | allowed or inhibited per the cell maker | protector + cell datasheets |
 | Pack FETs and OC trips | pack protector | OCD/OCC trips above the peak discharge/charge current with the FETs' R_DS(on) and R_SENSE in the path; short-circuit current within the FETs' pulse rating for the SCD delay | protector datasheet |
 | Gauge data flash | pack gauge | Design Capacity, Design Voltage, Device Chemistry, Cell Low Voltage (bqStudio), and the charge-voltage parameter step 6a reads (open item 16) | SLUSCY0C §7.2.2.1 |
 | Gauge chemistry ID | pack gauge | the Li-ion ID that matches the chosen cell (bqCHEM in bqStudio) | SLUSCY0C §7.1, §7.2.2.1 |
 | R_SENSE | gauge sense | 1–3 mΩ and ≤ 100 mV / I_peak (coulomb counter range ±100 mV) | SLUSCY0C §6.4.2.1, §7.4.1 |
-| Pack fuse rating | pack, `CELL_P` | above the maximum continuous discharge current with derating, below the cell's limit, and fast enough to clear a short that the protector fails to stop | cell + fuse datasheets (none in hand) |
+| Pack fuse rating | pack, `CELL_P` | Littelfuse 456 Nano2 (§2.2): above `pack.peak_a` with derating, breaking capacity ≥ the pack's short-circuit current, fast enough to clear a short the protector fails to stop | 456 datasheet Rev GD; short-circuit current from EEMB (RFQ) |
 
 ---
 
@@ -516,10 +547,9 @@ is inside the charger's input range by construction, it specifies dead-battery R
 PD-certified, and its status is readable on the always-on bus at no cost to the cell. The CH224K is
 cheaper and simpler but leaves Rd-at-0 V unspecified, and its I²C successors can request 28 V.
 
-The STUSB4500 conflicts with two existing rules (open items 5 and 8): `USB_ROBUSTNESS.md` R1 asks for
-discrete 5.1 kΩ ±1 % Rd (`usb.sink_cc_rd_tolerance_pct`), which a PD controller's own Rd replaces;
-and HARDWARE_SPEC §2.11 gives port 1's CC lines to a TUSB320 and makes port 2 a host port, which
-leaves no port for a PD sink.
+The STUSB4500 conflicts with one existing rule (open item 5): `USB_ROBUSTNESS.md` R1 asks for
+discrete 5.1 kΩ ±1 % Rd (`usb.sink_cc_rd_tolerance_pct`), which a PD controller's own Rd replaces.
+The port-role conflict (open item 8) is closed by ADR-049: port 1 is the PD sink, port 2 the source.
 
 ---
 
@@ -534,8 +564,9 @@ leaves no port for a PD sink.
 | 0x6B | BQ25798 charger | SLUSDV2C §7.3.14.5 |
 
 No conflicts among these. Carrier devices listed in HARDWARE_SPEC §2.9 (TMP112 0x48/0x49, BMA400
-0x15, BMP390 0x76, DS3231 0x68 DNP) were not checked against their datasheets here; the TUSB320
-and the GPIO expander (part TBD) still need addresses.
+0x15, BMP390 0x76, DS3231 0x68 DNP) were not checked against their datasheets here; the GPIO expander
+is the NXP PCAL6416A at 0x20/0x21 (ADDR pin; datasheet Rev. 7.1), clear of every address here. The
+TUSB320 (port 2) still needs its address checked.
 
 ---
 
@@ -607,28 +638,27 @@ Items closed by ADR-048 keep their numbers so references stay valid.
 6. **STUSB4500 on an unpowered I²C bus.** It is powered only from VBUS; its behaviour with SCL/SDA
    pulled up while unpowered is not stated. EVT-0 has 0 Ω links to drop it off the bus; measure.
 7. **Closed (ADR-048).** STUSB4500 chosen; it has no D+/D−, so the BQ25798 owns them.
-8. **USB-C port roles.** HARDWARE_SPEC §2.11 puts a TUSB320 on port 1's CC and a host switch on
-   port 2, yet §2.3 sinks PD and solar on those ports. One CC controller per port: decide which port
-   is the PD sink.
-9. **Input OR-ing.** The BQ25798 has a native two-input mux (VAC1/VAC2, ACDRV, §7.3.5); the BOM adds
-   two LM66100. Decide at carrier capture.
-10. **5 V boost off-state.** The re-selected boost (§2.6) must disconnect its output when EN is low,
-    or `5V_SYS` sits near VSYS with the CM5 "off", breaking the hard-off rule (AGENTS §4.2); otherwise
-    a load switch is needed. Its minimum input must sit below the pack protector's UVP.
+8. **Closed (ADR-049).** Port 1 is the PD sink (STUSB4500) and USB device; port 2 is host and the
+   only power output (TUSB320 source-only, TPS2051B). The BQ25798 OTG mode is unused.
+9. **Closed (ADR-049).** No OR-ing: port 1 is the only power input; the LM66100 pair is removed.
+10. **Closed (ADR-049).** The TPS61022 disconnects its output in shutdown (§2.6); `EN_5V_SYS` gets
+    an external pull-down. Its 1.8 V start-up input is below the protector's UVP.
 11. **Bezel strip.** Its open-circuit voltage must stay within VIN_DC's 3.0 V operating maximum
     (SLUSAH0G §7.5); the `SOLAR_ADC` divider waits for the strip part.
 12. **Closed in topology (ADR-048).** The harvester's thermal window is the hardware gate in §2.7.1;
     its parts are open item 18.
-13. **5 V boost part.** Re-selection from an in-production part with a datasheet in hand (ADR-048);
-    its frequency, compensation and current-limit parts then need the CM5 peak current.
+13. **Closed (ADR-049).** 5 V boost is the TPS61022 (§2.6). Its output at the bottom of the pack's
+    range is thin against `pack.rail_5v_a` (modelled); measure at step 8, and if it falls short cap
+    port 2 or the CM5 load in firmware before choosing a bigger boost.
 14. **INA3221 shunts** need each rail's maximum current (§2.9).
 15. **`J_PACK` sixth pin and gauge INT.** ADR-048 allows 5–6 pins. This package uses the sixth for
     `NTC_GATE`, because the charger's TS bias (REGN) is off on battery alone without firmware (§2.3).
     The alternative is a 5-pin connector with the gate comparator on the pack board, which puts
     harvester circuitry in every replaceable pack. The gauge's INT is not worth a contact: the host
     polls `InterruptStatus()` for the same flags (§2.3). **Recommended (ADR-049): keep `NTC_GATE`
-    on pin 6.** Whether the V2 pack is keyed differently, so a wrong-chemistry pack cannot mate (the
-    harvester bypasses step 6a, §2.7.1), is also open. Owner to confirm.
+    on pin 6** (owner confirmed 2026-10-21). Still open: the DF63 has no coded variants, so the V2
+    pack needs a different connector family or position count, or a bay key, so a wrong-chemistry
+    pack cannot mate (the harvester bypasses step 6a, §2.7.1).
 16. **Closed in method (ADR-049): pack charge voltage.** The host reads `ChargingVoltage()` (§3.2 step
     6a). It is set at pack programming, unsealed, by the data-flash "Voltage" parameter of each
     Advanced Charge Algorithm temperature subclass (SLUUC54C §9.5, Table 9-2). **TI's defaults are
@@ -637,11 +667,11 @@ Items closed by ADR-048 keep their numbers so references stay valid.
     sealed. Still open: SLUUC54C §12.8.51 says MAC 0x00B0 `ChargingVoltageOverride` writes these
     values in SEALED mode, while Table 12-2 says it is not available sealed. If §12.8.51 is right, any
     host can rewrite a sealed pack's limit; test it on the first programmed pack.
-17. **Pack protector part.** A Li-ion 1S protector that drives high-side FETs (§1.2 item 2, §4); no
-    datasheet in hand, chosen with the cell.
-18. **Harvester gate parts.** Comparator U12 and switch U11 (§2.7.1) need datasheets in hand:
-    comparator supply current, input range and hysteresis; switch off-state blocking in both
-    directions.
+17. **Pack protector picked (ADR-049), two checks left.** BQ298216 + CSD83325L (§2.2). Before the
+    pack is built: (a) TI confirms the BQ2980 and BQ27Z561 can share one R_SENSE, or the pack gets two;
+    (b) the SCD current and delay sit inside the FET's safe operating area.
+18. **Closed (ADR-049).** U12 TLV7042, U11 TPS22916CN (§2.7.1). U11's small ON-state reverse
+    current is measured at step 11.
 19. **CE pad frozen low (RP2350 pad isolation, §3.1).** If the RP2350 core powers down while it
     drives `CHG_CE_N` low, the pad latches low (RP2350 datasheet §9.7) and the 10 kΩ pull-up never
     acts, so the charger keeps charging with no firmware watching. The charger's own safety timer,
@@ -674,6 +704,16 @@ BQ27Z561 "TI lists LiFePO4" row (chemistry is now Li-ion).
 | :-- | :-- | :-- |
 | BQ25798 | TI SLUSDV2C | May 2020, rev. June 2026 |
 | BQ29706 | TI SLUSBU9I (BQ2970 family) | rev. August 2024 (cited only for its low-side FET drive) |
+| BQ298216 | TI SLUSCS3L (BQ2980 family) | Rev L, March 2025 |
+| CSD83325L | TI SLPS494C | November 2023 |
+| TPS61022 | TI SLVSDX7D | July 2021 |
+| TLV7042 | TI SLVSE13J | November 2024 |
+| TPS22916 | TI SLVSDO5F | December 2021 |
+| LM66100 | TI SLVSEZ8A | (cited only to reject it as U11) |
+| DF63 | Hirose connector catalog | 5/2025 |
+| 456 Nano2 | Littelfuse datasheet | Rev GD, 2025-09-18 |
+| LP7545135 | EEMB spec ZJQM-RD-SPC-H1734 | 2020-11-17 |
+| CM5 | Raspberry Pi CM5 datasheet | Release 3, build 2026-06-08 |
 | BQ27Z561 | TI SLUSCY0C | rev. September 2025 (10-page datasheet) |
 | BQ27Z561-R2 TRM | TI SLUUC54C | February 2020, rev. March 2024 (address, `ChargingVoltage()`, Advanced Charge Algorithm data flash) |
 | RP2350 | Raspberry Pi RP2350 datasheet | build 2026-01-10 (pads §9.3, §9.7, Table 1683; erratum E9) |

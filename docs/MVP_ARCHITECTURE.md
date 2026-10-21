@@ -25,7 +25,7 @@ SolarDeck is a sovereign, general-purpose open-hardware computing platform desig
    * **Core Internal Tactical Sensor Cluster:** RV-3028-C7-class RTC (ADR-046), Bosch BMI270 + BMM350 9-DOF IMU (compass & Stellarium), Bosch BMP390 Barometer (10cm altimeter & weather storm barograph), VEML7700 / Solar ADC ambient light sensor
    * **Voice (ADR-036):** two MEMS mics, speaker with echo-cancel reference, hardware mute, and a hold-to-talk voice button (RP2350 captures into PSRAM at press while the CM5 boots)
    * **Haptics (ADR-037):** DRV2605L + frame-mounted LRA; every keystroke fires a tap and optional typewriter sound at key-down
-   * 1S Li-ion user-replaceable smart pack (ADR-048), capacity TBD until the cell is chosen (ADR-040) (airline-compliant <100Wh)
+   * 1S Li-ion user-replaceable smart pack (ADR-048), capacity `battery_wh.li_ion` (ADR-049; airline-compliant <100Wh)
    * Lightweight, rugged SLS 3D-printed PA12 Nylon prototypes, PC/ABS production (ADR-039); ingress IP54 (V1 target), IP67 (V2 target)
 2. **Modular Expansion ("Hotpacks"):** Deferred to V2 (ADR-034).
    * **Descoped Flipper Zero Clone:** Redundant over-engineering. Operators simply attach their physical **Flipper Zero** to the rear M2.5/MagSafe anchor, plug into USB-C Port 2 or pair via Bluetooth, and control it through `qflipper-cli` and `flipperzero-protobuf` on SolarDeck's 10.3" E-Ink screen.
@@ -51,7 +51,7 @@ SolarDeck is a sovereign, general-purpose open-hardware computing platform desig
 │ 12. VOICE:    2 MEMS Mics + Speaker (AEC ref) + Voice Button                │
 │ 13. BATTERY:  Li-ion 1S smart pack (ADR-048), capacity TBD (ADR-040)        │
 │ 14. EXPAND:   2x IP68 USB-C (Monitor Sink + Host Expand with USB-to-I2C)     │
-│ 15. CHASSIS:  SLS 3D-Printed PA12 Nylon + 85A TPU Armor Corners (~510g total)│
+│ 15. CHASSIS:  SLS 3D-Printed PA12 Nylon + 85A TPU Armor Corners (`mass_g`)    │
 │ 16. HAPTICS:  DRV2605L + frame-mounted LRA (ADR-037)                        │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -62,18 +62,17 @@ SolarDeck is a sovereign, general-purpose open-hardware computing platform desig
 
 To achieve maximum field battery life without an excessively heavy device:
 
-### Capacity: TBD until the cell is chosen (ADR-040)
+### Capacity: `battery_wh.li_ion` (ADR-049)
 * **Configuration:** 1S Li-ion (charge limit `battery.charge_limit_v`), one chemistry per hardware revision, no selector; LiFePO4 is V2 (ADR-048). The cell ships in a user-replaceable smart pack: pack-side protector with a back-to-back N-FET pair and fuse, pack-side BQ27Z561-R2 gauge characterised on the chosen cell, keyed connector (pack+, pack−, SDA, SCL, NTC), screws and a pull tab, no adhesive. A larger pack of the same chemistry drops in; firmware refuses a pack whose design charge voltage does not match `battery.charge_limit_v`.
-* **Dimensions:** ~5.5 mm thick × 130 mm × 130 mm (occupies the flat recessed cavity coplanar with the PCBA directly behind the 10.3" e-paper display).
-* **Weight:** **~200 grams** (~7.0 oz).
-* **Total Tablet Device Weight:** **~510 grams** (1.12 lbs). For comparison:
+* **Cells:** two EEMB LP7545135 in parallel (1S2P), envelope `battery_cell_mm`, plus the pack board at the tab end (length TBD from EEMB's pack drawing); it sits in the flat recessed cavity coplanar with the PCBA directly behind the 10.3" e-paper display.
+* **Total Tablet Device Weight:** `mass_g`. For comparison:
   * iPad Pro 11" with case: ~680 grams
   * Onyx Boox Note Air 3C: ~430 grams (with small 3,700 mAh battery)
   * Panasonic Toughbook tablet: ~1,100 grams
 * **FAA / TSA Airline Compliance:** The international limit for passenger aircraft is **100 Watt-hours (Wh)**. A 1S pack that fits this cavity sits far below it.
 * **Heat:** charging stops outside the Li-ion cell's charge-temperature window (JEITA, pack NTC, harvester temperature gate; ADR-048). An operating-temperature rating is TBD until the cell and panel are chosen; do not leave the device in direct sun on a dashboard.
 
-### Runtime per power tier: TBD until the cell is chosen (ADR-040)
+### Runtime per power tier: TBD until measured on the bench (pack: `battery_wh.li_ion`) (ADR-040)
 The tier draws below are the modelled loads; runtimes are re-derived from the chosen cell.
 * **Tier 0: Dormant Standby (< 0.1 mW)**
 * **Tier 1: Zen Reader Mode (RP2350 Driven @ ~4.5 mW)** with 30ms page turns.
@@ -88,8 +87,8 @@ The tier draws below are the modelled loads; runtimes are re-derived from the ch
 * **During High-Motion Screen Work (images, maps, rapid pagination):** GPU blue-noise dithering, NEON differencing, and repeated full-frame transfers draw **1.6W to 2.2W** (runtime TBD, ADR-040). There is no video-playback tier: the panel link and its frame rate depend on the Kaleido 4 display controller (TBD, ADR-032), so V1 does not promise cinema (ADR-005).
 * **When Idle or Static** (Writing, Coding, Reading, Ambient Clock):**
   * **0.000W Bi-Stable Physics:** Unlike OLED or LCD screens that draw 1.5W–3.0W just keeping pixels backlit, E-Ink uses **0.000 Watts** to display a static page. Once particles move into position, they remain physically locked in place indefinitely without electrical power.
-  * **Interactive Terminal & Coding:** In Neovim and Claude Code CLI, the screen only consumes power during partial update pulses (timing TBD, ADR-032) when keys are pressed. Total system draw drops to **~1.1W–1.4W** (runtime TBD until the cell is chosen, ADR-040).
-  * **Zen Reading Mode:** With the CM5 unpowered and the RP2350 flipping pages in 30ms, battery runtime is TBD until the cell is chosen (ADR-040).
+  * **Interactive Terminal & Coding:** In Neovim and Claude Code CLI, the screen only consumes power during partial update pulses (timing TBD, ADR-032) when keys are pressed. Total system draw drops to **~1.1W–1.4W** (runtime TBD until measured on the bench (pack: `battery_wh.li_ion`), ADR-040).
+  * **Zen Reading Mode:** With the CM5 unpowered and the RP2350 flipping pages in 30ms, battery runtime is TBD until measured on the bench (pack: `battery_wh.li_ion`) (ADR-040).
   * **Ambient Desk Clock & Weather Station:** The top-bezel micro-solar strip tops up the idle co-processor outdoors only (ADR-041).
   * **Battery wear-out (ADR-048):** the Li-ion cell is the first hard wear-out item (`reliability.first_wearout_years`, modelled), so the pack is a user-replaceable service part, swapped when the gauge's state-of-health says so rather than promised to outlive the device.
 
@@ -192,7 +191,7 @@ To enable clean voice interaction with Claude Code and dictation:
 • RP2350 pushes pages/digits to the Kaleido 4 display controller (TBD, ADR-032) from 8MB PSRAM double-buffer.
 • Between updates, RP2350 deep-sleeps at 10 µA.
 • Display controller sleep power TBD (ADR-032). Total system draw: ~4.5 mW.
-• Battery runtime: TBD until the cell is chosen (ADR-040).
+• Battery runtime: TBD until measured on the bench (pack: `battery_wh.li_ion`) (ADR-040).
                               │
                               ▼
 [STEP 4: RESUME FULL LINUX]
@@ -231,7 +230,7 @@ For V1, descoping the proprietary SnapDeck keyboard eliminates $25,000+ in custo
 │ • Use Case: Reading long source files, logs, and technical documentation.   │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ POSTURE 4: PURE SLATE / SCRIBE MODE                                         │
-│ • Detached from all stands, held in one hand as a pure 510g tablet.         │
+│ • Detached from all stands, held in one hand as a pure tablet.              │
 │ • Use Case: Lightweight handheld e-reader, PDF annotation, Wacom sketching. │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```

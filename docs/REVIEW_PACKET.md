@@ -64,7 +64,7 @@ and the panel in the same rig? Is a two-board lash-up acceptable for a pillar cl
 
 ### Q4 — Battery, UN38.3, and shipping
 1S Li-ion in a user-replaceable smart pack (ADR-048): cell + protector + pack-side gauge, keyed
-connector, screws, no adhesive; capacity TBD until the cell is chosen (ADR-040). The LiFePO4
+connector, screws, no adhesive; capacity TBD until measured on the bench (pack: `battery_wh.li_ion`) (ADR-040). The LiFePO4
 shortlist (2026-10-21: EEMB LP7568130F, LP70103122F) fell below ADR-040's expectation and without
 verified UN38.3 reports, which triggered ADR-048; LiFePO4 is V2. No Li-ion cell is chosen yet, so
 `battery_wh.li_ion` stays null. UN38.3 is the longest-lead gate in the programme (~$8–15 k,

@@ -40,11 +40,11 @@ dual-ISA line in the table is "which ISA you boot into").
 ## 3. Power envelope vs. battery (capacity TBD, ADR-040)
 
 `native-read` tier today sits at 4.5 mW; the floor is the cell's own shelf life, not the silicon. Days on
-one charge are TBD until the cell is chosen (ADR-040); re-derive the column from `battery_wh.li_ion`.
+one charge are TBD until each tier is measured; derive the column from `battery_wh.li_ion` (ADR-049).
 
 | Mode | Power | Days on one charge | Sobered note |
 | :--- | :---: | :---: | :--- |
-| **RP2350 reader tier** (incumbent) | 4.5 mW | TBD (ADR-040) | The real number, once the cell is chosen. |
+| **RP2350 reader tier** (incumbent) | 4.5 mW | TBD (ADR-040) | The real number, once the tier is measured. |
 | RP2350 POWMAN deep sleep | ~0.033 mW | TBD (ADR-040) | Meaningless — beyond the pack's self-discharge and first wear-out (`reliability.first_wearout_years`) |
 | ESP32-C6 deep sleep | ~0.023 mW | TBD (ADR-040) | Same caveat |
 | ESP32-P4 deep sleep | ~0.040 mW | TBD (ADR-040) | Same caveat |

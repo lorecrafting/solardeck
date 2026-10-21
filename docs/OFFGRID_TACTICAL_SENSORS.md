@@ -216,7 +216,7 @@ SolarDeck runs a local, airgapped **Retrieval-Augmented Generation (RAG)** pipel
   * Active Inference RAM: ~2.4 GB (including 4K KV cache).
   * System Free Memory: the rest of the CM5's 16 GB for Linux, Wayland, and user tasks.
   * Inference Throughput: TBD — verify on CM5.
-  * Battery Consumption: ~3.2W during 20 seconds of generation = **~0.018 Wh per query** (share of the pack TBD until the cell is chosen, ADR-040).
+  * Battery Consumption: ~3.2W during 20 seconds of generation = **~0.018 Wh per query** (share of the pack TBD until measured on the bench (pack: `battery_wh.li_ion`), ADR-040).
 * **Zero-Hallucination Grounding:** The prompt template strictly constrains the model to cite only the retrieved excerpts. If an answer is not present in the local manuals, the model explicitly acknowledges the absence rather than guessing.
 
 ---
@@ -333,7 +333,7 @@ The following custom software utilities and daemons leverage SolarDeck's bi-stab
 ### 9.4 Sovereign Writing, Focus & Cryptography
 10. **`solardeck-zen` (Sovereign Prose Typewriter):**
     * A distraction-free markdown environment running on the 20ms 1-bit typing waveform.
-    * The CM5 has no RAM-retaining suspend (ADR-036), so there is no S2idle gating between keystrokes; writing runtime is TBD until the cell is chosen (ADR-040).
+    * The CM5 has no RAM-retaining suspend (ADR-036), so there is no S2idle gating between keystrokes; writing runtime is TBD until measured on the bench (pack: `battery_wh.li_ion`) (ADR-040).
 11. **`solardeck-slate` (Low-Latency Wacom Vector Field Notebook):**
     * Direct-to-DRM canvas hooking into Wacom EMR (<18ms latency) for sketching circuit schematics, physics math, or tactical maps, with 1-click export to vector SVG or Obsidian.
 12. **`solardeck-courier` (Autonomous Bi-Stable LoRa Pager & Bulletin Board):**

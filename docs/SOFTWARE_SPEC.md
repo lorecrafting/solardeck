@@ -106,7 +106,7 @@ Local video remains usable: decode on the CM5, dither to 1-bit, accept the full-
 While the main CM5 is powered completely off (0.000W), the **RP2350 co-processor** runs bare-metal C / Pico-SDK firmware:
 1. **Sub-30ms Zen Reader & Framebuffer Pre-Caching:**
    * Utilizes the onboard **8MB QSPI PSRAM** to double-buffer pre-rendered page images (page geometry TBD, ADR-032; `spec_values.reader.page_*`).
-   * When reading books, the CM5 pre-renders pages into PSRAM and sleeps. The RP2350 handles page-turn taps and side-bezel touch gestures autonomously, updating the Kaleido 4 display controller (TBD, ADR-032) (flip time `spec_values.reader.page_flip_ms`, TBD) while the CM5 remains dead (**~4.5 mW total power**; battery life TBD until the cell is chosen, ADR-040).
+   * When reading books, the CM5 pre-renders pages into PSRAM and sleeps. The RP2350 handles page-turn taps and side-bezel touch gestures autonomously, updating the Kaleido 4 display controller (TBD, ADR-032) (flip time `spec_values.reader.page_flip_ms`, TBD) while the CM5 remains dead (**~4.5 mW total power**; battery life TBD until measured on the bench (pack: `battery_wh.li_ion`), ADR-040).
 2. **Standalone LoRa Mesh Repeater:** Deferred to V2 (ADR-044); the V1 board reserves the footprint and pins (ADR-045, docs/PIN_BUDGET.md). V1 uses a paired Meshtastic node over BLE while Linux is up.
 3. **1-Second RTC Clock Tick & Weather Barograph:**
    * Receives a 1Hz hardware interrupt (`INT`) from the RV-3028-C7-class RTC (ADR-046).
@@ -628,7 +628,7 @@ bld --remote
 ### 16.4 Smartphone Thumbboard HID Forwarding
 Enables typing on the Clicks Communicator's physical tactile QWERTY keyboard to input directly into SolarDeck:
 * **Bluetooth HID Mode:** Android runs an open-source Bluetooth HID peripheral service; SolarDeck recognizes it as a standard wireless keyboard (`/dev/input/eventX`).
-* **Wired USB Link:** A 3cm flat ribbon U-cable bridges USB-C Port 2 directly into the phone, dropping keystroke latency to **<1 millisecond** while reverse-charging the phone, capped at `spec_values.power_bank.otg_max_a` (ADR-035).
+* **Wired USB Link:** A 3cm flat ribbon U-cable bridges USB-C Port 2 directly into the phone, dropping keystroke latency to **<1 millisecond** while reverse-charging the phone, capped at `spec_values.usb.port2_current_limit_a` (ADR-049).
 * **1-Button Hardware Focus Flip:** Tapping the Clicks Communicator's programmable side key flips typing focus between SolarDeck's terminal and local phone SMS/Google Maps in **0 milliseconds**.
 * **Capacitive Touch Scrolling:** Swiping thumbs vertically across the physical keycaps sends Page Up / Page Down or scroll-wheel events to Wayland, enabling smooth document reading without lifting hands.
 
@@ -665,7 +665,7 @@ The `solardeck-voiced` daemon orchestrates voice control — hold-to-talk first,
 
 * **Voice button — hold-to-talk, always available, zero standby cost:** with the wake word off, the mic is live only while the button is held. At press the RP2350 starts capturing audio into PSRAM immediately and asserts GPIO 17 so the CM5 boots or resumes in parallel; when Linux is up, `solardeck-voiced` drains the PSRAM buffer and transcribes it from the first syllable, so no words are lost to boot time. With Linux already running, the same button feeds the CM5 directly.
 * **Hands-free wake word — opt-in:** off by default and shown in settings with its measured battery cost. It runs on the CM5 when Linux is up (no extra cost) and on the RP2350 when Linux is off; RP2350 wake-word power is TBD until measured on the bench. A dedicated low-power voice chip is the V2 path if that cost is too high.
-* **Front end:** two MEMS microphones, a speaker echo-cancel reference (§17.1), and the privacy switch's MIC MUTE position (`PRIVACY_MUTE_N`, §21.1) that the software cannot override.
+* **Front end:** two MEMS microphones, a speaker echo-cancel reference (§17.1), and the privacy switch's MIC MUTE position (`PRIVACY_MUTE`, §21.1) that the software cannot override.
 
 ### 17.1 Acoustic Echo Cancellation (AEC) & Seamless Interruption
 * **The Barge-In Mechanism:** When SolarDeck speaks or generates audio, the audio frame buffer feeding the MAX98357A I2S amplifier is mirrored into a PipeWire loopback sink (`module-loopback`).
@@ -814,8 +814,8 @@ When invoked via CLI or local agent tool call (`solardeck-diag --json`), the eng
    * Reads eMMC life-time wear estimation registers via `mmc extcsd read` (Type A & Type B device health).
    * Reads M.2 NVMe SSD SMART health telemetry (`smartctl --json`) for bad sectors and temperature.
    * Checks Micro-HDMI Hot-Plug Detect (`HPD`) GPIO pin state.
-   * Checks USB-C Port 1 and Port 2 CC controller registers (TUSB320) for VBUS voltage, orientation, and short-circuit faults.
-   * Reads the single 3-position privacy switch (HARDWARE_SPEC §2.25) from its two sense lines (`PRIVACY_MUTE_N`, `PRIVACY_BLACKOUT_N`): NORMAL, MIC_MUTE (mic bit clock broken) or FULL_BLACKOUT (mics, GNSS and CM5 radios off).
+   * Checks the port 1 PD sink (STUSB4500) and port 2 source CC controller (TUSB320) for contract, orientation, and short-circuit faults.
+   * Reads the single 3-position privacy switch (HARDWARE_SPEC §2.25) from its two sense lines (`PRIVACY_MUTE`, `PRIVACY_BLACKOUT_N`): NORMAL, MIC_MUTE (mic bit clock broken) or FULL_BLACKOUT (mics, GNSS and CM5 radios off).
 
 ### 21.2 Structured Diagnostic JSON Output Schema
 ```json
