@@ -25,7 +25,7 @@ Every doc that mentions a phase count is checked against docs/spec_values.json b
   Phase 16: Reliability model, obsolescence policy, design-for-test
 
 NOTE: a green run means "the artifacts are internally consistent". It does NOT mean the design is
-fabricable -- the schematic is still a partial capture and the production bundles are placeholders.
+fabricable -- the schematic is still a partial capture and there are no fabrication files (ADR-046).
 See docs/AUDIT_6_2026-10-21.md.
 """
 
@@ -133,15 +133,16 @@ def verify_docs_present():
     return True
 
 
-FAB_BUNDLE = re.compile(r"\.(zip|gbr|drl)$", re.I)
+# KiCad/Protel Gerber, drill, bundle and print extensions.
+FAB_BUNDLE = re.compile(r"\.(zip|gbr|drl|xln|g[tb][losp]|gko|gm\d+|g\d+|stl|step|stp)$", re.I)
 
 
 def fab_guard_errors(prod):
     """ADR-046: no fabrication bundle may exist while NOT_FOR_FAB.md does (the PCB is unrouted)."""
     if not os.path.isfile(os.path.join(prod, "NOT_FOR_FAB.md")):
         return ["hardware/production/NOT_FOR_FAB.md is missing; remove it only with real KiCad Gerbers"]
-    return [f"fab bundle {f} present while NOT_FOR_FAB.md stands" for f in sorted(os.listdir(prod))
-            if FAB_BUNDLE.search(f)]
+    return [f"fab bundle {os.path.relpath(os.path.join(d, f), prod)} present while NOT_FOR_FAB.md stands"
+            for d, _, files in os.walk(prod) for f in sorted(files) if FAB_BUNDLE.search(f)]
 
 
 def verify_fab_guard():
@@ -152,7 +153,8 @@ def verify_fab_guard():
     errors = fab_guard_errors(prod)
     with tempfile.TemporaryDirectory() as td:  # red control: a planted Gerber must be caught
         open(os.path.join(td, "NOT_FOR_FAB.md"), "w").close()
-        open(os.path.join(td, "board-F.Cu.gbr"), "w").close()
+        os.mkdir(os.path.join(td, "gerbers"))
+        open(os.path.join(td, "gerbers", "board.gtl"), "w").close()
         assert fab_guard_errors(td), "fab guard missed a planted Gerber"
     if errors:
         print(f"{Colors.RED}[FAIL]{Colors.END} ({'; '.join(errors)})")
@@ -210,18 +212,14 @@ PHASES = [
 
 
 def verify_pipeline_metadata():
-    """AUDIT 5 fixes A/B: the docstring phase list and the CI workflow job name must not drift
-    from the real PHASES list (that is how the old 7-vs-9 / 11-vs-16 drift happened twice)."""
+    """AUDIT 5 fixes A/B: the docstring phase list must not drift from the real PHASES list (that is
+    how the old 7-vs-9 / 11-vs-16 drift happened twice). There is no hosted CI to check (ADR-046)."""
     t0 = time.time()
-    print(f"▶ {Colors.BOLD}Phase metadata consistency (docstring + CI name)...{Colors.END} ", end="", flush=True)
+    print(f"▶ {Colors.BOLD}Phase metadata consistency (docstring)...{Colors.END} ", end="", flush=True)
     try:
         expected = list(range(1, len(PHASES) + 1))
         nums = [int(x) for x in re.findall(r"Phase\s+(\d+):", __doc__ or "")]
         assert nums == expected, f"docstring phase list {nums} != {expected}"
-        yml = open(os.path.join(PROJECT_ROOT, ".github/workflows/verify.yml"), encoding="utf-8").read()
-        m = re.search(r"(\d+)-Phase System Verification", yml)
-        assert m and int(m.group(1)) == len(PHASES), \
-            f"workflow job name phase count != {len(PHASES)}"
     except AssertionError as e:
         print(f"{Colors.RED}[FAIL]{Colors.END} ({e})")
         return False
@@ -249,7 +247,7 @@ def main():
     if not failures:
         print(f"{Colors.BOLD}{Colors.GREEN}  ✅ ALL {len(PHASES)} PHASES PASSED IN {total_time:.1f}ms{Colors.END}")
         print(f"{Colors.BOLD}{Colors.YELLOW}  Artifacts are internally consistent -- NOT a design sign-off.{Colors.END}")
-        print(f"{Colors.BOLD}{Colors.YELLOW}  Schematic is a partial capture; production bundles are placeholders.{Colors.END}")
+        print(f"{Colors.BOLD}{Colors.YELLOW}  Schematic is a partial capture; there are no fabrication files (ADR-046).{Colors.END}")
         print(f"{Colors.BOLD}{Colors.YELLOW}  See docs/AUDIT_6_2026-10-21.md before ordering anything.{Colors.END}")
         print(f"{Colors.BOLD}{'=' * 72}{Colors.END}\n")
         return 0

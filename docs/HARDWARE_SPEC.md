@@ -299,10 +299,10 @@ Deferred to V2 (ADR-034). No forward-facing camera exists either (ADR-006); stan
 * **Dual-MEMS Noise-Cancelling Acoustic Array (Broadside Beamforming):**
   * **Sensors:** Dual matched Knowles **SPH0645LM4H-B** (or InvenSense ICS-43434) high-SNR I2S digital MEMS microphones.
   * **Acoustic Geometry:** Spaced **65 mm apart** along the top front bezel inside molded acoustic elastomer isolation boots with hydrophobic ePTFE dust/wind acoustic grilles.
-  * **Bus Architecture:** Connected to the RP2350 (PIO I²S, stereo L/R on one data line, `MIC_SD`), which streams the audio to the CM5's I2S0 (ADR-045, docs/PIN_BUDGET.md).
+  * **Bus Architecture:** Connected to the RP2350 (PIO I²S, stereo L/R on one data line, `MIC_SD`), which streams the audio to the CM5's I2S1, its clock-target I²S (ADR-045, ADR-046, docs/PIN_BUDGET.md).
   * **Acoustic Beamforming & Wind Rejection:** Processed in Linux via PipeWire / WebRTC audio processing DSP (`solardeck-beamformd`). Computes differential phase delay between Left and Right microphones, forming an elliptical 60° directional voice pickup cone targeted at the operator's face while attenuating 18–24 dB of ambient wind gusts, road noise, and office chatter. Yields clean, near-studio 16 kHz voice streams for 99%+ accuracy in local Whisper and Claude Code voice prompts.
-* **Physical Privacy Switch:** The MIC MUTE and FULL BLACKOUT positions of the single 3-position privacy switch (§2.25) cut both microphones in hardware (hardware-guaranteed un-hackable mute).
-* **Hold-to-Talk Voice Button (ADR-036):** Always available and costs nothing in standby; the mics are live only while it is held. At press the RP2350 starts capturing audio into PSRAM while the CM5 boots, and Linux transcribes the buffer, so no words are lost to boot time. Routing the mics so the RP2350 can capture with the CM5 off is TBD at schematic capture.
+* **Physical Privacy Switch:** The MIC MUTE and FULL BLACKOUT positions of the single 3-position privacy switch (§2.25) stop both microphones in hardware: MIC MUTE breaks their I²S clock, FULL BLACKOUT also cuts their supply. Firmware cannot bridge the open switch; the mic supply stays on in MIC MUTE (SECURITY.md).
+* **Hold-to-Talk Voice Button (ADR-036):** Always available and costs nothing in standby; the mics are live only while it is held. At press the RP2350 starts capturing audio into PSRAM while the CM5 boots, and Linux transcribes the buffer, so no words are lost to boot time. The RP2350 owns both mics, so it can capture with the CM5 off (ADR-046).
 * **Hands-Free Wake Word (opt-in, ADR-036):** Off by default and shown with its measured battery cost. Runs on the CM5 when Linux is up and on the RP2350 when Linux is off; RP2350 wake-word power is TBD (bench).
 * **Primary Audio Output (Linux Master):** Maxim Integrated / Analog Devices **MAX98357A** I2S Class-D amplifier driving an internal 1W sealed acoustic chamber micro-box speaker. The speaker feed is also taken as the echo-cancel reference for voice capture (ADR-036).
 * **3.5 mm headphone jack and headphone DAC:** Removed from V1 (ADR-046): use USB-C or Bluetooth audio; one less aperture for the IP54 target.
@@ -557,7 +557,7 @@ To guarantee true 0.000V electrical isolation and zero phantom leakage across al
 3. **Display Bus Multiplexer Isolation (TMUX1575):**
    * The high-speed SPI bus to the Kaleido 4 display controller (TBD, ADR-032) is isolated by **2× TI TMUX1575** (4 channels each, 8 total — ADR-004; suitability to be re-checked against that controller's host interface). Its fail-safe inputs tolerate up to 5.5V independent of supply voltage, completely preventing display signals from back-powering the CM5 when it is off.
 4. **Physical Line-Breaker for Microphones:**
-   * The physical airgap switch cuts `VDD_MIC` and shunts `I2S_CLK` and `I2S_DATA` to GND.
+   * The privacy switch breaks `MIC_BCLK` (MIC MUTE and FULL BLACKOUT) and cuts the mic supply (FULL BLACKOUT); it never shorts a driven pin (§2.25).
 
 #### Summary of SolarDeck Tiered Power Domains
 
@@ -756,10 +756,10 @@ To guarantee decadal survival in remote areas where the custom internal LiFePO4 
 
 ### 2.25 3-Position Hardware Privacy & Stealth Disconnect Switch
 To deliver mathematically verifiable, physical airgapped privacy for tactical operations, secure negotiations, and sovereign computing:
-* **Switch Mechanism:** A heavy-duty, IP67 sealed 3-position miniature slide switch located on the top chassis flank:
+* **Switch Mechanism:** A sealed (IP67-rated part) 3-position miniature slide switch on the left chassis flank beside the 5-way rocker (§3 layout); it is the only privacy/airgap switch (ADR-046):
   1. **Position 1: NORMAL (Green Index):** All microphones and radio load switches operate normally under Linux kernel software power management.
   2. **Position 2: MIC MUTE (Yellow Index):** Mechanically breaks the I²S bit clock (`MIC_BCLK`, RP2350 GPIO 26) between the RP2350 and both Knowles MEMS microphones, and a pull-down holds the microphone side at GND. The switch never shorts the driven RP2350 pin. Without a clock signal, the MEMS charge pump cannot oscillate; audio eavesdropping is physically and electrically impossible (0.000V signal level). The radios remain operational.
-  3. **Position 3: FULL BLACKOUT (Red Index):** Mechanically disconnects power (`VCC`) to both microphones and de-asserts the hardware gate on the u-blox MAX-M10S GNSS receiver to 0.000V and pulls the CM5's `WL_nDisable`/`BT_nDisable` low.
+  3. **Position 3: FULL BLACKOUT (Red Index):** Mechanically disconnects power (`VCC`) to both microphones and also breaks `MIC_BCLK` as in MIC MUTE, so no clock is driven into unpowered mics, de-asserts the hardware gate on the u-blox MAX-M10S GNSS receiver to 0.000V and pulls the CM5's `WL_nDisable`/`BT_nDisable` low.
 * **Diagnostic Sense Line (`PRIVACY_STAT`):** An auxiliary sense pin informs the RP2350 and Linux kernel of the physical switch position, allowing the OS to display a permanent hardware padlock icon on the 10.3" E-Ink screen with zero CPU overhead.
 
 ### 2.26 Hardware USB Data-Line Shield & Forensic Isolation ("Juice-Jacking" Defense)
@@ -910,7 +910,7 @@ The **R4 Deep-Off + Scrub** rung of the sleep ladder (§3.3.3 of SOFTWARE_SPEC.m
 
 * **P1 ships with a Li-primary keep-alive cell** (e.g. a 3V CR2-style primary in a bay, ~0.5–1%/y self-discharge → 20–40 y shelf life, a few dollars) feeding the RP2350's RTC rail. This is the *cheap, available, unlicensed* answer to a 20-year keep-alive.
 * **A betavoltaic bay is reserved (DNP):** a mechanically and electrically empty socket sized for a future tritium (H-3) betavoltaic cell (BV100-class: 3V, ~100 µW, ~50 y rated; practical useful output ≈20–40 y given the 12.3 y half-life). The bay is populated by enthusiasts or a later Rev after licensing/supply matures — **not** in the base BOM.
-* **Why not tritium in P1 (honest answer):** (1) power-budget mismatch — the modelled keep-alive load (`spec_values.keepalive.rtc_load_uw`, sized for the DS3231 and to be re-derived for the RV-3028-C7-class RTC, ADR-046) exceeded a single 100 µW cell's *continuous* output with the DS3231; re-check once the RTC's figure is in the spec, so even with tritium you need the same trickle→buffer→burst topology a coin cell provides; (2) tritium is a controlled nuclear material (US NRC / UK ONR) — owning a sealed microsource is tolerated, but *shipping and selling it as a product* is licensing paperwork hostile to an open-hardware supply chain; (3) cost — NanoTritium-class cells run hundreds to thousands of dollars per unit against a ≈$400 whole-BOM budget; (4) it is never the actual bottleneck — the embedded NAND already holds the hibernation image and the RTC real-time clock keeps the schedule; a 40-year-lifetime problem is served by a 40-year-primary that costs $2. The betavoltaic bay exists so the *century* claim (ADT-019, HARDWARE_SPEC §5) is physically reachable later without a board respin.
+* **Why not tritium in P1 (honest answer):** (1) power budget unproven — the keep-alive load (`spec_values.keepalive.rtc_load_uw`) is null until re-derived for the RV-3028-C7-class RTC (ADR-046), so whether one cell's continuous output (`keepalive.betavoltaic_uw`) can carry it is open, and the trickle→buffer→burst topology a coin cell provides is assumed until then; (2) tritium is a controlled nuclear material (US NRC / UK ONR) — owning a sealed microsource is tolerated, but *shipping and selling it as a product* is licensing paperwork hostile to an open-hardware supply chain; (3) cost — NanoTritium-class cells run hundreds to thousands of dollars per unit against a ≈$400 whole-BOM budget; (4) it is never the actual bottleneck — the embedded NAND already holds the hibernation image and the RTC real-time clock keeps the schedule; a 40-year-lifetime problem is served by a 40-year-primary that costs $2. The betavoltaic bay exists so the *century* claim (ADT-019, HARDWARE_SPEC §5) is physically reachable later without a board respin.
 * **Budget:** keep-alive envelope below ≈0.2 mW average (RTC tick; the scheduled LoRa RX slot it was sized with is V2, ADR-044); the bay's voltage rail and buffer-cap pad are spec'd on the carrier. See `docs/spec_values.json` → `keepalive.*` for the numbers the checker enforces.
 
 ---
@@ -1021,7 +1021,7 @@ To ensure reliable, error-free operation in pitch darkness, under strict militar
 │ • Top Bezel: IXYS Micro-Solar Strip + GNSS Antenna (NFC is V2, ADR-034)     │
 │ • Bottom Edge: Recessed Recovery + USB-C Port 1 (jack removed, ADR-046)     │
 │ • Right Flank: Magnetic Precision Stylus Clamping (N52 Array + Align Groove)│
-│ • Left Flank: 5-Way Tactical Navigation Rocker (ALPS SKRH) + Airgap Switch  │
+│ • Left Flank: 5-Way Tactical Navigation Rocker (ALPS SKRH) + Privacy Switch │
 │                                                                             │
 │ [INTERNAL COPLANAR CHASSIS STACKUP (X-Y ARRANGEMENT)]                       │
 │ • Front Glass + E-Ink Panel + Wacom EMR Layer: TBD (ADR-032)                │

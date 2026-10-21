@@ -59,7 +59,7 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **CM5 Retention** | CNC Aluminum CM5 Retention Bracket & Thermal Interface Pad | Custom CNC / Laird | Custom Bracket + Tflex | $1.80 |
 | **RF Pi-Matching** | Precision 0402 RF Inductors & C0G/NP0 Capacitors (5 nets) | Murata / TDK / LCSC | 0402 Precision RF Kit | $0.40 |
 | **Solar Aerogel** | 0.5mm Die-Cut Pyrogel Aerogel / Kapton Thermal Barrier | Aspen Aerogels / 3M | Pyrogel Insulation Strip | $0.60 |
-| **Privacy Switch** | Sub-miniature 3-position slide switch: normal / mic mute / full blackout (HARDWARE_SPEC §2.25, ADR-046) | C&K / E-Switch | TBD (3-position) | TBD |
+| **Privacy Switch** | Sealed (IP67-rated) sub-miniature 3-position slide switch, multi-pole: normal / mic mute / full blackout (HARDWARE_SPEC §2.25, ADR-046) | C&K / E-Switch | TBD (3-position) | TBD |
 | **GORE Vent** | ePTFE Pressure Equalization Vent Plug | W. L. Gore / Amphenol | PMF100396 | $1.50 |
 | **Haptic Engine** | Wideband Haptic Driver + frame-mounted Z-Axis LRA, core part (ADR-037; piezo array = DNP) | Texas Instruments / Vybronics | DRV2605L + 8mm Z-Axis LRA | $2.35 |
 | **Perimeter Gasket** | Die-Cut VMQ Silicone O-Ring, 27% Compression (Service Item) | Custom / Rogers | Custom Die-Cut VMQ | $2.10 |

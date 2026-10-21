@@ -167,7 +167,7 @@ To enable clean voice interaction with Claude Code and dictation:
    * Two I2S digital MEMS microphones (Knowles **SPH0645LM4H-B** or InvenSense `ICS-43434`), with the speaker output looped back as the echo-cancel reference for barge-in.
    * Mounted inside molded silicone acoustic boots to decouple chassis vibrations.
    * **Voice button:** hold-to-talk is always available and costs nothing in standby; the RP2350 starts capturing into PSRAM at press while the CM5 boots, so no words are lost. A hands-free wake word is opt-in, with its measured battery cost shown.
-3. **Physical Privacy:** The single 3-position privacy switch (normal / mic mute / full blackout, HARDWARE_SPEC §2.25) cuts the microphones in hardware.
+3. **Physical Privacy:** The single 3-position privacy switch (normal / mic mute / full blackout, HARDWARE_SPEC §2.25) stops the microphones in hardware: mute breaks their clock, blackout also cuts their supply.
 
 ---
 
