@@ -992,3 +992,23 @@ expects the RTC in April 2027).
 **Still assumes.** EEMB builds the pack and supplies pack-level UN38.3; TI confirms the BQ2980 and
 BQ27Z561 can share one sense resistor; the TPS61022's output at the bottom of the pack's range is
 enough for `pack.rail_5v_a` (EVT-0 step 8).
+
+---
+
+## ADR-050 — EMR pen-layer inquiries wait for the panel and go to several vendors (2026-10-21)
+
+Written 2026-10-21 20:54 UTC in Claude Code by anthropic/claude-opus-5-5. Owner: Hanvon Ugee "is coming
+up with their own Kaleido 4 thing, wouldn't we be competing?" The drafted Hanvon Ugee inquiry was
+deleted unsent.
+
+**Decision.** No EMR quote is requested before a 10.3″ Kaleido 4 is confirmed (the README's original
+plan). Then one neutral inquiry (sensor size, controller interface, Linux driver path, samples and
+volume pricing) goes to several vendors in parallel: Wacom's OEM channel, Hanvon Ugee and at least
+one more. It names no panel model, compute module or schedule.
+
+**Because.** A quote without a panel drawing goes stale before 2027. Hanvon Ugee sells EMR modules to
+other device makers, so competition alone would not stop a sale. But Hanvon ships a Kaleido 4 device
+(the M10C II, REVIEW_PACKET Q6), and a supplier does not need our roadmap to quote a sensor, and a single source leaves no
+alternative.
+
+**Still assumes.** At least two EMR vendors will quote small quantities.

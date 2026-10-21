@@ -12,6 +12,8 @@ Revised 2026-10-21 19:45 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion
 
 Revised 2026-10-21 20:42 UTC in Claude Code by anthropic/claude-opus-5-5 (pre-bench close-out and freeze, ADR-049).
 
+Revised 2026-10-21 20:54 UTC in Claude Code by anthropic/claude-opus-5-5 (EMR inquiry policy, ADR-050).
+
 Five internal audit rounds are done, the last against the datasheets (AUDIT 6). Further internal reading has near-zero yield; the open questions
 are judgement calls that need an outside opinion. This is the brief for that review.
 
@@ -29,7 +31,7 @@ failure far beyond the first hard wear-out.
 
 1. `docs/AUDIT_6_2026-10-21.md` — the repo checked against the datasheets; blockers and decisions.
 2. `docs/STATUS.md` — the honest evidence page. Note `measured: 0`.
-3. `docs/90-history/decisions.md` — ADR-001…049. **This is the highest-signal document in the repo**:
+3. `docs/90-history/decisions.md` — ADR-001…050. **This is the highest-signal document in the repo**:
    it records decisions reversed by evidence, the V1 scope cut (ADR-034, ADR-044) and the pin budget (ADR-045).
 4. `docs/LONGEVITY_30Y.md` §1b — the reliability arithmetic.
 5. `docs/FIRMWARE_INTERFACE.md` + `firmware/rp2350/include/solardeck_regs.h` — the only artifact that
@@ -92,7 +94,9 @@ sampling programme; the only announced device (Hanvon M10C II, China, December) 
 timing controller, for which no small-company sampling route was found. The IT8951 drives mono Carta
 only. An open FPGA controller (Modos Glider / Caster) already drives Kaleido 3. The CM5 has no built-in
 e-paper controller. EMR: Wacom is OEM/NDA-only (W9013 over I²C is proven on mainline Linux); Hanvon
-Ugee sells custom EMR modules to businesses. An E Ink sales inquiry was sent 2026-10-21.
+Ugee sells custom EMR modules to businesses but also ships its own Kaleido 4 device, so EMR quotes wait
+for the panel and go to several vendors with a neutral inquiry (ADR-050). An E Ink sales inquiry was
+sent 2026-10-21.
 **Attack:** should V1 commit to the T2000 route (needs E Ink), an open FPGA controller (needs Kaleido 4
 waveforms), or keep 10.3″ only if E Ink confirms it — and what is the fallback if Kaleido 4 is not
 offered at 10.3″?
