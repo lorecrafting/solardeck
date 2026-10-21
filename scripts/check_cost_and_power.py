@@ -10,7 +10,7 @@ catch a stale total, because a total is not written down anywhere else. This pha
 artifacts instead:
 
   BOM    sum the line-item rows; assert spec_values, the total row, and the ASCII summary agree.
-  POWER  recompute the two endurance claims from primitives; assert the claimed numbers hold.
+  POWER  recompute the solar-vs-idle claim from primitives (LoRa endurance left with LoRa, ADR-044).
   ENERGY assert the insolation assumption is stated (so a reader can recheck it).
 
 Derivation, not agreement. That distinction is the whole point.
@@ -92,16 +92,7 @@ def check_power(err):
     elif ratio < 1.25:
         err(f"strip/idle margin is only {ratio:.2f}x; claim 'infinite' is not defensible")
 
-    wh = SPEC["battery_wh"]["lifepo4"]  # the shipped chemistry
-    if wh is None:
-        print("  UNVERIFIED: battery_wh.lifepo4 is null until a cell is chosen (ADR-040); "
-              "LoRa endurance not derived.")
-        return gen_wh, idle_wh, ratio, None, None
-    days_lo = wh / (P["lora_repeater_mw_high"] / 1000 * 24)
-    days_hi = wh / (P["lora_repeater_mw_low"] / 1000 * 24)
-    if days_lo < 80:
-        err(f"LoRa repeater endurance is {days_lo:.0f}-{days_hi:.0f} days, the docs claim 80+")
-    return gen_wh, idle_wh, ratio, days_lo, days_hi
+    return gen_wh, idle_wh, ratio
 
 
 def check_charger(err):
@@ -139,7 +130,7 @@ def check_stated_assumptions(err):
 def main():
     errors = []
     lo, hi, n = check_bom(errors.append)
-    gen, idle, ratio, dlo, dhi = check_power(errors.append)
+    gen, idle, ratio = check_power(errors.append)
     chg = check_charger(errors.append)
     check_stated_assumptions(errors.append)
     if errors:
@@ -148,8 +139,7 @@ def main():
         print(f"   {len(errors)} derived-number failure(s)")
         return 1
     print(f"  BOM: {n} rows derived to ${lo:.2f}-${hi:.2f}, prose agrees.")
-    lora = f"LoRa repeater {dlo:.0f}-{dhi:.0f} days" if dlo is not None else "LoRa endurance TBD (cell null)"
-    print(f"  Power: strip {gen:.2f} Wh/day vs idle {idle:.3f} Wh/day = {ratio:.1f}x; {lora}.")
+    print(f"  Power: strip {gen:.2f} Wh/day vs idle {idle:.3f} Wh/day = {ratio:.1f}x.")
     print("  Charger: {} VREG {}-{} V covers {} {} V; firmware gate agrees.".format(*chg))
     return 0
 

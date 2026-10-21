@@ -21,7 +21,7 @@ Every doc that mentions a phase count is checked against docs/spec_values.json b
   Phase 12: Status catalogue (docs/STATUS.md generated and current)
   Phase 13: Longevity constraints (docs/LONGEVITY_30Y.md)
   Phase 14: Derived numbers (BOM total, energy budget) recomputed from artifacts
-  Phase 15: Firmware interface contract (header <-> doc <-> wire test)
+  Phase 15: Firmware interface contract (header <-> doc <-> wire test) and pin budget (ADR-045)
   Phase 16: Reliability model, obsolescence policy, design-for-test
 
 NOTE: a green run means "the artifacts are internally consistent". It does NOT mean the design is

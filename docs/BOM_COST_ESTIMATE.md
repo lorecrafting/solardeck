@@ -27,10 +27,7 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **5V Boost Conv**| 3.5A Synchronous Boost Converter (Main CM5/USB Supply) | Texas Instruments / Mouser | TPS61088RHLR | $1.20 |
 | **Micro-Solar** | Top-Bezel Monocrystalline Trickle Strip (~0.15W Peak, 50-120mW Real)| IXYS / DigiKey / Mouser | SM141K06L / PowerFilm | $3.50 |
 | **Power Gates** | Ultra-Low Leakage Load Switches (Airgap Cut + Port 2 VBUS) | Texas Instruments / LCSC | TPS22918DBVR (x2) | $0.80 |
-| **LoRa Mesh** | 915/868 MHz LoRa Transceiver Module (+22dBm) | Mouser / LCSC | Semtech SX1262 (Ebyte E22-900M22S) | $5.50 |
 | **GNSS Receiver**| Standalone multi-constellation GNSS, integrated LNA, on the RP2350 UART (ADR-038) | u-blox / Mouser | MAX-M10S | TBD |
-| **LoRa Antenna Mount**| IP67 Bulkhead SMA Female Jack with O-Ring Gasket | LCSC / Amphenol | SMA-KFD08-IP67 | $1.80 |
-| **LoRa Antenna** | Tactical 1/2-Wave 915MHz Dipole Whip (Center-Fed, 3.2dBi) | Linx Technologies / Mouser | ANT-916-CW-HWR-SMA | $8.50 |
 | **Wi-Fi/BT Antenna**| Dual-Band (2.4/5GHz) Balanced Dipole FPC with U.FL | Molex / Mouser | 1461530100 | $1.20 |
 | **GNSS Antenna** | Passive Internal FPC GPS/GLONASS Antenna (for MAX-M10S; integrated LNA) | Molex / Taoglas / LCSC | 1461860100 | $0.90 |
 | **Audio** | Dual-MEMS Acoustic Array (2x SPH0645) + I2S Class-D Amp + Speaker| Knowles / Maxim Integrated / PUI Audio | SPH0645LM4H (x2) + MAX98357A + AS03008MR | $5.10 |
@@ -44,6 +41,7 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **Barometer** | Precision Atmospheric Pressure & Altimeter Sensor | Bosch Sensortec / Mouser | BMP390 | $1.20 |
 | **5-Way Rocker** | IP67 Sealed Micro Navigation Joystick (Up/Down/Left/Right/Press)| ALPS / Panasonic / Mouser | SKRHABE010 | $0.85 |
 | **Power Telemetry**| 3-Channel High-Side Current & Power Monitor IC (Rail Logging)| Texas Instruments / Mouser | INA3221AIRGVR | $1.20 |
+| **GPIO Expander** | 16-bit low-quiescent I²C GPIO expander with interrupt, on the always-on bus (ADR-045, docs/PIN_BUDGET.md §4) | TBD | TBD | TBD |
 | **Coulomb Counter**| LiFePO4-capable Impedance Track fuel gauge, characterised on the chosen cell (ADR-035) | Texas Instruments / Mouser | BQ27Z561-R2 | TBD |
 | **Thermal Triad** | Dual Precision Digital Temperature Sensors (Batt + E-Ink Logs)| Texas Instruments / LCSC | TMP112AIDRLR (x2) | $0.60 |
 | **Ambient Lux Sensing**| Integrated via Solar Strip & RP2350 12-Bit ADC (Zero-BOM Innovation)| IXYS / RP2350 Subsystem | ADC Channel 3 ($0 Added Silicon) | $0.00 |
@@ -67,9 +65,9 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **Perimeter Gasket** | Die-Cut VMQ Silicone O-Ring, 27% Compression (Service Item) | Custom / Rogers | Custom Die-Cut VMQ | $2.10 |
 | **Enclosure (PA12)**| SLS 3D-Printed PA12 Nylon Shell + 85A TPU Corner Bumpers | JLC3D / Craftcloud | Custom CAD Housing (Streamlined)| $25.00 |
 | **Conformal Coat** | IPC-CC-830 Reworkable Acrylic Conformal Coating, Connector-Masked (spec_values.longevity.conformal_coat) | PSI / Applied Post-SMT | IPC-CC-830 (UC-2605) | $2.00 – $4.00 |
-| **Total Core BOM**| **(Sum of 55 V1 Line Items, excluding 7 TBD parts: Kaleido 4 panel, its controller, cell, charger, gauge, protector, GNSS — a floor, not a price; see docs/AUDIT_6_2026-10-21.md H22)** | | | **$497.55 – $499.55 + TBD** |
+| **Total Core BOM**| **(Sum of 53 V1 Line Items, excluding 8 TBD parts: Kaleido 4 panel, its controller, cell, charger, gauge, protector, GNSS, GPIO expander — a floor, not a price; see docs/AUDIT_6_2026-10-21.md H22)** | | | **$481.75 – $483.75 + TBD** |
 
-### Deferred to V2 (ADR-034) — not summed
+### Deferred to V2 (ADR-034, LoRa ADR-044) — not summed
 
 | Category | Component Description | Primary Supplier / Manufacturer | Part Number / Model | Est. Unit Cost (Qty 1-5) |
 | :--- | :--- | :--- | :--- | :--- |
@@ -78,6 +76,9 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **MFF2 eSIM Chip** | Consumer eUICC (GSMA SGP.22) Micro-eSIM, MFF2 DFN-8 — ADR-033 | TBD | TBD (ST4SIM-200M rejected: M2M SGP.02) | TBD |
 | **LTE MIMO Antennas**| Ultra-Wideband (698–3000 MHz) Flexible PCB Antennas (x2) | Taoglas / DigiKey | FXUB63.07.0150C (Main + Div) | $8.40 |
 | **Rear Camera** | 12MP Sony IMX708 Flush PDAF Scanner (Multimodal AI Vision & OCR)| Raspberry Pi / DigiKey | Official Cam Module 3 sensor + Sapphire | $14.50 |
+| **LoRa Mesh** | 915/868 MHz LoRa Transceiver Module (+22dBm) | Mouser / LCSC | Semtech SX1262 (Ebyte E22-900M22S) | $5.50 |
+| **LoRa Antenna Mount**| IP67 Bulkhead SMA Female Jack with O-Ring Gasket | LCSC / Amphenol | SMA-KFD08-IP67 | $1.80 |
+| **LoRa Antenna** | Tactical 1/2-Wave 915MHz Dipole Whip (Center-Fed, 3.2dBi) | Linx Technologies / Mouser | ANT-916-CW-HWR-SMA | $8.50 |
 | **NFC Controller** | 13.56 MHz NFC / Smartcard Reader & Crypto Signer + FPC Antenna | NXP Semiconductors / LCSC | PN5321A3HN / ST25R3916 | $2.40 |
 
 
@@ -142,7 +143,7 @@ Because standard surface-mount components from JLCPCB's / PCBWay's Basic and Ext
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  SOLARDECK V1 TABLET (excl. 7 TBD parts)   │ $498 – $500    │
+│  SOLARDECK V1 TABLET (excl. 8 TBD parts)   │ $482 – $484    │
 ├─────────────────────────────────────────────────────────────┤
 │  OPTIONAL SNAPDECK KEYBOARD (PHASE 2)      │ $47.55         │
 ├─────────────────────────────────────────────────────────────┤

@@ -4,6 +4,8 @@ Written 2026-10-20 12:40 UTC in the Pi harness by openrouter/deepseek/deepseek-v
 
 Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
 
+Revised 2026-10-21 17:23 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, pin budget; ADR-044/045).
+
 Audit 3 found the two halves of the product had no interface definition, so neither could be built or
 tested against the other. This is that definition.
 
@@ -15,7 +17,7 @@ does not exist in the header. Prose cannot drift from code in either direction.
 
 | Property | Value | Why |
 | :--- | :--- | :--- |
-| Bus | SPI, **CM5 is master**, RP2350 is slave | The CM5 is often off; it must be the side that initiates |
+| Bus | SPI, **CM5 is master** (SPI3, GPIO 4–7), RP2350 is slave (SPI1, GPIO 8–11) — `docs/PIN_BUDGET.md` | The CM5 is often off; it must be the side that initiates. The RP2350 drives its data-out line only while the CM5 is powered |
 | Frame | **64 bytes fixed**, little-endian, fixed offsets | No variable-length parsing on a device that wakes in 30 ms |
 | Integrity | **CRC-16/CCITT-FALSE** over bytes `0x00..0x3D`, stored at `0x3E` | A single bit flip must not become a state change |
 | Identity | `magic0='S'`, `magic1='D'`, `proto=1` | A driver that reads the wrong magic refuses to bind |
@@ -46,8 +48,8 @@ protocol version, and CRC, in that order.
 | `0x15` | `REG_CMD_ARG` | WO | u8 | command argument |
 | `0x16` | `REG_CMD_ACK` | RO | u8 | `SD_ACK_IDLE/APPLIED/REJECTED` |
 | `0x18` | `REG_EVENTS` | RO/W1C | u16 | `SD_EVENT_*`, write 1 to clear |
-| `0x1A` | `REG_LORA_RX_LEN` | RO | u8 | bytes queued in the LoRa RX ring |
-| `0x1B` | `REG_LORA_RX_HEAD` | RO | u8 | ring head index |
+| `0x1A` | `REG_LORA_RX_LEN` | RO | u8 | reserved for V2 LoRa (ADR-044); reads 0 in V1 |
+| `0x1B` | `REG_LORA_RX_HEAD` | RO | u8 | reserved for V2 LoRa (ADR-044); reads 0 in V1 |
 | `0x1C` | `REG_EPDC_OWNER` | RO | u8 | `SD_OWNER_CM5` or `SD_OWNER_RP2350` |
 | `0x1E` | `REG_HEARTBEAT_MS` | RO | u16 | ms since the RP2350 last serviced the bus |
 | `0x3E` | `REG_CRC16` | RO | u16 | frame checksum |
@@ -82,7 +84,7 @@ protocol version, and CRC, in that order.
 | `SD_EVENT_WAKE_REQ` | 0 | CM5 should resume |
 | `SD_EVENT_PWRFAIL` | 1 | power failing, flush now |
 | `SD_EVENT_BUTTON` | 2 | user button |
-| `SD_EVENT_LORA_RX` | 3 | packet queued in the ring |
+| `SD_EVENT_LORA_RX` | 3 | reserved for V2 LoRa (ADR-044) |
 | `SD_EVENT_TAMPER` | 4 | enclosure opened |
 
 | Flag | Bit | Meaning |
@@ -98,7 +100,7 @@ protocol version, and CRC, in that order.
 | :--- | ---: | :--- |
 | `SD_WAKE_NONE` | 0 | not a wake event |
 | `SD_WAKE_BUTTON` | 1 | user button |
-| `SD_WAKE_LORA` | 2 | mesh packet addressed to us |
+| `SD_WAKE_LORA` | 2 | reserved for V2 LoRa (ADR-044) |
 | `SD_WAKE_RTC` | 3 | scheduled alarm |
 | `SD_WAKE_PEN` | 4 | stylus pickup |
 | `SD_WAKE_PWRFAIL` | 5 | power fail |
@@ -123,7 +125,7 @@ protocol version, and CRC, in that order.
 
 ```
 RP2350 (event)                       CM5 (off / hibernated)
-  button/lora/rtc interrupt
+  button/rtc interrupt
   voice button: start mic capture into PSRAM now
   latch SD_EVENT_WAKE_REQ
   power on + assert PIN_GPIO17_WAKE ►  boots / resumes in seconds

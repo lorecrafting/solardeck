@@ -3,6 +3,7 @@
 Written 2026-10-18 17:35 UTC in the Pi harness by antigravity/gemini-3.8-flash
 Revised 2026-10-21 15:59 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
 Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
+Revised 2026-10-21 17:22 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, ADR-044/045).
 
 ---
 
@@ -14,12 +15,11 @@ SolarDeck is a sovereign, general-purpose open-hardware computing platform desig
    * Bare-metal Linux coding & computing platform (Raspberry Pi CM5)
    * Sunlight-readable 10.3" e-paper reader and Wacom EMR digitizer slate
    * Connectivity: Wi-Fi/BT on the CM5 plus phone tethering. Cellular (LTE modem, nano-SIM tray, soldered eSIM, LTE antennas, modem supply): deferred to V2 (ADR-034); the V2 eSIM requirement is a consumer SGP.22 eUICC (ADR-033)
-   * **Built-in Primary Off-Grid LoRa Mesh:** Semtech SX1262 LoRa (868/915 MHz) wired directly to RP2350 SPI for low-power Meshtastic repeating & zero-watt E-Ink pager mode
+   * Mesh: the CM5 talks to a paired external Meshtastic node over Bluetooth LE (software only). On-board LoRa: deferred to V2 (ADR-044); the V1 board reserves the footprint and pins (ADR-045, docs/PIN_BUDGET.md)
    * NFC: deferred to V2 (ADR-034)
    * Standalone GNSS: **u-blox MAX-M10S** on an RP2350 UART behind a load switch, passive antenna at the top edge; tracking power `spec_values.gnss.tracking_mw` (ADR-038)
-   * Dual-brain ultra-low-power supervisor (RP2350B + 8MB PSRAM) with **2× TI TMUX1575 (4-channel each, 8 total) display bus isolation** for 4.5 mW 30ms Zen reading, 24/7 LoRa mesh repeating, and desk clock modes
+   * Dual-brain ultra-low-power supervisor (RP2350B + 8MB PSRAM) with **2× TI TMUX1575 (4-channel each, 8 total) display bus isolation** for 4.5 mW 30ms Zen reading and desk clock modes
    * Rear camera: deferred to V2 (ADR-034)
-   * Top-bezel **IP67 Bulkhead SMA female connector** for tactical tuned LoRa whip
    * **Core Internal Tactical Sensor Cluster:** High-precision DS3231 RTC, Bosch BMI270 + BMM350 9-DOF IMU (compass & Stellarium), Bosch BMP390 Barometer (10cm altimeter & weather storm barograph), VEML7700 / Solar ADC ambient light sensor
    * **Voice (ADR-036):** two MEMS mics, speaker with echo-cancel reference, hardware mute, and a hold-to-talk voice button (RP2350 captures into PSRAM at press while the CM5 boots)
    * **Haptics (ADR-037):** DRV2605L + frame-mounted LRA; every keystroke fires a tap and optional typewriter sound at key-down
@@ -41,9 +41,9 @@ SolarDeck is a sovereign, general-purpose open-hardware computing platform desig
 │ 4. SCREEN:    10.3" E Ink Kaleido 4 (resolution/PPI TBD, ADR-032) + EMR     │
 │ 5. CAMERA:    Deferred to V2 (ADR-034)                                      │
 │ 6. CELLULAR:  Deferred to V2 (ADR-034); V2 eSIM = SGP.22 eUICC (ADR-033)    │
-│ 7. MESH/GNSS: Semtech SX1262 LoRa (Meshtastic) + u-blox MAX-M10S (ADR-038)  │
+│ 7. MESH/GNSS: BLE Meshtastic node (LoRa V2, ADR-044) + MAX-M10S (ADR-038)   │
 │ 8. NFC:       Deferred to V2 (ADR-034)                                      │
-│ 9. ANTENNAS:  Top-Edge IP67 SMA (LoRa) + passive GNSS antenna (top edge)    │
+│ 9. ANTENNAS:  passive GNSS (top edge); LoRa SMA boss plugged (V2, ADR-045)  │
 │ 10. SENSORS:  DS3231 RTC + BMI270/BMM350 9-DOF IMU + BMP390 Baro            │
 │ 11. AIRGAP SW: Physical Hardware RF Kill Switch (Zero EMF / 0.000 dBm Cutoff)│
 │ 12. VOICE:    2 MEMS Mics + Speaker (AEC ref) + Mute SW + Voice Button      │
@@ -75,7 +75,7 @@ To achieve maximum field battery life without an excessively heavy device:
 The tier draws below are the modelled loads; runtimes are re-derived from the chosen cell.
 * **Tier 0: Dormant Standby (< 0.1 mW)**
 * **Tier 1: Zen Reader Mode (RP2350 Driven @ ~4.5 mW)** with 30ms page turns.
-* **Tier 2: Perpetual LoRa Mesh Repeater (RP2350 @ 12–15 mW)** without waking Linux.
+* **Tier 2: LoRa mesh repeater:** deferred to V2 (ADR-044).
 * **Tier 3: Paper-Feel Scribe Slate (CM5 1-Core @ ~0.60W)**
 * **Tier 4: Adaptive Mixed Workstation (Web/Discord/Claude @ ~1.40W avg)**
 * **Tier 5: Audio-First Conferencing (Mic array + Opus + inbound dither @ ~1.30W)** (no outbound video; USB-C UVC webcam optional via Port 2).
@@ -106,10 +106,7 @@ V1 connectivity is Wi-Fi/BT on the CM5 plus phone tethering (ADR-034).
   * Allows private, zero-EMF, zero-latency listening to AI speech synthesis, audiobooks, and radio decoding even in 100% Hardware Airgap Mode.
 
 ### 3.2 Antenna Architecture & Reception Optimization
-1. **LoRa Mesh (Meshtastic 915/868 MHz):**
-   * Top-edge **IP67 Bulkhead SMA female connector** with silicone O-ring gasket.
-   * Field antenna: **Linx Technologies `ANT-916-CW-HWR-SMA`** (1/2-wave center-fed dipole, 3.2 dBi gain, operates without ground plane dependency).
-   * Pocket antenna: **Linx `ANT-916-CW-RH-SMA`** (50mm compact rubber ducky).
+1. **LoRa Mesh:** Deferred to V2 (ADR-044); the V1 board reserves the footprint and pins (ADR-045, docs/PIN_BUDGET.md). V1 mesh is a paired external Meshtastic node over Bluetooth LE.
 2. **Cellular LTE antennas:** Deferred to V2 (ADR-034).
    * **GNSS (ADR-038):** passive GNSS antenna at the top edge feeding the u-blox MAX-M10S (integrated LNA), which sits on an RP2350 UART behind a load switch. Receive-only.
 3. **Wi-Fi 5 & Bluetooth 5.0:**
@@ -133,7 +130,7 @@ V1 connectivity is Wi-Fi/BT on the CM5 plus phone tethering (ADR-034).
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 2. Microcontroller UART Console Bridge:                                     │
 │    • CM5 UART0 (GPIO 14/15, TBD — verify on CM5) routes to RP2350 UART.     │
-│    • RP2350 exposes a USB CDC serial port (`/dev/ttyACM0`) over USB-C.      │
+│    • RP2350 USB CDC serial on the recovery header (docs/PIN_BUDGET.md).     │
 │    • Stream early kernel dmesg / panic logs even if screen is dead.         │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 3. RP2350 ROM `BOOTSEL` Recovery:                                           │

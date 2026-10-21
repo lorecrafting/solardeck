@@ -3,6 +3,7 @@
 Written 2026-10-18 06:45 UTC in the Pi harness by antigravity/gemini-3.8-flash
 Revised 2026-10-21 15:55 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
 Revised 2026-10-21 16:46 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
+Revised 2026-10-21 17:22 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, ADR-044/045).
 
 Software architecture, operating system configuration, custom E-ink waveform drivers, power management daemons, and application workflows.
 
@@ -96,7 +97,7 @@ Local video remains usable: decode on the CM5, dither to 1-bit, accept the full-
 ### 3.1 Fast Sleep / Instant Wake Pipeline
 * **No RAM-retaining sleep on the CM5 (ADR-036):** the CM5 has no suspend-to-RAM state, so `spec_values.sleep_ladder` R2 is `null`. When sleep is triggered, Linux flushes file caches, cuts peripheral power switches (TPS22918) and either hibernates to disk or powers off (§3.3.3).
 * **Ambient modes are instant; Linux takes seconds:**
-  * The RP2350 owns the panel while Linux is off, so clock, reader, dashboard and mesh modes respond immediately (§3.2).
+  * The RP2350 owns the panel while Linux is off, so clock, reader and dashboard modes respond immediately (§3.2).
   * Touching any key or tapping the touch bar sends a hardware interrupt from the RP2350 to GPIO 17 on the CM5 (RP1 pin mapping TBD — verify on CM5). Linux resumes from hibernate or boots from off in seconds (`spec_values.sleep_ladder.r3_resume_s`); the last frame stays on the bistable panel meanwhile.
 
 ### 3.2 The Ambient LifeOps Mode (RP2350 Firmware)
@@ -104,9 +105,7 @@ While the main CM5 is powered completely off (0.000W), the **RP2350 co-processor
 1. **Sub-30ms Zen Reader & Framebuffer Pre-Caching:**
    * Utilizes the onboard **8MB QSPI PSRAM** to double-buffer pre-rendered page images (page geometry TBD, ADR-032; `spec_values.reader.page_*`).
    * When reading books, the CM5 pre-renders pages into PSRAM and sleeps. The RP2350 handles page-turn taps and side-bezel touch gestures autonomously, updating the Kaleido 4 display controller (TBD, ADR-032) (flip time `spec_values.reader.page_flip_ms`, TBD) while the CM5 remains dead (**~4.5 mW total power**; battery life TBD until the cell is chosen, ADR-040).
-2. **Standalone 24/7 Meshtastic LoRa Mesh Repeater:**
-   * The RP2350 communicates directly with the Semtech SX1262 LoRa transceiver over SPI.
-   * Listens for encrypted mesh packets, inspects routing headers, and hops packets across off-grid networks autonomously at **12–15 mW**, turning SolarDeck into a continuous tactical repeater (endurance TBD until the cell is chosen, ADR-040). If a direct message addresses the tablet, the RP2350 asserts `GPIO 17` to wake the CM5 and sound an alert.
+2. **Standalone LoRa Mesh Repeater:** Deferred to V2 (ADR-044); the V1 board reserves the footprint and pins (ADR-045, docs/PIN_BUDGET.md). V1 uses a paired Meshtastic node over BLE while Linux is up.
 3. **1-Second TCXO Clock Tick & Weather Barograph:**
    * Receives a 1Hz square-wave hardware interrupt (`INT/SQW`) from the high-precision DS3231 TCXO RTC.
    * Updates time digits and samples the Bosch BMP390 barometer and TMP112 thermals every 60 seconds into a rolling 7-day circular buffer in PSRAM.
@@ -122,7 +121,7 @@ Rather than relying on static, hardcoded power profiles, SolarDeck continuously 
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 1. REAL-TIME SENSING (Hardware Layer):                                      │
 │    • TI INA3221 (3-Rail mW) • BQ27Z561-R2 (Coulombs/ESR) • TMP112 (Thermal) │
-│    • Solar Lux (RP2350 ADC) • BMA400 (Motion) • SX1262/MAX-M10S (RF Metrics)│
+│    • Solar Lux (RP2350 ADC) • BMA400 (Motion) • MAX-M10S/Wi-Fi (RF Metrics) │
 │                                  │                                          │
 │                                  ▼ (10Hz / 1Hz / 0.1Hz Sampling)            │
 │ 2. TELEMETRY DAEMON (`solardeck-telemetryd`):                               │
@@ -149,9 +148,9 @@ The background daemon `solardeck-telemetryd` logs all physical metrics into a co
    `timestamp`, `battery_c`, `display_backplane_c`, `soc_die_c`, `modem_c` (no sensor in V1 — V2, ADR-034), `charger_rail_c`, `audio_c`
 4. **`module_health` Table (8 module health registers — `spec_values.telemetry.module_health_registers`):**
    `timestamp`, `module` (cm5|lte|esim|lora|panel|audio|battery|solar), `state` (ok|waning|fault), `value`, `unit`
-   (`lte` and `esim` report `absent` in V1 — V2 (ADR-034); the V2 requirement is a consumer SGP.22 eUICC (ADR-033).)
+   (`lte` and `esim` report `absent` in V1 — V2 (ADR-034); the V2 requirement is a consumer SGP.22 eUICC (ADR-033). `lora` reports `absent` in V1 — V2 (ADR-044).)
 5. **`rf_metrics` Table:**
-   `timestamp`, `lora_rssi`, `lora_snr`, `lora_airtime_pct`, `wifi_rssi`, `gnss_cn0`, `gnss_ttff`
+   `timestamp`, `lora_rssi`, `lora_snr`, `lora_airtime_pct`, `wifi_rssi`, `gnss_cn0`, `gnss_ttff` (`lora_*` are null in V1 — V2, ADR-044)
 5. **`environment_motion` Table:**
    `timestamp`, `ambient_lux`, `baro_hpa`, `relative_altitude_m`, `motion_state`, `tilt_angle`
 6. **`system_workload` Table:**
@@ -163,7 +162,7 @@ The full schema is the LLM's read surface: Tier 1/2 AI feedback (below) and the 
 1. **Tier 1: Immediate Autonomous Hardware Adaptation (< 100ms response):**
    * **Waveform Temperature Tuning:** Reads the display backplane TMP112 sensor and writes it to the temperature input of the Kaleido 4 display controller (TBD, ADR-032). The controller switches waveform LUTs in real time, preventing slow ghosting in cold weather and bleeding in hot sunlight.
    * **Ambient Lux Scaling:** When the solar strip ambient lux reads $>10,000\text{ lux}$ (direct sunlight), the front-light is locked to 0% and E-ink contrast curves are maximized.
-   * **Dead-Socket Power Cycle (cellular baseband):** V2 (ADR-034). In V1 the same pattern is the LoRa cold-restart (§21.5).
+   * **Dead-Socket Power Cycle (cellular baseband):** V2 (ADR-034); the LoRa cold-restart (§21.5) is V2 too (ADR-044).
 2. **Tier 2: Runtime System Profile Self-Tuning (`solardeck-optimize`):**
    * Running `solardeck-optimize` aggregates the past 24 hours of telemetry into a dense JSON payload and passes it to Claude Code:
      ```bash
@@ -190,7 +189,7 @@ The [[SolarDeck|device]] does not have one sleep mode: it has a ladder, and the 
 | **R1 — Alive** | User actively reading / inking / typing | `power_profiles.active_w` (≈0.60–2.6 W) | instant | zero latency, full responsiveness | any input event |
 | **R2 — S2idle** | Not available: the CM5 has no RAM-retaining low-power state (ADR-036) | `null` | `null` | — | — |
 | **R3 — Disk Hibernate** | Next interaction beyond the R1 idle timer; the RP2350 ambient modes cover the gap instantly | **0.000 W** after a one-time image write (≈0.005 Wh on NVMe, ≈0.02 Wh on eMMC) | seconds to interactive userspace (`sleep_ladder.r3_resume_s`) | *no flicker, no glitch* — the last page is already the correct picture; background resume simply re-warms the CPU | R1 idle timer (policy-tuned), or shadow gesture |
-| **R4 — Deep-Off + Scrub** (NEW) | Field / storage for months | 0.000 W continuous; the kept-alive wake path (RTC + one LoRa beacon) is below ≈0.2 mW | minutes, first broth | same as R3 — cold booting into the last *picture* is smooth even from months of offline; the user taps and the panel lights to the pre-rendered page | R3 timer clears ~1 week, then periodic scrub (RTC-triggered) re-writes the hibernation image so NAND retention decay (§54) can never corrupt a months-old resume image |
+| **R4 — Deep-Off + Scrub** (NEW) | Field / storage for months | 0.000 W continuous; the kept-alive wake path (RTC) is below ≈0.2 mW | minutes, first broth | same as R3 — cold booting into the last *picture* is smooth even from months of offline; the user taps and the panel lights to the pre-rendered page | R3 timer clears ~1 week, then periodic scrub (RTC-triggered) re-writes the hibernation image so NAND retention decay (§54) can never corrupt a months-old resume image |
 
 **Budget:** with no R2 rung (ADR-036), the ladder is R1 → R3 → R4: 0.000 W CM5 idle plus a one-time ≈0.005 Wh (NVMe) image write per transition. The R3 transition burst is real (it is the price of unloading DRAM); the ladder chooses *when* the burst is worth paying, and the RP2350 keeps the panel and ambient modes live meanwhile. `spec_values.sleep_ladder.*` holds the policy thresholds. (E: modelled on the ≈0.6 W active floor and the eMMC/NVMe image sizes — see `docs/AUDIT_2026-10-20.md` for what is measured vs modelled.)
 
@@ -283,7 +282,7 @@ SolarDeck's programmable RGB Notification Beacon ("Signal Halo") and Standby Pie
 │                   SOLARDECK BEACON & ALERT ARCHITECTURE                     │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ Applications & Daemons:                                                     │
-│ • `meshtasticd` (Incoming LoRa Packets) ──────────────────┐                 │
+│ • `meshtasticd` (paired BLE Meshtastic node) ─────────────┐                 │
 │ • `solardeck-telemetryd` (Battery / Solar / Thermals) ────┼─► `/run/beacon` │
 │ • `desktop-notifications` (Discord / Matrix / Slack) ─────┤   (UNIX Socket) │
 │ • `weather-barograph` (Barometric Storm Warnings) ────────┘        │        │
@@ -294,7 +293,7 @@ SolarDeck's programmable RGB Notification Beacon ("Signal Halo") and Standby Pie
 │              ▼ (When Linux CM5 is Active)                            ▼      │
 │     Direct IPC to RP2350 via UART/SPI               (When Linux CM5 Is Off)   
 │     • Custom color profiles & patterns              Autonomous RP2350 Engine
-│     • Gamma-corrected PWM curves (<0.2 mA)          • LoRa Mesh: Pulse Green
+│     • Gamma-corrected PWM curves (<0.2 mA)          • LoRa Mesh: V2 (ADR-044)
 │     • SMT Piezo Chime Tones (75 dB)                 • Solar: Breathing Amber
 │                                                     • Storm: Strobe Red Alert
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -313,7 +312,7 @@ SolarDeck's programmable RGB Notification Beacon ("Signal Halo") and Standby Pie
 
 ### 8.2 Deep-Sleep Autonomous Co-Processor Operation
 * When the CM5 hibernates or powers down (0.000W), the RP2350 firmware autonomously manages the beacon:
-  * **Incoming LoRa Mesh Packets:** RP2350 detects packet on SX1262 SPI $\to$ plays a subtle 2-tone chime on the SMT micro-piezo buzzer $\to$ pulses the emerald green LED at 0.5 Hz for 15 seconds.
+  * **Incoming LoRa Mesh Packets:** V2 (ADR-044); V1 uses a paired Meshtastic node over BLE.
   * **Rapid Barometric Drops (Storm Alert):** BMP390 detects pressure drop $> 3\text{ hPa / 3 hr}$ $\to$ strobes ruby red warning and sounds a weather alert tone.
   * **Ambient Nightstand Beacon:** When ambient solar lux reads $< 0.5\text{ lux}$ (pitch black) and device is resting on a nightstand or desk, pulses an ultra-faint warm white locator glow (2% duty cycle, $< 15\text{ µA}$) so you can effortlessly find the tablet in the dark.
 
@@ -434,7 +433,7 @@ Electrophoretic fluid viscosity varies significantly with temperature. Running f
 └────────────────────┴──────────────┴──────────────┴──────────────────────────┘
 ```
 
-* **Thermal Sensing Hook:** `eink-refreshd` polls the display backplane TMP112 sensor via the RP2350 inter-processor telemetry bridge (`I2C_HOST` target address `0x42` or `/run/solardeck/telemetry.sock`) every 10 seconds.
+* **Thermal Sensing Hook:** `eink-refreshd` polls the display backplane TMP112 sensor via the RP2350 inter-processor telemetry bridge (the CM5↔RP2350 SPI link, `docs/FIRMWARE_INTERFACE.md`, or `/run/solardeck/telemetry.sock`) every 10 seconds.
 * **Seamless In-Flight Transition:** Waveform switching occurs between frame updates without dropped keystrokes or UI tearing.
 
 ---
@@ -720,7 +719,7 @@ if [[ "$EVENT" == "plug" ]]; then
         swaymsg workspace "$ws" output "$HDMI_PORT"
     done
     
-    # Bind Workspaces 9-10 to internal 10.3" screen (Van telemetry, notes, LoRa chat)
+    # Bind Workspaces 9-10 to internal 10.3" screen (Van telemetry, notes, Meshtastic chat)
     swaymsg workspace 9 output "$INTERNAL_PANEL"
     swaymsg workspace 10 output "$INTERNAL_PANEL"
     
@@ -750,7 +749,7 @@ fi
 Governs the zero-battery supercapacitor cold-boot survival sequence:
 1. When supercapacitor reaches 3.3V, RP2350 executes emergency bootstrap from ROM.
 2. Ingests the last-valid fix from the u-blox MAX-M10S GNSS on its own UART (ADR-038) and the DS3231 timestamp from battery-backed NVRAM.
-3. Transmits 915 MHz / 868 MHz LoRa distress burst: `!SOS <LAT> <LON> <ALT> <TIME> <BLOOD_TYPE>`.
+3. Radio distress burst: V2 (ADR-044); V1 uses a paired Meshtastic node over BLE.
 4. Renders indelible high-contrast distress placard onto the 10.3" bi-stable screen before voltage drops below 2.0V.
 5. Once drawn, the distress message remains visible on the E-Ink display indefinitely with **0.000W battery consumption**.
 
@@ -801,9 +800,9 @@ When invoked via CLI or local agent tool call (`solardeck-diag --json`), the eng
      * `0x12`: Bosch BMA400 Accelerometer (executes internal electrostatic self-test deflection).
      * `0x68`: Maxim DS3231 RTC (reads oscillator stop flag `OSF`; checks battery backup coin-cell voltage).
      * `0x5D` / `0x14`: Goodix Touch Controller (reads mutual-capacitance baseline calibration frame).
-5. **RF & Wireless Mesh Domain (Semtech SX1262 & u-blox MAX-M10S):**
+5. **RF & Wireless Mesh Domain (u-blox MAX-M10S):**
    * **Cellular Modem:** V2 (ADR-034).
-   * **LoRa Transceiver:** Sends SPI opcode `0xC0` (`GetStatus`): verifies PLL lock, PA over-current protection flag, and antenna impedance match.
+   * **LoRa Transceiver:** V2 (ADR-044).
    * **GNSS (MAX-M10S, ADR-038):** Asks the RP2350, which owns the receiver's UART, for its NMEA status; counts tracked SVs (Satellites in View) and checks Fix status (2D/3D).
 6. **Rear Camera Domain:** Deferred to V2 (ADR-034).
 7. **Acoustic & Voice Front-End Domain (Knowles MEMS & MAX98357A):**
@@ -814,7 +813,7 @@ When invoked via CLI or local agent tool call (`solardeck-diag --json`), the eng
    * Reads M.2 NVMe SSD SMART health telemetry (`smartctl --json`) for bad sectors and temperature.
    * Checks Micro-HDMI Hot-Plug Detect (`HPD`) GPIO pin state.
    * Checks USB-C Port 1 and Port 2 CC controller registers (TUSB320) for VBUS voltage, orientation, and short-circuit faults.
-   * Reads physical Hardware Airgap Switch state pin (`AIRGAP_STAT`): 0V (Stealth Airgap Active) vs 3.3V (Normal Radio Operation).
+   * Reads physical Hardware Airgap Switch state pin (`AIRGAP_SENSE`): 0V (Stealth Airgap Active) vs 3.3V (Normal Radio Operation).
    * Reads 3-Position Hardware Privacy & Stealth Switch (`PRIVACY_STAT`): `0x01` (NORMAL), `0x02` (MIC_MUTE - PDM clock shunted to GND), `0x03` (FULL_BLACKOUT - mics and RF rails isolated to 0.000V).
 
 ### 21.2 Structured Diagnostic JSON Output Schema
@@ -861,7 +860,6 @@ When invoked via CLI or local agent tool call (`solardeck-diag --json`), the eng
     },
     "wireless": {
       "status": "PASS",
-      "lora_sx1262": {"status": "PASS", "pll_locked": true, "vswr_fault": false},
       "gnss": {"status": "PASS", "satellites_tracked": 9, "fix": "3D"}
     },
     "audio": {
@@ -886,7 +884,7 @@ When invoked via CLI or local agent tool call (`solardeck-diag --json`), the eng
 ### 21.3 LLM Reasoning & Plain-English Interpretation Rules
 When the user queries system health ("Is anything broken?"), the LLM follows four strict diagnostic rules:
 1. **Symptom-to-Hardware Correlation:** Never state raw register values alone; explain the physical meaning (e.g. *"Rail 3 is drawing current while every radio reports idle, which means a radio is stuck transmitting"*).
-2. **False-Positive Filtering:** Cross-check the Hardware Airgap Switch (`AIRGAP_STAT`). If the airgap switch is in STEALTH mode, radio NACKs are expected and reported as *"Radios safely unpowered by physical airgap switch (0.000W)"* rather than hardware failures.
+2. **False-Positive Filtering:** Cross-check the Hardware Airgap Switch (`AIRGAP_SENSE`). If the airgap switch is in STEALTH mode, radio NACKs are expected and reported as *"Radios safely unpowered by physical airgap switch (0.000W)"* rather than hardware failures.
 3. **Safety Clamping:** If battery cell impedance exceeds $85\text{ m}\Omega$ or display temperature exceeds $+55^\circ\text{C}$, the LLM flags an immediate safety alert and instructs the operator to disconnect solar charging.
 4. **Dew-Point & Humidity Mitigation:** If internal cavity humidity from the Sensirion SHT40 sensor exceeds 65% RH with falling ambient temperature, the LLM alerts the operator: *"Internal humidity alert: 68% RH. Condensation risk detected on front lens. Please remove and regenerate the orange desiccant sachet located inside the rear M.2 service hatch."*
 
@@ -901,7 +899,7 @@ Beyond passive diagnosis, the LLM is authorized to invoke targeted mitigation co
 Extends §21.4. All numbers live in `spec_values.self_heal.*`; no new silicon — every actuator below drives an existing load switch, charge register, or memory bank. **Every heal is gated by the §3.3.2 Tier-4 second opinion:** a heal never runs on a single sensor's say-so, because a blind pulse can make a good contact worse.
 
 1. **Corrosion Burn-Off Pulse (`solardeck-heal --burnish <rail>`):** Connector corrosion is the dominant field-failure mode of handheld electronics; oxide films on contact pairs are *reducible* by a controlled reverse-current soak, the same physics as relay burnishing. Sequence: rail confirmed idle (rail current $\approx 0$ via INA3221, §21.1.1), battery temp inside window, then a `spec_values.self_heal.burnish_current_ma` mA reverse pulse for `spec_values.self_heal.burnish_duration_ms` ms across the suspect contact pair, driven by the RP2350 through the rail's existing load-switch gate. Post-pulse: re-measure rail ESR/sag; log pre/post so the LLM can trend whether oxide is actually clearing. **Claim status: `modelled`** (relay-burnishing literature, not yet bench-measured for these contacts) — burns nothing because it is current-limited and temperature-gated.
-2. **LoRa Cold-Restart (`solardeck-heal --powercycle lora`):** Power-cycles the SX1262 rail: if LoRa RSSI sits below the mesh baseline for N consecutive polls while PLL stays locked (cold-cornered transceiver, not a dead antenna), assert the LoRa TPS22918 gate to 0.000V for 500ms and RSSI-after must recover.
+2. **LoRa Cold-Restart (`solardeck-heal --powercycle lora`):** V2 (ADR-044).
 3. **Thermal-Gradient Charge Reduction (automatic, no CLI):** If the $T_{\text{battery}}$ (TMP112 #1) vs $T_{\text{display}}$ (TMP112 #2) gradient exceeds the modelled threshold while charging, the RP2350 writes a reduced charge-current register to the BQ25798 directly — treating an overheating pouch as a *curable* state, not just a logged one. Reverts when the gradient closes.
 4. **Watchdog Chain-of-Custody Reporting (extends §10.4):** When the 5-second bootloader watchdog trips and the golden-bank revert fires, the event *must* be written to telemetry as a first-class row (`module_health: cm5 state=fault value=bank_b_reverted`) with the hash of the failed image — so the watchdog becomes a *healing loop that explains itself*, never a silent reboot-until-brick.
 5. **Generic Rail Gutter (`solardeck-heal --gutter <rail>`):** Generalizes the Port-2 trip-reset: any TPS22918-gated rail (GNSS, audio, expansion) that trips its malfunction indication can be guttered (isolated at 0.000V) while the rest of the board keeps running — the board degrades gracefully to a partial system instead of bricking on one flaky contact.
@@ -935,13 +933,13 @@ Leveraging the ultra-low-power Bosch BMA400 accelerometer running continuously a
 * **Acoustic/Vibration Pattern Matching:** When configured, `solardeck-tripwired` programs the BMA400's internal tap-sensing engine to listen for rhythmic knock sequences (e.g. *tap... tap-tap*) tapped on the aluminum unibody or front glass.
 * **Direct-Action Wakes:** Bypasses the need to find or press the power button in the dark:
   * Pattern A (*double-tap*): Instant wake to Dim Red Night-Vision terminal.
-  * Pattern B (*triple-tap*): Triggers emergency LoRa SOS distress beacon (§19).
+  * Pattern B (*triple-tap*): Triggers the SOS distress placard (§19); the radio burst is V2 (ADR-044).
   * Pattern C (*cadence rhythm*): Toggles Hardware Stealth mode.
 
 ### 23.2 Perimeter & Camp Anti-Theft Tripwire Mode
 * **Sub-Millimeter Movement Detection:** When placed in "Camp Guard" mode, the BMA400 establishes a baseline gravity vector reference $\vec{g}_0 = (x_0, y_0, z_0)$.
 * **Autonomous Alert Burst:** If the tablet is tilted by $>1.5^\circ$ or translated by $>1\text{ mm}$ (e.g., someone picking it up or nudging the table):
-  1. RP2350 wakes immediately and transmits an encrypted LoRa burst to the operator's pocket communicator or companion smartwatch:
+  1. RP2350 wakes immediately. The encrypted LoRa alert burst to the operator's pocket communicator or companion smartwatch is V2 (ADR-044); V1 sends it through a paired Meshtastic node over BLE once Linux is up:
      `[TRIPWIRE ALERT] Movement detected at 03:14:22 UTC! Displacement: 3.2G-sec. Last GPS: 21.3069 N, 157.8583 W`.
   2. If armed with acoustic deterrence, pulses a 105 dB ultrasonic siren or audible alarm through the MAX98357A speaker amp.
 
@@ -1016,8 +1014,8 @@ solardeck-ghostnavd --oneshot --json
 A passive tactical near-field signal countermeasure tool designed to detect unauthorized surveillance bugs, hidden Bluetooth tracking tags (Apple AirTag, Tile, Chipolo), and approaching drone command links:
 
 ### 27.1 Multi-Band Passive Energy Sweep
-* Commands the **Semtech SX1262 LoRa transceiver** and the **CM5 on-module Wi-Fi/Bluetooth** (receive-only sweep support TBD — verify on CM5) in pure receive-only energy detection mode (`RxSweep`):
-  * **Sub-GHz Bands (433 MHz, 868 MHz, 915 MHz):** Detects analog wireless microphones, covert LoRa beacons, and long-range drone telemetry links (ExpressLRS, Crossfire).
+* Commands the **CM5 on-module Wi-Fi/Bluetooth** (receive-only sweep support TBD — verify on CM5) in pure receive-only energy detection mode (`RxSweep`):
+  * **Sub-GHz Bands (433 MHz, 868 MHz, 915 MHz):** V2 (ADR-044): needs the deferred on-board LoRa radio. Detects analog wireless microphones, covert LoRa beacons, and long-range drone telemetry links (ExpressLRS, Crossfire).
   * **2.4 GHz ISM Band:** Sniffs BLE advertising bursts (Apple Find My 100ms chirp bursts, rolling public keys) and Wi-Fi video downlinks.
 
 ### 27.2 E-Ink Tactical Signal Radar & Audio Tone
@@ -1150,11 +1148,7 @@ Prevents night-blindness and maintains military-grade optical covertness:
 
 *Written 2026-10-19 15:20 UTC in the Pi harness by antigravity/gemini-3.8-flash*
 
-Operates continuously at 12 mW on the RP2350 / SX1262 LoRa radio while parked at remote trailheads:
-* Automatically answers remote LoRa packet queries from passing hikers:
-  * `?WEATHER`: Returns current barometric altitude, ambient temperature, and 12-hour barometric trend forecast.
-  * `?TRAIL`: Returns crowdsourced water source statuses, blowdowns, and wildlife alerts left by other hikers.
-  * `?SOS`: Triggers van audible horn, records GPS coordinates to non-volatile storage, and rebroadcasts distress beacon across the regional mesh.
+V2 (ADR-044); V1 uses a paired Meshtastic node over BLE.
 
 ---
 
@@ -1300,7 +1294,7 @@ Transforms SolarDeck into an ultra-rugged 10.3" sunlight-readable bicycle and ad
 * **Automated Crash & High-G Fall Detection:**
   * The 6-axis IMU (BMI270) continuously monitors for violent deceleration spikes ($>4\text{G}$) followed by immediate prolonged immobility ($>30\text{ seconds}$).
   * Triggers a 60-second audible piezo alert and LRA haptic vibration with an on-screen cancel button.
-  * If uncancelled, automatically broadcasts an **emergency SOS distress packet with GPS coordinates** over the 915 MHz Meshtastic LoRa mesh to all nearby riding companions or rescue nodes.
+  * If uncancelled, automatically broadcasts an **emergency SOS distress packet with GPS coordinates** through the paired Meshtastic node over BLE to all nearby riding companions or rescue nodes.
 
 
 ## 51. Pen / Refresh Arbiter (`solardeck-penarb`)

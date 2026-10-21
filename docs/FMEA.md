@@ -3,6 +3,7 @@
 Written 2026-10-20 14:40 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-0731
 
 Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
+Revised 2026-10-21 17:22 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, ADR-044/045).
 
 Read this document when: adding a sensor, an actuator, a repair hatch, or a gate. It is the single
 cross-reference that ties **failure family → design countermeasure → telemetry detector → heal
@@ -46,7 +47,7 @@ these), the board must not ship without:
   not just the 3 INA3221 channels — a second INA3221 or ADC sense taps on the gated rails. Without
   this, row 1's detector is a guess. This is a **quote-line item for the fab**, not an afterthought
   (`90-history/HANDOFF_TO_FABLE_2026-10-19.md` and `DECK_BUILDER_LAYOUT.md` both carry it).
-- **Thermal zones at 6 points** (battery, display backplane, SoC die, RF (LoRa/GNSS), charger rail, audio)
+- **Thermal zones at 6 points** (battery, display backplane, SoC die, RF (GNSS; LoRa is V2, ADR-044), charger rail, audio)
   — each a TMP112, all in `thermal_zones` (`SOFTWARE_SPEC.md` §3.3.1).
 - **Module health registers** (ok/waning/fault + numeric) per module, written by BIST and read by the
   Tier-2 export — the "cracked pad under a BGA chip" case stays invisible unless the registers exist.

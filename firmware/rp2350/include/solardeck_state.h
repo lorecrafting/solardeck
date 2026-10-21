@@ -16,9 +16,9 @@ extern "C" {
 // Hardware Pin Definitions
 #define PIN_TMUX_SEL_CM5_NRP    13   // High: CM5 controls EPDC; Low: RP2350 controls EPDC
 #define PIN_EN_5V_SYS           14   // TPS61088 5V System Boost Enable
-#define PIN_GPIO17_WAKE         15   // CM5 S2idle Wake Trigger (<300ms)
-#define PIN_GPIO16_PWRFAIL      16   // CM5 Emergency Powerfail Flush (<150ms)
-#define PIN_SOLAR_ADC           26   // ADC Channel 0 for Solar Panel Voc/Vmpp
+#define PIN_GPIO17_WAKE         15   // Interrupt to CM5 GPIO17; held low while the CM5 is off
+#define PIN_GPIO16_PWRFAIL      16   // Power-fail warning to CM5 GPIO16; held low while the CM5 is off
+#define PIN_SOLAR_ADC           40   // ADC0 on the RP2350B (ADC is GPIO 40-47 only); docs/PIN_BUDGET.md
 
 // ADR-035: BQ25798 CE is active-low and pulled HIGH in hardware, so the charger is off at power-up.
 // Firmware may drive CE low only once VREG reads back as this value. Must equal

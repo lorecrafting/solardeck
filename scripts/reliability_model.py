@@ -28,8 +28,6 @@ MODEL = [
     ("CM5 module (SoC + DRAM + eMMC)", 1, 120, "2.4 GHz SoC at 55 degC junction"),
     ("Display module (EPDC + panel + frontlight)", 1, 60, "Kaleido 4 + controller (TBD) + LED string"),
     ("NVMe SSD", 1, 50, "controller + NAND"),
-    ("Cellular modem module (EG25-G)", 1, 45, "module-level"),
-    ("LoRa module (SX1262)", 1, 25, "PA + TCXO"),
     ("Analog / power ICs", 14, 15, "chargers, bucks, load switches, e-fuses"),
     ("Sensors", 6, 12, "IMU, ALS, SHT40, RTC, fuel gauge, ADC"),
     ("Discrete semiconductors", 22, 6, "MOSFETs, ideal diodes, ESD arrays"),

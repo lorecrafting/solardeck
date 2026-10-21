@@ -6,6 +6,8 @@ Revised 2026-10-21 16:01 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / 
 
 Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
 
+Revised 2026-10-21 17:22 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, ADR-044/045).
+
 Purpose: classify every `BOM_COST_ESTIMATE.md` line as **snap-in (user-serviceable)** or
 **soldered (factory-welded)** so the SolarDeck quote (`90-history/HANDOFF_TO_FABLE_2026-10-19.md`) is structured around a
 user-assemblable "Deck-Builder" top layer — and to make that modularity serve the project's
@@ -36,7 +38,7 @@ If it has a human-scale interface (screw, latch, twist-on) → snap.
 | :--- | :--- | :--- |
 | CM5 (CM5116064, ADR-031) | 2× standoff screws + DF40 board-to-board connectors | ✅ identity + current sense on its rail |
 | LTE modem + antennas | Deferred to V2 (ADR-034). | — |
-| SX1262 LoRa + whip | Castellated pad *or* socket + SMA | ✅ RSSI/SNR telemetry |
+| SX1262 LoRa + whip | Deferred to V2 (ADR-044); the V1 board reserves the footprint and pins (ADR-045, docs/PIN_BUDGET.md). | — |
 | Kaleido 4 panel + EMR (ADR-032) | FPC latch (pin count TBD, ADR-032) | 🟨 physical latch, delicate; health via refresh-ACK latency |
 | Speaker / dual MEMS / piezo | Fly-wires + micro connectors | ✅ audio-loop self-test |
 | Battery pack | Screw-down terminals + strap | ✅ charge/discharge curve fit (see §4) |
@@ -67,7 +69,7 @@ If it has a human-scale interface (screw, latch, twist-on) → snap.
 
 When structuring the Seeed/JLCPCB request, ask for the carrier to be *born with these studs*:
 
-1. **M.2 NVMe socket** (CM5 PCIe lane, ADR-042) + **SMA stub mount** (LoRa) + **U.FL** (Wi-Fi) + passive GNSS antenna at the top edge (ADR-038)
+1. **M.2 NVMe socket** (CM5 PCIe lane, ADR-042) + **SMA boss, plugged** (V2 LoRa, ADR-045) + **U.FL** (Wi-Fi) + passive GNSS antenna at the top edge (ADR-038)
 2. LTE slot, LTE antennas and eSIM land pattern: deferred to V2 (ADR-034); the V2 eSIM requirement is a consumer SGP.22 eUICC (ADR-033)
 3. **40-pin FPC latch** for the panel (already specced)
 4. **Standoff post inserts ×2** for CM5; **CG-adjacent posts** for the RP2350 PGA brick (PGA2350 is 64-pin 25.4 mm — a pinned socket for it is feasible if the quote allows a 2.54 mm-pitch castellation)
@@ -89,7 +91,7 @@ power constrictions" you described. The modular top layer makes each reading *is
 | **Power constriction / overdraw** | µA sense per rail (§3.5) vs `spec_values.power.*` / `sleep_ladder.*` | "GNSS rail draws 2.1× `gnss.tracking_mw` → MAX-M10S stuck out of power-save; power-cycle it through its load switch" |
 | **Battery degradation** | Charge/discharge curve fit from telemetry DB | "Battery has 82% of rated capacity → 18% capacity fade, near mid-life threshold (`longevity.*`)" |
 | **E-ink panel wear** | Partial-refresh ACK latency creep + ghosting rate | "Refresh latency +38 ms over 90 days → panel pigment wear or waveform drift; re-run DC-balance calibration" |
-| **RF degradation** | SX1262 RSSI/SNR, MAX-M10S fix/satellite stats | "LoRa RSSI floor −15 dB vs mesh baseline → antenna SMA loose or cable fatigue; check the twist-on joint first" |
+| **RF degradation** | MAX-M10S fix/satellite stats, Wi-Fi RSSI | "GNSS satellites in view fall under open sky → antenna cable fatigue; check the top-edge antenna joint first" |
 | **Thermal / airflow** | On-board NTC per zone | "Charger zone runs 8 °C over profile → BQ heat-spread degradation, recommend service" |
 | **Register-level** | CM5 SMART, eMMC wear counters (already in telemetry) | "eMMC at 61% endurance → plan recapture within the 30-year budget (`longevity`) precedence" |
 
@@ -117,7 +119,7 @@ Module ↔ RP2350/CM5      Module emits:
 
 - CM5: SMART + eMMC wear + rail sense
 - GNSS: fix status, satellites in view, rail sense
-- LoRa: RSSI/SNR, rail sense
+- LoRa: V2 (ADR-044)
 - Panel: per-refresh ACK latency (already needed for G1), ghosting counter
 - Battery: coulomb-counted charge/discharge curve
 - Audio: loopback self-test (padded output, measured mic RMS)
