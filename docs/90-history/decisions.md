@@ -1058,3 +1058,65 @@ swap — check this before any colour commitment.
   any ghosting claim.
 - **EMR stack decision** (an EMR-laminated module vs a separate sensor layer) is now due before the
   cavity is drawn. ADR-050 stays in force; it finally has a confirmed panel to quote the sensor against.
+
+## ADR-052 — Open design, instrument price, kits before certification (2026-10-27)
+
+Written 2026-10-27 01:15 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017.
+
+**Owner decision.** Asked what the open route and an instrument price meant and whether any margin
+existed; answered with the numbers below, then "go".
+
+**Decision.** One commercial model, three parts, which only work together:
+
+1. **The design stays open.** CERN-OHL-S-2.0 (hardware), MIT (firmware), CC-BY-SA (docs) — see
+   `LICENSES/PATHS.md`. No relicensing, no closed enclosure. The licence already lets anyone build and
+   sell SolarDeck, so the model is built *on* that fact rather than against it.
+2. **V1 sells as an instrument, direct only**, at `unit_economics.price_usd.instrument`. The buyer is
+   comparing it with a rugged field computer, not with an e-reader. Bundled in the price: three-year
+   warranty, a spare panel and pack, the factory VCOM/calibration record, the first map pack, and named
+   support. No retail channel, no discounting, no marketplace.
+3. **Kits first, certification later.** A kit SKU at `unit_economics.price_usd.kit` exists to fund the
+   bench work, find field failures and produce customers — not to make money. Assembled sales start
+   only after FCC Part 15B plus the CM5 module integration memo, and a pack whose UN38.3 documentation
+   comes from the supplier.
+
+**The money, as modelled** (all figures in `unit_economics`, checked by `scripts/check_docs_numbers.py`):
+
+| SKU | Price | COGS | Cert/RMA/freight | Gross profit |
+| :--- | ---: | ---: | ---: | ---: |
+| Instrument | $1,799 | $710 | $141 | **$948 (53%)** |
+| Thin consumer | $1,099 | $650 | $85 | $364 (33%) |
+| Kit | $699 | $560 | — | $139 (20%) |
+
+At `unit_economics.target_units_per_year` instrument sales the model leaves
+`unit_economics.owner_profit_usd_per_year` a year before tax and before the owner's wages; starting
+capital to first revenue is `unit_economics.capital_to_first_revenue_usd`, staged in
+`unit_economics.starter_batch_units`-unit batches.
+
+**Because.** (1) The core BOM alone is `bom_total_low` with `cm5.price_usd` inside it, before panel and
+pack — at $499 the parts cost more than a Kindle Scribe's retail price, so a consumer price cannot work
+at any volume this project can fund. (2) Under CERN-OHL-S a BOM-plus-margin price is undercuttable to
+zero by anyone with better purchasing, so the only defensible price is one attached to what the licence
+does **not** grant: the name (OHL grants no trademark rights), the per-batch VCOM and waveform
+calibration data, the rendered map packs, the certificate, the spares, and a person to call. (3) The
+durable margin is the accessory, spares and services tail — Hotpacks, panels, packs, map packs, support
+— not the tablet.
+
+**Costs accepted.** Publishing invites a competitor to undercut the instrument price; that is the price
+of the project's reason to exist, and it is cheaper than losing the community that makes a niche device
+viable at all. The instrument price caps volume around 100–150 units a year: this is a business that
+pays a person, not one that sells. A kit containing a radio is still a device that the seller markets,
+so kit sales are a legal-review item and are labelled prototype/uncertified — never treated as a
+certification-free channel. `unit_economics.spares_held_pct_of_units` of every build is held as dead
+stock to keep the 30-year parts promise (`LONGEVITY_30Y.md`), which is real money in a warehouse.
+
+**What would reverse it.** A distributor quote putting `cm5.price_usd` at ≤$200 makes the thin-consumer
+SKU viable and the price drops; an ODM panel at ≤$110 with assembly at ≤$60 puts COGS near $450 and the
+whole table re-derives. Conversely, if compliance quotes above ~$20,000 or no pack supplier will supply
+UN38.3 documentation, assembled sales stop and the project remains kits and services.
+
+**Open items this creates.** Five quotes decide everything else, in this order: CM5 through a
+distributor; the mono panel module direct from an ODM at 100 and 500; enclosure CNC versus die-cast at
+400 units; the EEMB pack with documentation; a compliance lab for Part 15B plus the module memo. Every
+number in `unit_economics` is `modelled` until those land — replace them and re-run the check, never
+nudge them.

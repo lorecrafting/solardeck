@@ -105,6 +105,29 @@ def check_geometry(err):
         err("reader: 1-bit single-buffer exceeds PSRAM cache")
 
 
+def check_unit_economics(err):
+    """ADR-052: price - cogs - overhead must equal the recorded gross profit, and the headline
+    owner-profit figure must equal target volume x instrument GP - operating costs. Editing a price
+    without re-deriving the rest fails here instead of shipping an inconsistent business case."""
+    ue = SPEC.get("unit_economics") or {}
+    for model, price in (ue.get("price_usd") or {}).items():
+        oh = sum((ue["overhead_usd_per_unit"].get(model) or {}).values())
+        got = price - ue["cogs_usd"][model] - oh
+        if got != ue["gross_profit_usd"].get(model):
+            err(f"unit_economics.{model}: {price} - {ue['cogs_usd'][model]} - {oh} = {got}, "
+                f"but gross_profit_usd is {ue['gross_profit_usd'].get(model)}")
+    gp = (ue.get("gross_profit_usd") or {}).get("instrument")
+    units, ops = ue.get("target_units_per_year"), ue.get("operating_costs_usd_per_year")
+    if None not in (gp, units, ops):
+        derived = units * gp - ops
+        if derived != ue.get("owner_profit_usd_per_year"):
+            err(f"unit_economics: {units} units x {gp} - {ops} = {derived}, but "
+                f"owner_profit_usd_per_year is {ue.get('owner_profit_usd_per_year')}")
+    if ue.get("certification_usd", {}).get("pack_un383") is not None:
+        err("unit_economics.certification_usd.pack_un383 must stay null: UN38.3 is inherited from the "
+            "pack supplier's documentation, not bought (ADR-052)")
+
+
 def check_numbers(path, text, err):
     for m in re.finditer(r"(\d{2,3})\s*PPI", text):
         if SPEC["ppi"] is None:
@@ -157,6 +180,7 @@ def check_links(path, text, err):
 def main():
     errors = []
     check_geometry(errors.append)
+    check_unit_economics(errors.append)
 
     # ADR-027: the streaming-text guarantee must stay self-consistent. A streaming update IS one
     # partial rectangle, so the two latencies cannot drift apart; and the video answer must name

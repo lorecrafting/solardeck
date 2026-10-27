@@ -602,6 +602,25 @@
   },
   "bom_total_low": 524.76,
   "bom_total_high": 526.76,
+  "unit_economics": {
+    "_comment": "MODELLED, 2026-10-27 (ADR-052), not measured and not a claim that the device sells. Derived from bom_total_low/high (qty-1 retail parts), cm5.price_usd, and public turnkey-assembly quotes. Every figure is replaced -- never adjusted -- when the five quotes land: CM5 distributor, panel ODM, enclosure CNC-vs-die-cast, EEMB pack, compliance lab. cogs_usd is keyed by SKU: instrument = 500-off volume, thin_consumer = 1000-off, bench = one unit bought retail.",
+    "cogs_usd": { "bench": 1125, "instrument": 710, "kit": 560, "thin_consumer": 650 },
+    "price_usd": { "instrument": 1799, "kit": 699, "thin_consumer": 1099 },
+    "overhead_usd_per_unit": {
+      "instrument": { "cert": 24, "rma": 72, "freight": 45 },
+      "kit": { "cert": 0, "rma": 0, "freight": 0 },
+      "thin_consumer": { "cert": 12, "rma": 33, "freight": 40 }
+    },
+    "gross_profit_usd": { "instrument": 948, "kit": 139, "thin_consumer": 364 },
+    "certification_usd": { "fcc_part15b_and_module_integration": 12000, "pack_un383": null },
+    "_comment_certification": "US-only floor. pack_un383 is null because it should be inherited from EEMB's pack documentation, not bought; CE/RED for the EU is a separate, larger quote that is not budgeted (ADR-052 open items).",
+    "operating_costs_usd_per_year": 18000,
+    "target_units_per_year": 100,
+    "owner_profit_usd_per_year": 76800,
+    "starter_batch_units": 25,
+    "capital_to_first_revenue_usd": 40000,
+    "spares_held_pct_of_units": 3
+  },
   "cm5": {
     "_comment": "CM5 pivot (ADR-031, 2026): V1 moves from CM4 8 GB/32 GB eMMC to CM5 16 GB/64 GB eMMC wireless (CM5116064 / SC1608). 16 GB DRAM is the LLM-resident assumption: the 1-3B local model tier runs in RAM without swap/heritage modes. eMMC 64 GB holds the base image, reader cache, and full offline corpus. Wireless variant carries the Wi-Fi/BT that CM4 needed a USB dongle for — one less peripheral spine. The BOM compute row is priced at price_usd; Phase 14 totals were re-derived on 2026-10-21.",
     "sku": "CM5116064",
