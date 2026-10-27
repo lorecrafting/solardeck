@@ -77,7 +77,7 @@ def check_geometry(err):
         err(f"geometry: chassis {h}mm leaves <0.8mm wall around a {SPEC['chassis_cavity_depth_mm']}mm cavity")
     if SPEC["panel_module_outline_mm"] is None:
         print("  UNVERIFIED: panel outline, active area, stack depth and reader geometry are null until "
-              "the Kaleido 4 datasheet (ADR-032); panel-fit and page-cache checks skipped.")
+              "the mono module's drawing is on file (ADR-051); panel-fit and page-cache checks skipped.")
         return
     pw, pd = SPEC["panel_module_outline_mm"]
     aw, ad = SPEC["display_active_mm"]
@@ -108,7 +108,7 @@ def check_geometry(err):
 def check_numbers(path, text, err):
     for m in re.finditer(r"(\d{2,3})\s*PPI", text):
         if SPEC["ppi"] is None:
-            err(f"{path}: '{m.group(0)}' -- panel PPI is null until the Kaleido 4 datasheet (ADR-032)")
+            err(f"{path}: '{m.group(0)}' -- panel PPI is null until the V1 module's datasheet (ADR-051)")
             continue
         win = (text[m.end():m.end() + 12] + text[max(0, m.start() - 20):m.start()]).lower()
         if "colo" in win:

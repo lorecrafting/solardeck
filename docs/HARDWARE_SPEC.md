@@ -6,6 +6,7 @@ Revised 2026-10-21 16:41 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 sco
 Revised 2026-10-21 17:23 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, ADR-044/045).
 Revised 2026-10-21 17:53 UTC in Claude Code by anthropic/claude-opus-5-5 (RTC chip, jack removed, ADR-046).
 Revised 2026-10-21 19:43 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion smart pack, ADR-048).
+Revised 2026-10-27 01:10 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017 (mono V1 panel, ADR-051).
 
 Detailed hardware architecture, component selection, bus topology, antenna engineering, and electrical requirements for the custom carrier board and mechanical enclosure.
 
@@ -102,7 +103,7 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
       * **Hardware Watchdog Fallback:** The bootloader boots into the target bank with a **5-second hardware watchdog window**. Newly flashed firmware must execute a self-test and assert `WATCHDOG_KICK`. If the watchdog trips twice without a kick, the bootloader automatically reverts to the previous known-good golden bank, guaranteeing the power arbiter and wake logic cannot be bricked.
   * **External High-Speed Memory:** Paired with an **8MB QSPI PSRAM chip** (APMemory `APS6404L` / Winbond, $0.75).
   * **The 5 RP2350 Superpowers:**
-    1. **Full-Screen Autonomous Framebuffering (30ms Zen Reader):** Holds two full-screen framebuffers (frame size TBD until the Kaleido 4 resolution is published, ADR-032). Pre-caches eBook pages and executes sub-30ms paper-fast page turns without waking the CM5, dropping reading power to **4.5 mW** (runtime TBD until measured on the bench (pack: `battery_wh.li_ion`), ADR-040).
+    1. **Full-Screen Autonomous Framebuffering (30ms Zen Reader):** Holds two full-screen framebuffers (one 1-bit frame at 1872 × 1404 is 328 KB, so two full frames is a rounding error in 8 MB PSRAM; `spec_values.panel_sku.resolution_px`). Pre-caches eBook pages and executes sub-30ms paper-fast page turns without waking the CM5, dropping reading power to **4.5 mW** (runtime TBD until measured on the bench (pack: `battery_wh.li_ion`), ADR-040).
     2. **Standalone LoRa mesh node:** Deferred to V2 (ADR-044); the V1 board reserves the footprint and pins (ADR-045, docs/PIN_BUDGET.md).
     3. **Hardware Power Master & Anti-Brownout Shield:** Continuously monitors the pack-side TI BQ27Z561-R2 fuel gauge (ADR-035, ADR-048); blocks CM5 boot if battery voltage is $<3.0\text{V}$, preventing inrush brownouts and eMMC filesystem corruption.
     4. **Shadow Environmental Telemetry Logger:** Samples BMP390 barometric trends and TMP112 thermals every 60 seconds into a circular PSRAM buffer; dumps a 7-day weather barograph to Linux upon wake in 2ms.
@@ -110,7 +111,7 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
 * **Dual-Master Display Bus Multiplexer:** **2 × Texas Instruments TMUX1575** (each a 4-channel SPDT bus switch, giving 8 channels). TMUX1575 is only available in the 16-bump DSBGA (YCJ) package. See `docs/90-history/decisions.md` ADR-004.
   * High-speed **8-channel (2 × 4-channel) SPDT bidirectional bus switch pair** with Fail-Safe Power-Off Protection ($I_{\text{off}}$).
   * Between them the two devices completely isolate all 6 EPDC control and data lines: `SPI_MOSI`, `SPI_MISO`, `SPI_SCLK`, `SPI_CS`, `HRDY` (status flag), and `RESET`.
-  * These six lines are the IT8951 bench stand-in's SPI host interface. Whether the TMUX1575 pair suits the Kaleido 4 display controller's host interface must be re-checked once that controller is known (TBD, ADR-032).
+  * These six lines are the IT8951's SPI host interface (ADR-051), and the TMUX1575 pair switches exactly these.
   * **Zero-Leakage Isolation Safety:** When the CM5 is powered down to 0.000V, the TMUX1575 completely disconnects CM5 lines to eliminate parasitic back-powering and pin leakage ($I_{\text{leak}} < 10\text{ nA}$), allowing the RP2350 to update the display in deep sleep while drawing only **4.5 mW total system power**.
 * **Real-Time Clock (RTC):** Micro Crystal **RV-3028-C7-class** I²C RTC on the RP2350's `I2C_ALWAYS_ON` bus, with its own crystal and backup switchover; no separate RTC crystal on the board (ADR-046). The DS3231 footprint is a DNP fallback (§2.22).
   * Drift and current draw: per the RV-3028-C7 datasheet; not yet in `spec_values.json`.
@@ -118,21 +119,22 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
   * **Zero Maintenance & 100+ Day Lifespan:** Charges whenever the tablet is powered; maintains the RTC clock, alarms, and registers for **over 100 days** when the main battery is completely removed or depleted, eliminating the 1970 UNIX epoch clock reset bug without coin-cell leakage.
 
 ### 2.2 Display & Digitizer Assembly
-* **Display Panel:** 10.3-inch E Ink **Kaleido 4** colour panel, the only panel (ADR-032). V1 waits for its release.
-  * Resolution, PPI, active area, module outline, panel-stack thickness, FPC interface and contrast: **TBD (ADR-032)**. Each stays `null` in `spec_values.panel_sku` until E Ink publishes the 10.3" Kaleido 4 datasheet and mechanical drawing.
-  * Kaleido 4 uses an oxide-TFT backplane driven by a vendor TCON, not the IT8951 (ADR-025). Its frame rate is **unmeasured** (`spec_values.refresh_modes.kaleido4_fps: null`); no fps figure is claimed until E Ink's datasheet exists (ADR-017, ADR-018, ADR-025).
-  * **Bench stand-in only:** a Kaleido 3 / Carta + IT8951 module exercises the refresh software before Kaleido 4 is buyable. Its results are tagged `measured <date> (Kaleido 3)` and never promoted to product figures (ADR-025).
+* **Display Panel:** 10.3-inch E Ink **mono Carta 1200** module, 1872 × 1404, 227 PPI, IT8951-class EPDC (ADR-051, superseding ADR-032). Commodity, multi-vendor, available now.
+  * Resolution and PPI are datasheet class figures (`spec_values.panel_sku`). Active area, module outline, panel-stack thickness, FPC geometry and VCOM stay **`null`** until the chosen module's mechanical drawing and matching `.wbf` waveform are on file; never an estimate. Audit X5 already flags that a 174.4 mm module outline exceeds the 170 mm chassis depth, so the chassis or the glass moves first.
+  * **Tonal budget: 16 grey levels** (`spec_values.refresh_modes.mono_grey_levels`), 4-bit. That is the whole greyscale range; the fast modes are 1-bit.
+  * **No colour in V1.** Kaleido 4 is the V2 variant on the same chassis: the EPDC sits on a pluggable daughter board carrying DSI + SPI + panel bias rails, so a colour panel is a board swap rather than a carrier redesign (`spec_values.panel_sku.colour_variant`). The old Kaleido bench stand-in is gone — the stand-in *is* the V1 panel now.
+  * **VCOM trim and VCOM-vs-temperature compensation** are bring-up items (ADR-051). The panel TMP112 already feeds the controller's `TEMP_REG` for waveform pulse voltage; VCOM is a separate register.
   * **Digitizer over the panel (optional variant):** on-top EMR laminates raise the display stack (`spec_values.display_stack_mm`) and require the Pen/Refresh Arbiter of `SOFTWARE_SPEC.md` §51, because EMR interrogation bursts and EPD drive pulses cannot share the volume and cannot be shielded apart (ADR-018).
 * **Display Transport & Honest Throughput Budget:**
-  * **Single-path architecture (V1):** the CM5 routes its host SPI (provided through RP1) through the TMUX1575 pair to the Kaleido 4 display controller (TBD, ADR-032). Full-frame transfer time depends on the Kaleido 4 resolution and that controller's host interface, both TBD (ADR-032). Practical result: the full-frame and partial-rectangle figures in `spec_values.refresh_modes`, with **no colour motion** (ADR-017). This is why the daemon is rectangle-driven rather than frame-driven, and why `solardeck-refreshd` picks a waveform mode per dirty rectangle instead of chasing a screen-wide frame rate (`SOFTWARE_SPEC.md` §52, ADR-019).
+  * **Single-path architecture (V1):** the CM5 routes its host SPI (provided through RP1) through the TMUX1575 pair to the IT8951 EPDC (ADR-051). Full-frame transfer time at 1872 × 1404 1-bit over the SPI clock in `spec_values.epdc_spi_mhz` is **null until measured** on the bench. Practical result: the full-frame and partial-rectangle figures in `spec_values.refresh_modes`. This is why the daemon is rectangle-driven rather than frame-driven, and why `solardeck-refreshd` picks a waveform mode per dirty rectangle instead of chasing a screen-wide frame rate (`SOFTWARE_SPEC.md` §52, ADR-019).
   * **Removed from V1 (ADR-005):** the earlier "dual-path MIPI-DSI at 24 fps" plan required an LVDS/DSI timing controller that no shipping e-paper panel accepts, and e-paper particle motion cannot hold video rates regardless. There is **no DSI or LVDS bridge on the carrier board**.
-  * **RP2350 fallback path:** when the CM5 and its rails are at 0.000V, the TMUX1575 pair routes the RP2350's SPI lines to the display controller instead (suitability for the Kaleido 4 controller to be re-checked, ADR-032), enabling autonomous 30 ms book page flips and 1-second clock updates at **4.5 mW total system power**.
+  * **RP2350 fallback path:** when the CM5 and its rails are at 0.000V, the TMUX1575 pair routes the RP2350's SPI lines to the IT8951 EPDC instead (ADR-051: the same interface, so this path is no longer provisional), enabling autonomous 30 ms book page flips and 1-second clock updates at **4.5 mW total system power**.
   * **Thermal-Assisted Fluid Viscosity Coupling (Overdrive Viscosity Assist):**
     * Electrophoretic particle mobility ($\mu$) is inversely proportional to fluid viscosity ($\eta$): $\mu \propto 1/\eta(T)$.
     * In cold conditions (<20°C), microcapsule fluid is viscous and sluggish. At 30°C–33°C, dielectric fluid viscosity drops by **>40%**, enabling pigment particles to accelerate **$1.8\times$ faster** under identical electrical drive pulses.
     * The V1 PCBA integrates a balanced internal copper thermal dissipation plane that routes heat from the CM5 CPU shield directly beneath the display backplane.
     * During sustained high-motion work (rapid pagination, dither-heavy imaging), the thermal daemon (`solardeck-thermal-boostd`) uses waste CPU heat to hold the backplane at **30°C–33°C** (monitored by the panel TMP112 sensor), cutting motion trails without dedicated heater elements.
-* **EPDC (Electronic Paper Display Controller):** The Kaleido 4 display controller (TBD, ADR-032). The IT8951 cannot drive Kaleido 4; it appears in this spec only as the bench stand-in's controller (ADR-025).
+* **EPDC (Electronic Paper Display Controller):** an **IT8951-class** controller on the pluggable daughter board (ADR-051). A colour variant needs a vendor TCON that the IT8951 cannot drive, which is exactly why the EPDC lives on its own board.
   * *SoC-Direct Drive Architectural Evaluation:* While driving E-Ink directly from an SoC's integrated controller (e.g. RK3566 `rockchip-ebc`) eliminates an $18 chip, it creates fatal system lock-in: the display cannot be driven when the main CPU is powered down to 0.000W. Retaining a dedicated EPDC with a switchable SPI host (CM5 for compute, RP2350 for Zen reading) is mandatory to enable both the **universal modular compute socket** and the **RP2350 dual-brain co-processor** (which commands the display over SPI for the desk-clock and reader modes; runtimes TBD until measured on the bench (pack: `battery_wh.li_ion`), ADR-040).
 * **reMarkable-Grade Stylus Digitizer & Tactile Paper-Feel:**
   * **Digitizer Sensor:** Genuine **Wacom EMR (Electro-Magnetic Resonance)** sensor board laminated behind the e-paper panel (240 Hz sampling rate, 4,096 levels of pressure and tilt, `wacom_w9013` driver).
@@ -338,14 +340,14 @@ CM5_CLAIM_DISPLAY ────────┘         └── GND (Always Enab
 ```
 
 1. **Complete 6-Signal Galvanic Isolation (Power-Off Protection):**
-   * The design uses **two 4-channel TMUX1575 devices** (8 SPDT channels, one spare) to switch all 6 EPDC lines: `SPI_MOSI`, `SPI_MISO`, `SPI_SCLK`, `SPI_CS`, `HRDY` (Host Ready flag), and `RESET`. These are the IT8951 stand-in's lines; the hand-over must be re-checked against the Kaleido 4 display controller's host interface (TBD, ADR-032).
+   * The design uses **two 4-channel TMUX1575 devices** (8 SPDT channels, one spare) to switch all 6 EPDC lines: `SPI_MOSI`, `SPI_MISO`, `SPI_SCLK`, `SPI_CS`, `HRDY` (Host Ready flag), and `RESET`. These are the IT8951's lines (ADR-051).
    * The TMUX1575 features fail-safe inputs ($I_{\text{off}}$ circuitry): when CM5 `VDD_3V3` drops to 0.0V, the switch maintains giga-ohm impedance on the CM5 side, completely eliminating parasitic back-powering through internal ESD clamping diodes into unpowered rails ($I_{\text{leak}} < 10\text{ nA}$).
 2. **Deterministic Hardware Arbitration:**
    * The `SEL` line is pulled down to GND via a 10 kΩ resistor, defaulting bus ownership to the RP2350B.
    * When Linux boots, the CM5 kernel driver negotiates with the RP2350B via GPIO interrupt handshake (`CM5_REQ_BUS` $\to$ `RP2350_ACK_READY`), then asserts `CM5_CLAIM_DISPLAY` HIGH to seize the display bus.
 3. **DC Pigment Burn-In Protection:**
    * The RP2350B holds dedicated hardware control over `EPDC_PWR_EN` (TPS22918 load switch feeding the display rail).
-   * Before cutting display power or transitioning states, firmware polls the display controller's ready line (`HRDY` on the IT8951 stand-in; Kaleido 4 equivalent TBD, ADR-032) to ensure the active waveform has completed, averaging net DC bias across all electrophoretic capsules to **0.0V** before sequencing down high-voltage rails (`VCOM` $\to$ `VGL` $\to$ `VGH` $\to$ `VDD`).
+   * Before cutting display power or transitioning states, firmware polls the display controller's ready line (`HRDY` on the IT8951, ADR-051) to ensure the active waveform has completed, averaging net DC bias across all electrophoretic capsules to **0.0V** before sequencing down high-voltage rails (`VCOM` $\to$ `VGL` $\to$ `VGH` $\to$ `VDD`).
 
 ### 2.9 Dual Independent I2C Buses & Inter-Processor Telemetry Bridge
 To completely eliminate bus arbitration lockups and the hardware address collision between the Goodix touch controller (`0x14`) and Bosch accelerometer (`0x14`), SolarDeck bifurcates I2C into two galvanically separated hardware domains:
@@ -386,7 +388,7 @@ To completely eliminate bus arbitration lockups and the hardware address collisi
   * Replaces generic single ammeters with a 3-channel high-side current and bus voltage monitor over I2C.
   * Measures voltage and shunt current across three isolated domains simultaneously:
     * **Rail 1 (Compute):** CM5 module (SoC, DRAM, eMMC). Pinpoints CPU governor efficiency and memory leaks.
-    * **Rail 2 (Display):** Kaleido 4 display controller (TBD, ADR-032) and high-voltage rails. Pinpoints display power draw per waveform mode.
+    * **Rail 2 (Display):** IT8951 EPDC and high-voltage rails (ADR-051). Pinpoints display power draw per waveform mode.
     * **Rail 3 (RF Radios):** GNSS receiver, Wi-Fi/BT (LoRa is V2, ADR-044). Catches rogue radio beacons.
   * Direct telemetry to Claude Code CLI and `solardeck-telemetryd` SQLite database for empirical algorithmic power profiling.
   * **Per-gated-rail current sense (TPS22918 [- 4 TPS22918-gated rails](DECK_BUILDER_LAYOUT.md)):** each of the 4 TPS22918 peripheral load-switch rails (GNSS, Wi-Fi, audio, expansion) carries a µA-grade shunt + INA3221/ADC tap into the RP2350, so the LLM can distinguish "GNSS receiver overdraws" from "Wi-Fi radio storm" instead of only seeing RF aggregate. This is the Deck-Builder self-diagnosis contract (§4) made physical: **rail sense is the difference between a diagnosis and a guess.**
@@ -397,7 +399,7 @@ To completely eliminate bus arbitration lockups and the hardware address collisi
 * **Multi-Zone Precision Thermal Array — 6 zones (Texas Instruments TMP112 + SoC Diode - KEPT FOR THERMAL LOGS):**
   * High-precision ($\pm 0.5^\circ\text{C}$), ultra-thin SOT-563 digital temperature sensors placed at strategic thermal points. Three hard-wired TMP112s, three derived zones:
     * **Battery Zone:** Directly adhered to the pouch cell under the thermal protection sleeve for millidegree charging logs. (TMP112 #1)
-    * **Display Zone:** Adhered to the aluminum backplate behind the E-Ink panel. Directly feeds the display controller's temperature input (`TEMP_REG` on the IT8951 stand-in; Kaleido 4 equivalent TBD, ADR-032) via the RP2350 bridge to dynamically adjust waveform voltage pulses as liquid microcapsule viscosity changes with temperature (eliminating ghosting in winter cold and bleeding in summer heat). (TMP112 #2)
+    * **Display Zone:** Adhered to the aluminum backplate behind the E-Ink panel. Directly feeds the display controller's temperature input (`TEMP_REG` on the IT8951, ADR-051) via the RP2350 bridge to dynamically adjust waveform voltage pulses as liquid microcapsule viscosity changes with temperature (eliminating ghosting in winter cold and bleeding in summer heat). (TMP112 #2)
     * **Compute Zone:** Monitored via the CM5 SoC thermal sensor. (TMP112 #3 + SoC diode)
     * **RF/Modem Zone:** Deferred to V2 with the modem (ADR-034); `spec_values.telemetry.thermal_zones` still counts it.
     * **Charger-Rail Zone:** derived from the BQ25798 die-temperature and the charger rail sense, catching thermal stress that degrades the charge path before it becomes a longevity claim violation.
@@ -540,7 +542,7 @@ To guarantee true 0.000V electrical isolation and zero phantom leakage across al
    * All digital lines the always-on RP2350 drives into a switchable domain (the CM5 link, wake and power-fail lines, the audio link and the UART to the GNSS; `isolation = buffer` in docs/PIN_BUDGET.md) pass through Texas Instruments **TXU0104** or **SN74LVC1G125** buffers featuring **$I_{\text{off}}$ circuitry**.
    * When either $V_{CCA}$ or $V_{CCB}$ is 0V, the device automatically forces all I/O lines into a high-impedance (Hi-Z) state, guaranteeing leakage current **$I_{\text{leak}} < 1\text{ µA}$**.
 3. **Display Bus Multiplexer Isolation (TMUX1575):**
-   * The high-speed SPI bus to the Kaleido 4 display controller (TBD, ADR-032) is isolated by **2× TI TMUX1575** (4 channels each, 8 total — ADR-004; suitability to be re-checked against that controller's host interface). Its fail-safe inputs tolerate up to 5.5V independent of supply voltage, completely preventing display signals from back-powering the CM5 when it is off.
+   * The SPI bus to the IT8951 EPDC (ADR-051) is isolated by **2× TI TMUX1575** (4 channels each, 8 total — ADR-004). Its fail-safe inputs tolerate up to 5.5V independent of supply voltage, completely preventing display signals from back-powering the CM5 when it is off.
 4. **Physical Line-Breaker for Microphones:**
    * The privacy switch breaks `MIC_BCLK` (MIC MUTE and FULL BLACKOUT) and cuts the mic supply (FULL BLACKOUT); it never shorts a driven pin (§2.25).
 
@@ -711,7 +713,7 @@ To eliminate supply-chain bottlenecks, enable budget vs. pro hardware tiers, and
 
 ### 2.23 Direct-to-Co-Processor "Instant-Ink" Low-Latency Inking Architecture
 To eliminate the seconds-long Linux resume from off/hibernate (ADR-036) and 2.5W processor power penalty when quickly taking notes, sketching field maps, or recording tactical coordinates:
-* **Hardware Interconnect:** The Wacom EMR digitizer's coordinate data stream (UART/I2C) and stylus proximity interrupt (`PEN_INT`) are routed directly to the Raspberry Pi RP2350B co-processor, with dual-buffer SPI lines feeding into the Kaleido 4 display controller (TBD, ADR-032).
+* **Hardware Interconnect:** The Wacom EMR digitizer's coordinate data stream (UART/I2C) and stylus proximity interrupt (`PEN_INT`) are routed directly to the Raspberry Pi RP2350B co-processor, with dual-buffer SPI lines feeding the IT8951 EPDC (ADR-051).
 * **4.5 mW Always-Ready Legal Pad:**
   * When the main CM5 Linux brain is off (consuming 0.000W; the CM5 has no RAM-retaining sleep, ADR-036), bringing the stylus within 5mm of the display triggers `PEN_INT`, waking the RP2350 in **$<5\text{ milliseconds}$**.
   * The RP2350 ingests raw $(X, Y, \text{Pressure})$ packets at 200 Hz and blits 1-bit black stroke vectors directly into the display controller using a specialized 15ms zero-ghosting micro-LUT.
@@ -993,7 +995,7 @@ To ensure reliable, error-free operation in pitch darkness, under strict militar
 │                                                                             │
 │ [FRONT & EDGE TOPOLOGY]                                                     │
 │ • Chemically Etched Matte Glass Overlay (15% Haze, Paper-Texture Friction)  │
-│ • 10.3" E Ink Kaleido 4 Panel (ADR-032) + Wacom EMR Digitizer              │
+│ • 10.3" mono Carta 1872x1404 Panel (ADR-051) + Wacom EMR Digitizer         │
 │ • 0.1mm Mu-Metal / Ferrite Magnetic Shielding Layer (Behind Digitizer)      │
 │ • Top Bezel: IXYS Micro-Solar Strip + GNSS Antenna (NFC is V2, ADR-034)     │
 │ • Bottom Edge: Recessed Recovery + USB-C Port 1 (jack removed, ADR-046)     │
@@ -1343,7 +1345,7 @@ To guarantee that the electronics and physical components survive 10 to 30 years
    * SolarDeck exclusively mandates **solid Tantalum-Polymer (KEMET T520) and soft-termination Ceramic MLCCs**. Solid-state dielectrics do not contain liquid, eliminating shelf-life degradation.
 3. **UV-Blocking Optical Lamination (Anti-Bleaching):**
    * 10+ years of direct equatorial sunlight can yellow cheap epoxy adhesives and bleach electrophoretic microcapsules.
-   * The optically clear adhesive (LOCA) bonded to the 1.1mm matte aluminosilicate front glass incorporates a **395nm UV cut-off filter**, shielding the delicate Kaleido 4 colour filters from UV degradation.
+   * The optically clear adhesive (LOCA) bonded to the 1.1mm matte aluminosilicate front glass incorporates a **395nm UV cut-off filter**, shielding the panel and the LOCA from UV degradation. This matters more on the mono panel than it did on Kaleido: with no colour-filter dye to fade, UV attack on the adhesive and the capsule binder becomes the dominant ageing mechanism (`LONGEVITY_30Y.md` row 8).
 4. **Hermetic Gold-Crossbar Pushbuttons (5,000,000 Clicks):**
    * Consumer power/volume rocker switches use cheap stamped metal domes that corrode and lose spring tension.
    * SolarDeck specifies **IP67 sealed C&K KSC-series gold-plated tactile switches** rated for 5 million actuations, completely sealed against grit, mud, and sand.
@@ -1444,9 +1446,9 @@ Adopted policy (ADR-023, ADR-031):
 * **Three spare modules are purchased at build time** and stored with the service kit
   (`supply_chain.strategy`, priced at `cm5.price_usd` each). It is the only mitigation that works if the
   module simply disappears.
-* **Single-source parts are enumerated** in `spec_values.supply_chain`: Kaleido 4 panel (E Ink sole
-  source), Kaleido 4 display controller (TBD, ADR-032), CM5, RP2350. The IT8951 is only the bench
-  stand-in's controller and is not a product part. Any review must state which of these a change adds to.
+* **Single-source parts are enumerated** in `spec_values.supply_chain`: CM5, RP2350 — and that is now
+  the whole list, because ADR-051 moved the panel to a multi-vendor mono module, so neither the panel nor
+  its EPDC is single-sourced any more. Any review must state which of these a change adds to.
 
 Honest consequence: if no successor module exists when CM5 production ends, this is a **10-year device
 with a 30-year maintenance story** (or shorter, depending on the unpublished CM5 runway), and the

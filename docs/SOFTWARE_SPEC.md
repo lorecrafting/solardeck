@@ -791,9 +791,9 @@ When invoked via CLI or local agent tool call (`solardeck-diag --json`), the eng
    * Pings the RP2350 over SPI/UART with a 64-byte random challenge; verifies CRC-8 return checksum in $<10\text{ms}$.
    * Queries 8MB PSRAM memory test pattern registers and checks RV-3028-C7-class RTC synchronization drift ($|\Delta t| < 500\text{ms}$).
    * Reads 12-bit ADC raw voltages from the top-bezel IXYS micro-solar strip.
-3. **Display & Waveform Controller Domain (Kaleido 4 display controller, TBD, ADR-032):**
-   * Reads the controller's device info: validates panel geometry (against `spec_values.panel_sku.resolution_px`, TBD), engine firmware version, and Look-Up Table (LUT) integrity.
-   * Polls the controller's ready/busy line (signal TBD, ADR-032); checks for stuck busy flags indicating unseated FPC ribbon cables or frozen pigment microcapsules.
+3. **Display & Waveform Controller Domain (IT8951 EPDC, ADR-051):**
+   * Reads the controller's device info: validates panel geometry (against `spec_values.panel_sku.resolution_px`), engine firmware version, the loaded `.wbf` waveform version, and Look-Up Table (LUT) integrity.
+   * Polls the controller's `HRDY` ready/busy line; checks for stuck busy flags indicating unseated FPC ribbon cables or frozen pigment microcapsules.
    * Reads panel temperature from backplane TMP112 sensor ($0^\circ\text{C}$ to $+50^\circ\text{C}$ safe operating window).
 4. **I2C Sensor Fabric Domain (Bus 1 & Bus 2):**
    * Sweeps I2C addresses `0x00` through `0x7F` at 400 kHz:

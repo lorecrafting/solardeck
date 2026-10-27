@@ -1012,3 +1012,49 @@ other device makers, so competition alone would not stop a sale. But Hanvon ship
 alternative.
 
 **Still assumes.** At least two EMR vendors will quote small quantities.
+
+---
+
+## ADR-051 — Mono Carta 1200 is the V1 panel; colour becomes a variant (2026-10-27)
+
+Written 2026-10-27 01:05 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017.
+
+**Owner decision.** "Yes lets just go with mono first."
+
+**Decision.** V1 ships a **10.3″ mono Carta 1200 module, 1872 × 1404, 227 PPI, IT8951-class
+controller**, sold as commodity hardware with more than one source. Kaleido 4 (and Kaleido 3) move to
+**V2 as a variant SKU on the same chassis**: the EPDC sits on a pluggable daughter board carrying
+DSI + SPI + the panel bias rails, so a colour panel is a board swap, not a carrier redesign. This
+supersedes ADR-032. It does not revive ADR-030 as written — mono V1 keeps a colour path.
+
+**Because.** (1) K4 cannot be bought as a panel; K3 needs an ODM relationship with one source; a mono
+10.3″ IT8951 module is available now from several vendors, which is the difference between a bench and
+a product. (2) Colour is what halves the raster, not text: a Kaleido module keeps 227 PPI mono and
+roughly 114 PPI colour, so mono at 227 PPI is the sharpest text this project can ship. (3) The 30-year
+claim (ADR-030) is only reachable with mono capsules; dye lifespan stays `null`. (4) No colour-filter
+array means no frontlight requirement, no colour-quantise/dither path, and single-pass refreshes.
+
+**Costs accepted.** Colour is not a V1 differentiator; colour-coded UI semantics become weight, shape
+and position; colour imagery and plant/foraging identification by colour are out of V1 scope. The
+`CONTENT_COLOUR` refresh class stays in the scheduler for the V2 variant and is unreachable in V1.
+
+**What would reverse it.** A missing waveform (`.wbf`) file for the chosen module, or VCOM that is
+unstable over temperature: that is a different vendor, not a different architecture. If a K4 panel's
+outline or raster differ materially from the mono 10.3″ outline, colour is a V2 redesign and not a
+swap — check this before any colour commitment.
+
+**Open items this creates.**
+
+- **Panel outline is still unknown, and audit X5 now bites earlier.** `panel_module_outline_mm`,
+  `display_active_mm` and `display_stack_mm` stay `null` until the chosen module's drawing is on file;
+  never enter an estimate. ED103TC2 measures 216.7 × 174.4 mm (AUDIT_6 §X5) against a 170 mm chassis
+  depth, so either the chassis is re-derived or a narrower glass is chosen **before** enclosure
+  drawings (gate G2).
+- **VCOM trim and VCOM-vs-temperature compensation** become bench bring-up items. `HARDWARE_SPEC.md`
+  §2.2 already routes a backplate TMP112 to the controller `TEMP_REG` for waveform pulse voltage; VCOM
+  is a separate register and is not yet covered by any procedure.
+- **Ghost-ledger thresholds** (`GHOST_DEBT_THRESHOLD`, `GHOST_DEBT_CAP` in
+  `src/daemons/eink-refreshd/refreshd.h`) are modelled; measure them on the mono panel before quoting
+  any ghosting claim.
+- **EMR stack decision** (an EMR-laminated module vs a separate sensor layer) is now due before the
+  cavity is drawn. ADR-050 stays in force; it finally has a confirmed panel to quote the sensor against.

@@ -11,6 +11,7 @@ Revised 2026-10-21 17:22 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa t
 Revised 2026-10-21 19:12 UTC in Claude Code by anthropic/claude-opus-5-5 (EVT-0 power board, ADR-043).
 
 Revised 2026-10-21 19:44 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion smart pack, ADR-048).
+Revised 2026-10-27 01:10 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017 (mono V1 panel, ADR-051).
 
 Purpose: buy the minimum bench hardware that proves the three make-or-break gate claims (G1, G2,
 G12) and the Li-ion charge path (ADR-035, ADR-048) as **measured** values, before any PCB fabrication money is spent. This is the physical
@@ -29,7 +30,7 @@ or **modelled**, not measured.
 | **G2** | Linux resumes from off/hibernate in seconds (`sleep_ladder.r3_resume_s`); the S2idle target is withdrawn (R2 `null`, ADR-036) | Same rig, wake-trigger timing loop | PASS = resume time measured and recorded; ambient modes stay instant on the RP2350 |
 | **G12** | Ambient (CM5-off) floor < 25 mW with TPS22918 loads hard off, R3 hibernate 0.000 W idle | **µA-resolution DMM** on the always-on rail | PASS = measured floor within spec_values.safety/sleep gate |
 | **Charge path** (ADR-035) | Charging held off until VREG = `battery.charge_limit_v` is written; JEITA zones and NTC cutoff behave on a real cell | BQ25798 evaluation board + one Li-ion cell (with protector) + NTC, DMM on VBAT | PASS = no charge current before VREG is written; VREG read back; termination at the limit; NTC cutoff trips |
-| Color (Kaleido 4) | fps is `null` (vendor-TCON-dependent, ADR-017/018) | **Not provable on this bench** — the IT8951 cannot drive Kaleido 4 (ADR-025, ADR-032) | Bench uses the Carta stand-in panel; Kaleido 4 colour stays `null` |
+| Panel class (mono Carta) | 16 grey levels, DU/A2/GLR16/GC16 timings, VCOM stability over temperature (ADR-051) | This bench plus a panel TMP112 and a thermal chamber substitute (fridge / oven + thermocouple) | PASS = timings measured, VCOM drift tabulated; colour (Kaleido 4, V2 variant) stays `null` and is **not** provable on this bench |
 
 The board-level gates (thermal, EMI, mechanical, a fully populated carrier) are explicitly NOT in
 this bench's scope — they need the PCB. The bench exists to answer "do the signature numbers even
@@ -41,7 +42,7 @@ exist on real silicon" for a bench total that is TBD (§2) before a ~$1.5 k PCB 
 
 | # | Item | Why it's on the bench | Use | Price (USD) | Where to buy *(Honolulu-friendly)* | Notes |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | **Waveshare 10.3" e-Paper HAT (IT8951 + Carta panel)** | The display controller + panel pair. Every G1/G2/ink-latency number runs through this | Display + EPDC | **$198** | Waveshare official / AliExpress flagship / Amazon reseller | Mono Carta, 1872×1404 — **bench stand-in only** (ADR-025, ADR-032): the product is Kaleido 4, which the IT8951 cannot drive; results are tagged with the stand-in panel and never promoted to Kaleido 4 numbers; colour fps stays `null` (ADR-017) |
+| 1 | **Waveshare 10.3" e-Paper HAT (IT8951 + Carta panel)** | The display controller + panel pair. Every G1/G2/ink-latency number runs through this | Display + EPDC | **$198** | Waveshare official / AliExpress flagship / Amazon reseller | Mono Carta, 1872×1404, 227 PPI — **this is the V1 panel now** (ADR-051), not a stand-in. **Buy two or three:** one gets damaged during lamination and ESD work, and an untouched reference panel is what makes ghosting measurements comparable. Ask for the matching `.wbf` waveform and the VCOM value with the order; no waveform, no purchase |
 | 2 | **Raspberry Pi CM5 (CM5116064 / SC1608, ADR-031)** | The Linux brain — runs the daemons under test; same module as production | Host compute | **$375** (`spec_values.cm5.price_usd`) | Raspberry Pi approved resellers | Stock and HI shipping TBD |
 | 3 | **Raspberry Pi CM5 IO Board** | Carrier for the CM5 on the bench | Bench carrier | **TBD** | Raspberry Pi approved resellers | Not the production carrier — bench only |
 | 4a | **Pimoroni PGA2350 — the actual RP2350B + 8 MB PSRAM** (DigiKey PIM722) | This is the real co-processor silicon the spec names (RP2350B, 48 GPIO, PSRAM frame cache) — flash **our own firmware** on it, tweak power-sipping modes (1 M Hz sleep, reader/dashboard states) on production-identical silicon | Co-proc bring-up + power-tuning | **$12 (PIM722)** | Pimoroni (UK), PiShop.us, DigiKey | Real dev board for the B chip: no USB-C (BOOTSEL bridging + jumper wiring to program), SWD probe for debug — slightly more friction than a Pico, but this is the chip that ships. Available in single unit, no MOQ |

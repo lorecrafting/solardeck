@@ -4,6 +4,7 @@ Written 2026-10-18 17:35 UTC in the Pi harness by antigravity/gemini-3.8-flash
 Revised 2026-10-21 15:59 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
 Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
 Revised 2026-10-21 17:22 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, ADR-044/045).
+Revised 2026-10-27 01:10 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017 (mono V1 panel, ADR-051).
 Revised 2026-10-21 17:53 UTC in Claude Code by anthropic/claude-opus-5-5 (RTC chip, jack removed, ADR-046).
 Revised 2026-10-21 19:43 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion smart pack, ADR-048).
 
@@ -39,8 +40,8 @@ SolarDeck is a sovereign, general-purpose open-hardware computing platform desig
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 1. BRAIN:     Raspberry Pi CM5 CM5116064 (16GB RAM, 64GB eMMC, Wi-Fi/BT)    │
 │ 2. CO-PROC:   RP2350B (Cortex-M33/RISC-V) + 8MB PSRAM (Zen Reader)          │
-│ 3. DISPLAY BUS: K4 display controller (TBD, ADR-032) + 2x TMUX1575          │
-│ 4. SCREEN:    10.3" E Ink Kaleido 4 (resolution/PPI TBD, ADR-032) + EMR     │
+│ 3. DISPLAY BUS: IT8951 EPDC + 2x TMUX1575 (ADR-051)                        │
+│ 4. SCREEN:    10.3" mono Carta 1872x1404, 227 PPI (ADR-051) + EMR          │
 │ 5. CAMERA:    Deferred to V2 (ADR-034)                                      │
 │ 6. CELLULAR:  Deferred to V2 (ADR-034); V2 eSIM = SGP.22 eUICC (ADR-033)    │
 │ 7. MESH/GNSS: BLE Meshtastic node (LoRa V2, ADR-044) + MAX-M10S (ADR-038)   │
@@ -188,7 +189,7 @@ To enable clean voice interaction with Claude Code and dictation:
                               │
                               ▼
 [STEP 3: AUTONOMOUS RP2350 SIPPING MODE]
-• RP2350 pushes pages/digits to the Kaleido 4 display controller (TBD, ADR-032) from 8MB PSRAM double-buffer.
+• RP2350 pushes pages/digits to the IT8951 EPDC (ADR-051) from 8MB PSRAM double-buffer.
 • Between updates, RP2350 deep-sleeps at 10 µA.
 • Display controller sleep power TBD (ADR-032). Total system draw: ~4.5 mW.
 • Battery runtime: TBD until measured on the bench (pack: `battery_wh.li_ion`) (ADR-040).

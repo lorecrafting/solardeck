@@ -1,6 +1,7 @@
 {
   "_comment": "Single source of truth for every quantitative claim repeated across docs. Change a number HERE, then run scripts/check_docs_numbers.py to find the docs that still disagree. Written 2026-10-20 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017",
-  "ppi": null,
+  "ppi": 227,
+  "_comment_ppi": "datasheet, class figure (ADR-051): the 10.3in mono module is 1872 x 1404 over a 10.3in diagonal, i.e. 227 PPI. Confirmed per module on the purchase order; scripts/check_docs_numbers.py treats any other figure as a defect. The Kaleido colour sub-pixel PPI is a different number and stays null (panel_sku.colour_variant.colour_ppi, V2).",
   "display_active_mm": null,
   "panel_module_outline_mm": null,
   "chassis_mm": [
@@ -27,12 +28,14 @@
   },
   "epdc_spi_mhz": null,
   "refresh_modes": {
+    "mono_grey_levels": 16,
     "full_frame_1bit_fps": null,
     "partial_rect_latency_ms": null,
     "small_rect_fps_equivalent": null,
     "colour_full_refresh_s": null,
     "colour_motion_supported": false,
-    "kaleido4_fps": null
+    "kaleido4_fps": null,
+    "_comment": "ADR-051: V1 is the mono panel, so mono_grey_levels is the real tonal budget (16 levels, 4-bit, from the IT8951). Every timing here stays null until measured on the bench; the colour keys describe the V2 variant only."
   },
   "token_stream": {
     "guaranteed_wpm": 120,
@@ -43,16 +46,27 @@
     "full_screen_video": "via USB-C monitor sink (Pillar 8); colour motion unsupported on-panel"
   },
   "panel_sku": {
-    "_comment": "ADR-032: Kaleido 4 is the only panel; every fact below is null until E Ink publishes the 10.3\" datasheet and drawing. The IT8951 + Kaleido 3/Carta module is a bench stand-in only (ADR-025).",
-    "standard": "Kaleido 4",
-    "resolution_px": null,
-    "ppi": null,
-    "colour_ppi": null,
+    "_comment": "ADR-051 (supersedes ADR-032): the V1 panel is a 10.3in mono Carta 1200 module with an IT8951-class controller, bought as commodity multi-source hardware. Resolution and PPI are datasheet class figures; the mechanical drawing is not on file yet, so active area, outline and stack stay null (audit X5). Kaleido 4 / Kaleido 3 are the V2 colour variant on the same chassis, behind a pluggable EPDC daughter board.",
+    "standard": "Carta 1200 (mono), 10.3in",
+    "resolution_px": [
+      1872,
+      1404
+    ],
+    "ppi": 227,
     "module_outline_mm": null,
-    "controller": null,
-    "availability": "awaiting E Ink release",
-    "bench_stand_in": "Kaleido 3 / Carta + IT8951 module (ADR-025)",
-    "kaleido4_dye_lifespan_years": null,
+    "_comment_module_outline_mm": "null until the chosen module's drawing is on file (ADR-051). Do not enter an estimate: AUDIT_6 §X5 records ED103TC2 at 216.7 x 174.4 mm against a 170 mm chassis depth, so the chassis or the glass must change first (gate G2).",
+    "controller": "IT8951-class EPDC",
+    "availability": "commodity, multiple vendors (Waveshare / GoodDisplay / DKE class)",
+    "waveform_file": "required on the PO, per module (ADR-051): no .wbf, no purchase",
+    "vcom_trim": null,
+    "_comment_vcom_trim": "null until measured at bring-up; VCOM-vs-temperature compensation is an open item (ADR-051), and it is not the same register as the TEMP_REG waveform-voltage adjustment in HARDWARE_SPEC §2.2.",
+    "colour_variant": {
+      "standard": "Kaleido 4 (V2 variant, ADR-051)",
+      "colour_ppi": null,
+      "module_outline_mm": null,
+      "kaleido4_dye_lifespan_years": null,
+      "status": "not buyable as a standalone panel; the EPDC daughter board carries DSI + SPI + bias rails so the swap is a board, not a carrier redesign"
+    },
     "v1_panel_mount": "bonded (VHB on glass, service-kit part)",
     "future_service_hatch": "connectorized EPDC + IP67 hatch, gasket as P/N'd wear item"
   },
@@ -641,11 +655,10 @@
     "cm5_shortfall_years": null,
     "_cm5_comment": "CM5 end-of-production commitment not yet published by Raspberry Pi (ADR-031 will lock the number the day a source confirms it; then re-derive cm5_shortfall_years = design_life_years - (year - 2026)).",
     "single_source_parts": [
-      "Kaleido 4 panel (E Ink, sole source)",
-      "Kaleido 4 display controller (TBD, ADR-032)",
       "CM5 (Raspberry Pi)",
       "RP2350 (Raspberry Pi)"
     ],
+    "_comment_single_source_parts": "ADR-051 removed the panel and its EPDC from this list: the mono 10.3in IT8951 module is multi-vendor, which is the main supply-chain reason the panel changed.",
     "active_confirmed": [
       "CM5"
     ],
@@ -662,7 +675,7 @@
     "wake_trigger": "button (always available); hands-free wake word opt-in with measured battery cost (ADR-036)"
   },
   "reader": {
-    "_comment": "SOFTWARE_SPEC §55 Zero-Kernel Reader Tier: pre-rendered page-flip engine; the RP2350 flips, it never renders PDFs. Page geometry and flip time are null until the Kaleido 4 datasheet (ADR-032).",
+    "_comment": "SOFTWARE_SPEC §55 Zero-Kernel Reader Tier: pre-rendered page-flip engine; the RP2350 flips, it never renders PDFs. The raster is spec_values.panel_sku.resolution_px; reader page geometry and flip time stay null until the V1 mono module's drawing is on file (ADR-051).",
     "native_read_mw": 4.5,
     "page_cache_psram_mb": 8,
     "page_width_px": null,
@@ -725,7 +738,7 @@
     "powercycle_hold_ms": 500,
     "baseband_retry_polls": "N consecutive radio RSSI polls below baseline, modelled (applies to the V2 modem and LoRa, ADR-034/044)"
   },
-  "_comment_adr032": "ADR-032: ppi, display_active_mm, panel_module_outline_mm, display_stack_mm, epdc_spi_mhz, refresh timings and reader page geometry are null until E Ink publishes the 10.3\" Kaleido 4 datasheet. Gates skip them loudly; they never fall back to stand-in values.",
+  "_comment_panel": "ADR-051 (supersedes ADR-032): ppi and resolution are now datasheet class figures for the V1 mono module. display_active_mm, panel_module_outline_mm, display_stack_mm, epdc_spi_mhz, refresh timings and reader page geometry stay null until that module's drawing and waveform are on file. Gates skip them loudly; they never fall back to estimates or to the old colour-stand-in values.",
   "battery": {
     "chemistry": "Li-ion",
     "charge_limit_v": 4.2,

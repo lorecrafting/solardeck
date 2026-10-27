@@ -44,11 +44,12 @@ This guide details the complete mechanical engineering pipeline to guarantee tha
 
 Never model display glass or flex cables using a hand caliper. Always obtain the official 2D DXF and 3D STEP files directly from E Ink Corporation.
 
-### 10.3" E-Ink Panel Specification (Kaleido 4, ADR-032):
-* **Outer Glass Dimensions:** TBD (ADR-032) — `spec_values.panel_module_outline_mm` is `null`.
-* **Active Display Area (AA) and resolution:** TBD (ADR-032) — `spec_values.display_active_mm` and `panel_sku.resolution_px` are `null`.
-* **Border Offsets:** TBD (ADR-032).
-* **FPC (Ribbon Tail) Geometry** (width, tail length, pin count, pitch, exit coordinate): TBD (ADR-032).
+### 10.3" E-Ink Panel Specification (mono Carta 1200, ADR-051):
+* **Outer Glass Dimensions:** TBD — `spec_values.panel_module_outline_mm` stays `null` until the chosen module's drawing is on file. **Blocker:** AUDIT_6 §X5 records ED103TC2 at 216.7 × 174.4 mm against a 170 mm chassis depth, so the chassis or the glass moves before this section can be filled (ADR-051).
+* **Active Display Area (AA) and resolution:** resolution is `spec_values.panel_sku.resolution_px` = 1872 × 1404; AA stays `null` until the drawing (`spec_values.display_active_mm`).
+* **Border Offsets:** TBD — from the same drawing.
+* **FPC (Ribbon Tail) Geometry** (width, tail length, pin count, pitch, exit coordinate): TBD — from the same drawing.
+* **Panel thickness and stack:** TBD (`spec_values.display_stack_mm`). Design the cavity to the **colour variant's** envelope and shim for mono, or the V2 swap will not fit (ADR-051).
 
 Every value above waits for E Ink's 10.3" Kaleido 4 datasheet and mechanical drawing.
 

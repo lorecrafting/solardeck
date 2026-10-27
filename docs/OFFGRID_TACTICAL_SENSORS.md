@@ -244,7 +244,9 @@ The Raspberry Pi CM5's BCM2712 integrates a 3D graphics and compute GPU with ope
 
 1. **Hardware-Accelerated Temporal Blue-Noise Dithering (`dither.glsl`):**
    * Electrophoretic displays physically cannot switch 24-bit RGB or 256-level greyscale at video rates.
-   * A custom GLSL fragment shader running on the CM5 GPU dynamically maps 24-bit frames into 1-bit binary or 2-bit (4-level) dithered bitmaps in **under 2.0 milliseconds**, creating smooth optical gradients with near-zero CPU load.
+   * A custom GLSL fragment shader running on the CM5 GPU maps 24-bit frames into **4-bit (16-level)** dithered bitmaps for maps and images, or 1-bit / 2-bit for live overlays, in **under 2.0 milliseconds**.
+   * **Ordered (Bayer) dither, never Floyd-Steinberg.** Error diffusion is content-dependent, so the same tile re-dithers differently, defeats tile caching and adds high-frequency grain that reads as panel noise; an ordered dither is deterministic and cacheable.
+   * **Maps do not go through the shader at all.** Grey map tiles are pre-rendered offline from a custom style (layer → luminance band → hatch, so water/vegetation/contours stay separable at 16 levels) and shipped in the image; only live overlays (position, track, ADS-B) are dithered at runtime. Luminance-only conversion is not enough — Rec.709 blue is 0.0722, so saturated water and forest collapse into the same grey.
 2. **Vulkan Matrix Compute Acceleration (`llama.cpp` & `whisper.cpp`):**
    * Leveraging Mesa's native `v3dv` Vulkan driver, matrix multiplications and token embedding lookups can be partially offloaded from the Cortex-A76 cores to the GPU shaders, improving local STT transcription latency and conserving battery.
 3. **Hardware Camera ISP & Outgoing Video Encoding:** V2 (ADR-034): needs the deferred rear camera.
