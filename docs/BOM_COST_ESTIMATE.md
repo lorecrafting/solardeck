@@ -13,62 +13,70 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 
 ## 1. Core SolarDeck Tablet BOM
 
-| Category | Component Description | Primary Supplier / Manufacturer | Part Number / Model | Est. Unit Cost (Qty 1-5) |
-| :--- | :--- | :--- | :--- | :--- |
-| **Compute** | Raspberry Pi Compute Module 5 (16GB RAM, 64GB eMMC, Wi-Fi/BT) — ADR-031 | Raspberry Pi approved resellers | CM5116064 (SC1608) | $375.00 |
-| **Co-Processor** | Dual Cortex-M33 / RISC-V Microcontroller (Power Master) | DigiKey / Mouser / LCSC | Raspberry Pi RP2350B | $1.25 |
-| **Co-Proc PSRAM** | 8MB Ultra-Low-Power QSPI PSRAM (Page Double-Buffer) | Mouser / LCSC | APMemory APS6404L-3SQR-SN | $0.75 |
-| **Co-Proc Flash** | 16 MB QSPI NOR flash: RP2350B firmware (two slots) + reader content; the RP2350B has no internal flash (ADR-046). DigiKey 2026-10-21 qty 1 | Winbond / DigiKey | W25Q128JVSIQ | $5.99 |
-| **Bus Multiplexer**| Display Bus Isolator, 2 × 4-channel SPDT switch (ADR-004) | Texas Instruments / Mouser | TMUX1575YCJR (x2) | $0.55 |
-| **Display Panel** | 10.3" E Ink Kaleido 4 (colour) + Capacitive Touch + Wacom EMR — ADR-032 | E Ink (sole source) | Kaleido 4 10.3" (P/N on release) | TBD |
-| **EMR Shielding** | 0.1mm High-Permeability Mu-Metal / Ferrite Flux Absorber Sheet | 3M / Wurth / AliExpress | Custom Die-Cut Shield Foil | $1.80 |
-| **Controller** | Kaleido 4 display controller / TCON (the IT8951 cannot drive Kaleido 4 — ADR-025, ADR-032) | TBD with E Ink | TBD | TBD |
-| **Stylus** | Wacom EMR Passive Stylus with Eraser | Amazon / B&H | Staedtler Noris Digital or Lamy AL-star | $28.00 |
-| **Battery** | 1S2P Li-ion user-replaceable smart pack: 2× EEMB LP7545135 (`battery_wh.li_ion`) + pack board (protector, FETs, fuse, gauge), keyed connector, screws, no adhesive; built by EEMB, quote and pack-level UN38.3 requested (ADR-048, ADR-049) | EEMB | 2× LP7545135, custom pack | TBD |
-| **Power IC** | 1S Li-ion buck-boost charger, VREG 3.0–18.8 V; OTG unused (ADR-035, ADR-049). DigiKey 2026-10-21 qty 1 | Texas Instruments / DigiKey | BQ25798RQMR | $5.90 |
-| **USB-PD Sink Ctrl**| Standalone USB-PD sink controller on port 1, the only power input (ADR-048, ADR-049). DigiKey 2026-10-21 qty 1 | STMicroelectronics / DigiKey | STUSB4500QTR | $2.22 |
-| **AON 3.3V Supply**| Low-IQ buck-boost for the always-on rail, holds 3.3 V to an empty pack (ADR-048; pins in docs/EVT0_POWER_BOARD.md). DigiKey 2026-10-21 qty 1; 0 in stock, Mouser on order | Texas Instruments / DigiKey | TPS63900DSKR | $3.10 |
-| **5V Boost Conv**| Synchronous boost with true output disconnect, 5 V CM5 / port 2 supply (ADR-049, docs/EVT0_POWER_BOARD.md §2.6). DigiKey 2026-10-21 qty 1; 0 in stock | Texas Instruments / DigiKey | TPS61022RWUR | $2.38 |
-| **Micro-Solar** | Top-Bezel Monocrystalline Trickle Strip (~0.15W Peak, 50-120mW Real)| IXYS / DigiKey / Mouser | SM141K06L / PowerFilm | $3.50 |
-| **Power Gates** | Ultra-Low Leakage Load Switches (Airgap Cut + Port 2 VBUS) | Texas Instruments / LCSC | TPS22918DBVR (x2) | $0.80 |
-| **GNSS Receiver**| Standalone multi-constellation GNSS, integrated LNA, on the RP2350 UART (ADR-038). DigiKey 2026-10-21 qty 1 | u-blox / DigiKey | MAX-M10S-00B | $11.42 |
-| **Wi-Fi/BT Antenna**| Dual-Band (2.4/5GHz) Balanced Dipole FPC with U.FL | Molex / Mouser | 1461530100 | $1.20 |
-| **GNSS Antenna** | Passive Internal FPC GPS/GLONASS Antenna (for MAX-M10S; integrated LNA) | Molex / Taoglas / LCSC | 1461860100 | $0.90 |
-| **Audio** | Dual-MEMS Acoustic Array (2x SPH0645) + I2S Class-D Amp + Speaker| Knowles / Maxim Integrated / PUI Audio | SPH0645LM4H (x2) + MAX98357A + AS03008MR | $5.10 |
-| **Mechanical Mount**| Universal M2.5 Brass Heat-Set Inserts (x4) + MagSafe Magnetic Array | McMaster / LCSC / Custom | M2.5 Inserts + N52 Ring | $0.90 |
-| **Passives/Ports**| 2x IP68 USB-C Ports, 1,000µF Poly Caps, SMD Passives | LCSC / JLCPCB SMT Library | Standard SMD 0402/0603 | $9.40 |
-| **USB-C CC Ctrl** | Type-C CC controller for port 2, strapped source-only (ADR-049) | Texas Instruments / Mouser | TUSB320RWBR | $0.65 |
-| **I/O Isolators** | Fail-Safe Cross-Domain Buffers with I_off Partial-Power-Down | Texas Instruments / Mouser | TXU0104PWR (x2) | $0.50 |
-| **Motion Sensor** | Ultra-Low-Power 3-Axis Accelerometer (3.5µA Pick-up Wake) | Bosch Sensortec / Mouser | BMA400 | $1.10 |
-| **Barometer** | Precision Atmospheric Pressure & Altimeter Sensor | Bosch Sensortec / Mouser | BMP390 | $1.20 |
-| **5-Way Rocker** | IP67 Sealed Micro Navigation Joystick (Up/Down/Left/Right/Press)| ALPS / Panasonic / Mouser | SKRHABE010 | $0.85 |
-| **Power Telemetry**| 3-Channel High-Side Current & Power Monitor IC (Rail Logging)| Texas Instruments / Mouser | INA3221AIRGVR | $1.20 |
-| **GPIO Expander** | 16-bit low-quiescent I²C GPIO expander with interrupt, on the always-on bus at 0x20/0x21 (ADR-045, ADR-049, docs/PIN_BUDGET.md §4). DigiKey 2026-10-21 qty 1 | NXP / DigiKey | PCAL6416AHF,128 | $1.61 |
-| **Coulomb Counter**| Pack-side Impedance Track fuel gauge on the pack board, characterised on the chosen cell (ADR-035, ADR-048). DigiKey 2026-10-21 qty 1 | Texas Instruments / DigiKey | BQ27Z561YPHR-R2 | $2.23 |
-| **Thermal Triad** | Dual Precision Digital Temperature Sensors (Batt + E-Ink Logs)| Texas Instruments / LCSC | TMP112AIDRLR (x2) | $0.60 |
-| **Ambient Lux Sensing**| Integrated via Solar Strip & RP2350 12-Bit ADC (Zero-BOM Innovation)| IXYS / RP2350 Subsystem | ADC Channel 3 ($0 Added Silicon) | $0.00 |
-| **Host VBUS Sw** | 1.5A Current-Limited USB Host Distribution Power Switch | Texas Instruments / Mouser | TPS2051BDBVR | $0.45 |
-| **Recovery Sw** | Single Sub-Miniature IP67 Pinhole Micro-Tactile Switch | C&K / Panasonic / LCSC | KMR2 / EVQ-P8 | $0.20 |
-| **Voice Button** | Hold-to-talk tactile switch: wakes the RP2350, which starts audio capture while the CM5 boots (ADR-036) | C&K / Panasonic / LCSC | KMR2 / EVQ-P8 | $0.20 |
-| **Harvester Gate** | Hardware temperature gate for the solar harvester: dual open-drain comparator + load switch (ADR-048, ADR-049, docs/EVT0_POWER_BOARD.md §2.7.1). DigiKey 2026-10-21 qty 1 (1.86 + 0.63) | Texas Instruments / DigiKey | TLV7042DDFR + TPS22916CNYFPR | $2.49 |
-| **Pack Connector** | Keyed, locking 6-position pack connector: header + receptacle + 6 crimps (ADR-049, docs/EVT0_POWER_BOARD.md §2.3); the priced crimp is 20–22 AWG, the 8 A rating needs 18 AWG (open item 20). DigiKey 2026-10-21 qty 1 (0.85 + 0.49 + 6 × 0.22) | Hirose / DigiKey | DF63-6P-3.96DSA + DF63-6S-3.96C + DF63A-2022SCF | $2.66 |
-| **Bezel Solar MPPT**| Nano-Power Solar Boost Harvester IC (cold start and MPPT per SLUSAH0G §7.5, docs/EVT0_POWER_BOARD.md §2.7)| Texas Instruments / Mouser | BQ25504RGTR | $1.80 |
-| **Frontlight Driver**| Dual-Channel Constant-Current Step-Up LED Driver (2048-step CCT)| Texas Instruments / Mouser | TPS61163YFFR | $0.65 |
-| **Battery PCM** | Pack-side high-side Li-ion protector + common-drain N-FET pair on the pack board (ADR-049, docs/EVT0_POWER_BOARD.md §2.2). The pack fuse is not priced: its rating must sit below the FET and connector ratings, which the Nano2 family cannot (EVT-0 open item 20). DigiKey 2026-10-21 qty 1 (0.63 + 1.04) | Texas Instruments / DigiKey | BQ298216RUGR + CSD83325L | $1.67 |
-| **ESD Suppression** | Low-Capacitance TVS Diode Arrays for USB & Pogo Pins (x4) | Texas Instruments / Mouser | TPD4E05U06 (x4) + SMAJ5.0A | $0.80 |
-| **RTC** | Always-on I²C real-time clock with its own crystal and backup switchover, on the RP2350 bus at 0x52 — no GPIO (ADR-046). DigiKey 2026-10-21 qty 1; 0 in stock at DigiKey/Mouser/LCSC, Mouser expects April 2027 | Micro Crystal / DigiKey | RV-3028-C7 32.768KHZ 1PPM-TA-QC | $2.41 |
-| **RTC Backup Battery**| 3.3V Rechargeable Lithium Micro-Battery (5.5 mAh, >100 days hold)| Seiko Instruments / Mouser | MS621FE-FL11E | $0.65 |
-| **JEITA Resistors** | 0.1% Precision Resistors for the BQ25798 TS NTC network (values per BQ25798 datasheet) | Yageo / Panasonic 0603 | Precision Thin-Film (x2)| $0.15 |
-| **CM5 Retention** | CNC Aluminum CM5 Retention Bracket & Thermal Interface Pad | Custom CNC / Laird | Custom Bracket + Tflex | $1.80 |
-| **RF Pi-Matching** | Precision 0402 RF Inductors & C0G/NP0 Capacitors (5 nets) | Murata / TDK / LCSC | 0402 Precision RF Kit | $0.40 |
-| **Solar Aerogel** | 0.5mm Die-Cut Pyrogel Aerogel / Kapton Thermal Barrier | Aspen Aerogels / 3M | Pyrogel Insulation Strip | $0.60 |
-| **Privacy Switch** | Sealed (IP67 terminals) 2-pole 3-position on-off-on slide switch: normal / mic mute (centre) / full blackout (HARDWARE_SPEC §2.25, ADR-049). Mouser 2026-10-21 qty 1 | E-Switch / Mouser | 600DP3S2M4R | $4.78 |
-| **GORE Vent** | ePTFE Pressure Equalization Vent Plug | W. L. Gore / Amphenol | PMF100396 | $1.50 |
-| **Haptic Engine** | Wideband Haptic Driver + frame-mounted Z-Axis LRA, core part (ADR-037; piezo array = DNP) | Texas Instruments / Vybronics | DRV2605L + 8mm Z-Axis LRA | $2.35 |
-| **Perimeter Gasket** | Die-Cut VMQ Silicone O-Ring, 27% Compression (Service Item) | Custom / Rogers | Custom Die-Cut VMQ | $2.10 |
-| **Enclosure (PA12)**| SLS 3D-Printed PA12 Nylon Shell + 85A TPU Corner Bumpers | JLC3D / Craftcloud | Custom CAD Housing (Streamlined)| $25.00 |
-| **Conformal Coat** | IPC-CC-830 Reworkable Acrylic Conformal Coating, Connector-Masked (spec_values.longevity.conformal_coat) | PSI / Applied Post-SMT | IPC-CC-830 (UC-2605) | $2.00 – $4.00 |
-| **Total Core BOM**| **(Sum of 53 V1 Line Items, excluding 3 TBD parts: Kaleido 4 panel, its controller, the battery pack — a floor, not a price; distributor prices at qty 1, before tariffs; see docs/AUDIT_6_2026-10-21.md H22)** | | | **$524.76 – $526.76 + TBD** |
+**Origin** is the part's country of origin under the ADR-053 sourcing standard (`supply_chain.sourcing_standard`):
+an ISO country code once a distributor or supplier record confirms it, `TBD` until then. `CN` marks a row whose
+named sources are *all* China-based (maker, distributor or service), so the part is China-made unless re-sourced. A row
+that also names a non-China source stays `TBD` until its origin is confirmed. Rows named in ADR-053 (magnets, EMR
+shield, fabrication) are tracked there even while their Origin is `TBD`. Every `CN` row must be replaced before assembled
+sales and is listed in `supply_chain.china_origin_open`. Phase 16 fails on a `CN` row missing from that list, and on a
+listed row that is no longer `CN`.
+
+| Category | Component Description | Primary Supplier / Manufacturer | Part Number / Model | Origin | Est. Unit Cost (Qty 1-5) |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Compute** | Raspberry Pi Compute Module 5 (16GB RAM, 64GB eMMC, Wi-Fi/BT) — ADR-031 | Raspberry Pi approved resellers | CM5116064 (SC1608) | TBD | $375.00 |
+| **Co-Processor** | Dual Cortex-M33 / RISC-V Microcontroller (Power Master) | DigiKey / Mouser / LCSC | Raspberry Pi RP2350B | TBD | $1.25 |
+| **Co-Proc PSRAM** | 8MB Ultra-Low-Power QSPI PSRAM (Page Double-Buffer) | Mouser / LCSC | APMemory APS6404L-3SQR-SN | TBD | $0.75 |
+| **Co-Proc Flash** | 16 MB QSPI NOR flash: RP2350B firmware (two slots) + reader content; the RP2350B has no internal flash (ADR-046). DigiKey 2026-10-21 qty 1 | Winbond / DigiKey | W25Q128JVSIQ | TBD | $5.99 |
+| **Bus Multiplexer**| Display Bus Isolator, 2 × 4-channel SPDT switch (ADR-004) | Texas Instruments / Mouser | TMUX1575YCJR (x2) | TBD | $0.55 |
+| **Display Panel** | 10.3" E Ink Kaleido 4 (colour) + Capacitive Touch + Wacom EMR — ADR-032 | E Ink (sole source) | Kaleido 4 10.3" (P/N on release) | TBD | TBD |
+| **EMR Shielding** | 0.1mm High-Permeability Mu-Metal / Ferrite Flux Absorber Sheet | 3M / Wurth / AliExpress | Custom Die-Cut Shield Foil | TBD | $1.80 |
+| **Controller** | Kaleido 4 display controller / TCON (the IT8951 cannot drive Kaleido 4 — ADR-025, ADR-032) | TBD with E Ink | TBD | TBD | TBD |
+| **Stylus** | Wacom EMR Passive Stylus with Eraser | Amazon / B&H | Staedtler Noris Digital or Lamy AL-star | TBD | $28.00 |
+| **Battery** | 1S2P Li-ion user-replaceable smart pack: 2× EEMB LP7545135 (`battery_wh.li_ion`) + pack board (protector, FETs, fuse, gauge), keyed connector, screws, no adhesive; built by EEMB, quote and pack-level UN38.3 requested (ADR-048, ADR-049) | EEMB | 2× LP7545135, custom pack | CN | TBD |
+| **Power IC** | 1S Li-ion buck-boost charger, VREG 3.0–18.8 V; OTG unused (ADR-035, ADR-049). DigiKey 2026-10-21 qty 1 | Texas Instruments / DigiKey | BQ25798RQMR | TBD | $5.90 |
+| **USB-PD Sink Ctrl**| Standalone USB-PD sink controller on port 1, the only power input (ADR-048, ADR-049). DigiKey 2026-10-21 qty 1 | STMicroelectronics / DigiKey | STUSB4500QTR | TBD | $2.22 |
+| **AON 3.3V Supply**| Low-IQ buck-boost for the always-on rail, holds 3.3 V to an empty pack (ADR-048; pins in docs/EVT0_POWER_BOARD.md). DigiKey 2026-10-21 qty 1; 0 in stock, Mouser on order | Texas Instruments / DigiKey | TPS63900DSKR | TBD | $3.10 |
+| **5V Boost Conv**| Synchronous boost with true output disconnect, 5 V CM5 / port 2 supply (ADR-049, docs/EVT0_POWER_BOARD.md §2.6). DigiKey 2026-10-21 qty 1; 0 in stock | Texas Instruments / DigiKey | TPS61022RWUR | TBD | $2.38 |
+| **Micro-Solar** | Top-Bezel Monocrystalline Trickle Strip (~0.15W Peak, 50-120mW Real)| IXYS / DigiKey / Mouser | SM141K06L / PowerFilm | TBD | $3.50 |
+| **Power Gates** | Ultra-Low Leakage Load Switches (Airgap Cut + Port 2 VBUS) | Texas Instruments / LCSC | TPS22918DBVR (x2) | TBD | $0.80 |
+| **GNSS Receiver**| Standalone multi-constellation GNSS, integrated LNA, on the RP2350 UART (ADR-038). DigiKey 2026-10-21 qty 1 | u-blox / DigiKey | MAX-M10S-00B | TBD | $11.42 |
+| **Wi-Fi/BT Antenna**| Dual-Band (2.4/5GHz) Balanced Dipole FPC with U.FL | Molex / Mouser | 1461530100 | TBD | $1.20 |
+| **GNSS Antenna** | Passive Internal FPC GPS/GLONASS Antenna (for MAX-M10S; integrated LNA) | Molex / Taoglas / LCSC | 1461860100 | TBD | $0.90 |
+| **Audio** | Dual-MEMS Acoustic Array (2x SPH0645) + I2S Class-D Amp + Speaker| Knowles / Maxim Integrated / PUI Audio | SPH0645LM4H (x2) + MAX98357A + AS03008MR | TBD | $5.10 |
+| **Mechanical Mount**| Universal M2.5 Brass Heat-Set Inserts (x4) + MagSafe Magnetic Array | McMaster / LCSC / Custom | M2.5 Inserts + N52 Ring | TBD | $0.90 |
+| **Passives/Ports**| 2x IP68 USB-C Ports, 1,000µF Poly Caps, SMD Passives | LCSC / JLCPCB SMT Library | Standard SMD 0402/0603 | CN | $9.40 |
+| **USB-C CC Ctrl** | Type-C CC controller for port 2, strapped source-only (ADR-049) | Texas Instruments / Mouser | TUSB320RWBR | TBD | $0.65 |
+| **I/O Isolators** | Fail-Safe Cross-Domain Buffers with I_off Partial-Power-Down | Texas Instruments / Mouser | TXU0104PWR (x2) | TBD | $0.50 |
+| **Motion Sensor** | Ultra-Low-Power 3-Axis Accelerometer (3.5µA Pick-up Wake) | Bosch Sensortec / Mouser | BMA400 | TBD | $1.10 |
+| **Barometer** | Precision Atmospheric Pressure & Altimeter Sensor | Bosch Sensortec / Mouser | BMP390 | TBD | $1.20 |
+| **5-Way Rocker** | IP67 Sealed Micro Navigation Joystick (Up/Down/Left/Right/Press)| ALPS / Panasonic / Mouser | SKRHABE010 | TBD | $0.85 |
+| **Power Telemetry**| 3-Channel High-Side Current & Power Monitor IC (Rail Logging)| Texas Instruments / Mouser | INA3221AIRGVR | TBD | $1.20 |
+| **GPIO Expander** | 16-bit low-quiescent I²C GPIO expander with interrupt, on the always-on bus at 0x20/0x21 (ADR-045, ADR-049, docs/PIN_BUDGET.md §4). DigiKey 2026-10-21 qty 1 | NXP / DigiKey | PCAL6416AHF,128 | TBD | $1.61 |
+| **Coulomb Counter**| Pack-side Impedance Track fuel gauge on the pack board, characterised on the chosen cell (ADR-035, ADR-048). DigiKey 2026-10-21 qty 1 | Texas Instruments / DigiKey | BQ27Z561YPHR-R2 | TBD | $2.23 |
+| **Thermal Triad** | Dual Precision Digital Temperature Sensors (Batt + E-Ink Logs)| Texas Instruments / LCSC | TMP112AIDRLR (x2) | TBD | $0.60 |
+| **Ambient Lux Sensing**| Integrated via Solar Strip & RP2350 12-Bit ADC (Zero-BOM Innovation)| IXYS / RP2350 Subsystem | ADC Channel 3 ($0 Added Silicon) | TBD | $0.00 |
+| **Host VBUS Sw** | 1.5A Current-Limited USB Host Distribution Power Switch | Texas Instruments / Mouser | TPS2051BDBVR | TBD | $0.45 |
+| **Recovery Sw** | Single Sub-Miniature IP67 Pinhole Micro-Tactile Switch | C&K / Panasonic / LCSC | KMR2 / EVQ-P8 | TBD | $0.20 |
+| **Voice Button** | Hold-to-talk tactile switch: wakes the RP2350, which starts audio capture while the CM5 boots (ADR-036) | C&K / Panasonic / LCSC | KMR2 / EVQ-P8 | TBD | $0.20 |
+| **Harvester Gate** | Hardware temperature gate for the solar harvester: dual open-drain comparator + load switch (ADR-048, ADR-049, docs/EVT0_POWER_BOARD.md §2.7.1). DigiKey 2026-10-21 qty 1 (1.86 + 0.63) | Texas Instruments / DigiKey | TLV7042DDFR + TPS22916CNYFPR | TBD | $2.49 |
+| **Pack Connector** | Keyed, locking 6-position pack connector: header + receptacle + 6 crimps (ADR-049, docs/EVT0_POWER_BOARD.md §2.3); the priced crimp is 20–22 AWG, the 8 A rating needs 18 AWG (open item 20). DigiKey 2026-10-21 qty 1 (0.85 + 0.49 + 6 × 0.22) | Hirose / DigiKey | DF63-6P-3.96DSA + DF63-6S-3.96C + DF63A-2022SCF | TBD | $2.66 |
+| **Bezel Solar MPPT**| Nano-Power Solar Boost Harvester IC (cold start and MPPT per SLUSAH0G §7.5, docs/EVT0_POWER_BOARD.md §2.7)| Texas Instruments / Mouser | BQ25504RGTR | TBD | $1.80 |
+| **Frontlight Driver**| Dual-Channel Constant-Current Step-Up LED Driver (2048-step CCT)| Texas Instruments / Mouser | TPS61163YFFR | TBD | $0.65 |
+| **Battery PCM** | Pack-side high-side Li-ion protector + common-drain N-FET pair on the pack board (ADR-049, docs/EVT0_POWER_BOARD.md §2.2). The pack fuse is not priced: its rating must sit below the FET and connector ratings, which the Nano2 family cannot (EVT-0 open item 20). DigiKey 2026-10-21 qty 1 (0.63 + 1.04) | Texas Instruments / DigiKey | BQ298216RUGR + CSD83325L | TBD | $1.67 |
+| **ESD Suppression** | Low-Capacitance TVS Diode Arrays for USB & Pogo Pins (x4) | Texas Instruments / Mouser | TPD4E05U06 (x4) + SMAJ5.0A | TBD | $0.80 |
+| **RTC** | Always-on I²C real-time clock with its own crystal and backup switchover, on the RP2350 bus at 0x52 — no GPIO (ADR-046). DigiKey 2026-10-21 qty 1; 0 in stock at DigiKey/Mouser/LCSC, Mouser expects April 2027 | Micro Crystal / DigiKey | RV-3028-C7 32.768KHZ 1PPM-TA-QC | TBD | $2.41 |
+| **RTC Backup Battery**| 3.3V Rechargeable Lithium Micro-Battery (5.5 mAh, >100 days hold)| Seiko Instruments / Mouser | MS621FE-FL11E | TBD | $0.65 |
+| **JEITA Resistors** | 0.1% Precision Resistors for the BQ25798 TS NTC network (values per BQ25798 datasheet) | Yageo / Panasonic 0603 | Precision Thin-Film (x2)| TBD | $0.15 |
+| **CM5 Retention** | CNC Aluminum CM5 Retention Bracket & Thermal Interface Pad | Custom CNC / Laird | Custom Bracket + Tflex | TBD | $1.80 |
+| **RF Pi-Matching** | Precision 0402 RF Inductors & C0G/NP0 Capacitors (5 nets) | Murata / TDK / LCSC | 0402 Precision RF Kit | TBD | $0.40 |
+| **Solar Aerogel** | 0.5mm Die-Cut Pyrogel Aerogel / Kapton Thermal Barrier | Aspen Aerogels / 3M | Pyrogel Insulation Strip | TBD | $0.60 |
+| **Privacy Switch** | Sealed (IP67 terminals) 2-pole 3-position on-off-on slide switch: normal / mic mute (centre) / full blackout (HARDWARE_SPEC §2.25, ADR-049). Mouser 2026-10-21 qty 1 | E-Switch / Mouser | 600DP3S2M4R | TBD | $4.78 |
+| **GORE Vent** | ePTFE Pressure Equalization Vent Plug | W. L. Gore / Amphenol | PMF100396 | TBD | $1.50 |
+| **Haptic Engine** | Wideband Haptic Driver + frame-mounted Z-Axis LRA, core part (ADR-037; piezo array = DNP) | Texas Instruments / Vybronics | DRV2605L + 8mm Z-Axis LRA | TBD | $2.35 |
+| **Perimeter Gasket** | Die-Cut VMQ Silicone O-Ring, 27% Compression (Service Item) | Custom / Rogers | Custom Die-Cut VMQ | TBD | $2.10 |
+| **Enclosure (PA12)**| SLS 3D-Printed PA12 Nylon Shell + 85A TPU Corner Bumpers | JLC3D / Craftcloud | Custom CAD Housing (Streamlined)| TBD | $25.00 |
+| **Conformal Coat** | IPC-CC-830 Reworkable Acrylic Conformal Coating, Connector-Masked (spec_values.longevity.conformal_coat) | PSI / Applied Post-SMT | IPC-CC-830 (UC-2605) | TBD | $2.00 – $4.00 |
+| **Total Core BOM**| **(Sum of 53 V1 Line Items, excluding 3 TBD parts: Kaleido 4 panel, its controller, the battery pack — a floor, not a price; distributor prices at qty 1, before tariffs; see docs/AUDIT_6_2026-10-21.md H22)** | | | | **$524.76 – $526.76 + TBD** |
 
 ### Deferred to V2 (ADR-034, LoRa ADR-044) — not summed
 

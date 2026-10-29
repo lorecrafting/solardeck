@@ -681,7 +681,10 @@
     "active_confirmed": [
       "CM5"
     ],
-    "strategy": "socketed module + published carrier pinout + 3 spare modules at build time"
+    "strategy": "socketed module + published carrier pinout + 3 spare modules at build time",
+    "sourcing_standard": "No China-origin parts; every part's country of origin is the US or a Trade Agreements Act designated country; final assembly in the US, labelled 'Assembled in USA', never an unqualified 'Made in USA'. Gates assembled instrument sales; bench and kit builds may use current sources (ADR-053).",
+    "china_origin_open": ["Battery", "Passives/Ports"],
+    "_comment_china_origin_open": "ADR-053: core-BOM rows whose named sources are all China-based. Adding a row here needs an ADR; Phase 16 fails on a CN row missing here and on a listed row that is no longer CN."
   },
   "voice": {
     "_comment": "SOFTWARE_SPEC §17.2 (ADR-026): enrollment is co-processor-resident so a root-compromised Linux brain cannot swap the voiceprint. CM5 pivot (ADR-031): 16 GB DRAM means the LLM runs resident on-device, so voice verification gating boots a local model, not a cloud round-trip.",

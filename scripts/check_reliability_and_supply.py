@@ -32,6 +32,32 @@ def read(rel):
         return f.read()
 
 
+def origin_errors(bom, china_open):
+    """ADR-053: every core-BOM row states an origin (ISO code or TBD); every CN row is a listed open item."""
+    lines = bom.split("\n")
+    head = next((i for i, l in enumerate(lines) if l.startswith("| Category |")), None)
+    cols = [c.strip() for c in lines[head].split("|")] if head is not None else []
+    if "Origin" not in cols:
+        return ["core BOM table has no Origin column (ADR-053)"]
+    col, errs, cn = cols.index("Origin"), [], set()
+    for line in lines[head + 2:]:
+        if not line.startswith("|") or "Total Core BOM" in line:
+            break
+        cells = [c.strip() for c in line.split("|")]
+        if len(cells) <= col:
+            errs.append(f"BOM row is missing cells: {line[:60]!r}")
+            continue
+        name, origin = cells[1].strip("*").strip(), cells[col]
+        if origin == "CN":
+            cn.add(name)
+        if origin != "TBD" and not re.fullmatch(r"[A-Z]{2}", origin):
+            errs.append(f"BOM row {name!r}: origin {origin!r} is not an ISO country code or TBD")
+        elif origin == "CN" and name not in china_open:
+            errs.append(f"BOM row {name!r} is China-origin but not in supply_chain.china_origin_open (ADR-053)")
+    errs += [f"supply_chain.china_origin_open lists {n!r}, which is no longer a CN row" for n in set(china_open) - cn]
+    return errs
+
+
 def main():
     errors = []
     hw = read("docs/HARDWARE_SPEC.md")
@@ -68,6 +94,7 @@ def main():
     ]:
         if not re.search(phrase, hw, re.I):
             errors.append(why)
+    errors.extend(origin_errors(read("docs/BOM_COST_ESTIMATE.md"), S["china_origin_open"]))
 
     # 3. design for test
     if "7.8" not in hw or "test-point set" not in hw:

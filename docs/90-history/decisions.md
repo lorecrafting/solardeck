@@ -1120,3 +1120,59 @@ distributor; the mono panel module direct from an ODM at 100 and 500; enclosure 
 400 units; the EEMB pack with documentation; a compliance lab for Part 15B plus the module memo. Every
 number in `unit_economics` is `modelled` until those land — replace them and re-run the check, never
 nudge them.
+
+---
+
+## ADR-053 — No China-origin parts, TAA origins, assembled in the USA (2026-10-29)
+
+Written 2026-10-29 00:05 UTC in Claude Code by anthropic/claude-opus-5-5. Owner asked "if I had to do it
+with all domestic parts how would I do it?", was shown the four meanings of "domestic" below, and said
+yes to recording this standard.
+
+**Decision.** The assembled V1 instrument meets `supply_chain.sourcing_standard`: no China-origin part,
+every part's country of origin the US or a Trade Agreements Act (TAA) designated country, and final
+assembly in the US. It is labelled "Assembled in USA", never an unqualified "Made in USA". This joins the
+ADR-052 gates (FCC Part 15B, pack UN38.3) for assembled sales. Bench, EVT and kit builds may keep current
+sources. The core BOM gains an **Origin** column, and the rows whose current source is China-based are
+listed in `supply_chain.china_origin_open`, which Phase 16 holds to the table. Adding to that list needs an ADR.
+
+**Because.** (1) An all-US BOM is not available. No US maker produces E-Ink panels, the CM5's SoC and
+the RP2350 are fabricated in Taiwan, and almost no small-format Li-ion cells are made in the US. So the
+FTC "all or virtually all" test for an unqualified "Made in USA" claim cannot be met. (2) What buyers
+actually check is achievable:
+- federal buyers check TAA and Buy American;
+- DoD checks NDAA Section 889, the Section 154 battery restriction (from 2027-10-01) and the magnet
+  restrictions;
+- island and field customers check supply resilience.
+
+(3) The SBIR/STTR applications under consideration make "no China, assembled in the USA" part of the stewardship
+case. SBIR itself only requires the R&D to be done in the US.
+
+**What changes, in priority order.**
+1. **Battery cells (critical path).** EEMB (ADR-048/049) is China-based. Replace it with a TAA-origin cell
+   (Japanese or Korean makers, with country of origin stated per lot, since some lines are in China) or a
+   US specialty cell maker. The pack itself is built in the US around the existing TI protector and gauge.
+   A cylindrical cell changes the chassis stack, so it needs its own ADR before anyone commits to it.
+   The charge limit and every pack safety rule in AGENTS §4.1 stay as they are. A US-built pack has no
+   supplier UN38.3 report to inherit, so that ADR must also replace ADR-052's assumption that
+   `unit_economics.certification_usd.pack_un383` stays null (enforced in `scripts/check_docs_numbers.py`)
+   with a quoted UN38.3 cost.
+2. **Panel origin.** Require a Taiwan-origin certificate for the mono module. Some E Ink modules are
+   assembled in China, and the low-cost integrators are Chinese.
+3. **EMR sensor.** Wacom (Japan) only, which narrows ADR-050's vendor list.
+4. **Magnets.** The N52 ring needs a non-China NdFeB source, or it leaves V1.
+5. **Fabrication.** The listed PCB, assembly, passives and enclosure sources (JLCPCB, LCSC, JLC3D) move
+   to US or TAA-country vendors for production.
+6. **Solar strip.** PowerFilm (US) is already the listed alternate. Making it primary is a separate
+   change, because `solar_w.bezel_strip` is datasheet-derived.
+
+**Costs accepted.** Production PCBs, assembly and cells cost materially more than the current Chinese
+quotes. No number is entered until US and TAA quotes exist. Several `TBD` origins will stay `TBD` until a
+distributor record confirms them. That is honest, but it means the standard is not yet demonstrated.
+
+**Still assumes.** The Buy American component test is waived for COTS end products, which is unverified;
+confirm it with an APEX Accelerator before quoting it to a buyer. A TAA-origin cell can meet the pack's
+capacity and the chassis envelope.
+
+**What would reverse it.** No TAA-origin cell fits the chassis at an acceptable capacity, or the cost
+increase breaks the `unit_economics` instrument margin once quotes land.
