@@ -45,7 +45,7 @@ This guide details the complete mechanical engineering pipeline to guarantee tha
 Never model display glass or flex cables using a hand caliper. Always obtain the official 2D DXF and 3D STEP files directly from E Ink Corporation.
 
 ### 10.3" E-Ink Panel Specification (mono Carta 1200, ADR-051):
-* **Outer Glass Dimensions:** TBD — `spec_values.panel_module_outline_mm` stays `null` until the chosen module's drawing is on file. **Blocker:** AUDIT_6 §X5 records ED103TC2 at 216.7 × 174.4 mm against a 170 mm chassis depth, so the chassis or the glass moves before this section can be filled (ADR-051).
+* **Outer Glass Dimensions:** TBD — `spec_values.panel_module_outline_mm` stays `null` until the chosen module's drawing is on file. **Blocker:** AUDIT_6 §X5 records ED103TC2 at 216.7 × 174.4 mm against a 170 mm chassis depth, so the chassis grows to fit the module (ADR-057); its new depth is derived from the drawing once it is on file.
 * **Active Display Area (AA) and resolution:** resolution is `spec_values.panel_sku.resolution_px` = 1872 × 1404; AA stays `null` until the drawing (`spec_values.display_active_mm`).
 * **Border Offsets:** TBD — from the same drawing.
 * **FPC (Ribbon Tail) Geometry** (width, tail length, pin count, pitch, exit coordinate): TBD — from the same drawing.

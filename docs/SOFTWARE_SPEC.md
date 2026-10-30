@@ -419,7 +419,7 @@ Electrophoretic fluid viscosity varies significantly with temperature. Running f
 ├────────────────────┬──────────────┬──────────────┬──────────────────────────┤
 │ Temperature Band   │ Backplane °C │ Active LUT   │ Waveform Strategy        │
 ├────────────────────┼──────────────┼──────────────┼──────────────────────────┤
-│ 1. Cold Sub-Zero   │ T < 5°C      │ `LUT_COLD`   │ • DU pulse TBD (ADR-032) │
+│ 1. Cold            │ min ≤ T < 5°C│ `LUT_COLD`   │ • DU pulse TBD (ADR-032) │
 │                    │              │              │ • Pulse width × 1.35     │
 │                    │              │              │ • Full GC16 every 15 keys│
 ├────────────────────┼──────────────┼──────────────┼──────────────────────────┤
@@ -427,15 +427,16 @@ Electrophoretic fluid viscosity varies significantly with temperature. Running f
 │                    │              │              │ • A2 smooth motion: TBD  │
 │                    │              │              │ • GC16 crisp colour: TBD │
 ├────────────────────┼──────────────┼──────────────┼──────────────────────────┤
-│ 3. High Desert Heat│ 35°C < T ≤ 50°C│ `LUT_HOT`   │ • Drive voltage −10%     │
+│ 3. High Desert Heat│ 35°C < T ≤ max│ `LUT_HOT`   │ • Drive voltage −10%     │
 │                    │              │              │ • Shortened settle time  │
 │                    │              │              │ • Zero pigment overshoot │
 ├────────────────────┼──────────────┼──────────────┼──────────────────────────┤
-│ 4. Thermal Cutoff  │ T > 50°C     │ `LUT_PROTECT`│ • High-temp alert banner │
-│                    │              │              │ • Pauses high-rate A2    │
+│ 4. Outside window  │ T<min, T>max │ none         │ • No refresh (ADR-056)   │
+│                    │              │              │ • Last image is held     │
 └────────────────────┴──────────────┴──────────────┴──────────────────────────┘
 ```
 
+* **Refresh temperature gate (ADR-056):** outside `panel_sku.operating_temp_c` nothing refreshes, at either end of the range, and the panel holds its last image. Within `panel_sku.refresh_warn_margin_c` of a limit the next refresh draws a "panel hot / cold, refreshes will pause" banner, so that banner is what stays on the glass while paused; the pause also goes to the paired phone over BLE and to the log. The RP2350's ambient renderer applies the same gate with the CM5 off. `min` and `max` in the table are the two ends of that key.
 * **Thermal Sensing Hook:** `eink-refreshd` polls the display backplane TMP112 sensor via the RP2350 inter-processor telemetry bridge (the CM5↔RP2350 SPI link, `docs/FIRMWARE_INTERFACE.md`, or `/run/solardeck/telemetry.sock`) every 10 seconds.
 * **Seamless In-Flight Transition:** Waveform switching occurs between frame updates without dropped keystrokes or UI tearing.
 
@@ -743,7 +744,6 @@ fi
 ### 18.1 Giant External E-Ink Secondary Monitor Power Economics
 * **Dasung Paperlike 253 / Boox Mira Pro 25.3" (3200 × 1800):** Connects via standard HDMI.
 * **0.000W Static Power Sipping:** When reading code, schematics, or documentation, the external E-Ink monitor draws **0.000W** holding power.
-* **Sunlight Immunity:** Operates inside sun-drenched campervans with doors wide open; contrast improves under direct sunlight while drawing $10\times$ less power than a 27" 4K LED backlight.
 
 ---
 
@@ -795,7 +795,7 @@ When invoked via CLI or local agent tool call (`solardeck-diag --json`), the eng
 3. **Display & Waveform Controller Domain (IT8951 EPDC, ADR-051):**
    * Reads the controller's device info: validates panel geometry (against `spec_values.panel_sku.resolution_px`), engine firmware version, the loaded `.wbf` waveform version, and Look-Up Table (LUT) integrity.
    * Polls the controller's `HRDY` ready/busy line; checks for stuck busy flags indicating unseated FPC ribbon cables or frozen pigment microcapsules.
-   * Reads panel temperature from backplane TMP112 sensor ($0^\circ\text{C}$ to $+50^\circ\text{C}$ safe operating window).
+   * Reads panel temperature from backplane TMP112 sensor and reports whether it is inside `panel_sku.operating_temp_c` (ADR-056).
 4. **I2C Sensor Fabric Domain (Bus 1 & Bus 2):**
    * Sweeps I2C addresses `0x00` through `0x7F` at 400 kHz:
      * `0x60`: Bosch BMP390 Barometer (verifies chip ID `0x60`, pressure sanity $300\text{–}1100\text{ hPa}$).

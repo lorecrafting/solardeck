@@ -1273,3 +1273,90 @@ bulkhead is in the BOM). Three BOM rows move into the core BOM and one TBD row i
 
 **Reverse if** certification or SAR cost forces it out, or the bench shows station mode does not fit
 the ambient budget.
+
+---
+
+## ADR-056 — The panel refreshes only inside its operating temperature; the bench buys the rigid ED103TC2 (2026-10-30)
+
+Written 2026-10-30 17:25 UTC in Claude Code by anthropic/claude-opus-5-5. Owner decision: "ok do it"
+(record Waveshare's answers, add a refresh temperature gate that both pauses and warns, fix the
+sunlight overclaims, update the bench list).
+
+**Trigger.** Waveshare answered the panel inquiry (support ticket 261670, 2026-10-30): the rigid
+10.3″ HAT and raw panel use **ED103TC2**, the flexible HAT (D) uses **ES103TC1**, both Carta 1200;
+"refreshing under direct sunlight is not allowed", because of temperature and UV; the safe operating
+range is `panel_sku.operating_temp_c`; the waveform is stored in the driver board's flash and its
+firmware reads the temperature and picks the waveform; no datasheet beyond the wiki; bare panels are
+for sale. The repo had no panel temperature range at all. The waveform matrix in
+`SOFTWARE_SPEC.md` §11 only paused A2 above the range and kept refreshing, and prose claimed SolarDeck
+"operates continuously" in noon sun.
+
+**Decision.**
+- **No refresh outside `panel_sku.operating_temp_c`, from either brain.** `eink-refreshd` on the CM5
+  and the RP2350's ambient renderer (the minute clock, ADR-055) both read the backplate TMP112 and
+  skip the refresh. E Ink holds its image with no power, so the panel freezes on the last frame; it
+  does not go blank or break. Refreshing resumes when the panel is back inside the range.
+- **Warn first.** When the panel is within `panel_sku.refresh_warn_margin_c` of either limit, the next
+  refresh draws a banner ("panel hot, refreshes will pause"). That banner is then the image held while
+  paused, so the user sees why the screen stopped changing. The pause is also sent to the paired phone
+  over BLE (ADR-055) and logged. The margin is `null` until the bench measures it.
+- **UV is handled by the stack, not the gate.** The UV-blocking optical lamination already in
+  `HARDWARE_SPEC.md` §7.5 (item 3) stays mandatory. No UV dose limit is known; it waits for the datasheet.
+- **Bench panel: the rigid ED103TC2 HAT** (`panel_sku.bench_module_pn`), not the flexible ES103TC1.
+  ED103TC2 is sold by more than one vendor (Good Display's GDEP103TC2), so the bench keeps a second
+  source; ES103TC1 is a different stack, and Waveshare's glass (G) HAT is discontinued.
+- **The bench HAT needs no separate `.wbf`:** its waveform is in the board's flash. The rule "no
+  waveform, no purchase" still applies to production, where our own controller board needs the file.
+- The values are tagged as a vendor statement, not a datasheet, until the E Ink datasheet is on file.
+
+**Because.** A panel driven outside its range ghosts and can be damaged for good (AGENTS §4.3 already
+treats pigment damage as permanent). In Hawaiʻi sun a dark device on a dashboard or a rock can pass
+the upper limit. Holding the last image is the cheapest safe failure E Ink offers.
+
+**Costs.** Pillar P3 is "readable" in direct sun, not "refreshing": in sustained noon sun the device
+holds the last page until it cools, which is worst for the always-on clock. The superseded claims were
+removed (`SOFTWARE_SPEC.md` §11 and §18.1, `HARDWARE_SPEC.md` §2.30).
+
+**Open.**
+- *Sensor offset.* The TMP112 is on the aluminium backplate; in sun the panel front can be hotter than
+  the back. The bench measures the offset, and the warning margin must cover it.
+- *Wide-temperature panels.* Ask E Ink and Good Display whether a wider-range 10.3″ module exists.
+- *Datasheet.* Storage range (`panel_sku.storage_temp_c`), outline and UV guidance stay `null` until the
+  E Ink datasheet is on file; Waveshare publishes only its wiki.
+- *Bare-panel price and lead time* are not yet quoted.
+
+**Reverse if** the E Ink datasheet gives a different range (change the key, not the gate), or a
+wide-temperature module is chosen.
+
+---
+
+## ADR-057 — The chassis grows to fit the 10.3″ module; the glass is not cut (2026-10-30)
+
+Written 2026-10-30 17:50 UTC in Claude Code by anthropic/claude-opus-5-5. Owner decision: "Please go
+with your recommendation on this."
+
+**Trigger.** ADR-056 confirmed the bench panel is ED103TC2. AUDIT_6 §X5 records that module at
+216.7 × 174.4 mm (eink.com product page), and `chassis_mm` is 170 mm on that side, so the confirmed
+panel cannot fit the case as drawn.
+
+**Decision.** The chassis is re-derived from the module, never the reverse. Its short side becomes
+the module's short side plus the walls and whatever the top and bottom bezels carry (the solar strip,
+ADR-041). The figure is derived once the module drawing is on file, not from the product page: until
+then `panel_module_outline_mm` stays `null` (ADR-051) and `chassis_mm` keeps its current value with a
+comment saying it does not fit. Entering the outline turns Phase 10's existing geometry check red until
+`chassis_mm` and `hardware/enclosure/solardeck_chassis.scad` clear it, so the fix cannot be skipped.
+
+**Rejected.**
+- *Cutting the glass.* The E Ink module's glass is the TFT backplane, with the FPC bonded to it;
+  cutting it destroys the panel.
+- *A different 10.3″ panel.* Every 10.3″ Carta module checked is wider than 170 mm on the short side
+  (ED103KC2 is 172.9 mm, AUDIT_6 §X5), so swapping panels does not close the gap.
+- *A smaller panel.* It would give up the 10.3″ page that ADR-051 chose, and Good Display has already
+  marked the 9.7″ part end-of-life.
+
+**Costs.** The device gets somewhat taller on the short side and a little heavier: `mass_g` (P4,
+modelled) and the enclosure CAD are re-derived with the chassis. Neither is measured yet, so no
+measured claim is lost.
+
+**Reverse if** the module drawing shows an outline that already fits, or a narrower 10.3″ module with a
+drawing on file turns up.

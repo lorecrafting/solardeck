@@ -124,6 +124,7 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
   * Resolution and PPI are datasheet class figures (`spec_values.panel_sku`). Active area, module outline, panel-stack thickness, FPC geometry and VCOM stay **`null`** until the chosen module's mechanical drawing and matching `.wbf` waveform are on file; never an estimate. Audit X5 already flags that a 174.4 mm module outline exceeds the 170 mm chassis depth, so the chassis or the glass moves first.
   * **Tonal budget: 16 grey levels** (`spec_values.refresh_modes.mono_grey_levels`), 4-bit. That is the whole greyscale range; the fast modes are 1-bit.
   * **No colour in V1.** Kaleido 4 is the V2 variant on the same chassis: the EPDC sits on a pluggable daughter board carrying DSI + SPI + panel bias rails, so a colour panel is a board swap rather than a carrier redesign (`spec_values.panel_sku.colour_variant`). The old Kaleido bench stand-in is gone — the stand-in *is* the V1 panel now.
+  * **Operating temperature:** the panel refreshes only inside `panel_sku.operating_temp_c` (vendor statement, not yet datasheet). Outside it neither the CM5 nor the RP2350 refreshes and the last image is held; a warning is drawn first (`SOFTWARE_SPEC.md` §11, ADR-056). Direct sun can push it past the upper limit; the UV-blocking lamination (§7.5) covers the UV half.
   * **VCOM trim and VCOM-vs-temperature compensation** are bring-up items (ADR-051). The panel TMP112 already feeds the controller's `TEMP_REG` for waveform pulse voltage; VCOM is a separate register.
   * **Digitizer over the panel (optional variant):** on-top EMR laminates raise the display stack (`spec_values.display_stack_mm`) and require the Pen/Refresh Arbiter of `SOFTWARE_SPEC.md` §51, because EMR interrogation bursts and EPD drive pulses cannot share the volume and cannot be shielded apart (ADR-018).
 * **Display Transport & Honest Throughput Budget:**
@@ -854,7 +855,7 @@ To achieve massive off-grid energy generation without permanently burdening the 
 ### 2.30 Bicycle & Motorcycle Handlebar Sunlight Cockpit: Aerodynamic Convection & Thermal Safety Envelope
 *Written 2026-10-19 16:30 UTC in the Pi harness by antigravity/gemini-3.8-flash*
 
-Mounting a computing terminal to a bicycle or motorcycle handlebar in direct midday sunlight creates an extreme thermal environment. While smartphones routinely overheat and trigger emergency shutdown within 15 to 20 minutes, SolarDeck operates continuously without thermal throttling or damage due to three fundamental thermodynamic principles and dedicated hardware safeguards:
+Mounting a computing terminal to a bicycle or motorcycle handlebar in direct midday sunlight creates an extreme thermal environment. While smartphones routinely overheat and trigger emergency shutdown within 15 to 20 minutes, SolarDeck stays readable, because reading needs no power. It may only *refresh* inside `panel_sku.operating_temp_c` (ADR-056): in sustained noon sun the panel holds its last image until it cools. The principles and safeguards below keep it inside that range for as long as they can:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -868,7 +869,7 @@ Mounting a computing terminal to a bicycle or motorcycle handlebar in direct mid
 │ Heat Dissipation      │ Trapped in phone mount  │ Direct forced-air cooling │
 │ Forced Convection Air │ Negligible (glass back) │ 227x165mm unibody heatsink│
 │ Internal Heat Barrier │ None (battery on PCB)   │ 0.5mm Aspen Aerogel Foil  │
-│ Result in Noon Sun    │ Shuts down in 15–20 min │ Runs 30+ hours at ~38°C   │
+│ Result in Noon Sun    │ Shuts down in 15–20 min │ Pauses refresh if too hot │
 └───────────────────────┴─────────────────────────┴───────────────────────────┘
 ```
 

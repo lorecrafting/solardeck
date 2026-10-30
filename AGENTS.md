@@ -14,6 +14,7 @@ Revised 2026-10-21 19:36 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion
 Revised 2026-10-27 01:10 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017 (mono V1 panel, ADR-051).
 Revised 2026-10-29 00:05 UTC in Claude Code by anthropic/claude-opus-5-5 (sourcing standard, ADR-053).
 Revised 2026-10-29 07:20 UTC in Claude Code by anthropic/claude-opus-5-5 (sourcing gate lifted, ADR-054; LoRa and BLE in V1 on a radio MCU, ADR-055).
+Revised 2026-10-29 23:03 UTC in Claude Code by anthropic/claude-opus-5-5 (owner learning mode, §6).
 
 **Read `docs/WORKFLOW.md` before your first change.** It is the operating procedure: claim tags,
 change classes, the intent→ledger lifecycle, the 13 non-negotiables from the audit, and the
@@ -145,3 +146,17 @@ attribution before you call the task done.
 - **Tracker comments:** `[Pi · <provider>/<model> · session <id>]`.
 - Subagents and reviewers you launch inherit these rules — put them in the prompt.
 
+---
+
+## 6. The owner is learning hardware
+
+The owner knows some software and is new to hardware. Teach as you go, unasked:
+
+- When a part, signal, bus or concept comes up (an RP2350, I²C, an NTC, VREG, an EVM), say in a
+  sentence or two what it is and why SolarDeck needs it. Plain words first, the term second.
+- Explain fully the first time; after that a short reminder in a few words; once a term is in the
+  known list below, use it bare.
+- When the owner uses a term correctly or says they know it, or it has been explained across several
+  sessions, add it to the list. Keep it one line, alphabetical.
+
+**Terms the owner knows:** *(none yet)*

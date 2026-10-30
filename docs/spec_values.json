@@ -9,6 +9,7 @@
     170.0,
     14.0
   ],
+  "_comment_chassis_mm": "Known not to hold the bench panel: ED103TC2 is 174.4 mm on the short side (AUDIT_6 X5, eink.com product page). The chassis grows to fit the module, never the reverse (ADR-057). The new depth is derived when the module drawing is on file: enter panel_module_outline_mm, and Phase 10's geometry check stays red until this key and the enclosure CAD clear it.",
   "chassis_cavity_depth_mm": 12.5,
   "display_stack_mm": null,
   "battery_cell_mm": [
@@ -57,7 +58,18 @@
     "_comment_module_outline_mm": "null until the chosen module's drawing is on file (ADR-051). Do not enter an estimate: AUDIT_6 §X5 records ED103TC2 at 216.7 x 174.4 mm against a 170 mm chassis depth, so the chassis or the glass must change first (gate G2).",
     "controller": "IT8951-class EPDC",
     "availability": "commodity, multiple vendors (Waveshare / GoodDisplay / DKE class)",
-    "waveform_file": "required on the PO, per module (ADR-051): no .wbf, no purchase",
+    "waveform_file": "production: required on the PO, per module (ADR-051): no .wbf, no purchase. Bench HAT: the waveform is in the driver board's flash and its firmware picks it by temperature, so the bench needs no separate file (ADR-056)",
+    "bench_module_pn": "ED103TC2",
+    "_comment_bench_module_pn": "Vendor statement, Waveshare support ticket 261670 (2026-10-30): the rigid 10.3in HAT and raw panel are ED103TC2, the flexible HAT (D) is ES103TC1, and both are Carta 1200. Good Display sells ED103TC2 as GDEP103TC2 and lists it as Carta 1000; the E Ink datasheet settles it. The bench buys the rigid ED103TC2 (ADR-056). The V1 module is still open (module_outline_mm).",
+    "operating_temp_c": [
+      0,
+      50
+    ],
+    "_comment_operating_temp_c": "Vendor statement, Waveshare ticket 261670 (2026-10-30), not a datasheet: the safe range for refreshing. No refresh outside it, from either brain (ADR-056). Promote to datasheet when the E Ink datasheet is on file.",
+    "storage_temp_c": null,
+    "_comment_storage_temp_c": "null until the E Ink datasheet is on file; Waveshare publishes only its wiki (ADR-056).",
+    "refresh_warn_margin_c": null,
+    "_comment_refresh_warn_margin_c": "How far inside operating_temp_c the 'refreshes will pause' warning is drawn (ADR-056). null until the bench measures how fast the panel heats in sun and the offset between the backplate TMP112 and the panel front.",
     "vcom_trim": null,
     "_comment_vcom_trim": "null until measured at bring-up; VCOM-vs-temperature compensation is an open item (ADR-051), and it is not the same register as the TEMP_REG waveform-voltage adjustment in HARDWARE_SPEC §2.2.",
     "colour_variant": {

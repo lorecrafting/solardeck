@@ -170,6 +170,18 @@ def check_spec_keys(path, text, err):
             node = node[p]
 
 
+def check_panel_temp(pk):
+    """ADR-056: the refresh gate needs a real window, and the warning bands at both ends must not overlap."""
+    t, margin = pk.get("operating_temp_c"), pk.get("refresh_warn_margin_c")
+    num = (int, float)
+    if not (isinstance(t, list) and len(t) == 2 and all(isinstance(x, num) for x in t) and t[0] < t[1]):
+        return ["panel_sku.operating_temp_c must be [min, max] with min < max (ADR-056)"]
+    if margin is not None and not (isinstance(margin, num) and 0 < margin < (t[1] - t[0]) / 2):
+        return [f"panel_sku.refresh_warn_margin_c={margin!r} must be null or a number > 0 and "
+                f"< half of operating_temp_c {t} (ADR-056)"]
+    return []
+
+
 def check_links(path, text, err):
     for target in re.findall(r"\]\((?!https?:|#)([^)#]+)", text):
         resolved = os.path.normpath(os.path.join(os.path.dirname(os.path.join(ROOT, path)), target))
@@ -193,6 +205,13 @@ def main():
     for req in ("guaranteed_wpm", "zero_flash", "ghost_residue_threshold_db", "bench_duration_min"):
         if req not in ts:
             errors.append(f"token_stream.{req} missing (ADR-027)")
+
+    # Red controls: each broken panel window must be rejected, the shipped one accepted.
+    for bad in ({}, {"operating_temp_c": [50, 0]}, {"operating_temp_c": [0, 50], "refresh_warn_margin_c": 30},
+                {"operating_temp_c": [0, 50], "refresh_warn_margin_c": "TBD"}):
+        assert check_panel_temp(bad), f"panel temperature check accepted {bad}"
+    assert not check_panel_temp({"operating_temp_c": [0, 50], "refresh_warn_margin_c": 5})
+    errors += check_panel_temp(SPEC["panel_sku"])
 
     for rel in docs():
         text = open(os.path.join(ROOT, rel), encoding="utf-8", errors="ignore").read()

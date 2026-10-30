@@ -101,6 +101,13 @@ sent 2026-10-21.
 waveforms), or keep 10.3″ only if E Ink confirms it — and what is the fallback if Kaleido 4 is not
 offered at 10.3″?
 
+*Mono panel temperature (ADR-056, 2026-10-30).* The panel may refresh only inside
+`panel_sku.operating_temp_c` (Waveshare's statement, not a datasheet), so both brains skip refreshes
+outside it and hold the last image. Open gates: the warning margin (`panel_sku.refresh_warn_margin_c`)
+and the backplate-to-front sensor offset are measured on the bench; the storage range and UV guidance
+wait for the E Ink datasheet. **Attack:** is a sunlit field device viable on a panel with this
+range, or does V1 need a wide-temperature module?
+
 ---
 
 ## What is already settled — don't spend review budget on it
