@@ -77,8 +77,6 @@ gate in the programme (~$8–15 k, 6–10 weeks) and has no owner; a spare pack 
 too. TI's gauge ships with a 4.4 V charge-voltage default, so pack programming is a safety step.
 The pack current path is still open (`docs/EVT0_POWER_BOARD.md` open item 20): the protector's OCD
 and any off-the-shelf pack fuse sit above the 8 A FET and connector ratings.
-ADR-053 adds a sourcing gate: EEMB is China-based, so assembled units need a TAA-origin cell and a
-US-built pack (`supply_chain.china_origin_open`).
 **Attack:** does the chosen pack pass UN38.3 and IEC 62133-2, and does the screw-retained pack meet
 the EU Battery Regulation's user-replaceability requirement (applicability to confirm)? Which test
 house, which schedule, and what does a failed UN38.3 cost?

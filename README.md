@@ -6,7 +6,8 @@ a calm Linux machine for working with AI, built to be repaired and upgraded inst
 *Written 2026-10-18 17:35 UTC in the Pi harness by antigravity/gemini-3.8-flash.
 Revised 2026-10-20 14:40 UTC in the Pi harness by openrouter/deepseek/deepseek-v4-flash-0731.
 Rewritten 2026-10-21 16:05 UTC and revised 16:55, 17:30 and 19:38 UTC in Claude Code by anthropic/claude-opus-5-5.
-Revised 2026-10-27 01:10 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017 (mono V1 panel, ADR-051).*
+Revised 2026-10-27 01:10 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017 (mono V1 panel, ADR-051).
+Revised 2026-10-29 07:20 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa and BLE in V1 on a radio MCU, ADR-055).*
 
 > [!NOTE]
 > **Status (2026-10-27): design stage.** The architecture, parts and pin budget are worked out and
@@ -80,8 +81,9 @@ again when you're done.
 ```
 
 A bus switch hands the display to whichever brain is awake. V1 gets online over Wi-Fi or your phone's
-hotspot and talks to an external Meshtastic radio over Bluetooth; cellular, on-board LoRa, NFC and a
-camera arrive in V2, and the V1 board already reserves their footprints and pins
+hotspot and talks to an external Meshtastic radio over Bluetooth. An always-on radio chip carries on-board
+LoRa and Bluetooth LE, so messages can reach the device with Linux off (hardware in V1, ADR-055; software
+not written yet, ADR-046). Cellular, NFC and a camera arrive in V2, and the V1 board already reserves their footprints and pins
 ([`docs/PIN_BUDGET.md`](docs/PIN_BUDGET.md)). The full architecture is in
 [`docs/MVP_ARCHITECTURE.md`](docs/MVP_ARCHITECTURE.md).
 
@@ -153,10 +155,10 @@ Numbers live in [`docs/spec_values.json`](docs/spec_values.json); this table nam
 | Battery | 1S Li-ion in a user-replaceable smart pack (protection + gauge in the pack); capacity claimed only from a real datasheet — ADR-048 (`battery`, `battery_wh`) |
 | Charging & power | BQ25798 charger, STUSB4500 USB-C PD sink, buck-boost always-on rail, power bank on USB-C port 2 — ADR-035, ADR-048, ADR-049 |
 | Solar | Bezel strip with a hardware temperature gate; outdoor top-up only — ADR-041, ADR-048 (`solar_w`) |
-| Radios | Wi-Fi/BT on the CM5, u-blox MAX-M10S GPS on the co-processor — ADR-038 (`gnss`) |
+| Radios | Wi-Fi/BT on the CM5, u-blox MAX-M10S GPS on the co-processor — ADR-038 (`gnss`); LoRa and Bluetooth LE on an always-on radio MCU — ADR-055 (`radio`) |
 | Storage | eMMC + M.2 NVMe + microSD; native USB 3 — ADR-042 |
 | Enclosure | PA12 prototypes, PC/ABS production, IP54 target — ADR-039 (`chassis_mm`, `ingress`) |
-| **Coming in V2** | LTE with nano-SIM and SGP.22 eSIM (ADR-033), on-board LoRa, NFC, rear camera, snap-on Hotpacks — ADR-034, ADR-044 |
+| **Coming in V2** | LTE with nano-SIM and SGP.22 eSIM (ADR-033), NFC, rear camera, snap-on Hotpacks — ADR-034 |
 
 ---
 

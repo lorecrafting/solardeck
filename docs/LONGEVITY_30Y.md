@@ -6,6 +6,7 @@ Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 sco
 Revised 2026-10-21 17:23 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, ADR-044).
 Revised 2026-10-21 17:53 UTC in Claude Code by anthropic/claude-opus-5-5 (RTC chip, jack removed, ADR-046).
 Revised 2026-10-21 19:44 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion smart pack, ADR-048).
+Revised 2026-10-29 07:20 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa and BLE in V1 on a radio MCU, ADR-055).
 
 Second audit round, scoped to one question: **what breaks over 30 years, and is the current design
 built to survive it?** The existing audit asked "is the documentation true". This one asks "will the
@@ -46,10 +47,10 @@ schematic/netlist audit could not see it.
 
 ## 1b. Reliability arithmetic: random failure is not the risk (modelled)
 
-`python3 scripts/reliability_model.py` sums ~935 FIT across 13 categories (V1 parts only; the V2 modem and LoRa rows left with ADR-034/044) (Telcordia SR-332-class
+`python3 scripts/reliability_model.py` sums ~995 FIT across 14 categories (V1 parts only, including the radio MCU and LoRa modules of ADR-055; the V2 modem rows left with ADR-034) (Telcordia SR-332-class
 rates at 40 °C, placement counts estimated from `HARDWARE_SPEC.md`):
 
-**MTBF ≈ 1,070,000 h ≈ 122 years.** Compare that with the first *hard* wear-out item:
+**MTBF ≈ 1,005,000 h ≈ 115 years.** Compare that with the first *hard* wear-out item:
 
 | Item | Years to 70–80 % of spec | Kind |
 | :--- | ---: | :--- |

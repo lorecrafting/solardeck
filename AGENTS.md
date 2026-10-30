@@ -13,6 +13,7 @@ Revised 2026-10-21 19:36 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion
 
 Revised 2026-10-27 01:10 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017 (mono V1 panel, ADR-051).
 Revised 2026-10-29 00:05 UTC in Claude Code by anthropic/claude-opus-5-5 (sourcing standard, ADR-053).
+Revised 2026-10-29 07:20 UTC in Claude Code by anthropic/claude-opus-5-5 (sourcing gate lifted, ADR-054; LoRa and BLE in V1 on a radio MCU, ADR-055).
 
 **Read `docs/WORKFLOW.md` before your first change.** It is the operating procedure: claim tags,
 change classes, the intent→ledger lifecycle, the 13 non-negotiables from the audit, and the
@@ -32,8 +33,8 @@ running mainline bare-metal Linux. Open hardware; CERN-OHL-S-2.0 + MIT, see `LIC
 | :--- | :--- | :--- |
 | **Dual-brain compute** | Raspberry Pi CM5, CM5116064 only (BCM2712 quad Cortex-A76, 16 GB RAM, 64 GB eMMC, on-module Wi-Fi/BT; ADR-031) running Linux; RP2350B co-processor at 10 µA sleep / 4.5 mW reader mode handling RTC, ADC solar sampling, PSRAM frame cache, voice-button audio capture and CM5 power-on. The CM5 has no RAM-retaining sleep: ambient modes are instant on the RP2350, Linux resumes from off/hibernate in seconds (ADR-036). Bus isolation via a pair of TI TMUX1575 4-channel switches (two devices = 8 channels). | `docs/MVP_ARCHITECTURE.md` |
 | **Display** | 10.3" E Ink mono Carta 1200, 1872 × 1404, 227 PPI, IT8951 EPDC (ADR-051, superseding ADR-032). 16 grey levels is the whole tonal budget. Active area, module outline, stack and VCOM stay `null` until the chosen module's drawing and `.wbf` waveform are on file (`spec_values.panel_sku`) — audit X5 already shows a 174.4 mm module against a 170 mm chassis depth. Colour (Kaleido 4) is a V2 variant on the same chassis behind a pluggable EPDC daughter board carrying DSI + SPI + bias rails. Frame rates are per-rectangle, not per-screen; colour motion is unsupported. All figures: `spec_values.refresh_modes`. On-top Wacom EMR variants require the pen/refresh arbiter. | `docs/HARDWARE_SPEC.md` §2.2, `docs/SOFTWARE_SPEC.md` §51–52 |
-| **Power** | 1S Li-ion in a user-replaceable smart pack (1S2P EEMB LP7545135, `battery_wh.li_ion`; ADR-048, ADR-049; a TAA-origin cell before assembled sales, ADR-053), BQ25798 charger, pack-side protector + BQ27Z561 gauge (ADR-035, ADR-048) + USB-PD sink, 0.15 W solar bezel strip that tops up the idle co-processor outdoors only (ADR-041; larger harvest is an accessory), buck-boost always-on rail (ADR-048), TPS22918 peripheral load switches | `docs/HARDWARE_SPEC.md` §3 |
-| **Comms** | Wi-Fi/BT on the CM5 (phone tethering for internet; mesh through a paired Meshtastic node over BLE), u-blox MAX-M10S GNSS on an RP2350 UART (ADR-038), USB-C only (the pogo bus is descoped). LTE, SIM/eSIM and NFC are V2 (ADR-034); on-board LoRa is V2 (ADR-044). Every pin, V1 and V2: `docs/PIN_BUDGET.md` (ADR-045). | `docs/HARDWARE_SPEC.md` §2.5 |
+| **Power** | 1S Li-ion in a user-replaceable smart pack (1S2P EEMB LP7545135, `battery_wh.li_ion`; ADR-048, ADR-049), BQ25798 charger, pack-side protector + BQ27Z561 gauge (ADR-035, ADR-048) + USB-PD sink, 0.15 W solar bezel strip that tops up the idle co-processor outdoors only (ADR-041; larger harvest is an accessory), buck-boost always-on rail (ADR-048), TPS22918 peripheral load switches | `docs/HARDWARE_SPEC.md` §3 |
+| **Comms** | Wi-Fi/BT on the CM5 (phone tethering for internet; mesh through a paired Meshtastic node over BLE), u-blox MAX-M10S GNSS on an RP2350 UART (ADR-038), USB-C only (the pogo bus is descoped). LoRa and Bluetooth LE on an always-on radio MCU that the RP2350 reaches over UART, so messages arrive with Linux off (ADR-055). LTE, SIM/eSIM and NFC are V2 (ADR-034). Every pin, V1 and V2: `docs/PIN_BUDGET.md` (ADR-045). | `docs/HARDWARE_SPEC.md` §2.5 |
 | **Ergonomics** | External USB-C/BT keyboard only — no keyboard firmware in this repo (ADR-001). Rear M2.5 inserts + MagSafe anchor array for grips, tripods, easel arms. | `docs/MECHANICAL_FIT_AND_ENCLOSURE_WORKFLOW.md` |
 
 Fabrication status is **not** implied by a green CI run. See `docs/AUDIT_6_2026-10-21.md`.
@@ -124,11 +125,11 @@ attribution before you call the task done.
    stays off until the RP2350 has written and read back the BQ25798 VREG, and a pack whose gauge reports
    a different design voltage is refused (ADR-035, ADR-048). Protector, fuse, JEITA and pack NTC are
    mandatory. Verify NTC cutoff behaviour before any charging change. LiFePO4 is V2.
-2. **Sleep power.** TPS22918 loads hard off whenever the CM5 is off (ambient modes, ADR-036); the gate is measured (<25 mW), not assumed
+2. **Sleep power.** TPS22918 loads hard off whenever the CM5 is off (ambient modes, ADR-036), except the radio MCU rail while station or Meshtastic-peer mode is on (ADR-055; FULL BLACKOUT still cuts it). The gate is measured (<25 mW, with the radio rail off), not assumed, and the radio's draw is measured on its own (`radio.station_mode_idle_mw`)
    (`docs/FIRST_BOOT_CHECKLIST.md` §5b).
 3. **Waveform DC balance.** Any LUT change must keep net DC bias ≈ 0 V across refresh cycles. Fast-mode
    bursts need a forced balanced cycle; pigment burn-in is permanent (`docs/SOFTWARE_SPEC.md` §52).
-4. **RF limits.** Any transmitter this repo configures — the V2 SX1262, a Hotpack, or an external Meshtastic node set up over
+4. **RF limits.** Any transmitter this repo configures — the on-board SX1262 and BLE radio (ADR-055), a Hotpack, or an external Meshtastic node set up over
    BLE (ADR-044) — respects regional ISM bands and EIRP (915 MHz NA, 868 MHz EU). No transmission config ships without the region.
 5. **Input validation at trust boundaries** and error handling that prevents data loss are never
    simplified away.
@@ -143,3 +144,4 @@ attribution before you call the task done.
   header or at the start of the appended section.
 - **Tracker comments:** `[Pi · <provider>/<model> · session <id>]`.
 - Subagents and reviewers you launch inherit these rules — put them in the prompt.
+

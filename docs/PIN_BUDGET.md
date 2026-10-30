@@ -3,6 +3,7 @@
 Written 2026-10-21 17:20 UTC in Claude Code by anthropic/claude-opus-5-5 (ADR-044, ADR-045).
 Revised 2026-10-21 17:26 UTC in Claude Code by anthropic/claude-opus-5-5 (checked against the V1 BOM; always-on GPIO expander).
 Revised 2026-10-21 17:52 UTC in Claude Code by anthropic/claude-opus-5-5 (owner decisions, ADR-046).
+Revised 2026-10-29 07:20 UTC in Claude Code by anthropic/claude-opus-5-5 (radio MCU on the always-on side, ADR-055).
 
 Every signal on both processors is assigned before schematic capture, so V1 can be drawn once and V2
 fits without a re-spin of the pinout (ADR-045). **The data is `spec_values.pins`; this page is the
@@ -28,18 +29,28 @@ no wired schematic yet (AUDIT 6 X8).
    crosses into the CM5 domain needs one of these isolation rules:
    - `tmux`: the line goes through the TMUX1575 pair (I_off protected).
    - `buffer`: the RP2350 drives it through one of the two TXU0104 I_off buffers (BOM "I/O Isolators",
-     `pins.buffer_channels`), which go high-impedance when the CM5 rail is at 0 V (HARDWARE_SPEC §2.13). The same buffers protect the UART into the switched-off GNSS.
+     `pins.buffer_channels`), which go high-impedance when the CM5 rail is at 0 V (HARDWARE_SPEC §2.13).
+     A TXU0104 has one B-side supply, the CM5 rail, so only lines into the CM5 domain use it.
+   - `gate`: a line into another switched rail (the GNSS or the radio MCU) goes through its own
+     single-gate I_off buffer (SN74LVC1G125, `pins.gate_buffers`) powered from that rail, so the gate
+     is unpowered and high-impedance whenever the rail is off (ADR-055).
    - `rp_input`: the RP2350 only receives on it.
    - `od`: open-drain, with the pull-up on the CM5 rail.
 
    Firmware tri-stating is not an isolation rule: a hang, a debugger halt or a brown-out restart leaves
    pins driven. Firmware still keeps these lines idle while the CM5 is off (defence in depth); for
    `LINK_MISO` an unpowered CM5 leaves `LINK_CS` at 0 V, which selects an active-low SPI target.
-2. **V2 parts are DNP, never absent.** Every V2 row gets its footprint, pull resistors and test pad on
+2. **Inputs from a switched rail get an external pull-down on the RP2350 side.** With the GNSS or
+   radio rail off, `GNSS_UART_RX`, `GNSS_PPS`, `RADIO_IRQ` and `RADIO_UART_RX` would float and fake
+   wakes or UART noise. A pull-up toward the switched rail would back-power it, and the RP2350's
+   internal pull-downs are not relied on (RP2350 erratum E9). The value is chosen at schematic capture
+   against that erratum. Firmware also ignores these inputs while their rail is off.
+3. **V2 parts are DNP, never absent.** Every V2 row gets its footprint, pull resistors and test pad on
    the V1 board, unpopulated. High-speed V2 lanes run to their footprint and stop: no stubs, no branches.
-3. **Shared buses are one net with several users.** The RP-side SPI0 bus (GPIO 4, 6, 7) serves the
-   display through the TMUX and, in V2, the SX1262 with its own chip select. It is listed once.
-4. **CM5 GPIO_VREF is tied to 3.3 V.** Every CM5 GPIO peripheral here is 3.3 V. Total GPIO current
+4. **Shared buses are one net with several users.** The RP-side SPI0 bus (GPIO 4, 6, 7) serves the
+   display through the TMUX; it is listed once. The SX1262 hangs off the radio MCU's own SPI bus, not
+   this one (ADR-055).
+5. **CM5 GPIO_VREF is tied to 3.3 V.** Every CM5 GPIO peripheral here is 3.3 V. Total GPIO current
    stays within the CM5 datasheet's bank limit.
 
 ## 2. CM5 high-speed interfaces and control pins
@@ -66,10 +77,10 @@ field update path yet (FIRMWARE_INTERFACE §6).
 | GPIO | Net | Function | Scope | Isolation | Purpose |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | RP2350 0 | `PSRAM_CS` | qmi_cs1 | V1 |  | 8 MB PSRAM chip select (QMI CS1n exists only on GPIO 0/8/19/47); the flash uses the dedicated QSPI pins |
-| RP2350 1 | `LORA_NSS` | sio | V2 |  | SX1262 chip select on the shared RP-side SPI0 bus |
+| RP2350 1 | `SPARE_GPIO1` | sio | RESERVED |  | spare (freed by the radio MCU, ADR-055); test pad |
 | RP2350 2 | `EPDC_HRDY_RP` | sio | V1 | tmux | display controller ready, RP2350 side of the TMUX |
 | RP2350 3 | `EPDC_RST_RP` | sio | V1 | tmux | display controller reset, RP2350 side |
-| RP2350 4 | `RP_SPI0_RX` | spi0_rx | V1 | tmux | SPI0 bus, RP2350 side: display (via TMUX) and V2 LoRa |
+| RP2350 4 | `RP_SPI0_RX` | spi0_rx | V1 | tmux | SPI0 bus, RP2350 side: display (via TMUX) |
 | RP2350 5 | `EPDC_CS_RP` | spi0_csn | V1 | tmux | display chip select, RP2350 side |
 | RP2350 6 | `RP_SPI0_SCK` | spi0_sck | V1 | tmux | SPI0 bus clock (shared, as GPIO 4) |
 | RP2350 7 | `RP_SPI0_TX` | spi0_tx | V1 | tmux | SPI0 bus data out (shared, as GPIO 4) |
@@ -85,9 +96,9 @@ field update path yet (FIRMWARE_INTERFACE §6).
 | RP2350 17 | `CHG_CE_N` | sio | V1 |  | BQ25798 CE, active-low, hardware pull-up keeps charging off (ADR-035); direct, never via the expander |
 | RP2350 18 | `EXP_INT_N` | sio | V1 |  | always-on GPIO expander interrupt; wakes the RP2350 |
 | RP2350 19 | `FRONTLIGHT_CTRL` | sio | V1 |  | TPS61163 frontlight EasyScale/enable (timed one-wire, so direct) |
-| RP2350 20 | `GNSS_UART_TX` | uart1_tx | V1 | buffer | to MAX-M10S RXD (UART1), through a TXU0104 (GNSS rail may be off) |
+| RP2350 20 | `GNSS_UART_TX` | uart1_tx | V1 | gate | to MAX-M10S RXD (UART1), through an SN74LVC1G125 on the GNSS rail (GNSS rail may be off) |
 | RP2350 21 | `GNSS_UART_RX` | uart1_rx | V1 |  | from MAX-M10S TXD (UART1) |
-| RP2350 22 | `LORA_BUSY` | sio | V2 |  | SX1262 busy |
+| RP2350 22 | `RADIO_UART_TX` | pio | V1 | gate | PIO UART to the radio MCU, through an SN74LVC1G125 on the radio rail (radio rail may be off; ADR-055) |
 | RP2350 23 | `GNSS_PPS` | sio | V1 |  | GNSS time pulse, disciplines the RTC |
 | RP2350 24 | `I2C_AON_SDA` | i2c0_sda | V1 |  | always-on I²C: charger, gauge, expander, RTC, sensors, CC controller |
 | RP2350 25 | `I2C_AON_SCL` | i2c0_scl | V1 |  | always-on I²C clock |
@@ -104,15 +115,15 @@ field update path yet (FIRMWARE_INTERFACE §6).
 | RP2350 36 | `ROCKER_LEFT` | sio | V1 |  | 5-way rocker |
 | RP2350 37 | `ROCKER_RIGHT` | sio | V1 |  | 5-way rocker |
 | RP2350 38 | `ROCKER_PRESS` | sio | V1 |  | 5-way rocker centre press |
-| RP2350 39 | `LORA_DIO1` | sio | V2 |  | SX1262 IRQ (DIO1); wakes the RP2350 |
+| RP2350 39 | `RADIO_IRQ` | sio | V1 |  | radio MCU interrupt (message waiting); wakes the RP2350. External pull-down (rule 2); ignored while `RADIO_PWR_EN` is off |
 | RP2350 40 | `SOLAR_ADC` | adc | V1 |  | solar strip voltage (ADC0) |
 | RP2350 41 | `LED_R` | pwm | V1 |  | notification LED, PWM (slice 8) |
 | RP2350 42 | `LED_G` | pwm | V1 |  | notification LED, PWM (slice 9) |
 | RP2350 43 | `LUX_ADC` | adc | V1 |  | ambient light (ADC3, the BOM's "ADC Channel 3" lux row) |
 | RP2350 44 | `LED_B` | pwm | V1 |  | notification LED, PWM (slice 10) |
-| RP2350 45 | `LORA_RXEN` | sio | V2 |  | module RF switch, receive (E22 class) |
+| RP2350 45 | `RADIO_UART_RX` | pio | V1 |  | PIO UART from the radio MCU. External pull-down (rule 2); receiver off while `RADIO_PWR_EN` is off |
 | RP2350 46 | `PIEZO` | pwm | V1 |  | standby alert piezo, PWM (slice 11, alone) |
-| RP2350 47 | `LORA_TXEN` | sio | V2 |  | module RF switch, transmit |
+| RP2350 47 | `SPARE_GPIO47` | sio | RESERVED |  | spare. It can carry QMI CS1n, but CS1n is one signal and GPIO 0 already uses it, so it cannot select a second PSRAM |
 
 ## 4. Always-on GPIO expander (I²C, on the RP2350's bus)
 
@@ -132,8 +143,8 @@ pull resistor that holds the load off until firmware drives it.
 | EXP 6 | `CC_INT_N` | gpio | V1 |  | TUSB320 port 2 (source) CC interrupt |
 | EXP 7 | `PRIVACY_BLACKOUT_N` | gpio | V1 |  | privacy switch pole B, low in FULL BLACKOUT; with EXP 2 it encodes all three positions |
 | EXP 8 | `SENSOR_ALERT_N` | gpio | V1 |  | wired-OR TMP112 / INA3221 alerts |
-| EXP 9 | `LORA_NRESET` | gpio | V2 |  | SX1262 reset |
-| EXP 10 | `LORA_PWR_EN` | gpio | V2 |  | LoRa load switch |
+| EXP 9 | `RADIO_NRESET` | gpio | V1 | gate | radio MCU reset, through an SN74LVC1G125 on the radio rail |
+| EXP 10 | `RADIO_PWR_EN` | gpio | V1 |  | radio load switch (radio MCU + SX1262); FULL BLACKOUT forces it off in hardware (ADR-055) |
 | EXP 11 | `LTE_PWR_EN` | gpio | V2 |  | modem load switch |
 | EXP 12 | `LTE_RESET_N` | gpio | V2 |  | M.2 RESET# |
 | EXP 13 | `LTE_W_DISABLE_N` | gpio | V2 |  | M.2 W_DISABLE1#; airgap also forces it in hardware |
@@ -176,8 +187,9 @@ pull resistor that holds the load off until firmware drives it.
 - **V1 does not fit on the RP2350 without the expander.** Checked against every signal-bearing part in
   the V1 BOM (5-way rocker, lux ADC, motion sensor, CC controller, frontlight) and
   the HARDWARE_SPEC notification LED and piezo, V1 needs more lines than the RP2350B has. With the
-  expander V1 fits, and V2 LoRa and the LTE modem's control take the rest: the RP2350's own pins are
-  then full and the expander has a few lines spare (the Scope column is the count).
+  expander V1 fits, including the radio MCU (ADR-055), and the LTE modem's control takes most of the
+  rest: the RP2350 keeps GPIO 1 and 47 spare and the expander has a few lines spare (the Scope column
+  is the count).
 - **The CM5 is full in V1.** All 28 GPIO are assigned; GPIO 0/1 are the only spares. The audio link is
   what makes this fit: the RP2350 owns the microphones and is the audio clock master, so the speaker
   amp and the mic stream share the CM5's I2S1, its clock-target I²S (I2S0 is master-only).
@@ -191,8 +203,8 @@ pull resistor that holds the load off until firmware drives it.
 
 - The Kaleido 4 controller interface is assumed SPI plus ready and reset, like the IT8951. The real
   controller reference (ADR-032, under NDA) may need different lines.
-- The SX1262 module's `RXEN`/`TXEN` assume an Ebyte E22-class module. A bare SX1262 uses DIO2 for the
-  RF switch and frees GPIO 45 and 47.
+- The radio MCU's UART is a PIO UART, because no free RP2350 pin pair has a hardware UART. Its SX1262
+  wiring (`RXEN`/`TXEN` for an E22-class module) is on the radio MCU's pins, outside this budget.
 - SPI3 on CM5 GPIO 4–7 needs its device-tree overlay confirmed on the CM5 at bring-up.
 - GNSS PPS on GPIO 23 assumes the MAX-M10S `TIMEPULSE` output is used.
 

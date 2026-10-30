@@ -738,6 +738,8 @@ Written 2026-10-21 16:37 UTC in Claude Code by anthropic/claude-opus-5-5.
 
 ## ADR-044 — LoRa moves to V2; V1 talks to an external Meshtastic node over Bluetooth (2026-10-21)
 
+**Scope decision superseded by ADR-055 (2026-10-29): LoRa is V1 again, on an always-on radio MCU.** The GNSS and RF-limit rules below still stand.
+
 Written 2026-10-21 17:20 UTC in Claude Code by anthropic/claude-opus-5-5. Amends ADR-034 (V1 scope)
 and ADR-038 (GNSS rationale). Owner decision: "Should we descope LoRa from V1?" → yes.
 
@@ -1125,6 +1127,8 @@ nudge them.
 
 ## ADR-053 — No China-origin parts, TAA origins, assembled in the USA (2026-10-29)
 
+**Superseded by ADR-054 (2026-10-29): the sourcing gate is lifted.** Kept as the record of what was weighed.
+
 Written 2026-10-29 00:05 UTC in Claude Code by anthropic/claude-opus-5-5. Owner asked "if I had to do it
 with all domestic parts how would I do it?", was shown the four meanings of "domestic" below, and said
 yes to recording this standard.
@@ -1176,3 +1180,96 @@ capacity and the chassis envelope.
 
 **What would reverse it.** No TAA-origin cell fits the chassis at an acceptable capacity, or the cost
 increase breaks the `unit_economics` instrument margin once quotes land.
+
+---
+
+## ADR-054 — The sourcing gate is lifted; parts come from wherever they are available (2026-10-29)
+
+Written 2026-10-29 07:20 UTC in Claude Code by anthropic/claude-opus-5-5. Supersedes ADR-053. Owner
+decision: "lets lift the domestic thing, we can get whatever part from wherever its available."
+
+**Decision.** No country-of-origin rule applies to any build. The ADR-053 enforcement is removed: the
+BOM `Origin` column, `supply_chain.sourcing_standard` and `supply_chain.china_origin_open`, and the
+Phase 16 origin check. Parts are chosen on availability, datasheet fit, price and lifetime, as before
+ADR-053.
+
+**Because.** The findings behind ADR-053 showed the display, the pen layer, the small-lot cells and the
+embedded magnets have no practical non-China source at this volume, and no funding path the owner is
+pursuing (NSF, USDA, NOAA, the Hawaiʻi match) requires domestic content.
+
+**Still true, and now costs rather than gates.** Tariffs on imported parts belong in the unit
+economics (ADR-052); a federal sale above the TAA threshold or to DoD would need origin paperwork
+then; an "Assembled in USA" label still needs substantial US assembly. The research stays under
+`reports/` and `research_notes/` (untracked).
+
+**Reverse if** a buyer or a grant requires origin rules; then reopen ADR-053, not a new standard.
+
+---
+
+## ADR-055 — LoRa and Bluetooth LE return to V1 on an always-on radio MCU; the ambient clock ticks once a minute (2026-10-29)
+
+Written 2026-10-29 07:20 UTC in Claude Code by anthropic/claude-opus-5-5. Supersedes ADR-044's scope
+decision; its RF-limit rule stays. Owner decisions: "lets put lora in v1, and lets go with your rec of
+putting both radios on the coprocessor"; "tick every minute sounds good".
+
+**Trigger.** The owner wants an idle command centre that runs with Linux off: a clock, sensor alerts,
+and notifications from a phone, a home station or the mesh. Every V1 radio was on the CM5, so with the
+CM5 off nothing could receive.
+
+**Decision.**
+- **A radio MCU on the always-on side owns both radios.** A Bluetooth LE MCU module
+  (nRF52840 class, part TBD) drives the existing SX1262 module (`U36`, E22-900M22S) on its own SPI
+  bus. The RP2350 talks to it over a PIO UART: GPIO 22 out through a single-gate I_off buffer on the
+  radio rail (the radio rail can be off), GPIO 45 in, GPIO 39 as the radio's wake interrupt. Expander
+  lines 9 and 10 become its reset (through a second such gate) and load switch. GPIO 1 and 47 become
+  spares.
+  *Why not on the RP2350 directly:* all 48 RP2350 GPIO were assigned (ADR-045). The SX1262 alone needs
+  five lines and a BLE chip needs more; the radio MCU needs three.
+- **Three ways in, one default.**
+  1. *Station check-in (default).* A home station (internet plus LoRa, mains or solar) holds messages;
+     the device listens on each minute wake. Low power, because the receiver is off between wakes.
+  2. *Meshtastic peer (opt-in).* The receiver stays on, so the device is a full mesh node with Linux
+     off. Meshtastic already runs on an nRF52840 with an SX1262 and speaks a serial API. This mode
+     costs far more than the idle budget; it is a mode the user chooses, not the ambient default.
+  3. *Bluetooth LE to a phone.* The phone relays push notifications, as a smartwatch does.
+  The CM5's own Wi-Fi/BT is unchanged; pairing an external Meshtastic node still works.
+- **Every radio power figure is `null` until measured** (`radio.*`). The modelled
+  `power.rp2350_idle_mw` was sized with a scheduled LoRa listen slot but not the radio MCU's own draw.
+  Phase 14 adds `radio.station_mode_idle_mw` to the idle load once it is measured; until then the
+  solar-strip claim covers the RP2350 only. Meshtastic-peer mode is outside that claim.
+- **The ambient clock updates once a minute** (`radio.ambient_clock_update_s`), on the RTC's minute
+  interrupt: a partial refresh of the digits, a periodic clean refresh at an interval the bench sets,
+  and alerts drawn at once. A per-second tick was rejected for panel energy, ghosting and wear; seconds
+  on demand (tap or pick-up) can come later. The station check-in rides the same wake.
+- **FULL BLACKOUT cuts the radio rail in hardware,** as it does the GNSS rail: `PRIVACY_BLACKOUT_N`
+  gates the radio load switch, so a firmware fault cannot leave a transmitter on (HARDWARE_SPEC §2.25).
+- **Region before transmit (AGENTS §4.4).** The radio MCU refuses to transmit until a region is set.
+- The register map keeps `REG_LORA_RX_*`, `SD_WAKE_LORA` and `SD_EVENT_LORA_RX` at their offsets; they
+  now carry the radio MCU's messages. Renaming waits for firmware (ADR-046).
+
+**Costs, now V1's (they were why ADR-044 deferred LoRa).** FCC Part 15.247 and EN 300 220 for LoRa
+and Part 15.247 for BLE: use modules with a modular grant, and the end product still needs its own
+testing. RF exposure at up to +22 dBm near the body may need SAR, not just MPE (AUDIT 6 H18); capping
+transmit power is the fallback. The SMA bulkhead is an aperture against the IP54 target (an IP67
+bulkhead is in the BOM). Three BOM rows move into the core BOM and one TBD row is added.
+
+**Open at capture (code review, 2026-10-29).**
+- *Back-powering the radio rail (resolved 2026-10-30).* Each TXU0104 has one B-side supply, and the
+  CM5-domain lines need both of them, so the GNSS UART, the radio UART and `RADIO_NRESET` each go
+  through their own SN74LVC1G125 powered from the rail they feed (`pins.gate_buffers`, BOM "Rail
+  Gates", price TBD). The lines out of the radio (`RADIO_UART_RX`, `RADIO_IRQ`), and the GNSS UART and
+  PPS, get an external pull-down on the RP2350 side, never a pull-up toward the switched rail
+  (PIN_BUDGET rule 2). Phase 15 now fails a TXU0104 line that leaves the CM5 domain and a gate count
+  that disagrees with the pins.
+- *Idle-power rule (resolved 2026-10-30).* AGENTS §4.2 said every TPS22918 load is hard off with the
+  CM5 off; the radio rail is the one exception, while station or peer mode is on. The <25 mW floor is
+  measured with the radio rail off, and the radio's draw is measured on its own
+  (`radio.station_mode_idle_mw`). FULL BLACKOUT still cuts it.
+- *Module grants and antennas.* The E22-900M22S's FCC modular grant is unverified; if it has none,
+  pick a SX1262 module that does, or budget full Part 15.247 testing. The whip in the BOM is 915 MHz
+  only; an 868 MHz unit needs its own antenna.
+- *Money.* `unit_economics` (ADR-052) is not re-derived for the new rows, and its certification
+  budget does not yet include Part 15.247, EN 300 220 or SAR.
+
+**Reverse if** certification or SAR cost forces it out, or the bench shows station mode does not fit
+the ambient budget.

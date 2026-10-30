@@ -6,6 +6,7 @@ Revised 2026-10-21 16:46 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 sco
 Revised 2026-10-21 17:22 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, ADR-044/045).
 Revised 2026-10-21 17:53 UTC in Claude Code by anthropic/claude-opus-5-5 (RTC chip, jack removed, ADR-046).
 Revised 2026-10-21 19:44 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion smart pack, ADR-048).
+Revised 2026-10-29 07:20 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa and BLE in V1 on a radio MCU, ADR-055).
 
 Software architecture, operating system configuration, custom E-ink waveform drivers, power management daemons, and application workflows.
 
@@ -107,10 +108,10 @@ While the main CM5 is powered completely off (0.000W), the **RP2350 co-processor
 1. **Sub-30ms Zen Reader & Framebuffer Pre-Caching:**
    * Utilizes the onboard **8MB QSPI PSRAM** to double-buffer pre-rendered page images (page geometry TBD, ADR-032; `spec_values.reader.page_*`).
    * When reading books, the CM5 pre-renders pages into PSRAM and sleeps. The RP2350 handles page-turn taps and side-bezel touch gestures autonomously, updating the Kaleido 4 display controller (TBD, ADR-032) (flip time `spec_values.reader.page_flip_ms`, TBD) while the CM5 remains dead (**~4.5 mW total power**; battery life TBD until measured on the bench (pack: `battery_wh.li_ion`), ADR-040).
-2. **Standalone LoRa Mesh Repeater:** Deferred to V2 (ADR-044); the V1 board reserves the footprint and pins (ADR-045, docs/PIN_BUDGET.md). V1 uses a paired Meshtastic node over BLE while Linux is up.
-3. **1-Second RTC Clock Tick & Weather Barograph:**
-   * Receives a 1Hz hardware interrupt (`INT`) from the RV-3028-C7-class RTC (ADR-046).
-   * Updates time digits and samples the Bosch BMP390 barometer and TMP112 thermals every 60 seconds into a rolling 7-day circular buffer in PSRAM.
+2. **LoRa and Bluetooth LE via the radio MCU (ADR-055):** the RP2350 talks to an always-on radio MCU over a PIO UART. Station check-in is the default: the receiver listens on the minute wake for a home station holding messages. Meshtastic-peer mode (receiver always on) is opt-in and costs more than the idle budget (`radio.*`, null until measured). BLE to a phone relays notifications. Radio software not written (ADR-046).
+3. **Minute Clock Tick & Weather Barograph:**
+   * Receives a once-a-minute hardware interrupt (`INT`) from the RV-3028-C7-class RTC (ADR-046) and redraws only the time digits (`radio.ambient_clock_update_s`, ADR-055); alerts are drawn at once. The radio check-in rides the same wake.
+   * Samples the Bosch BMP390 barometer and TMP112 thermals every 60 seconds into a rolling 7-day circular buffer in PSRAM.
 4. **Motion & Pick-Up-To-Wake Interrupt:**
    * Configures the Bosch BMA400 accelerometer in 3.5 µA autonomous motion-detect mode, starting Linux (seconds, §3.1) upon pick-up or frame tap.
 
@@ -150,9 +151,9 @@ The background daemon `solardeck-telemetryd` logs all physical metrics into a co
    `timestamp`, `battery_c`, `display_backplane_c`, `soc_die_c`, `modem_c` (no sensor in V1 — V2, ADR-034), `charger_rail_c`, `audio_c`
 4. **`module_health` Table (8 module health registers — `spec_values.telemetry.module_health_registers`):**
    `timestamp`, `module` (cm5|lte|esim|lora|panel|audio|battery|solar), `state` (ok|waning|fault), `value`, `unit`
-   (`lte` and `esim` report `absent` in V1 — V2 (ADR-034); the V2 requirement is a consumer SGP.22 eUICC (ADR-033). `lora` reports `absent` in V1 — V2 (ADR-044).)
+   (`lte` and `esim` report `absent` in V1 — V2 (ADR-034); the V2 requirement is a consumer SGP.22 eUICC (ADR-033). `lora` reports the radio MCU (ADR-055).)
 5. **`rf_metrics` Table:**
-   `timestamp`, `lora_rssi`, `lora_snr`, `lora_airtime_pct`, `wifi_rssi`, `gnss_cn0`, `gnss_ttff` (`lora_*` are null in V1 — V2, ADR-044)
+   `timestamp`, `lora_rssi`, `lora_snr`, `lora_airtime_pct`, `wifi_rssi`, `gnss_cn0`, `gnss_ttff` (`lora_*` come from the radio MCU, ADR-055)
 5. **`environment_motion` Table:**
    `timestamp`, `ambient_lux`, `baro_hpa`, `relative_altitude_m`, `motion_state`, `tilt_angle`
 6. **`system_workload` Table:**
@@ -164,7 +165,7 @@ The full schema is the LLM's read surface: Tier 1/2 AI feedback (below) and the 
 1. **Tier 1: Immediate Autonomous Hardware Adaptation (< 100ms response):**
    * **Waveform Temperature Tuning:** Reads the display backplane TMP112 sensor and writes it to the temperature input of the Kaleido 4 display controller (TBD, ADR-032). The controller switches waveform LUTs in real time, preventing slow ghosting in cold weather and bleeding in hot sunlight.
    * **Ambient Lux Scaling:** When the solar strip ambient lux reads $>10,000\text{ lux}$ (direct sunlight), the front-light is locked to 0% and E-ink contrast curves are maximized.
-   * **Dead-Socket Power Cycle (cellular baseband):** V2 (ADR-034); the LoRa cold-restart (§21.5) is V2 too (ADR-044).
+   * **Dead-Socket Power Cycle (cellular baseband):** V2 (ADR-034); for the radio MCU see the LoRa cold-restart (§21.5).
 2. **Tier 2: Runtime System Profile Self-Tuning (`solardeck-optimize`):**
    * Running `solardeck-optimize` aggregates the past 24 hours of telemetry into a dense JSON payload and passes it to Claude Code:
      ```bash
@@ -295,7 +296,7 @@ SolarDeck's programmable RGB Notification Beacon ("Signal Halo") and Standby Pie
 │              ▼ (When Linux CM5 is Active)                            ▼      │
 │     Direct IPC to RP2350 via UART/SPI               (When Linux CM5 Is Off)   
 │     • Custom color profiles & patterns              Autonomous RP2350 Engine
-│     • Gamma-corrected PWM curves (<0.2 mA)          • LoRa Mesh: V2 (ADR-044)
+│     • Gamma-corrected PWM curves (<0.2 mA)          • LoRa Mesh: radio MCU (ADR-055)
 │     • SMT Piezo Chime Tones (75 dB)                 • Solar: Breathing Amber
 │                                                     • Storm: Strobe Red Alert
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -314,7 +315,7 @@ SolarDeck's programmable RGB Notification Beacon ("Signal Halo") and Standby Pie
 
 ### 8.2 Deep-Sleep Autonomous Co-Processor Operation
 * When the CM5 hibernates or powers down (0.000W), the RP2350 firmware autonomously manages the beacon:
-  * **Incoming LoRa Mesh Packets:** V2 (ADR-044); V1 uses a paired Meshtastic node over BLE.
+  * **Incoming LoRa Mesh Packets and Phone Notifications:** the radio MCU wakes the RP2350 on its interrupt line (ADR-055); the beacon pattern is defined with the firmware (ADR-046).
   * **Rapid Barometric Drops (Storm Alert):** BMP390 detects pressure drop $> 3\text{ hPa / 3 hr}$ $\to$ strobes ruby red warning and sounds a weather alert tone.
   * **Ambient Nightstand Beacon:** When ambient solar lux reads $< 0.5\text{ lux}$ (pitch black) and device is resting on a nightstand or desk, pulses an ultra-faint warm white locator glow (2% duty cycle, $< 15\text{ µA}$) so you can effortlessly find the tablet in the dark.
 
@@ -751,7 +752,7 @@ fi
 Governs the low-battery distress placard (HARDWARE_SPEC §2.19; there is no zero-battery boot, ADR-049):
 1. When the power-fail alarm fires (`battery.low_alarm_v`), the RP2350 starts the sequence.
 2. Ingests the last-valid fix from the u-blox MAX-M10S GNSS on its own UART (ADR-038) and the RTC timestamp from the battery-backed RTC.
-3. Radio distress burst: V2 (ADR-044); V1 uses a paired Meshtastic node over BLE.
+3. Radio distress burst through the radio MCU (ADR-055), only once a region is set (AGENTS §4.4); software not written (ADR-046).
 4. Renders indelible high-contrast distress placard onto the 10.3" bi-stable screen before the pack protector trips.
 5. Once drawn, the distress message remains visible on the E-Ink display indefinitely with **0.000W battery consumption**.
 
@@ -804,7 +805,7 @@ When invoked via CLI or local agent tool call (`solardeck-diag --json`), the eng
      * `0x5D` / `0x14`: Goodix Touch Controller (reads mutual-capacitance baseline calibration frame).
 5. **RF & Wireless Mesh Domain (u-blox MAX-M10S):**
    * **Cellular Modem:** V2 (ADR-034).
-   * **LoRa Transceiver:** V2 (ADR-044).
+   * **LoRa Transceiver:** Asks the RP2350 for the radio MCU's status (ADR-055).
    * **GNSS (MAX-M10S, ADR-038):** Asks the RP2350, which owns the receiver's UART, for its NMEA status; counts tracked SVs (Satellites in View) and checks Fix status (2D/3D).
 6. **Rear Camera Domain:** Deferred to V2 (ADR-034).
 7. **Acoustic & Voice Front-End Domain (Knowles MEMS & MAX98357A):**
@@ -899,7 +900,7 @@ Beyond passive diagnosis, the LLM is authorized to invoke targeted mitigation co
 Extends §21.4. All numbers live in `spec_values.self_heal.*`; no new silicon — every actuator below drives an existing load switch, charge register, or memory bank. **Every heal is gated by the §3.3.2 Tier-4 second opinion:** a heal never runs on a single sensor's say-so, because a blind pulse can make a good contact worse.
 
 1. **Corrosion Burn-Off Pulse (`solardeck-heal --burnish <rail>`):** Connector corrosion is the dominant field-failure mode of handheld electronics; oxide films on contact pairs are *reducible* by a controlled reverse-current soak, the same physics as relay burnishing. Sequence: rail confirmed idle (rail current $\approx 0$ via INA3221, §21.1.1), battery temp inside window, then a `spec_values.self_heal.burnish_current_ma` mA reverse pulse for `spec_values.self_heal.burnish_duration_ms` ms across the suspect contact pair, driven by the RP2350 through the rail's existing load-switch gate. Post-pulse: re-measure rail ESR/sag; log pre/post so the LLM can trend whether oxide is actually clearing. **Claim status: `modelled`** (relay-burnishing literature, not yet bench-measured for these contacts) — burns nothing because it is current-limited and temperature-gated.
-2. **LoRa Cold-Restart (`solardeck-heal --powercycle lora`):** V2 (ADR-044).
+2. **LoRa Cold-Restart (`solardeck-heal --powercycle lora`):** power-cycles the radio MCU through its load switch and reset line (ADR-055); software not written (ADR-046).
 3. **Thermal-Gradient Charge Reduction (automatic, no CLI):** If the $T_{\text{battery}}$ (TMP112 #1) vs $T_{\text{display}}$ (TMP112 #2) gradient exceeds the modelled threshold while charging, the RP2350 writes a reduced charge-current register to the BQ25798 directly — treating an overheating pouch as a *curable* state, not just a logged one. Reverts when the gradient closes.
 4. **Watchdog Chain-of-Custody Reporting (extends §10.4):** When the 5-second bootloader watchdog trips and the golden-bank revert fires, the event *must* be written to telemetry as a first-class row (`module_health: cm5 state=fault value=bank_b_reverted`) with the hash of the failed image — so the watchdog becomes a *healing loop that explains itself*, never a silent reboot-until-brick.
 5. **Generic Rail Gutter (`solardeck-heal --gutter <rail>`):** Generalizes the Port-2 trip-reset: any TPS22918-gated rail (GNSS, audio, expansion) that trips its malfunction indication can be guttered (isolated at 0.000V) while the rest of the board keeps running — the board degrades gracefully to a partial system instead of bricking on one flaky contact.
@@ -933,13 +934,13 @@ Leveraging the ultra-low-power Bosch BMA400 accelerometer running continuously a
 * **Acoustic/Vibration Pattern Matching:** When configured, `solardeck-tripwired` programs the BMA400's internal tap-sensing engine to listen for rhythmic knock sequences (e.g. *tap... tap-tap*) tapped on the aluminum unibody or front glass.
 * **Direct-Action Wakes:** Bypasses the need to find or press the power button in the dark:
   * Pattern A (*double-tap*): Instant wake to Dim Red Night-Vision terminal.
-  * Pattern B (*triple-tap*): Triggers the SOS distress placard (§19); the radio burst is V2 (ADR-044).
+  * Pattern B (*triple-tap*): Triggers the SOS distress placard (§19); the radio burst goes through the radio MCU (ADR-055).
   * Pattern C (*cadence rhythm*): Toggles Hardware Stealth mode.
 
 ### 23.2 Perimeter & Camp Anti-Theft Tripwire Mode
 * **Sub-Millimeter Movement Detection:** When placed in "Camp Guard" mode, the BMA400 establishes a baseline gravity vector reference $\vec{g}_0 = (x_0, y_0, z_0)$.
 * **Autonomous Alert Burst:** If the tablet is tilted by $>1.5^\circ$ or translated by $>1\text{ mm}$ (e.g., someone picking it up or nudging the table):
-  1. RP2350 wakes immediately. The encrypted LoRa alert burst to the operator's pocket communicator or companion smartwatch is V2 (ADR-044); V1 sends it through a paired Meshtastic node over BLE once Linux is up:
+  1. RP2350 wakes immediately. The radio MCU sends an encrypted alert over LoRa or Bluetooth LE to the operator's pocket communicator or companion smartwatch without waiting for Linux (ADR-055; software not written (ADR-046)):
      `[TRIPWIRE ALERT] Movement detected at 03:14:22 UTC! Displacement: 3.2G-sec. Last GPS: 21.3069 N, 157.8583 W`.
   2. If armed with acoustic deterrence, pulses a 105 dB ultrasonic siren or audible alarm through the MAX98357A speaker amp.
 
@@ -1015,7 +1016,7 @@ A passive tactical near-field signal countermeasure tool designed to detect unau
 
 ### 27.1 Multi-Band Passive Energy Sweep
 * Commands the **CM5 on-module Wi-Fi/Bluetooth** (receive-only sweep support TBD — verify on CM5) in pure receive-only energy detection mode (`RxSweep`):
-  * **Sub-GHz Bands (433 MHz, 868 MHz, 915 MHz):** V2 (ADR-044): needs the deferred on-board LoRa radio. Detects analog wireless microphones, covert LoRa beacons, and long-range drone telemetry links (ExpressLRS, Crossfire).
+  * **Sub-GHz Bands (433 MHz, 868 MHz, 915 MHz):** Needs the on-board SX1262 (V1 hardware, ADR-055); whether it can sweep is TBD and the software not written (ADR-046). Detects analog wireless microphones, covert LoRa beacons, and long-range drone telemetry links (ExpressLRS, Crossfire).
   * **2.4 GHz ISM Band:** Sniffs BLE advertising bursts (Apple Find My 100ms chirp bursts, rolling public keys) and Wi-Fi video downlinks.
 
 ### 27.2 E-Ink Tactical Signal Radar & Audio Tone
@@ -1148,7 +1149,7 @@ Prevents night-blindness and maintains military-grade optical covertness:
 
 *Written 2026-10-19 15:20 UTC in the Pi harness by antigravity/gemini-3.8-flash*
 
-V2 (ADR-044); V1 uses a paired Meshtastic node over BLE.
+Hardware in V1 (ADR-055): the radio MCU and SX1262; software not written (ADR-046). A mailbox that listens continuously costs more than the idle budget (radio power null until measured).
 
 ---
 

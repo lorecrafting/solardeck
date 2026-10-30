@@ -11,6 +11,7 @@ Revised 2026-10-21 17:22 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa t
 Revised 2026-10-21 17:53 UTC in Claude Code by anthropic/claude-opus-5-5 (RTC chip, jack removed, ADR-046).
 
 Revised 2026-10-21 19:45 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion smart pack, ADR-048).
+Revised 2026-10-29 07:20 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa and BLE in V1 on a radio MCU, ADR-055).
 
 This step-by-step technical punch list guides the hardware engineer or field operator from unboxing the DHL Express package from Seeed Studio Fusion in Honolulu to running an authorized terminal session in pure sunlight.
 
@@ -131,7 +132,7 @@ Before inserting the CM5, initialize the RP2350B co-processor to confirm power s
      - `i2c_bus`: All 7 core sensors responding (`0x60`, `0x44`, `0x12`, `0x68`, `0x5D`, `0x40`, `0x6B`).
      - `environmental`: SHT40 internal humidity $<30\%$ (desiccant active).
      - `audio`: Dual MEMS mics, speaker echo-cancel reference and hardware mute switch functional.
-     - `rf`: MAX-M10S GNSS UART response (ADR-038). No on-board LoRa in V1 (ADR-044).
+     - `rf`: MAX-M10S GNSS UART response (ADR-038). Radio MCU response over its PIO UART (ADR-055); no transmit until a region is set (AGENTS §4.4).
      - `storage`: NVMe/eMMC write speed $>250\text{ MB/s}$.
 
 ---
@@ -143,8 +144,10 @@ is `null`: ambient modes (clock, reader) run on the RP2350 with the CM5 off, and
 from off/hibernate in seconds. Nothing in CI measures either. Run this gate before accepting any
 power claim:
 
-* **Ambient floor:** with the CM5 off and every TPS22918 load hard off, the measured draw (USB-C PD
-  meter or INA3221 telemetry) is **< 25 mW**.
+* **Ambient floor:** with the CM5 off and every TPS22918 load hard off, the radio rail included, the
+  measured draw (USB-C PD meter or INA3221 telemetry) is **< 25 mW**.
+* **Radio station mode (ADR-055):** repeat with only the radio rail on and station check-in running;
+  the difference is `radio.station_mode_idle_mw`, recorded as `measured <date>`.
 * **Linux resume:** time power-button press to console login from hibernate and from cold off;
   record both as `measured <date>` against `sleep_ladder.r3_resume_s`.
 * **If it fails:** record the kernel version and the firmware commit in this checklist, downgrade

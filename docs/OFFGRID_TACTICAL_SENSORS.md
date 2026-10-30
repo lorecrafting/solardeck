@@ -6,6 +6,7 @@ Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 sco
 Revised 2026-10-21 17:22 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, ADR-044/045).
 Revised 2026-10-21 17:53 UTC in Claude Code by anthropic/claude-opus-5-5 (RTC chip, jack removed, ADR-046).
 Revised 2026-10-21 19:45 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion smart pack, ADR-048).
+Revised 2026-10-29 07:20 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa and BLE in V1 on a radio MCU, ADR-055).
 
 Detailed architectural specification for campervan energy bus integration, enhanced sensor navigation (RTK, celestial plate-solving, 9-DOF IMU), grid-down doomsday survival hardware, frontlight optical engineering, and offline AI knowledgebase traversal.
 
@@ -326,7 +327,7 @@ The following custom software utilities and daemons leverage SolarDeck's bi-stab
    * Delivers 0% glare under blinding open-ocean sunlight.
    * Hardware water-lock isolates capacitive touch against splashing waves while allowing the Wacom EMR stylus to plot course bearings; draws only 1.2W vs 25W for standard marine MFDs.
 8. **`solardeck-gcs` (Sunlight UAV & Weather Balloon Ground Control Station):**
-   * Runs **QGroundControl** over USB telemetry radios using MAVLink (on-board LoRa is V2, ADR-044).
+   * Runs **QGroundControl** over USB telemetry radios using MAVLink.
    * Serves as an outdoor daylight ground station for tracking autonomous drones, search-and-rescue quadcopters, and high-altitude meteorological balloons.
 9. **`solardeck-bench` (Outdoor Logic Analyzer, Oscilloscope & Bus Pirate):**
    * Pairs with open-source USB logic analyzers via `sigrok` and `PulseView` on USB-C Port 2.
@@ -339,7 +340,7 @@ The following custom software utilities and daemons leverage SolarDeck's bi-stab
 11. **`solardeck-slate` (Low-Latency Wacom Vector Field Notebook):**
     * Direct-to-DRM canvas hooking into Wacom EMR (<18ms latency) for sketching circuit schematics, physics math, or tactical maps, with 1-click export to vector SVG or Obsidian.
 12. **`solardeck-courier` (Autonomous Bi-Stable LoRa Pager & Bulletin Board):**
-    * V2 (ADR-044); V1 uses a paired Meshtastic node over BLE.
+    * Hardware in V1 (ADR-055): the radio MCU receives with Linux off and the bistable panel holds the board. The software not written (ADR-046); continuous-listen modes cost more than the idle budget (radio power null until measured).
 13. **`solardeck-airgap-tx` (Optical QR Fountain Code Bridge):**
     * V2 (ADR-034): ingestion needs the deferred rear camera.
 14. **`solardeck-vault-totp` (Bi-Stable Airgapped 2FA & Password Vault):**

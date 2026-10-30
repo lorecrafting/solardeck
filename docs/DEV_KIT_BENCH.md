@@ -12,6 +12,7 @@ Revised 2026-10-21 19:12 UTC in Claude Code by anthropic/claude-opus-5-5 (EVT-0 
 
 Revised 2026-10-21 19:44 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion smart pack, ADR-048).
 Revised 2026-10-27 01:10 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017 (mono V1 panel, ADR-051).
+Revised 2026-10-29 07:20 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa and BLE in V1 on a radio MCU, ADR-055).
 
 Purpose: buy the minimum bench hardware that proves the three make-or-break gate claims (G1, G2,
 G12) and the Li-ion charge path (ADR-035, ADR-048) as **measured** values, before any PCB fabrication money is spent. This is the physical
@@ -28,7 +29,7 @@ or **modelled**, not measured.
 | :--- | :--- | :--- | :--- |
 | **G1** | <20 ms typewriter DU ink latency | Bench stand-in panel + IT8951 (ADR-025) + CM5, low-latency DU waveform | PASS = frame swap + partial update under 20 ms |
 | **G2** | Linux resumes from off/hibernate in seconds (`sleep_ladder.r3_resume_s`); the S2idle target is withdrawn (R2 `null`, ADR-036) | Same rig, wake-trigger timing loop | PASS = resume time measured and recorded; ambient modes stay instant on the RP2350 |
-| **G12** | Ambient (CM5-off) floor < 25 mW with TPS22918 loads hard off, R3 hibernate 0.000 W idle | **µA-resolution DMM** on the always-on rail | PASS = measured floor within spec_values.safety/sleep gate |
+| **G12** | Ambient (CM5-off) floor < 25 mW with TPS22918 loads hard off (the radio rail too; its draw is measured separately, ADR-055), R3 hibernate 0.000 W idle | **µA-resolution DMM** on the always-on rail | PASS = measured floor within spec_values.safety/sleep gate |
 | **Charge path** (ADR-035) | Charging held off until VREG = `battery.charge_limit_v` is written; JEITA zones and NTC cutoff behave on a real cell | BQ25798 evaluation board + one Li-ion cell (with protector) + NTC, DMM on VBAT | PASS = no charge current before VREG is written; VREG read back; termination at the limit; NTC cutoff trips |
 | Panel class (mono Carta) | 16 grey levels, DU/A2/GLR16/GC16 timings, VCOM stability over temperature (ADR-051) | This bench plus a panel TMP112 and a thermal chamber substitute (fridge / oven + thermocouple) | PASS = timings measured, VCOM drift tabulated; colour (Kaleido 4, V2 variant) stays `null` and is **not** provable on this bench |
 
@@ -57,7 +58,7 @@ exist on real silicon" for a bench total that is TBD (§2) before a ~$1.5 k PCB 
 | | **Bench total** | | | **TBD** (CM5 IO board and items 9–11 TBD) | | Shipped total TBD (2–3 vendors, HI freight) |
 
 **What is deliberately NOT on the bench:** the panel's Wacom EMR (pen arbiter comes later, after the
-core gates pass), the audio array, LoRa (V2, ADR-044), and the solar strip
+core gates pass), the audio array, the radio MCU and LoRa (ADR-055), and the solar strip
 (0.15 W trickle is a charge-tree question, not a gate). LTE, camera and NFC are V2 (ADR-034) and have no
 bench item.
 
@@ -89,7 +90,7 @@ design has been through a DFM-for-hand pass. Here is the honest ladder:
      *DFM-for-hand-assembly* pads at quoting time; JLCPCB/Seeed will happily fab enlarged-pad
      variants.
    - **Castellated SMD modules** (KiCad 8 feature, already referenced in `HARDWARE_SPEC.md:793` for
-     the V2 SX1262 footprint, ADR-045): each IC gets a castellated footprint with a sacrificial trace ring — a
+     the SX1262 module, ADR-055): each IC gets a castellated footprint with a sacrificial trace ring — a
      hand-solder pattern that drags tin across pads and is then cleaned off. This is the *right*
      hand-assembly answer for the RF/co-proc parts.
    - **Precision tools, when you do it:** hot-air rework station (~$120–250, the solder sucker +

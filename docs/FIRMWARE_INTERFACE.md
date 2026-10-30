@@ -48,8 +48,8 @@ protocol version, and CRC, in that order.
 | `0x15` | `REG_CMD_ARG` | WO | u8 | command argument |
 | `0x16` | `REG_CMD_ACK` | RO | u8 | `SD_ACK_IDLE/APPLIED/REJECTED` |
 | `0x18` | `REG_EVENTS` | RO/W1C | u16 | `SD_EVENT_*`, write 1 to clear |
-| `0x1A` | `REG_LORA_RX_LEN` | RO | u8 | reserved for V2 LoRa (ADR-044); reads 0 in V1 |
-| `0x1B` | `REG_LORA_RX_HEAD` | RO | u8 | reserved for V2 LoRa (ADR-044); reads 0 in V1 |
+| `0x1A` | `REG_LORA_RX_LEN` | RO | u8 | radio MCU message ring (ADR-055); reads 0 until radio firmware exists (ADR-046) |
+| `0x1B` | `REG_LORA_RX_HEAD` | RO | u8 | radio MCU message ring (ADR-055); reads 0 until radio firmware exists (ADR-046) |
 | `0x1C` | `REG_EPDC_OWNER` | RO | u8 | `SD_OWNER_CM5` or `SD_OWNER_RP2350` |
 | `0x1E` | `REG_HEARTBEAT_MS` | RO | u16 | ms since the RP2350 last serviced the bus |
 | `0x3E` | `REG_CRC16` | RO | u16 | frame checksum |
@@ -84,7 +84,7 @@ protocol version, and CRC, in that order.
 | `SD_EVENT_WAKE_REQ` | 0 | CM5 should resume |
 | `SD_EVENT_PWRFAIL` | 1 | power failing, flush now |
 | `SD_EVENT_BUTTON` | 2 | user button |
-| `SD_EVENT_LORA_RX` | 3 | reserved for V2 LoRa (ADR-044) |
+| `SD_EVENT_LORA_RX` | 3 | radio MCU message (ADR-055) |
 | `SD_EVENT_TAMPER` | 4 | enclosure opened |
 
 | Flag | Bit | Meaning |
@@ -100,7 +100,7 @@ protocol version, and CRC, in that order.
 | :--- | ---: | :--- |
 | `SD_WAKE_NONE` | 0 | not a wake event |
 | `SD_WAKE_BUTTON` | 1 | user button |
-| `SD_WAKE_LORA` | 2 | reserved for V2 LoRa (ADR-044) |
+| `SD_WAKE_LORA` | 2 | radio MCU message (ADR-055) |
 | `SD_WAKE_RTC` | 3 | scheduled alarm |
 | `SD_WAKE_PEN` | 4 | stylus pickup |
 | `SD_WAKE_PWRFAIL` | 5 | power fail |

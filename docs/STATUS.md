@@ -15,7 +15,7 @@ Regenerate: `python3 scripts/gen_status.py`. CI Phase 12 fails if this page is s
 | `aspirational` | A design goal. Do not quote it as a capability. |
 | `TBD` | Unknown, and we refuse to guess. |
 
-`specified` is the honest default for this repo: 53 BOM lines, 40 captured in schematics, 0 board nets.
+`specified` is the honest default for this repo: 58 BOM lines, 40 captured in schematics, 0 board nets.
 Read `docs/AUDIT_6_2026-10-21.md` before treating any row here as a purchase decision.
 
 ## Totals
@@ -39,7 +39,7 @@ What the product is judged on (`README.md`, “Product pillars”).
 | P2 | Typewriter-on-paper latency (1-bit DU keystroke, EMR ink, LRA haptics) | `aspirational` |
 | P3 | Sunlight-readable; solar tops up the idle co-processor outdoors (ADR-041) | `aspirational` |
 | P4 | Form-morphology: 620 g slate, desk easel, modular grips | `modelled` |
-| P5 | Field hardening: airgap, GNSS, IP54 (V1) / IP67 (V2), rain-lock; LoRa in V2 | `aspirational` |
+| P5 | Field hardening: airgap, GNSS, IP54 (V1) / IP67 (V2), rain-lock; LoRa + BLE with Linux off (ADR-055) | `aspirational` |
 | P6 | Modular upgrade bridge: ARM/RISC-V SOM, RAM, NVMe | `specified` |
 | P7 | Voice-first control: hold-to-talk button, opt-in hands-free wake word, barge-in (ADR-036) | `aspirational` |
 

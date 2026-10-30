@@ -10,7 +10,7 @@ catch a stale total, because a total is not written down anywhere else. This pha
 artifacts instead:
 
   BOM    sum the line-item rows; assert spec_values, the total row, and the ASCII summary agree.
-  POWER  recompute the solar-vs-idle claim from primitives (LoRa endurance left with LoRa, ADR-044).
+  POWER  recompute the solar-vs-idle claim from primitives (radio idle power is null until measured, ADR-055).
   ENERGY assert the insolation assumption is stated (so a reader can recheck it).
 
 Derivation, not agreement. That distinction is the whole point.
@@ -84,10 +84,12 @@ def check_bom(err):
 def check_power(err):
     P = SPEC["power"]
     gen_wh = P["solar_strip_w"] * P["insolation_kwh_m2_day"] * P["derate"] * 1000 / 1000
-    idle_wh = P["rp2350_idle_mw"] / 1000 * 24
+    # ADR-055: the radio MCU's station-mode draw joins the idle load once measured; until then the claim covers the RP2350 only.
+    radio_mw = SPEC["radio"]["station_mode_idle_mw"]
+    idle_wh = (P["rp2350_idle_mw"] + (radio_mw or 0)) / 1000 * 24
     ratio = gen_wh / idle_wh
     if ratio < 1.0:
-        err(f"bezel strip harvests {gen_wh:.2f} Wh/day but RP2350 idle needs {idle_wh:.3f} Wh/day "
+        err(f"bezel strip harvests {gen_wh:.2f} Wh/day but always-on idle needs {idle_wh:.3f} Wh/day "
             f"-> the 'infinite desk life' claim is FALSE at ratio {ratio:.2f}")
     elif ratio < 1.25:
         err(f"strip/idle margin is only {ratio:.2f}x; claim 'infinite' is not defensible")
@@ -185,7 +187,8 @@ def main():
         print(f"   {len(errors)} derived-number failure(s)")
         return 1
     print(f"  BOM: {n} rows derived to ${lo:.2f}-${hi:.2f}, prose agrees.")
-    print(f"  Power: strip {gen:.2f} Wh/day vs idle {idle:.3f} Wh/day = {ratio:.1f}x.")
+    print(f"  Power: strip {gen:.2f} Wh/day vs idle {idle:.3f} Wh/day = {ratio:.1f}x"
+          f"{'' if SPEC['radio']['station_mode_idle_mw'] is not None else ' (radio MCU excluded: not measured, ADR-055)'}.")
     print("  Charger: {} VREG {}-{} V covers {} {} V; firmware gate agrees.".format(*chg))
     print("  Pack: {:.1f} Wh; peak {:.2f} A vs cells {:.0f} A; protector OVP min {:.3f} V > VREG max {:.3f} V.".format(*pack))
     return 0
