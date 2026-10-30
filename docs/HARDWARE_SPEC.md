@@ -6,6 +6,8 @@ Revised 2026-10-21 16:41 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 sco
 Revised 2026-10-21 17:23 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, ADR-044/045).
 Revised 2026-10-21 17:53 UTC in Claude Code by anthropic/claude-opus-5-5 (RTC chip, jack removed, ADR-046).
 Revised 2026-10-21 19:43 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion smart pack, ADR-048).
+Revised 2026-10-27 01:10 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017 (mono V1 panel, ADR-051).
+Revised 2026-10-29 07:20 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa and BLE in V1 on a radio MCU, ADR-055).
 
 Detailed hardware architecture, component selection, bus topology, antenna engineering, and electrical requirements for the custom carrier board and mechanical enclosure.
 
@@ -57,7 +59,7 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
                                       ┌───────────────────────────────────────────┐
                                       │  PERIPHERALS & NETWORKING                 │
                                       │  • u-blox MAX-M10S GNSS (RP2350 UART)     │
-                                      │  • LoRa: V2 (ADR-044), footprint reserved │
+                                      │  • LoRa + BLE: radio MCU (ADR-055)        │
                                       │  • Knowles I2S MEMS Mic Array             │
                                       │  • Maxim/ADI MAX98357A 1W Speaker Amp     │
                                       │  • USB-C Port 2 (Host / TPS2051B Switch)  │
@@ -102,15 +104,15 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
       * **Hardware Watchdog Fallback:** The bootloader boots into the target bank with a **5-second hardware watchdog window**. Newly flashed firmware must execute a self-test and assert `WATCHDOG_KICK`. If the watchdog trips twice without a kick, the bootloader automatically reverts to the previous known-good golden bank, guaranteeing the power arbiter and wake logic cannot be bricked.
   * **External High-Speed Memory:** Paired with an **8MB QSPI PSRAM chip** (APMemory `APS6404L` / Winbond, $0.75).
   * **The 5 RP2350 Superpowers:**
-    1. **Full-Screen Autonomous Framebuffering (30ms Zen Reader):** Holds two full-screen framebuffers (frame size TBD until the Kaleido 4 resolution is published, ADR-032). Pre-caches eBook pages and executes sub-30ms paper-fast page turns without waking the CM5, dropping reading power to **4.5 mW** (runtime TBD until measured on the bench (pack: `battery_wh.li_ion`), ADR-040).
-    2. **Standalone LoRa mesh node:** Deferred to V2 (ADR-044); the V1 board reserves the footprint and pins (ADR-045, docs/PIN_BUDGET.md).
+    1. **Full-Screen Autonomous Framebuffering (30ms Zen Reader):** Holds two full-screen framebuffers (one 1-bit frame at 1872 × 1404 is 328 KB, so two full frames is a rounding error in 8 MB PSRAM; `spec_values.panel_sku.resolution_px`). Pre-caches eBook pages and executes sub-30ms paper-fast page turns without waking the CM5, dropping reading power to **4.5 mW** (runtime TBD until measured on the bench (pack: `battery_wh.li_ion`), ADR-040).
+    2. **Always-on radios:** a radio MCU (Bluetooth LE, nRF52840 class, part TBD) owns the SX1262 LoRa module and reaches the RP2350 over a PIO UART, so station check-ins, mesh messages and phone notifications can arrive with the CM5 off (ADR-055, docs/PIN_BUDGET.md); software not written (ADR-046).
     3. **Hardware Power Master & Anti-Brownout Shield:** Continuously monitors the pack-side TI BQ27Z561-R2 fuel gauge (ADR-035, ADR-048); blocks CM5 boot if battery voltage is $<3.0\text{V}$, preventing inrush brownouts and eMMC filesystem corruption.
     4. **Shadow Environmental Telemetry Logger:** Samples BMP390 barometric trends and TMP112 thermals every 60 seconds into a circular PSRAM buffer; dumps a 7-day weather barograph to Linux upon wake in 2ms.
     5. **Autonomous Bezel Touch Gestures:** Scans capacitive side-bezel touch traces at 10 Hz (15 µA) for instant page-flip navigation.
 * **Dual-Master Display Bus Multiplexer:** **2 × Texas Instruments TMUX1575** (each a 4-channel SPDT bus switch, giving 8 channels). TMUX1575 is only available in the 16-bump DSBGA (YCJ) package. See `docs/90-history/decisions.md` ADR-004.
   * High-speed **8-channel (2 × 4-channel) SPDT bidirectional bus switch pair** with Fail-Safe Power-Off Protection ($I_{\text{off}}$).
   * Between them the two devices completely isolate all 6 EPDC control and data lines: `SPI_MOSI`, `SPI_MISO`, `SPI_SCLK`, `SPI_CS`, `HRDY` (status flag), and `RESET`.
-  * These six lines are the IT8951 bench stand-in's SPI host interface. Whether the TMUX1575 pair suits the Kaleido 4 display controller's host interface must be re-checked once that controller is known (TBD, ADR-032).
+  * These six lines are the IT8951's SPI host interface (ADR-051), and the TMUX1575 pair switches exactly these.
   * **Zero-Leakage Isolation Safety:** When the CM5 is powered down to 0.000V, the TMUX1575 completely disconnects CM5 lines to eliminate parasitic back-powering and pin leakage ($I_{\text{leak}} < 10\text{ nA}$), allowing the RP2350 to update the display in deep sleep while drawing only **4.5 mW total system power**.
 * **Real-Time Clock (RTC):** Micro Crystal **RV-3028-C7-class** I²C RTC on the RP2350's `I2C_ALWAYS_ON` bus, with its own crystal and backup switchover; no separate RTC crystal on the board (ADR-046). The DS3231 footprint is a DNP fallback (§2.22).
   * Drift and current draw: per the RV-3028-C7 datasheet; not yet in `spec_values.json`.
@@ -118,21 +120,23 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
   * **Zero Maintenance & 100+ Day Lifespan:** Charges whenever the tablet is powered; maintains the RTC clock, alarms, and registers for **over 100 days** when the main battery is completely removed or depleted, eliminating the 1970 UNIX epoch clock reset bug without coin-cell leakage.
 
 ### 2.2 Display & Digitizer Assembly
-* **Display Panel:** 10.3-inch E Ink **Kaleido 4** colour panel, the only panel (ADR-032). V1 waits for its release.
-  * Resolution, PPI, active area, module outline, panel-stack thickness, FPC interface and contrast: **TBD (ADR-032)**. Each stays `null` in `spec_values.panel_sku` until E Ink publishes the 10.3" Kaleido 4 datasheet and mechanical drawing.
-  * Kaleido 4 uses an oxide-TFT backplane driven by a vendor TCON, not the IT8951 (ADR-025). Its frame rate is **unmeasured** (`spec_values.refresh_modes.kaleido4_fps: null`); no fps figure is claimed until E Ink's datasheet exists (ADR-017, ADR-018, ADR-025).
-  * **Bench stand-in only:** a Kaleido 3 / Carta + IT8951 module exercises the refresh software before Kaleido 4 is buyable. Its results are tagged `measured <date> (Kaleido 3)` and never promoted to product figures (ADR-025).
+* **Display Panel:** 10.3-inch E Ink **mono Carta 1200** module, 1872 × 1404, 227 PPI, IT8951-class EPDC (ADR-051, superseding ADR-032). Commodity, multi-vendor, available now.
+  * Resolution and PPI are datasheet class figures (`spec_values.panel_sku`). Active area, module outline, panel-stack thickness, FPC geometry and VCOM stay **`null`** until the chosen module's mechanical drawing and matching `.wbf` waveform are on file; never an estimate. Audit X5 already flags that a 174.4 mm module outline exceeds the 170 mm chassis depth, so the chassis or the glass moves first.
+  * **Tonal budget: 16 grey levels** (`spec_values.refresh_modes.mono_grey_levels`), 4-bit. That is the whole greyscale range; the fast modes are 1-bit.
+  * **No colour in V1.** Kaleido 4 is the V2 variant on the same chassis: the EPDC sits on a pluggable daughter board carrying DSI + SPI + panel bias rails, so a colour panel is a board swap rather than a carrier redesign (`spec_values.panel_sku.colour_variant`). The old Kaleido bench stand-in is gone — the stand-in *is* the V1 panel now.
+  * **Operating temperature:** the panel refreshes only inside `panel_sku.operating_temp_c` (vendor statement, not yet datasheet). Outside it neither the CM5 nor the RP2350 refreshes and the last image is held; a warning is drawn first (`SOFTWARE_SPEC.md` §11, ADR-056). Direct sun can push it past the upper limit; the UV-blocking lamination (§7.5) covers the UV half.
+  * **VCOM trim and VCOM-vs-temperature compensation** are bring-up items (ADR-051). The panel TMP112 already feeds the controller's `TEMP_REG` for waveform pulse voltage; VCOM is a separate register.
   * **Digitizer over the panel (optional variant):** on-top EMR laminates raise the display stack (`spec_values.display_stack_mm`) and require the Pen/Refresh Arbiter of `SOFTWARE_SPEC.md` §51, because EMR interrogation bursts and EPD drive pulses cannot share the volume and cannot be shielded apart (ADR-018).
 * **Display Transport & Honest Throughput Budget:**
-  * **Single-path architecture (V1):** the CM5 routes its host SPI (provided through RP1) through the TMUX1575 pair to the Kaleido 4 display controller (TBD, ADR-032). Full-frame transfer time depends on the Kaleido 4 resolution and that controller's host interface, both TBD (ADR-032). Practical result: the full-frame and partial-rectangle figures in `spec_values.refresh_modes`, with **no colour motion** (ADR-017). This is why the daemon is rectangle-driven rather than frame-driven, and why `solardeck-refreshd` picks a waveform mode per dirty rectangle instead of chasing a screen-wide frame rate (`SOFTWARE_SPEC.md` §52, ADR-019).
+  * **Single-path architecture (V1):** the CM5 routes its host SPI (provided through RP1) through the TMUX1575 pair to the IT8951 EPDC (ADR-051). Full-frame transfer time at 1872 × 1404 1-bit over the SPI clock in `spec_values.epdc_spi_mhz` is **null until measured** on the bench. Practical result: the full-frame and partial-rectangle figures in `spec_values.refresh_modes`. This is why the daemon is rectangle-driven rather than frame-driven, and why `solardeck-refreshd` picks a waveform mode per dirty rectangle instead of chasing a screen-wide frame rate (`SOFTWARE_SPEC.md` §52, ADR-019).
   * **Removed from V1 (ADR-005):** the earlier "dual-path MIPI-DSI at 24 fps" plan required an LVDS/DSI timing controller that no shipping e-paper panel accepts, and e-paper particle motion cannot hold video rates regardless. There is **no DSI or LVDS bridge on the carrier board**.
-  * **RP2350 fallback path:** when the CM5 and its rails are at 0.000V, the TMUX1575 pair routes the RP2350's SPI lines to the display controller instead (suitability for the Kaleido 4 controller to be re-checked, ADR-032), enabling autonomous 30 ms book page flips and 1-second clock updates at **4.5 mW total system power**.
+  * **RP2350 fallback path:** when the CM5 and its rails are at 0.000V, the TMUX1575 pair routes the RP2350's SPI lines to the IT8951 EPDC instead (ADR-051: the same interface, so this path is no longer provisional), enabling autonomous 30 ms book page flips and 1-second clock updates at **4.5 mW total system power**.
   * **Thermal-Assisted Fluid Viscosity Coupling (Overdrive Viscosity Assist):**
     * Electrophoretic particle mobility ($\mu$) is inversely proportional to fluid viscosity ($\eta$): $\mu \propto 1/\eta(T)$.
     * In cold conditions (<20°C), microcapsule fluid is viscous and sluggish. At 30°C–33°C, dielectric fluid viscosity drops by **>40%**, enabling pigment particles to accelerate **$1.8\times$ faster** under identical electrical drive pulses.
     * The V1 PCBA integrates a balanced internal copper thermal dissipation plane that routes heat from the CM5 CPU shield directly beneath the display backplane.
     * During sustained high-motion work (rapid pagination, dither-heavy imaging), the thermal daemon (`solardeck-thermal-boostd`) uses waste CPU heat to hold the backplane at **30°C–33°C** (monitored by the panel TMP112 sensor), cutting motion trails without dedicated heater elements.
-* **EPDC (Electronic Paper Display Controller):** The Kaleido 4 display controller (TBD, ADR-032). The IT8951 cannot drive Kaleido 4; it appears in this spec only as the bench stand-in's controller (ADR-025).
+* **EPDC (Electronic Paper Display Controller):** an **IT8951-class** controller on the pluggable daughter board (ADR-051). A colour variant needs a vendor TCON that the IT8951 cannot drive, which is exactly why the EPDC lives on its own board.
   * *SoC-Direct Drive Architectural Evaluation:* While driving E-Ink directly from an SoC's integrated controller (e.g. RK3566 `rockchip-ebc`) eliminates an $18 chip, it creates fatal system lock-in: the display cannot be driven when the main CPU is powered down to 0.000W. Retaining a dedicated EPDC with a switchable SPI host (CM5 for compute, RP2350 for Zen reading) is mandatory to enable both the **universal modular compute socket** and the **RP2350 dual-brain co-processor** (which commands the display over SPI for the desk-clock and reader modes; runtimes TBD until measured on the bench (pack: `battery_wh.li_ion`), ADR-040).
 * **reMarkable-Grade Stylus Digitizer & Tactile Paper-Feel:**
   * **Digitizer Sensor:** Genuine **Wacom EMR (Electro-Magnetic Resonance)** sensor board laminated behind the e-paper panel (240 Hz sampling rate, 4,096 levels of pressure and tilt, `wacom_w9013` driver).
@@ -205,7 +209,7 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
   2. *Main 5.0V System Boost:* a **TI TPS61022** with true output disconnect (ADR-049, `docs/EVT0_POWER_BOARD.md` §2.6) steps up battery voltage to the 5 V rail for the CM5 (`cm5.supply_design_a`), port 2 (`usb.port2_current_limit_a`) and the display supply. Its output at the bottom of the pack's range is below the modelled budget (`pack.rail_5v_a`), and the display supply is not budgeted yet (EVT-0 open item 20).
   3. *Cellular modem supply (TPS63020):* Deferred to V2 (ADR-034).
 * **Power Gating (Physical Cutoff Switches):**
-  * Texas Instruments **TPS22918** ultra-low leakage load switches on peripheral power rails (GNSS receiver, Wi-Fi, audio amp, and external expansion bus). Loads are hard off when not in use.
+  * Texas Instruments **TPS22918** ultra-low leakage load switches on peripheral power rails (GNSS receiver, Wi-Fi, audio amp, external expansion bus, and the radio MCU, ADR-055). Loads are hard off when not in use; the radio MCU rail is the one that stays on with the CM5 off, while station or peer mode is on (AGENTS §4.2).
 
 ### 2.4 USB Ports & Wireless Subsystem
 * **USB Port Architecture (CM5 native USB, ADR-042):**
@@ -216,8 +220,8 @@ Detailed hardware architecture, component selection, bus topology, antenna engin
 * **Cellular modem, nano-SIM tray and soldered eSIM:** Deferred to V2 (ADR-034); the V2 requirement is a consumer SGP.22 eUICC (ADR-033).
 * **NFC:** Deferred to V2 (ADR-034).
 * **Physical Wallet Companion:** Rear chassis MagSafe magnetic ring supports snapping standard physical MagSafe card wallets (Apple, Moft, Peak Design) for carrying 2–3 physical credit cards, IDs, and cash.
-* **LoRa mesh radio:** Deferred to V2 (ADR-044); the V1 board reserves the footprint and pins (ADR-045, docs/PIN_BUDGET.md).
-  * Mesh in V1 is CM5 software: pair an external Meshtastic node over Bluetooth LE. RF limits still bind: the client refuses to configure a node without a region (ADR-044, AGENTS §4.4).
+* **LoRa mesh radio (ADR-055):** the SX1262 module (`radio.lora_module`) on an always-on radio MCU that also carries Bluetooth LE. Station check-in on the minute wake is the default; Meshtastic-peer mode (receiver always on) is opt-in and outside the solar-strip claim. Radio power is null until measured (`radio.*`).
+  * The CM5 can still pair an external Meshtastic node over Bluetooth LE. RF limits bind both: the radio MCU refuses to transmit, and the client refuses to configure a node, until a region is set (ADR-044, ADR-055, AGENTS §4.4).
 * **Global Satellite Navigation (standalone GNSS, ADR-038):**
   * **u-blox MAX-M10S** (`spec_values.gnss`) on an RP2350 UART behind a TPS22918 load switch, with a passive GNSS antenna at the top edge (the module's integrated LNA supports passive antennas).
   * Tracking power: `spec_values.gnss.tracking_mw` (datasheet). The RP2350 owns it (UART1, `GNSS_PPS` on RP2350 GPIO 23, docs/PIN_BUDGET.md) so it keeps time and logs position with Linux off, and PPS disciplines its RTC (ADR-044); when Linux is up the RP2350 forwards NMEA to `gpsd` for offline OsmAnd, QGIS, and FoxtrotGPS mapping.
@@ -231,7 +235,7 @@ To prevent the device from becoming an unwieldy "hedgehog" with 5 external anten
 │                       SOLARDECK TOP BEZEL RF TOPOLOGY                       │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
-│   [SMA BOSS, PLUGGED]  LoRa antenna: V2 (ADR-044); keep-out (ADR-045)       │
+│   [SMA BULKHEAD]  LoRa antenna (ADR-055)                                    │
 │                                                                             │
 │  ─────────────────────────────────────────────────────────────────────────  │
 │  INTERNAL CONCEALED ANTENNAS (Inside PA12 Frame / TPU Bumpers):             │
@@ -241,7 +245,7 @@ To prevent the device from becoming an unwieldy "hedgehog" with 5 external anten
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-1. **LoRa 915/868 MHz antenna:** Deferred to V2 (ADR-044); the V1 board reserves the footprint and pins (ADR-045, docs/PIN_BUDGET.md). The enclosure keeps a top-edge antenna keep-out and a plugged SMA boss.
+1. **LoRa 915/868 MHz antenna (ADR-055):** an external antenna on an SMA bulkhead at the top edge, fed from the SX1262 module. The bulkhead is an aperture against the IP54 target (an IP67 bulkhead is in the BOM).
 2. **Cellular LTE antennas:** Deferred to V2 (ADR-034).
 3. **Wi-Fi & Bluetooth (CM5 on-module; standard and version TBD — verify against the CM5 datasheet):**
    * **Molex `1461530100`** balanced dual-band (2.4 GHz / 5.8 GHz) dipole FPC with micro-coax pigtail to the CM5 antenna connector (type TBD — verify against the CM5 datasheet). Balanced dipole design ensures human hand grip does not de-tune the wireless link.
@@ -250,15 +254,15 @@ To prevent the device from becoming an unwieldy "hedgehog" with 5 external anten
    * **CNC 6061-T6 Aluminum:** Aluminum completely blocks RF signals. When the aluminum unibody is chosen, the top 25mm bezel is manufactured as a modular **PA12/Delrin "RF Window"** cap, allowing RF waves to escape while maintaining the IP54 (V1 target) gasket sealing.
 
 ### 2.5.1 RF Coexistence & Multi-Radio Isolation Architecture
-SolarDeck operates three concurrent radio channels in V1 (Wi-Fi 5 GHz, Bluetooth 2.4 GHz, and receive-only GNSS L1 1575.42 MHz; LoRa is V2, ADR-044; cellular is V2, ADR-034) within a single 10.3" portable frame without mutual receiver desensitization (desense) or packet degradation:
+SolarDeck operates its V1 radios concurrently (Wi-Fi 5 GHz, Bluetooth 2.4 GHz on the CM5 and the radio MCU, sub-GHz LoRa on the SX1262 (ADR-055), and receive-only GNSS L1 1575.42 MHz; cellular is V2, ADR-034) within a single 10.3" portable frame without mutual receiver desensitization (desense) or packet degradation:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                 SOLARDECK 4-CORNER RF COEXISTENCE TOPOLOGY                  │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ [TOP-LEFT CORNER]                                       [TOP-RIGHT CORNER]  │
-│ (no radio in V1;                                        GNSS (MAX-M10S)     │
-│  LoRa is V2, ADR-044)                                   • Passive antenna   │
+│ LoRa sub-GHz (SX1262)                                   GNSS (MAX-M10S)     │
+│ • SMA bulkhead (ADR-055)                                • Passive antenna   │
 │                                                         • Receive-only      │
 │                                                                             │
 │ [BOTTOM-LEFT CORNER]                                    [BOTTOM-RIGHT]      │
@@ -268,14 +272,14 @@ SolarDeck operates three concurrent radio channels in V1 (Wi-Fi 5 GHz, Bluetooth
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-1. **LoRa isolation (path loss, cross-polarization, SAW filtering, duty cycle):** V2 (ADR-044).
+1. **LoRa isolation (path loss, cross-polarization, SAW filtering, duty cycle):** TBD for V1 (ADR-055); set at layout and confirmed on the bench.
 2. **5 GHz Wi-Fi Spectrum Steering:**
    * Linux network profiles default Wi-Fi connectivity to the **5.0 GHz band**, leaving the 2.4 GHz ISM band 100% clear for low-latency Bluetooth keyboard and audio pairing, arbitrated by the CM5's on-module Wi-Fi/BT combo chip's coexistence logic (chip and PTA support TBD — verify against the CM5 datasheet).
 
 ### 2.5.2 RF Front-End Precision: Pi-Matching Networks & Coaxial Strain Relief
 To guarantee peak radiation efficiency, prevent destructive transmitter reflection, and maintain impedance integrity across manufacturing tolerances:
 * **0402 Discrete Pi-Matching Networks:** Every antenna trace on the carrier board features a dedicated 3-element Pi-matching footprint ($C_{\text{shunt1}}$ – $L_{\text{series}}$ – $C_{\text{shunt2}}$ in 0402 surface-mount packaging with high-Q Murata / TDK RF components) immediately adjacent to its U.FL / SMA launch point:
-  * `RF_LORA`: Deferred to V2 (ADR-044); the footprint is reserved (ADR-045).
+  * `RF_LORA`: Matching from the SX1262 module into the SMA bulkhead (ADR-055).
   * `RF_WIFI_BT`: Dual-band conjugate matching for 2.4 GHz and 5.8 GHz.
   * `RF_GNSS`: Matching from the passive top-edge antenna into the MAX-M10S integrated LNA (no active-antenna bias, ADR-038).
 * **Inner-Layer Ground Keepout:** A continuous **3.0 mm copper clearance void** is etched across all internal PCBA ground layers directly beneath each surface-mount U.FL pad, eliminating parasitic shunt capacitance that would otherwise detune high-frequency RF launches.
@@ -307,7 +311,7 @@ Inspired by iconic ambient communicator status lights (Clicks, BlackBerry, Palm)
 * **Factory Color Mapping & Fully User-Programmable Profiles:**
   * **Breathing Amber (Solar / Charge Active):** Indicates battery is replenishing from folding panel or USB-C.
   * **Steady Dim Green (Charge Complete):** Battery is at 100%.
-  * **Gentle Pulsing Emerald Green (Mesh Activity):** Unread Meshtastic message from the paired external node (via the CM5 when Linux is up; on-board LoRa is V2, ADR-044).
+  * **Gentle Pulsing Emerald Green (Mesh Activity):** Unread mesh message, from the on-board radio MCU with Linux off (ADR-055) or from a paired external node via the CM5 when Linux is up.
   * **Pulsing Sapphire Blue (Bluetooth / SnapDeck):** Keyboard pairing or active wireless connection.
   * **Pulsing Amethyst Purple (Comms Mention):** Discord ping, Slack huddle, or Matrix room notification.
   * **Urgent Strobe Ruby Red (Environmental Hazard / Critical Battery):** Rapid barometric drop (storm warning) or battery $<5\%$.
@@ -338,14 +342,14 @@ CM5_CLAIM_DISPLAY ────────┘         └── GND (Always Enab
 ```
 
 1. **Complete 6-Signal Galvanic Isolation (Power-Off Protection):**
-   * The design uses **two 4-channel TMUX1575 devices** (8 SPDT channels, one spare) to switch all 6 EPDC lines: `SPI_MOSI`, `SPI_MISO`, `SPI_SCLK`, `SPI_CS`, `HRDY` (Host Ready flag), and `RESET`. These are the IT8951 stand-in's lines; the hand-over must be re-checked against the Kaleido 4 display controller's host interface (TBD, ADR-032).
+   * The design uses **two 4-channel TMUX1575 devices** (8 SPDT channels, one spare) to switch all 6 EPDC lines: `SPI_MOSI`, `SPI_MISO`, `SPI_SCLK`, `SPI_CS`, `HRDY` (Host Ready flag), and `RESET`. These are the IT8951's lines (ADR-051).
    * The TMUX1575 features fail-safe inputs ($I_{\text{off}}$ circuitry): when CM5 `VDD_3V3` drops to 0.0V, the switch maintains giga-ohm impedance on the CM5 side, completely eliminating parasitic back-powering through internal ESD clamping diodes into unpowered rails ($I_{\text{leak}} < 10\text{ nA}$).
 2. **Deterministic Hardware Arbitration:**
    * The `SEL` line is pulled down to GND via a 10 kΩ resistor, defaulting bus ownership to the RP2350B.
    * When Linux boots, the CM5 kernel driver negotiates with the RP2350B via GPIO interrupt handshake (`CM5_REQ_BUS` $\to$ `RP2350_ACK_READY`), then asserts `CM5_CLAIM_DISPLAY` HIGH to seize the display bus.
 3. **DC Pigment Burn-In Protection:**
    * The RP2350B holds dedicated hardware control over `EPDC_PWR_EN` (TPS22918 load switch feeding the display rail).
-   * Before cutting display power or transitioning states, firmware polls the display controller's ready line (`HRDY` on the IT8951 stand-in; Kaleido 4 equivalent TBD, ADR-032) to ensure the active waveform has completed, averaging net DC bias across all electrophoretic capsules to **0.0V** before sequencing down high-voltage rails (`VCOM` $\to$ `VGL` $\to$ `VGH` $\to$ `VDD`).
+   * Before cutting display power or transitioning states, firmware polls the display controller's ready line (`HRDY` on the IT8951, ADR-051) to ensure the active waveform has completed, averaging net DC bias across all electrophoretic capsules to **0.0V** before sequencing down high-voltage rails (`VCOM` $\to$ `VGL` $\to$ `VGH` $\to$ `VDD`).
 
 ### 2.9 Dual Independent I2C Buses & Inter-Processor Telemetry Bridge
 To completely eliminate bus arbitration lockups and the hardware address collision between the Goodix touch controller (`0x14`) and Bosch accelerometer (`0x14`), SolarDeck bifurcates I2C into two galvanically separated hardware domains:
@@ -386,10 +390,10 @@ To completely eliminate bus arbitration lockups and the hardware address collisi
   * Replaces generic single ammeters with a 3-channel high-side current and bus voltage monitor over I2C.
   * Measures voltage and shunt current across three isolated domains simultaneously:
     * **Rail 1 (Compute):** CM5 module (SoC, DRAM, eMMC). Pinpoints CPU governor efficiency and memory leaks.
-    * **Rail 2 (Display):** Kaleido 4 display controller (TBD, ADR-032) and high-voltage rails. Pinpoints display power draw per waveform mode.
-    * **Rail 3 (RF Radios):** GNSS receiver, Wi-Fi/BT (LoRa is V2, ADR-044). Catches rogue radio beacons.
+    * **Rail 2 (Display):** IT8951 EPDC and high-voltage rails (ADR-051). Pinpoints display power draw per waveform mode.
+    * **Rail 3 (RF Radios):** GNSS receiver, Wi-Fi/BT, radio MCU + LoRa (ADR-055). Catches rogue radio beacons.
   * Direct telemetry to Claude Code CLI and `solardeck-telemetryd` SQLite database for empirical algorithmic power profiling.
-  * **Per-gated-rail current sense (TPS22918 [- 4 TPS22918-gated rails](DECK_BUILDER_LAYOUT.md)):** each of the 4 TPS22918 peripheral load-switch rails (GNSS, Wi-Fi, audio, expansion) carries a µA-grade shunt + INA3221/ADC tap into the RP2350, so the LLM can distinguish "GNSS receiver overdraws" from "Wi-Fi radio storm" instead of only seeing RF aggregate. This is the Deck-Builder self-diagnosis contract (§4) made physical: **rail sense is the difference between a diagnosis and a guess.**
+  * **Per-gated-rail current sense (TPS22918 [- 5 TPS22918-gated rails](DECK_BUILDER_LAYOUT.md)):** each of the TPS22918 peripheral load-switch rails (GNSS, Wi-Fi, audio, expansion, radio MCU; ADR-055) carries a µA-grade shunt + INA3221/ADC tap into the RP2350, so the LLM can distinguish "GNSS receiver overdraws" from "Wi-Fi radio storm" instead of only seeing RF aggregate. This is the Deck-Builder self-diagnosis contract (§4) made physical: **rail sense is the difference between a diagnosis and a guess.**
 * **Coulomb Counter & Battery Fuel Gauge (Texas Instruments BQ27Z561-R2, pack-side, ADR-035, ADR-048):**
   * Integrated Impedance Track™ fuel-gauge technology tracks exact milliamp-hours entering and leaving the pack (true Coulomb counting).
   * Measures battery cell internal impedance ($R_{\text{cell}}$ in mΩ) and computes true State-of-Health (SOH %) over the pack's life, so a pack swap is scheduled by data.
@@ -397,7 +401,7 @@ To completely eliminate bus arbitration lockups and the hardware address collisi
 * **Multi-Zone Precision Thermal Array — 6 zones (Texas Instruments TMP112 + SoC Diode - KEPT FOR THERMAL LOGS):**
   * High-precision ($\pm 0.5^\circ\text{C}$), ultra-thin SOT-563 digital temperature sensors placed at strategic thermal points. Three hard-wired TMP112s, three derived zones:
     * **Battery Zone:** Directly adhered to the pouch cell under the thermal protection sleeve for millidegree charging logs. (TMP112 #1)
-    * **Display Zone:** Adhered to the aluminum backplate behind the E-Ink panel. Directly feeds the display controller's temperature input (`TEMP_REG` on the IT8951 stand-in; Kaleido 4 equivalent TBD, ADR-032) via the RP2350 bridge to dynamically adjust waveform voltage pulses as liquid microcapsule viscosity changes with temperature (eliminating ghosting in winter cold and bleeding in summer heat). (TMP112 #2)
+    * **Display Zone:** Adhered to the aluminum backplate behind the E-Ink panel. Directly feeds the display controller's temperature input (`TEMP_REG` on the IT8951, ADR-051) via the RP2350 bridge to dynamically adjust waveform voltage pulses as liquid microcapsule viscosity changes with temperature (eliminating ghosting in winter cold and bleeding in summer heat). (TMP112 #2)
     * **Compute Zone:** Monitored via the CM5 SoC thermal sensor. (TMP112 #3 + SoC diode)
     * **RF/Modem Zone:** Deferred to V2 with the modem (ADR-034); `spec_values.telemetry.thermal_zones` still counts it.
     * **Charger-Rail Zone:** derived from the BQ25798 die-temperature and the charger rail sense, catching thermal stress that degrades the charge path before it becomes a longevity claim violation.
@@ -407,10 +411,10 @@ To completely eliminate bus arbitration lockups and the hardware address collisi
   * Rather than adding a dedicated photodiode IC, the RP2350's internal 12-bit ADC directly samples the open-circuit voltage ($V_{OC}$) of the top-bezel IXYS solar strip. Dynamic range spans from 0.01 lux up to 120,000 lux.
   * Enables dynamic E-Ink contrast optimization: disables front-lights completely in full sunlight ($>10,000\text{ lux}$), decreases anti-ghosting frequency, and calculates optimal solar panel angles when external folding panels are connected.
 * **Module Health Registers (the Deck-Builder contract, §5):**
-  * Every user-serviceable module (CM5, LoRa (reserved, V2), GNSS, panel, audio, battery, solar — 7 registers; LTE/eSIM are V2, ADR-034) emits a `(ok | waning | fault, value)` row into the `module_health` table (§3.3.1):
+  * Every user-serviceable module (CM5, LoRa (radio MCU, ADR-055), GNSS, panel, audio, battery, solar — 7 registers; LTE/eSIM are V2, ADR-034) emits a `(ok | waning | fault, value)` row into the `module_health` table (§3.3.1):
     * **CM5:** SMART + eMMC wear + rail sense
     * **GNSS:** fix stats, rail sense
-    * **LoRa:** register reserved; V2 (ADR-044)
+    * **LoRa:** reports the radio MCU (ADR-055); contents defined with the firmware (ADR-046)
     * **Panel:** per-refresh ACK latency + ghosting counter
     * **Battery:** coulomb-counted charge/discharge curve + ESR
     * **Audio:** loopback self-test (padded output, measured mic RMS)
@@ -482,6 +486,7 @@ For true sovereign privacy, commercial flight compliance, sensitive compartmente
    All Peripherals Under OS Control                        All Radio Load Switches Dead:
                                                            • u-blox MAX-M10S GNSS (0.000V)
                                                            • CM5 Wi-Fi/BT (WL/BT_nDisable low)
+                                                           • Radio MCU: LoRa + BLE (0.000V)
                                                            • MEMS mics (0.000V)
 ```
 
@@ -537,10 +542,10 @@ To guarantee true 0.000V electrical isolation and zero phantom leakage across al
    * Each TPS22918 load switch includes an internal discharge transistor that connects the output rail (`VOUT`) to GND through a 470 Ω resistor whenever the switch is disabled.
    * Floating pins and residual capacitor charges are forcibly drained to true 0.000V within 50 microseconds.
 2. **$I_{\text{off}}$ Partial-Power-Down Protection on All Inter-Domain Lines:**
-   * All digital lines the always-on RP2350 drives into a switchable domain (the CM5 link, wake and power-fail lines, the audio link and the UART to the GNSS; `isolation = buffer` in docs/PIN_BUDGET.md) pass through Texas Instruments **TXU0104** or **SN74LVC1G125** buffers featuring **$I_{\text{off}}$ circuitry**.
+   * All digital lines the always-on RP2350 drives into a switchable domain pass through buffers featuring **$I_{\text{off}}$ circuitry**: lines into the CM5 domain (the CM5 link, wake and power-fail lines, the audio link; `buffer` in docs/PIN_BUDGET.md) through Texas Instruments **TXU0104**s whose B side is the CM5 rail, and lines into the GNSS and radio MCU rails (`gate`) through **SN74LVC1G125** single gates powered from those rails (ADR-055).
    * When either $V_{CCA}$ or $V_{CCB}$ is 0V, the device automatically forces all I/O lines into a high-impedance (Hi-Z) state, guaranteeing leakage current **$I_{\text{leak}} < 1\text{ µA}$**.
 3. **Display Bus Multiplexer Isolation (TMUX1575):**
-   * The high-speed SPI bus to the Kaleido 4 display controller (TBD, ADR-032) is isolated by **2× TI TMUX1575** (4 channels each, 8 total — ADR-004; suitability to be re-checked against that controller's host interface). Its fail-safe inputs tolerate up to 5.5V independent of supply voltage, completely preventing display signals from back-powering the CM5 when it is off.
+   * The SPI bus to the IT8951 EPDC (ADR-051) is isolated by **2× TI TMUX1575** (4 channels each, 8 total — ADR-004). Its fail-safe inputs tolerate up to 5.5V independent of supply voltage, completely preventing display signals from back-powering the CM5 when it is off.
 4. **Physical Line-Breaker for Microphones:**
    * The privacy switch breaks `MIC_BCLK` (MIC MUTE and FULL BLACKOUT) and cuts the mic supply (FULL BLACKOUT); it never shorts a driven pin (§2.25).
 
@@ -550,7 +555,7 @@ To guarantee true 0.000V electrical isolation and zero phantom leakage across al
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Tier 0: Dormant Standby** | RP2350 (10 µA sleep) | Display OFF (Static) | RV-3028-C7-class RTC, BQ27Z561-R2 (CM5 0V, Radios 0V, Hi-Z)| **< 0.1 mW** | TBD until measured on the bench (pack: `battery_wh.li_ion`) (ADR-040) |
 | **Tier 1: Ambient Clock & Zen Reader**| RP2350 (12MHz Cortex-M33)| Display ctrl (PSRAM Double-Buf)| 8MB PSRAM, BMA400, BMP390 (30ms Page Turns) | **~4.5 mW** | TBD until measured on the bench (pack: `battery_wh.li_ion`) (ADR-040) |
-| **Tier 2: LoRa Mesh Node** | V2 (ADR-044) | — | — | — | — |
+| **Tier 2: LoRa (radio MCU)** | Radio MCU + RP2350 (ADR-055) | — | SX1262; station check-in on the minute wake, Meshtastic-peer opt-in | `radio.station_mode_idle_mw` (null until measured) | TBD until measured on the bench (ADR-040) |
 | **Tier 3: Paper-Feel Scribe Slate** | CM5 (1 core @ 600 MHz) | Display ctrl (DU 1-bit Buffer) | Wacom EMR (240 Hz, Hover-gated), eMMC | **~0.60 W** | TBD until measured on the bench (pack: `battery_wh.li_ion`) (ADR-040) |
 | **Tier 4: Adaptive Mixed Workstation**| CM5 (Dynamic DVFS)| Display ctrl (Dynamic Waveforms)| Wi-Fi, Web, Twitter, Discord, Claude Code CLI | **~1.40 W** | TBD until measured on the bench (pack: `battery_wh.li_ion`) (ADR-040) |
 | **Tier 5: Multimedia & Audio Station**| CM5 (Hardware Audio Pipeline)| Display ctrl (A2 Motion / GC16)| Knowles Mic, MAX98357A Box Speaker, Wi-Fi | **~1.70 W** | TBD until measured on the bench (pack: `battery_wh.li_ion`) (ADR-040) |
@@ -588,14 +593,14 @@ To withstand field operations where exposed gold pogo pins and USB-C ports touch
 ```
 
 ### 2.16 PCBA Signal Integrity & 6-Layer Impedance-Controlled Stackup
-To guarantee 50Ω coplanar waveguide matching for GNSS RF traces (and the reserved V2 LoRa footprint, ADR-045), and prevent digital noise from leaking into sensitive GPS and audio LNAs, SolarDeck mandates a **6-layer impedance-controlled board stackup** (Standard JLC2313 / Isola FR408HR):
+To guarantee 50Ω coplanar waveguide matching for GNSS RF traces (and the LoRa feed to the SMA bulkhead, ADR-055), and prevent digital noise from leaking into sensitive GPS and audio LNAs, SolarDeck mandates a **6-layer impedance-controlled board stackup** (Standard JLC2313 / Isola FR408HR):
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                   SOLARDECK 6-LAYER PCBA LAYER ASSIGNMENT                   │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ Layer 1 (Top Signal & RF):                                                  │
-│ • 50Ω Coplanar Waveguides (GNSS L1; V2 LoRa footprint reserved)             │
+│ • 50Ω Coplanar Waveguides (GNSS L1; LoRa, ADR-055)                          │
 │ • 90Ω Differential Pairs for USB 2.0 (Port 1, Port 2, Pogo Docks)           │
 │ • SMT Component Pads & Local Decoupling                                     │
 ├─────────────────────────────────────────────────────────────────────────────┤
@@ -654,7 +659,7 @@ To provide 100% mission reliability in severe sub-zero weather, dust storms, and
   * External 25.3" E-Ink / 4K monitor serves as primary high-density code and Kiwix browser workspace.
 
 ### 2.19 Low-Battery Emergency SOS Placard
-* **What it does:** when the RP2350's power-fail alarm fires (`battery.low_alarm_v`), it reads the last GNSS fix and the RTC time and draws a high-contrast distress placard on the E-Ink panel before the pack protector trips. The panel is bistable, so the placard stays visible with no power. The radio SOS burst is V2 (ADR-044).
+* **What it does:** when the RP2350's power-fail alarm fires (`battery.low_alarm_v`), it reads the last GNSS fix and the RTC time and draws a high-contrast distress placard on the E-Ink panel before the pack protector trips. The panel is bistable, so the placard stays visible with no power. A radio SOS burst through the radio MCU is V1 hardware (ADR-055); its software not written (ADR-046).
 * **What it does not do (ADR-049):** boot with a flat, tripped or missing pack. The earlier zero-battery supercapacitor boot is withdrawn: no supercapacitor is in the BOM and the harvester's temperature gate is off without a pack (§2.3).
 * **Unverified:** the energy between `battery.low_alarm_v` and the protector's UVP has to cover one display update; measured at EVT-1 with the panel.
 
@@ -705,13 +710,13 @@ To eliminate supply-chain bottlenecks, enable budget vs. pro hardware tiers, and
    * One STMicroelectronics STUSB4500 footprint (ADR-048).
    * Two DNP 0402 pads allow omitting active PD silicon entirely and populating standard 5.1 kΩ pull-down resistors for basic 5V 3A (15W) charging.
 5. **PCIe steering bridge:** Removed. The CM5's single PCIe Gen 2 x1 lane goes directly to the M.2 Key-M NVMe socket; USB comes from the CM5's native ports (ADR-042).
-6. **Onboard LoRa SX1262:** DNP in V1; deferred to V2 (ADR-044); the V1 board reserves the footprint and pins (ADR-045, docs/PIN_BUDGET.md).
+6. **Onboard LoRa SX1262:** populated in V1, driven by the radio MCU (ADR-055, docs/PIN_BUDGET.md).
 7. **Cellular identity (eSIM / Nano-SIM):** Deferred to V2 (ADR-034); the V2 requirement is a consumer SGP.22 eUICC (ADR-033).
 8. **Battery chemistry strap:** Deleted. One chemistry per hardware revision; V1 is Li-ion, charge limit `battery.charge_limit_v` (ADR-035, ADR-048).
 
 ### 2.23 Direct-to-Co-Processor "Instant-Ink" Low-Latency Inking Architecture
 To eliminate the seconds-long Linux resume from off/hibernate (ADR-036) and 2.5W processor power penalty when quickly taking notes, sketching field maps, or recording tactical coordinates:
-* **Hardware Interconnect:** The Wacom EMR digitizer's coordinate data stream (UART/I2C) and stylus proximity interrupt (`PEN_INT`) are routed directly to the Raspberry Pi RP2350B co-processor, with dual-buffer SPI lines feeding into the Kaleido 4 display controller (TBD, ADR-032).
+* **Hardware Interconnect:** The Wacom EMR digitizer's coordinate data stream (UART/I2C) and stylus proximity interrupt (`PEN_INT`) are routed directly to the Raspberry Pi RP2350B co-processor, with dual-buffer SPI lines feeding the IT8951 EPDC (ADR-051).
 * **4.5 mW Always-Ready Legal Pad:**
   * When the main CM5 Linux brain is off (consuming 0.000W; the CM5 has no RAM-retaining sleep, ADR-036), bringing the stylus within 5mm of the display triggers `PEN_INT`, waking the RP2350 in **$<5\text{ milliseconds}$**.
   * The RP2350 ingests raw $(X, Y, \text{Pressure})$ packets at 200 Hz and blits 1-bit black stroke vectors directly into the display controller using a specialized 15ms zero-ghosting micro-LUT.
@@ -737,10 +742,10 @@ To guarantee decadal survival in remote areas where the internal smart pack has 
 To deliver mathematically verifiable, physical airgapped privacy for tactical operations, secure negotiations, and sovereign computing:
 * **Switch Mechanism (ADR-049):** E-Switch 600DP3S2M4R, a sealed (IP67 terminals) 2-pole, 3-position **on-off-on** slide switch on the left chassis flank beside the 5-way rocker (§3 layout); it is the only privacy/airgap switch (ADR-046). No sealed on-on-on 3-position part was found, so the centre (both poles open) is MIC MUTE. Its gold contacts are rated for logic levels only (0.4 VA), so both poles switch DC logic nets to GND and the cuts are made by hardware gates on those nets, never by firmware:
   * **Pole A** is closed only in NORMAL: `PRIVACY_MUTE` (pull-up) is low in NORMAL and high in MIC MUTE and FULL BLACKOUT. High opens a bus-switch gate in the I²S bit clock (`MIC_BCLK`, RP2350 GPIO 26) between the RP2350 and both MEMS microphones, and a pull-down holds the microphone side at GND. The RP2350 pin is never shorted.
-  * **Pole B** is closed only in FULL BLACKOUT: `PRIVACY_BLACKOUT_N` (pull-up) goes low, which turns off the microphones' supply switch and the MAX-M10S GNSS load-switch gate, and pulls the CM5's `WL_nDisable`/`BT_nDisable` low through one diode each.
+  * **Pole B** is closed only in FULL BLACKOUT: `PRIVACY_BLACKOUT_N` (pull-up) goes low, which turns off the microphones' supply switch, the MAX-M10S GNSS load-switch gate and the radio MCU's load switch (`RADIO_PWR_EN`, ADR-055), and pulls the CM5's `WL_nDisable`/`BT_nDisable` low through one diode each.
   1. **NORMAL (Green Index):** all microphones and radio load switches operate under software power management.
   2. **MIC MUTE (Yellow Index, centre):** the bit clock is gated off, so the MEMS microphones cannot run. The radios remain operational.
-  3. **FULL BLACKOUT (Red Index):** as MIC MUTE, plus the microphone supply, GNSS and CM5 Wi-Fi/BT are off.
+  3. **FULL BLACKOUT (Red Index):** as MIC MUTE, plus the microphone supply, GNSS, the radio MCU (LoRa and BLE) and CM5 Wi-Fi/BT are off.
 * **Fail-safe, and its limit:** an open or broken switch reads as MIC MUTE (both nets pulled high): microphones off, radios on. FULL BLACKOUT needs pole B to make contact, so a failed pole B leaves the radios on and reads as MIC MUTE, indistinguishable from the centre position. The OS therefore shows radio power from the radios' own state, not only from the switch; a part whose blackout position is sensed positively (an on-on-on 3-pole switch behind a gasket) would close this (ADR-049).
 * **Sense lines (`PRIVACY_MUTE`, `PRIVACY_BLACKOUT_N`, always-on expander EXP 2 and EXP 7, `docs/PIN_BUDGET.md`):** the same two nets report the position (low/high NORMAL, high/high MIC MUTE, high/low FULL BLACKOUT), allowing the OS to display a permanent hardware padlock icon on the 10.3" E-Ink screen with zero CPU overhead.
 * **Parts still to choose at capture:** the single-channel bus switch in `MIC_BCLK` and the microphone supply switch.
@@ -787,7 +792,7 @@ recheck them, and `scripts/check_cost_and_power.py` (CI Phase 14) recomputes bot
 | :--- | :--- | :--- |
 | Peak insolation | **4.28 kWh/m²/day** | Hawaii-typical annual average, horizontal panel |
 | Combined panel + MPPT + orientation derate | **70 %** | BQ25504 FOCV efficiency, flat-mount cosine loss |
-| RP2350 always-on idle (RTC + ADC; modelled with LoRa listen, now V2, so conservative) | **4.5 mW** | `SOFTWARE_SPEC.md` §6 power tiers |
+| RP2350 always-on idle (RTC + ADC + a scheduled LoRa listen slot; the radio MCU's own idle draw is not in this figure and is null until measured, ADR-055) | **4.5 mW** | `SOFTWARE_SPEC.md` §6 power tiers |
 
 | Claim | Derivation | Result |
 | :--- | :--- | :--- |
@@ -850,7 +855,7 @@ To achieve massive off-grid energy generation without permanently burdening the 
 ### 2.30 Bicycle & Motorcycle Handlebar Sunlight Cockpit: Aerodynamic Convection & Thermal Safety Envelope
 *Written 2026-10-19 16:30 UTC in the Pi harness by antigravity/gemini-3.8-flash*
 
-Mounting a computing terminal to a bicycle or motorcycle handlebar in direct midday sunlight creates an extreme thermal environment. While smartphones routinely overheat and trigger emergency shutdown within 15 to 20 minutes, SolarDeck operates continuously without thermal throttling or damage due to three fundamental thermodynamic principles and dedicated hardware safeguards:
+Mounting a computing terminal to a bicycle or motorcycle handlebar in direct midday sunlight creates an extreme thermal environment. While smartphones routinely overheat and trigger emergency shutdown within 15 to 20 minutes, SolarDeck stays readable, because reading needs no power. It may only *refresh* inside `panel_sku.operating_temp_c` (ADR-056): in sustained noon sun the panel holds its last image until it cools. The principles and safeguards below keep it inside that range for as long as they can:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -864,7 +869,7 @@ Mounting a computing terminal to a bicycle or motorcycle handlebar in direct mid
 │ Heat Dissipation      │ Trapped in phone mount  │ Direct forced-air cooling │
 │ Forced Convection Air │ Negligible (glass back) │ 227x165mm unibody heatsink│
 │ Internal Heat Barrier │ None (battery on PCB)   │ 0.5mm Aspen Aerogel Foil  │
-│ Result in Noon Sun    │ Shuts down in 15–20 min │ Runs 30+ hours at ~38°C   │
+│ Result in Noon Sun    │ Shuts down in 15–20 min │ Pauses refresh if too hot │
 └───────────────────────┴─────────────────────────┴───────────────────────────┘
 ```
 
@@ -883,12 +888,12 @@ Mounting a computing terminal to a bicycle or motorcycle handlebar in direct mid
 
 ### 2.30 **[DNP — Do Not Populate]** Betavoltaic Keep-Alive Bay & Li-Primary Keep-Alive (P1 Ships With the Coin Cell, Not the Tritium)
 
-The **R4 Deep-Off + Scrub** rung of the sleep ladder (§3.3.3 of SOFTWARE_SPEC.md) keeps the device at 0.000 W for *months*, which needs a low-power wake authority outside Linux: an always-on RTC tick (a scheduled LoRa beacon is V2, ADR-044). That authority's energy budget is microwatts-to-a-tenth-of-a-milliwatt, which is exactly the class only *primary* cells or betavoltaics can serve — no rechargeable chemistry has the calendar life (the V1 Li-ion pack is a replaceable wear item, ADR-048).
+The **R4 Deep-Off + Scrub** rung of the sleep ladder (§3.3.3 of SOFTWARE_SPEC.md) keeps the device at 0.000 W for *months*, which needs a low-power wake authority outside Linux: an always-on RTC tick (LoRa check-ins belong to the ambient tiers, not R4; ADR-055). That authority's energy budget is microwatts-to-a-tenth-of-a-milliwatt, which is exactly the class only *primary* cells or betavoltaics can serve — no rechargeable chemistry has the calendar life (the V1 Li-ion pack is a replaceable wear item, ADR-048).
 
 * **P1 ships with a Li-primary keep-alive cell** (e.g. a 3V CR2-style primary in a bay, ~0.5–1%/y self-discharge → 20–40 y shelf life, a few dollars) feeding the RP2350's RTC rail. This is the *cheap, available, unlicensed* answer to a 20-year keep-alive.
 * **A betavoltaic bay is reserved (DNP):** a mechanically and electrically empty socket sized for a future tritium (H-3) betavoltaic cell (BV100-class: 3V, ~100 µW, ~50 y rated; practical useful output ≈20–40 y given the 12.3 y half-life). The bay is populated by enthusiasts or a later Rev after licensing/supply matures — **not** in the base BOM.
 * **Why not tritium in P1 (honest answer):** (1) power budget unproven — the keep-alive load (`spec_values.keepalive.rtc_load_uw`) is null until re-derived for the RV-3028-C7-class RTC (ADR-046), so whether one cell's continuous output (`keepalive.betavoltaic_uw`) can carry it is open, and the trickle→buffer→burst topology a coin cell provides is assumed until then; (2) tritium is a controlled nuclear material (US NRC / UK ONR) — owning a sealed microsource is tolerated, but *shipping and selling it as a product* is licensing paperwork hostile to an open-hardware supply chain; (3) cost — NanoTritium-class cells run hundreds to thousands of dollars per unit against a ≈$400 whole-BOM budget; (4) it is never the actual bottleneck — the embedded NAND already holds the hibernation image and the RTC real-time clock keeps the schedule; a 40-year-lifetime problem is served by a 40-year-primary that costs $2. The betavoltaic bay exists so the *century* claim (ADT-019, HARDWARE_SPEC §5) is physically reachable later without a board respin.
-* **Budget:** keep-alive envelope below ≈0.2 mW average (RTC tick; the scheduled LoRa RX slot it was sized with is V2, ADR-044); the bay's voltage rail and buffer-cap pad are spec'd on the carrier. See `docs/spec_values.json` → `keepalive.*` for the numbers the checker enforces.
+* **Budget:** keep-alive envelope below ≈0.2 mW average (RTC tick; the scheduled LoRa RX slot it was sized with is not counted here, ADR-055); the bay's voltage rail and buffer-cap pad are spec'd on the carrier. See `docs/spec_values.json` → `keepalive.*` for the numbers the checker enforces.
 
 ---
 
@@ -993,7 +998,7 @@ To ensure reliable, error-free operation in pitch darkness, under strict militar
 │                                                                             │
 │ [FRONT & EDGE TOPOLOGY]                                                     │
 │ • Chemically Etched Matte Glass Overlay (15% Haze, Paper-Texture Friction)  │
-│ • 10.3" E Ink Kaleido 4 Panel (ADR-032) + Wacom EMR Digitizer              │
+│ • 10.3" mono Carta 1872x1404 Panel (ADR-051) + Wacom EMR Digitizer         │
 │ • 0.1mm Mu-Metal / Ferrite Magnetic Shielding Layer (Behind Digitizer)      │
 │ • Top Bezel: IXYS Micro-Solar Strip + GNSS Antenna (NFC is V2, ADR-034)     │
 │ • Bottom Edge: Recessed Recovery + USB-C Port 1 (jack removed, ADR-046)     │
@@ -1343,7 +1348,7 @@ To guarantee that the electronics and physical components survive 10 to 30 years
    * SolarDeck exclusively mandates **solid Tantalum-Polymer (KEMET T520) and soft-termination Ceramic MLCCs**. Solid-state dielectrics do not contain liquid, eliminating shelf-life degradation.
 3. **UV-Blocking Optical Lamination (Anti-Bleaching):**
    * 10+ years of direct equatorial sunlight can yellow cheap epoxy adhesives and bleach electrophoretic microcapsules.
-   * The optically clear adhesive (LOCA) bonded to the 1.1mm matte aluminosilicate front glass incorporates a **395nm UV cut-off filter**, shielding the delicate Kaleido 4 colour filters from UV degradation.
+   * The optically clear adhesive (LOCA) bonded to the 1.1mm matte aluminosilicate front glass incorporates a **395nm UV cut-off filter**, shielding the panel and the LOCA from UV degradation. This matters more on the mono panel than it did on Kaleido: with no colour-filter dye to fade, UV attack on the adhesive and the capsule binder becomes the dominant ageing mechanism (`LONGEVITY_30Y.md` row 8).
 4. **Hermetic Gold-Crossbar Pushbuttons (5,000,000 Clicks):**
    * Consumer power/volume rocker switches use cheap stamped metal domes that corrode and lose spring tension.
    * SolarDeck specifies **IP67 sealed C&K KSC-series gold-plated tactile switches** rated for 5 million actuations, completely sealed against grit, mud, and sand.
@@ -1444,9 +1449,9 @@ Adopted policy (ADR-023, ADR-031):
 * **Three spare modules are purchased at build time** and stored with the service kit
   (`supply_chain.strategy`, priced at `cm5.price_usd` each). It is the only mitigation that works if the
   module simply disappears.
-* **Single-source parts are enumerated** in `spec_values.supply_chain`: Kaleido 4 panel (E Ink sole
-  source), Kaleido 4 display controller (TBD, ADR-032), CM5, RP2350. The IT8951 is only the bench
-  stand-in's controller and is not a product part. Any review must state which of these a change adds to.
+* **Single-source parts are enumerated** in `spec_values.supply_chain`: CM5, RP2350 — and that is now
+  the whole list, because ADR-051 moved the panel to a multi-vendor mono module, so neither the panel nor
+  its EPDC is single-sourced any more. Any review must state which of these a change adds to.
 
 Honest consequence: if no successor module exists when CM5 production ends, this is a **10-year device
 with a 30-year maintenance story** (or shorter, depending on the unpublished CM5 runway), and the

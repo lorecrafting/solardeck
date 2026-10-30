@@ -9,6 +9,7 @@ Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 sco
 Revised 2026-10-21 17:23 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, pin budget; ADR-044/045).
 
 Revised 2026-10-21 19:45 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion smart pack, ADR-048).
+Revised 2026-10-29 07:20 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa and BLE in V1 on a radio MCU, ADR-055).
 
 SolarDeck is sold as a *sovereign* device, so its security claims are product claims, not
 boilerplate. This document states what is actually enforced in hardware, what is enforced in
@@ -18,7 +19,7 @@ software, and what a buyer should not assume.
 
 | Control | Mechanism | Limits |
 | :--- | :--- | :--- |
-| Radio cutoff | FULL BLACKOUT on the single 3-position privacy switch (HARDWARE_SPEC §2.25) holds the TPS22918 GNSS gate off. A pole-B contact that fails open leaves the radios on and reads as MIC MUTE (§2.25) | The GNSS rail is cut; the CM5's on-module Wi-Fi/BT is held off by tying its `WL_nDisable`/`BT_nDisable` pins low (CM5 datasheet §2.1.1–2.1.2), not by a rail cut. Residual emissions are what gate G5 measures |
+| Radio cutoff | FULL BLACKOUT on the single 3-position privacy switch (HARDWARE_SPEC §2.25) holds the TPS22918 GNSS gate and the radio MCU's load switch off (ADR-055). A pole-B contact that fails open leaves the radios on and reads as MIC MUTE (§2.25) | The GNSS and radio MCU rails are cut; the CM5's on-module Wi-Fi/BT is held off by tying its `WL_nDisable`/`BT_nDisable` pins low (CM5 datasheet §2.1.1–2.1.2), not by a rail cut. Residual emissions are what gate G5 measures |
 | Microphone cutoff | MIC MUTE gates off the mics' I²S bit clock (`MIC_BCLK`, `docs/PIN_BUDGET.md`) through a hardware gate driven by the switch, and pulls the mic side to GND; FULL BLACKOUT also cuts the mic supply. An open switch reads as MIC MUTE | In MIC MUTE the mic supply is not cut. Firmware cannot drive the gate, but the switch position is only as trustworthy as its contacts — "hard to defeat", not "impossible" |
 | Display bus isolation | Two TMUX1575 devices (fail-safe, $I_{\text{off}}$) present giga-ohm impedance when the CM5 rail is at 0 V | Isolation is per-line and switch-state dependent |
 | Airgap | Series disconnect of peripheral power gates, not an RF shield | Near-field coupling, thermal and acoustic side channels are outside the model |
@@ -44,8 +45,8 @@ power side-channel resistance, no anti-evil-maid guarantee. Cellular and the eSI
 1. **The `.pi/`, `~/.ssh` and API-key stores are ordinary files** — a root compromise reads them.
 2. **Local LLM prompt injection:** documents and images fed to a vision model can carry instructions
    that reach the agent's shell. Run agentic work in a bubblewrap sandbox with no radio access.
-3. **Radios can locate you:** GNSS is receive-only, but Wi-Fi/BT and a paired Meshtastic node (ADR-044)
-   transmit. The privacy switch cuts GNSS and the CM5 radios; nothing prevents RF fingerprinting while
+3. **Radios can locate you:** GNSS is receive-only, but Wi-Fi/BT, the on-board LoRa and Bluetooth LE radio MCU (ADR-055)
+   and a paired Meshtastic node transmit. The privacy switch cuts GNSS, the CM5 radios and the radio MCU; nothing prevents RF fingerprinting while
    they are on, and an external node is outside the switch.
 4. **The BIST engine (`solardeck-diag`) reads device state but does not attest it** — a rooted OS can
    lie to it. Hardware attestation is out of scope for V1.

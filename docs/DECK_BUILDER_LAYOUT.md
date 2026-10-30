@@ -9,6 +9,7 @@ Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 sco
 Revised 2026-10-21 17:22 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, ADR-044/045).
 
 Revised 2026-10-21 19:45 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion smart pack, ADR-048).
+Revised 2026-10-29 07:20 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa and BLE in V1 on a radio MCU, ADR-055).
 
 Purpose: classify every `BOM_COST_ESTIMATE.md` line as **snap-in (user-serviceable)** or
 **soldered (factory-welded)** so the SolarDeck quote (`90-history/HANDOFF_TO_FABLE_2026-10-19.md`) is structured around a
@@ -40,7 +41,7 @@ If it has a human-scale interface (screw, latch, twist-on) → snap.
 | :--- | :--- | :--- |
 | CM5 (CM5116064, ADR-031) | 2× standoff screws + DF40 board-to-board connectors | ✅ identity + current sense on its rail |
 | LTE modem + antennas | Deferred to V2 (ADR-034). | — |
-| SX1262 LoRa + whip | Deferred to V2 (ADR-044); the V1 board reserves the footprint and pins (ADR-045, docs/PIN_BUDGET.md). | — |
+| SX1262 LoRa + radio MCU | Soldered on the carrier (ADR-055); antenna on the SMA bulkhead | 🟨 health via the radio MCU, defined with the firmware (ADR-046) |
 | Kaleido 4 panel + EMR (ADR-032) | FPC latch (pin count TBD, ADR-032) | 🟨 physical latch, delicate; health via refresh-ACK latency |
 | Speaker / dual MEMS / piezo | Fly-wires + micro connectors | ✅ audio-loop self-test |
 | Li-ion smart pack (ADR-048) | Screws + pull tab, keyed 5–6-pin connector (pack+, pack−, SDA, SCL, NTC), no adhesive | ✅ pack gauge identity + design-voltage check before charge; charge/discharge curve fit (see §4) |
@@ -71,11 +72,11 @@ If it has a human-scale interface (screw, latch, twist-on) → snap.
 
 When structuring the Seeed/JLCPCB request, ask for the carrier to be *born with these studs*:
 
-1. **M.2 NVMe socket** (CM5 PCIe lane, ADR-042) + **SMA boss, plugged** (V2 LoRa, ADR-045) + **U.FL** (Wi-Fi) + passive GNSS antenna at the top edge (ADR-038)
+1. **M.2 NVMe socket** (CM5 PCIe lane, ADR-042) + **SMA bulkhead** (LoRa, ADR-055) + **U.FL** (Wi-Fi) + passive GNSS antenna at the top edge (ADR-038)
 2. LTE slot, LTE antennas and eSIM land pattern: deferred to V2 (ADR-034); the V2 eSIM requirement is a consumer SGP.22 eUICC (ADR-033)
 3. **40-pin FPC latch** for the panel (already specced)
 4. **Standoff post inserts ×2** for CM5; **CG-adjacent posts** for the RP2350 PGA brick (PGA2350 is 64-pin 25.4 mm — a pinned socket for it is feasible if the quote allows a 2.54 mm-pitch castellation)
-5. **Per-rail current-sense nodes** — the *diagnosis* requirement, not just assembly: a µA-grade sense point (sense resistor + ADC feed to RP2350) on each TPS22918-gated load rail (GNSS, Wi-Fi, audio) and on the CM5 rail. See §4.
+5. **Per-rail current-sense nodes** — the *diagnosis* requirement, not just assembly: a µA-grade sense point (sense resistor + ADC feed to RP2350) on each TPS22918-gated load rail (GNSS, Wi-Fi, audio, expansion, radio MCU) and on the CM5 rail. See §4.
 6. **JTAG/UART breakout** (TP_SWD_CLK/TP_SWD_DIO/TP_UART_* already exist in `HARDWARE_SPEC.md:635` — keep them in the quote as the diagnosis ports)
 
 ---
@@ -121,7 +122,7 @@ Module ↔ RP2350/CM5      Module emits:
 
 - CM5: SMART + eMMC wear + rail sense
 - GNSS: fix status, satellites in view, rail sense
-- LoRa: V2 (ADR-044)
+- LoRa: reports the radio MCU (ADR-055)
 - Panel: per-refresh ACK latency (already needed for G1), ghosting counter
 - Battery: coulomb-counted charge/discharge curve
 - Audio: loopback self-test (padded output, measured mic RMS)

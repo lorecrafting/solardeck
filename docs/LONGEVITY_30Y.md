@@ -6,6 +6,7 @@ Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 sco
 Revised 2026-10-21 17:23 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, ADR-044).
 Revised 2026-10-21 17:53 UTC in Claude Code by anthropic/claude-opus-5-5 (RTC chip, jack removed, ADR-046).
 Revised 2026-10-21 19:44 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion smart pack, ADR-048).
+Revised 2026-10-29 07:20 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa and BLE in V1 on a radio MCU, ADR-055).
 
 Second audit round, scoped to one question: **what breaks over 30 years, and is the current design
 built to survive it?** The existing audit asked "is the documentation true". This one asks "will the
@@ -31,7 +32,7 @@ design does, and the required change. **"Gap" means the design as written does n
 | 5 | **Adhesive creep / yellowing** | VHB and LOCA migrate and yellow; taped cells are the classic 10-year failure | VHB 5952 used for **glass** (correct: no plastic film, §4.0); battery retention relies on cavity fit only | ⚠ **Gap** — VHB on glass is fine; a taped or untethered cell is not |
 | 6 | **NAND retention** | Client SSD unpowered retention ≈1 year at 30 °C; eMMC similar | 64 GB eMMC + 2 TB NVMe, no scrub, no archive warning | ❌ **Gap** — quarterly powered scrub; state plainly that the NVMe is not an archive |
 | 7 | **RTC backup cell** | Lithium coin cells leak; rechargeables lose capacity | RV-3028-C7-class RTC (ADR-046) + Seiko MS621FE rechargeable (in BOM), **no documented replacement interval** | ⚠ **Gap** — a 10-year service item, not a redesign |
-| 8 | **Display aging** | Charge trapping in capsules; Kaleido colour-filter dye fades under UV | 395 nm UV cut-off in the LOCA (§7.5.3), acid-etched glass, no glued film | ❓ **Unknown** — the only panel is the Kaleido 4 (ADR-032); its colour-filter dye lifespan is `null` (`spec_values.panel_sku.kaleido4_dye_lifespan_years`) until E Ink publishes it |
+| 8 | **Display aging** | Charge trapping in capsules; Kaleido colour-filter dye fades under UV | 395 nm UV cut-off in the LOCA (§7.5.3), acid-etched glass, no glued film | ✅ **Addressed in V1** — mono Carta has no colour-filter dye (ADR-051), so the ageing mechanism is charge trapping in the capsules plus UV attack on the LOCA, both of which the 395 nm cut-off and the balanced-waveform rule (AGENTS §4.3) target. The colour variant's dye lifespan stays `null` (`spec_values.panel_sku.colour_variant.kaleido4_dye_lifespan_years`) and a colour build must not inherit the 30-year claim |
 | 9 | **Connector cycles** | USB-C rated ~10 k cycles; daily charging for 30 years ≈ 11 k | IP68 mid-mount receptacles, 4 through-hole stake tabs, >50 N, **10 000 cycles** | ⚠ **Gap** — raise to ≥20 k cycles and state strain relief |
 | 10 | **Fastener/insert creep** | Brass inserts in PA12 creep; over-torque strips the thread | 12 × M2.5 into knurled brass inserts, 500 teardowns, **0.45 N·m**, no threadlocker, screw types uncounted | ⚠ **Gap** — lock the torque in one place, add low-strength threadlocker, cap screw types |
 | 11 | **Internal humidity** | Sealed volume still outgasses; condensation on cold-soak | Sensirion SHT40 dew-point telemetry (§7.4.6), GORE vent, rechargeable desiccant pocket (§4.6) | ✅ **Handled** — the best-specified row in the set |
@@ -46,10 +47,10 @@ schematic/netlist audit could not see it.
 
 ## 1b. Reliability arithmetic: random failure is not the risk (modelled)
 
-`python3 scripts/reliability_model.py` sums ~935 FIT across 13 categories (V1 parts only; the V2 modem and LoRa rows left with ADR-034/044) (Telcordia SR-332-class
+`python3 scripts/reliability_model.py` sums ~995 FIT across 14 categories (V1 parts only, including the radio MCU and LoRa modules of ADR-055; the V2 modem rows left with ADR-034) (Telcordia SR-332-class
 rates at 40 °C, placement counts estimated from `HARDWARE_SPEC.md`):
 
-**MTBF ≈ 1,070,000 h ≈ 122 years.** Compare that with the first *hard* wear-out item:
+**MTBF ≈ 1,005,000 h ≈ 115 years.** Compare that with the first *hard* wear-out item:
 
 | Item | Years to 70–80 % of spec | Kind |
 | :--- | ---: | :--- |

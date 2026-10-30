@@ -6,6 +6,7 @@ Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 sco
 Revised 2026-10-21 17:22 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, ADR-044/045).
 Revised 2026-10-21 17:53 UTC in Claude Code by anthropic/claude-opus-5-5 (RTC chip, jack removed, ADR-046).
 Revised 2026-10-21 19:45 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion smart pack, ADR-048).
+Revised 2026-10-29 07:20 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa and BLE in V1 on a radio MCU, ADR-055).
 
 Detailed architectural specification for campervan energy bus integration, enhanced sensor navigation (RTK, celestial plate-solving, 9-DOF IMU), grid-down doomsday survival hardware, frontlight optical engineering, and offline AI knowledgebase traversal.
 
@@ -244,7 +245,9 @@ The Raspberry Pi CM5's BCM2712 integrates a 3D graphics and compute GPU with ope
 
 1. **Hardware-Accelerated Temporal Blue-Noise Dithering (`dither.glsl`):**
    * Electrophoretic displays physically cannot switch 24-bit RGB or 256-level greyscale at video rates.
-   * A custom GLSL fragment shader running on the CM5 GPU dynamically maps 24-bit frames into 1-bit binary or 2-bit (4-level) dithered bitmaps in **under 2.0 milliseconds**, creating smooth optical gradients with near-zero CPU load.
+   * A custom GLSL fragment shader running on the CM5 GPU maps 24-bit frames into **4-bit (16-level)** dithered bitmaps for maps and images, or 1-bit / 2-bit for live overlays, in **under 2.0 milliseconds**.
+   * **Ordered (Bayer) dither, never Floyd-Steinberg.** Error diffusion is content-dependent, so the same tile re-dithers differently, defeats tile caching and adds high-frequency grain that reads as panel noise; an ordered dither is deterministic and cacheable.
+   * **Maps do not go through the shader at all.** Grey map tiles are pre-rendered offline from a custom style (layer → luminance band → hatch, so water/vegetation/contours stay separable at 16 levels) and shipped in the image; only live overlays (position, track, ADS-B) are dithered at runtime. Luminance-only conversion is not enough — Rec.709 blue is 0.0722, so saturated water and forest collapse into the same grey.
 2. **Vulkan Matrix Compute Acceleration (`llama.cpp` & `whisper.cpp`):**
    * Leveraging Mesa's native `v3dv` Vulkan driver, matrix multiplications and token embedding lookups can be partially offloaded from the Cortex-A76 cores to the GPU shaders, improving local STT transcription latency and conserving battery.
 3. **Hardware Camera ISP & Outgoing Video Encoding:** V2 (ADR-034): needs the deferred rear camera.
@@ -324,7 +327,7 @@ The following custom software utilities and daemons leverage SolarDeck's bi-stab
    * Delivers 0% glare under blinding open-ocean sunlight.
    * Hardware water-lock isolates capacitive touch against splashing waves while allowing the Wacom EMR stylus to plot course bearings; draws only 1.2W vs 25W for standard marine MFDs.
 8. **`solardeck-gcs` (Sunlight UAV & Weather Balloon Ground Control Station):**
-   * Runs **QGroundControl** over USB telemetry radios using MAVLink (on-board LoRa is V2, ADR-044).
+   * Runs **QGroundControl** over USB telemetry radios using MAVLink.
    * Serves as an outdoor daylight ground station for tracking autonomous drones, search-and-rescue quadcopters, and high-altitude meteorological balloons.
 9. **`solardeck-bench` (Outdoor Logic Analyzer, Oscilloscope & Bus Pirate):**
    * Pairs with open-source USB logic analyzers via `sigrok` and `PulseView` on USB-C Port 2.
@@ -337,7 +340,7 @@ The following custom software utilities and daemons leverage SolarDeck's bi-stab
 11. **`solardeck-slate` (Low-Latency Wacom Vector Field Notebook):**
     * Direct-to-DRM canvas hooking into Wacom EMR (<18ms latency) for sketching circuit schematics, physics math, or tactical maps, with 1-click export to vector SVG or Obsidian.
 12. **`solardeck-courier` (Autonomous Bi-Stable LoRa Pager & Bulletin Board):**
-    * V2 (ADR-044); V1 uses a paired Meshtastic node over BLE.
+    * Hardware in V1 (ADR-055): the radio MCU receives with Linux off and the bistable panel holds the board. The software not written (ADR-046); continuous-listen modes cost more than the idle budget (radio power null until measured).
 13. **`solardeck-airgap-tx` (Optical QR Fountain Code Bridge):**
     * V2 (ADR-034): ingestion needs the deferred rear camera.
 14. **`solardeck-vault-totp` (Bi-Stable Airgapped 2FA & Password Vault):**

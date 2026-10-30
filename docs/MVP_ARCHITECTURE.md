@@ -4,8 +4,10 @@ Written 2026-10-18 17:35 UTC in the Pi harness by antigravity/gemini-3.8-flash
 Revised 2026-10-21 15:59 UTC in Claude Code by anthropic/claude-opus-5-5 (CM5 / Kaleido 4 / eSIM standardization, ADR-031–033).
 Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 scope, ADR-034–043).
 Revised 2026-10-21 17:22 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, ADR-044/045).
+Revised 2026-10-27 01:10 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017 (mono V1 panel, ADR-051).
 Revised 2026-10-21 17:53 UTC in Claude Code by anthropic/claude-opus-5-5 (RTC chip, jack removed, ADR-046).
 Revised 2026-10-21 19:43 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion smart pack, ADR-048).
+Revised 2026-10-29 07:20 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa and BLE in V1 on a radio MCU, ADR-055).
 
 ---
 
@@ -17,7 +19,7 @@ SolarDeck is a sovereign, general-purpose open-hardware computing platform desig
    * Bare-metal Linux coding & computing platform (Raspberry Pi CM5)
    * Sunlight-readable 10.3" e-paper reader and Wacom EMR digitizer slate
    * Connectivity: Wi-Fi/BT on the CM5 plus phone tethering. Cellular (LTE modem, nano-SIM tray, soldered eSIM, LTE antennas, modem supply): deferred to V2 (ADR-034); the V2 eSIM requirement is a consumer SGP.22 eUICC (ADR-033)
-   * Mesh: the CM5 talks to a paired external Meshtastic node over Bluetooth LE (software only). On-board LoRa: deferred to V2 (ADR-044); the V1 board reserves the footprint and pins (ADR-045, docs/PIN_BUDGET.md)
+   * Mesh: an always-on radio MCU (Bluetooth LE, nRF52840 class, part TBD) owns the on-board SX1262 LoRa module and talks to the RP2350 over a PIO UART, so LoRa and BLE work with Linux off (ADR-055, docs/PIN_BUDGET.md). Station check-in on the minute wake is the default; Meshtastic-peer mode is opt-in; BLE to a phone relays notifications. The CM5 can still pair an external Meshtastic node over Bluetooth LE. Radio software not written (ADR-046)
    * NFC: deferred to V2 (ADR-034)
    * Standalone GNSS: **u-blox MAX-M10S** on an RP2350 UART behind a load switch, passive antenna at the top edge; tracking power `spec_values.gnss.tracking_mw` (ADR-038)
    * Dual-brain ultra-low-power supervisor (RP2350B + 8MB PSRAM) with **2× TI TMUX1575 (4-channel each, 8 total) display bus isolation** for 4.5 mW 30ms Zen reading and desk clock modes
@@ -39,13 +41,13 @@ SolarDeck is a sovereign, general-purpose open-hardware computing platform desig
 ├─────────────────────────────────────────────────────────────────────────────┤
 │ 1. BRAIN:     Raspberry Pi CM5 CM5116064 (16GB RAM, 64GB eMMC, Wi-Fi/BT)    │
 │ 2. CO-PROC:   RP2350B (Cortex-M33/RISC-V) + 8MB PSRAM (Zen Reader)          │
-│ 3. DISPLAY BUS: K4 display controller (TBD, ADR-032) + 2x TMUX1575          │
-│ 4. SCREEN:    10.3" E Ink Kaleido 4 (resolution/PPI TBD, ADR-032) + EMR     │
+│ 3. DISPLAY BUS: IT8951 EPDC + 2x TMUX1575 (ADR-051)                        │
+│ 4. SCREEN:    10.3" mono Carta 1872x1404, 227 PPI (ADR-051) + EMR          │
 │ 5. CAMERA:    Deferred to V2 (ADR-034)                                      │
 │ 6. CELLULAR:  Deferred to V2 (ADR-034); V2 eSIM = SGP.22 eUICC (ADR-033)    │
-│ 7. MESH/GNSS: BLE Meshtastic node (LoRa V2, ADR-044) + MAX-M10S (ADR-038)   │
+│ 7. MESH/GNSS: radio MCU + SX1262 LoRa, BLE (ADR-055) + MAX-M10S (ADR-038)   │
 │ 8. NFC:       Deferred to V2 (ADR-034)                                      │
-│ 9. ANTENNAS:  passive GNSS (top edge); LoRa SMA boss plugged (V2, ADR-045)  │
+│ 9. ANTENNAS:  passive GNSS (top edge); LoRa SMA bulkhead (ADR-055)          │
 │ 10. SENSORS:  RV-3028-C7 RTC + BMI270/BMM350 9-DOF IMU + BMP390 Baro        │
 │ 11. PRIVACY SW: one 3-position slide: normal / mic mute / full blackout      │
 │ 12. VOICE:    2 MEMS Mics + Speaker (AEC ref) + Voice Button                │
@@ -76,7 +78,7 @@ To achieve maximum field battery life without an excessively heavy device:
 The tier draws below are the modelled loads; runtimes are re-derived from the chosen cell.
 * **Tier 0: Dormant Standby (< 0.1 mW)**
 * **Tier 1: Zen Reader Mode (RP2350 Driven @ ~4.5 mW)** with 30ms page turns.
-* **Tier 2: LoRa mesh repeater:** deferred to V2 (ADR-044).
+* **Tier 2: LoRa via the radio MCU (ADR-055):** station check-in rides the minute wake (`radio.station_mode_idle_mw`, null until measured); Meshtastic-peer mode keeps the receiver on, costs more than the idle budget and is opt-in (`radio.meshtastic_mode_idle_mw`); software not written (ADR-046).
 * **Tier 3: Paper-Feel Scribe Slate (CM5 1-Core @ ~0.60W)**
 * **Tier 4: Adaptive Mixed Workstation (Web/Discord/Claude @ ~1.40W avg)**
 * **Tier 5: Audio-First Conferencing (Mic array + Opus + inbound dither @ ~1.30W)** (no outbound video; USB-C UVC webcam optional via Port 2).
@@ -104,7 +106,7 @@ V1 connectivity is Wi-Fi/BT on the CM5 plus phone tethering (ADR-034).
 * **3.5 mm headphone jack:** Removed from V1 (ADR-046): use USB-C or Bluetooth audio; one less aperture for the IP54 target.
 
 ### 3.2 Antenna Architecture & Reception Optimization
-1. **LoRa Mesh:** Deferred to V2 (ADR-044); the V1 board reserves the footprint and pins (ADR-045, docs/PIN_BUDGET.md). V1 mesh is a paired external Meshtastic node over Bluetooth LE.
+1. **LoRa Mesh (ADR-055):** the SX1262 module, driven by the radio MCU, feeds an SMA bulkhead (an aperture against the IP54 target). Pairing an external Meshtastic node over Bluetooth LE still works.
 2. **Cellular LTE antennas:** Deferred to V2 (ADR-034).
    * **GNSS (ADR-038):** passive GNSS antenna at the top edge feeding the u-blox MAX-M10S (integrated LNA), which sits on an RP2350 UART behind a load switch. Receive-only.
 3. **Wi-Fi 5 & Bluetooth 5.0:**
@@ -188,7 +190,7 @@ To enable clean voice interaction with Claude Code and dictation:
                               │
                               ▼
 [STEP 3: AUTONOMOUS RP2350 SIPPING MODE]
-• RP2350 pushes pages/digits to the Kaleido 4 display controller (TBD, ADR-032) from 8MB PSRAM double-buffer.
+• RP2350 pushes pages/digits to the IT8951 EPDC (ADR-051) from 8MB PSRAM double-buffer.
 • Between updates, RP2350 deep-sleeps at 10 µA.
 • Display controller sleep power TBD (ADR-032). Total system draw: ~4.5 mW.
 • Battery runtime: TBD until measured on the bench (pack: `battery_wh.li_ion`) (ADR-040).

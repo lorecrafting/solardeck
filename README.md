@@ -1,16 +1,19 @@
 # SolarDeck
 
-**An open-hardware 10.3″ colour E-Ink slate you can read in full sun, talk to, write on and type on —
+**An open-hardware 10.3″ E-Ink slate you can read in full sun, talk to, write on and type on —
 a calm Linux machine for working with AI, built to be repaired and upgraded instead of replaced.**
 
 *Written 2026-10-18 17:35 UTC in the Pi harness by antigravity/gemini-3.8-flash.
 Revised 2026-10-20 14:40 UTC in the Pi harness by openrouter/deepseek/deepseek-v4-flash-0731.
-Rewritten 2026-10-21 16:05 UTC and revised 16:55, 17:30 and 19:38 UTC in Claude Code by anthropic/claude-opus-5-5.*
+Rewritten 2026-10-21 16:05 UTC and revised 16:55, 17:30 and 19:38 UTC in Claude Code by anthropic/claude-opus-5-5.
+Revised 2026-10-27 01:10 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017 (mono V1 panel, ADR-051).
+Revised 2026-10-29 07:20 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa and BLE in V1 on a radio MCU, ADR-055).*
 
 > [!NOTE]
-> **Status (2026-10-21): design stage.** The architecture, parts and pin budget are worked out and
-> machine-checked; there is no board yet and nothing has been measured. The display, E Ink's Kaleido 4,
-> was announced on 2026-10-15 and we are waiting on its datasheet. Every figure in this repo is tagged
+> **Status (2026-10-27): design stage.** The architecture, parts and pin budget are worked out and
+> machine-checked; there is no board yet and nothing has been measured. The display is a 10.3″ mono
+> Carta 1200 module, 1872 × 1404, 227 PPI (ADR-051); colour moves to a V2 variant. We are waiting on
+> that module's mechanical drawing and waveform file. Every figure in this repo is tagged
 > `datasheet`, `modelled`, `aspirational` or `null` — see [Where things stand](#where-things-stand).
 
 ---
@@ -73,13 +76,14 @@ again when you're done.
                  │        Raspberry Pi CM5 · Linux · Sway            │                 │
                  │        Wi-Fi/BT · speaker · NVMe ─────────┐       │                 │
                  │                                           ▼       ▼                 │
-                 │                          bus switch ─► display controller (TBD) ─► 10.3″ Kaleido 4 + Wacom EMR
+                 │                          bus switch ─► EPDC (IT8951) ─► 10.3″ mono Carta + Wacom EMR
                  └─────────────────────────────────────────────────────────────────────┘
 ```
 
 A bus switch hands the display to whichever brain is awake. V1 gets online over Wi-Fi or your phone's
-hotspot and talks to an external Meshtastic radio over Bluetooth; cellular, on-board LoRa, NFC and a
-camera arrive in V2, and the V1 board already reserves their footprints and pins
+hotspot and talks to an external Meshtastic radio over Bluetooth. An always-on radio chip carries on-board
+LoRa and Bluetooth LE, so messages can reach the device with Linux off (hardware in V1, ADR-055; software
+not written yet, ADR-046). Cellular, NFC and a camera arrive in V2, and the V1 board already reserves their footprints and pins
 ([`docs/PIN_BUDGET.md`](docs/PIN_BUDGET.md)). The full architecture is in
 [`docs/MVP_ARCHITECTURE.md`](docs/MVP_ARCHITECTURE.md).
 
@@ -144,17 +148,17 @@ Numbers live in [`docs/spec_values.json`](docs/spec_values.json); this table nam
 | :--- | :--- |
 | Compute | Raspberry Pi CM5 (CM5116064: 16 GB RAM, 64 GB eMMC, Wi-Fi/BT), socketed — ADR-031 (`cm5`) |
 | Co-processor | RP2350B + 8 MB PSRAM + 16 MB flash |
-| Display | 10.3″ E Ink Kaleido 4 colour, pending E Ink's datasheet — ADR-032 (`panel_sku`) |
+| Display | 10.3″ mono Carta 1200, 1872 × 1404, 227 PPI, IT8951 EPDC; colour is a V2 variant behind a pluggable daughter board — ADR-051 (`panel_sku`) |
 | Pen / touch | EMR pen layer + capacitive touch, hardware palm blanking |
 | Voice | Two MEMS mics owned by the co-processor, speaker, hold-to-talk button, mute switch — ADR-036, ADR-046 |
 | Haptics | DRV2605L + frame-mounted LRA, plus typewriter sound — ADR-037 |
 | Battery | 1S Li-ion in a user-replaceable smart pack (protection + gauge in the pack); capacity claimed only from a real datasheet — ADR-048 (`battery`, `battery_wh`) |
 | Charging & power | BQ25798 charger, STUSB4500 USB-C PD sink, buck-boost always-on rail, power bank on USB-C port 2 — ADR-035, ADR-048, ADR-049 |
 | Solar | Bezel strip with a hardware temperature gate; outdoor top-up only — ADR-041, ADR-048 (`solar_w`) |
-| Radios | Wi-Fi/BT on the CM5, u-blox MAX-M10S GPS on the co-processor — ADR-038 (`gnss`) |
+| Radios | Wi-Fi/BT on the CM5, u-blox MAX-M10S GPS on the co-processor — ADR-038 (`gnss`); LoRa and Bluetooth LE on an always-on radio MCU — ADR-055 (`radio`) |
 | Storage | eMMC + M.2 NVMe + microSD; native USB 3 — ADR-042 |
 | Enclosure | PA12 prototypes, PC/ABS production, IP54 target — ADR-039 (`chassis_mm`, `ingress`) |
-| **Coming in V2** | LTE with nano-SIM and SGP.22 eSIM (ADR-033), on-board LoRa, NFC, rear camera, snap-on Hotpacks — ADR-034, ADR-044 |
+| **Coming in V2** | LTE with nano-SIM and SGP.22 eSIM (ADR-033), NFC, rear camera, snap-on Hotpacks — ADR-034 |
 
 ---
 
@@ -176,11 +180,12 @@ Numbers live in [`docs/spec_values.json`](docs/spec_values.json); this table nam
 waits on the items below.
 
 **What we're waiting on:**
-1. **Kaleido 4 (E Ink).** Announced without public sizes, resolution or a sampling programme; a 10.3″
-   version is not yet confirmed. A sales inquiry went to E Ink on 2026-10-21. Panel figures stay `null`
-   until the datasheet exists (ADR-032), and the case outline waits on its drawing.
-2. **The pen layer (ADR-050).** No EMR quote has been requested. Once a 10.3″ Kaleido 4 is confirmed,
-   a neutral inquiry (sensor size, controller interface, Linux, samples and volume pricing; no panel,
+1. **The panel drawing and waveform (ADR-051).** The mono 10.3″ Carta 1200 module class is commodity,
+   but the chosen module's mechanical drawing and its matching `.wbf` waveform file must be on the
+   purchase order. Active area, outline and stack stay `null` until then — audit X5 already shows the
+   170 mm chassis depth is short of a 174.4 mm module, so the chassis or the glass moves first.
+2. **The pen layer (ADR-050).** No EMR quote has been requested. Now that the panel is confirmed, a
+   neutral inquiry (sensor size, controller interface, Linux, samples and volume pricing; no panel,
    compute or schedule details) goes to several vendors at once: Wacom's OEM channel, Hanvon Ugee and
    at least one more.
 3. **The battery pack (ADR-049).** EEMB's quote, samples and pack-level UN38.3 / IEC 62133 reports for
@@ -189,14 +194,14 @@ waits on the items below.
    bench, bought once the panel and pen layer are available.
 
 <details>
-<summary><b>Kaleido 4 day-one list</b> (the day E Ink's datasheet and drawing arrive)</summary>
+<summary><b>Panel day-one list</b> (the day the mono module's drawing and waveform arrive)</summary>
 
-- Fill `ppi`, `display_active_mm`, `panel_module_outline_mm`, `display_stack_mm`, `epdc_spi_mhz`,
-  `refresh_modes` and the reader geometry in `docs/spec_values.json`, tagged `datasheet`.
+- Fill `display_active_mm`, `panel_module_outline_mm`, `display_stack_mm`, `epdc_spi_mhz`, `vcom_trim`,
+  `refresh_modes` and the reader geometry in `docs/spec_values.json`, tagged `datasheet` or `measured`.
 - Run `python3 scripts/verify_all.py`: the panel-fit, page-cache and enclosure checks stop skipping and
   report anything that no longer fits.
-- Choose the display controller (ADR-032) and check its host interface against `docs/PIN_BUDGET.md`
-  (the budget assumes SPI plus ready and reset).
+- Check the module's host interface against `docs/PIN_BUDGET.md` (the budget assumes SPI plus ready and
+  reset, which is the IT8951 interface the mono module uses).
 - Freeze the case outline (ADR-039) and the battery bay, then capture the carrier schematic.
 
 </details>

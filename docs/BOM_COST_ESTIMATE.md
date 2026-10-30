@@ -30,7 +30,7 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **AON 3.3V Supply**| Low-IQ buck-boost for the always-on rail, holds 3.3 V to an empty pack (ADR-048; pins in docs/EVT0_POWER_BOARD.md). DigiKey 2026-10-21 qty 1; 0 in stock, Mouser on order | Texas Instruments / DigiKey | TPS63900DSKR | $3.10 |
 | **5V Boost Conv**| Synchronous boost with true output disconnect, 5 V CM5 / port 2 supply (ADR-049, docs/EVT0_POWER_BOARD.md §2.6). DigiKey 2026-10-21 qty 1; 0 in stock | Texas Instruments / DigiKey | TPS61022RWUR | $2.38 |
 | **Micro-Solar** | Top-Bezel Monocrystalline Trickle Strip (~0.15W Peak, 50-120mW Real)| IXYS / DigiKey / Mouser | SM141K06L / PowerFilm | $3.50 |
-| **Power Gates** | Ultra-Low Leakage Load Switches (Airgap Cut + Port 2 VBUS) | Texas Instruments / LCSC | TPS22918DBVR (x2) | $0.80 |
+| **Power Gates** | Ultra-Low Leakage Load Switches (Airgap Cut + Port 2 VBUS + radio MCU rail, ADR-055) | Texas Instruments / LCSC | TPS22918DBVR (x3) | $1.20 |
 | **GNSS Receiver**| Standalone multi-constellation GNSS, integrated LNA, on the RP2350 UART (ADR-038). DigiKey 2026-10-21 qty 1 | u-blox / DigiKey | MAX-M10S-00B | $11.42 |
 | **Wi-Fi/BT Antenna**| Dual-Band (2.4/5GHz) Balanced Dipole FPC with U.FL | Molex / Mouser | 1461530100 | $1.20 |
 | **GNSS Antenna** | Passive Internal FPC GPS/GLONASS Antenna (for MAX-M10S; integrated LNA) | Molex / Taoglas / LCSC | 1461860100 | $0.90 |
@@ -39,6 +39,7 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **Passives/Ports**| 2x IP68 USB-C Ports, 1,000µF Poly Caps, SMD Passives | LCSC / JLCPCB SMT Library | Standard SMD 0402/0603 | $9.40 |
 | **USB-C CC Ctrl** | Type-C CC controller for port 2, strapped source-only (ADR-049) | Texas Instruments / Mouser | TUSB320RWBR | $0.65 |
 | **I/O Isolators** | Fail-Safe Cross-Domain Buffers with I_off Partial-Power-Down | Texas Instruments / Mouser | TXU0104PWR (x2) | $0.50 |
+| **Rail Gates** | Single-gate I_off buffers powered from the GNSS and radio MCU rails, for the lines a CM5-rail TXU0104 cannot isolate (ADR-055, `pins.gate_buffers`) | Texas Instruments | SN74LVC1G125 (x3) | TBD |
 | **Motion Sensor** | Ultra-Low-Power 3-Axis Accelerometer (3.5µA Pick-up Wake) | Bosch Sensortec / Mouser | BMA400 | $1.10 |
 | **Barometer** | Precision Atmospheric Pressure & Altimeter Sensor | Bosch Sensortec / Mouser | BMP390 | $1.20 |
 | **5-Way Rocker** | IP67 Sealed Micro Navigation Joystick (Up/Down/Left/Right/Press)| ALPS / Panasonic / Mouser | SKRHABE010 | $0.85 |
@@ -68,9 +69,13 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **Perimeter Gasket** | Die-Cut VMQ Silicone O-Ring, 27% Compression (Service Item) | Custom / Rogers | Custom Die-Cut VMQ | $2.10 |
 | **Enclosure (PA12)**| SLS 3D-Printed PA12 Nylon Shell + 85A TPU Corner Bumpers | JLC3D / Craftcloud | Custom CAD Housing (Streamlined)| $25.00 |
 | **Conformal Coat** | IPC-CC-830 Reworkable Acrylic Conformal Coating, Connector-Masked (spec_values.longevity.conformal_coat) | PSI / Applied Post-SMT | IPC-CC-830 (UC-2605) | $2.00 – $4.00 |
-| **Total Core BOM**| **(Sum of 53 V1 Line Items, excluding 3 TBD parts: Kaleido 4 panel, its controller, the battery pack — a floor, not a price; distributor prices at qty 1, before tariffs; see docs/AUDIT_6_2026-10-21.md H22)** | | | **$524.76 – $526.76 + TBD** |
+| **LoRa Radio** | 915/868 MHz LoRa Transceiver Module (+22dBm), on the radio MCU's SPI bus (ADR-055) | Mouser / LCSC | Semtech SX1262 (Ebyte E22-900M22S) | $5.50 |
+| **LoRa Antenna Mount**| IP67 Bulkhead SMA Female Jack with O-Ring Gasket | LCSC / Amphenol | SMA-KFD08-IP67 | $1.80 |
+| **LoRa Antenna** | Tactical 1/2-Wave 915MHz Dipole Whip (Center-Fed, 3.2dBi) | Linx Technologies / Mouser | ANT-916-CW-HWR-SMA | $8.50 |
+| **Radio MCU (BLE)** | Always-on Bluetooth LE MCU module (nRF52840 class) that owns the LoRa radio and talks to the RP2350 over UART (ADR-055) | TBD | TBD | TBD |
+| **Total Core BOM**| **(Sum of 58 V1 Line Items, excluding 5 TBD parts: the mono panel, its controller, the battery pack, the radio MCU, the rail gates — a floor, not a price; distributor prices at qty 1, before tariffs; see docs/AUDIT_6_2026-10-21.md H22)** | | | **$540.96 – $542.96 + TBD** |
 
-### Deferred to V2 (ADR-034, LoRa ADR-044) — not summed
+### Deferred to V2 (ADR-034) — not summed
 
 | Category | Component Description | Primary Supplier / Manufacturer | Part Number / Model | Est. Unit Cost (Qty 1-5) |
 | :--- | :--- | :--- | :--- | :--- |
@@ -79,9 +84,6 @@ Comprehensive bill of materials, component part numbers, verified suppliers, and
 | **MFF2 eSIM Chip** | Consumer eUICC (GSMA SGP.22) Micro-eSIM, MFF2 DFN-8 — ADR-033 | TBD | TBD (ST4SIM-200M rejected: M2M SGP.02) | TBD |
 | **LTE MIMO Antennas**| Ultra-Wideband (698–3000 MHz) Flexible PCB Antennas (x2) | Taoglas / DigiKey | FXUB63.07.0150C (Main + Div) | $8.40 |
 | **Rear Camera** | 12MP Sony IMX708 Flush PDAF Scanner (Multimodal AI Vision & OCR)| Raspberry Pi / DigiKey | Official Cam Module 3 sensor + Sapphire | $14.50 |
-| **LoRa Mesh** | 915/868 MHz LoRa Transceiver Module (+22dBm) | Mouser / LCSC | Semtech SX1262 (Ebyte E22-900M22S) | $5.50 |
-| **LoRa Antenna Mount**| IP67 Bulkhead SMA Female Jack with O-Ring Gasket | LCSC / Amphenol | SMA-KFD08-IP67 | $1.80 |
-| **LoRa Antenna** | Tactical 1/2-Wave 915MHz Dipole Whip (Center-Fed, 3.2dBi) | Linx Technologies / Mouser | ANT-916-CW-HWR-SMA | $8.50 |
 | **NFC Controller** | 13.56 MHz NFC / Smartcard Reader & Crypto Signer + FPC Antenna | NXP Semiconductors / LCSC | PN5321A3HN / ST25R3916 | $2.40 |
 
 
@@ -146,7 +148,7 @@ Because standard surface-mount components from JLCPCB's / PCBWay's Basic and Ext
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  SOLARDECK V1 TABLET (excl. 3 TBD parts)    │ $525 – $527    │
+│  SOLARDECK V1 TABLET (excl. 5 TBD parts)    │ $541 – $543    │
 ├─────────────────────────────────────────────────────────────┤
 │  OPTIONAL SNAPDECK KEYBOARD (PHASE 2)      │ $47.55         │
 ├─────────────────────────────────────────────────────────────┤

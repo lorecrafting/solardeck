@@ -738,6 +738,8 @@ Written 2026-10-21 16:37 UTC in Claude Code by anthropic/claude-opus-5-5.
 
 ## ADR-044 — LoRa moves to V2; V1 talks to an external Meshtastic node over Bluetooth (2026-10-21)
 
+**Scope decision superseded by ADR-055 (2026-10-29): LoRa is V1 again, on an always-on radio MCU.** The GNSS and RF-limit rules below still stand.
+
 Written 2026-10-21 17:20 UTC in Claude Code by anthropic/claude-opus-5-5. Amends ADR-034 (V1 scope)
 and ADR-038 (GNSS rationale). Owner decision: "Should we descope LoRa from V1?" → yes.
 
@@ -1012,3 +1014,349 @@ other device makers, so competition alone would not stop a sale. But Hanvon ship
 alternative.
 
 **Still assumes.** At least two EMR vendors will quote small quantities.
+
+---
+
+## ADR-051 — Mono Carta 1200 is the V1 panel; colour becomes a variant (2026-10-27)
+
+Written 2026-10-27 01:05 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017.
+
+**Owner decision.** "Yes lets just go with mono first."
+
+**Decision.** V1 ships a **10.3″ mono Carta 1200 module, 1872 × 1404, 227 PPI, IT8951-class
+controller**, sold as commodity hardware with more than one source. Kaleido 4 (and Kaleido 3) move to
+**V2 as a variant SKU on the same chassis**: the EPDC sits on a pluggable daughter board carrying
+DSI + SPI + the panel bias rails, so a colour panel is a board swap, not a carrier redesign. This
+supersedes ADR-032. It does not revive ADR-030 as written — mono V1 keeps a colour path.
+
+**Because.** (1) K4 cannot be bought as a panel; K3 needs an ODM relationship with one source; a mono
+10.3″ IT8951 module is available now from several vendors, which is the difference between a bench and
+a product. (2) Colour is what halves the raster, not text: a Kaleido module keeps 227 PPI mono and
+roughly 114 PPI colour, so mono at 227 PPI is the sharpest text this project can ship. (3) The 30-year
+claim (ADR-030) is only reachable with mono capsules; dye lifespan stays `null`. (4) No colour-filter
+array means no frontlight requirement, no colour-quantise/dither path, and single-pass refreshes.
+
+**Costs accepted.** Colour is not a V1 differentiator; colour-coded UI semantics become weight, shape
+and position; colour imagery and plant/foraging identification by colour are out of V1 scope. The
+`CONTENT_COLOUR` refresh class stays in the scheduler for the V2 variant and is unreachable in V1.
+
+**What would reverse it.** A missing waveform (`.wbf`) file for the chosen module, or VCOM that is
+unstable over temperature: that is a different vendor, not a different architecture. If a K4 panel's
+outline or raster differ materially from the mono 10.3″ outline, colour is a V2 redesign and not a
+swap — check this before any colour commitment.
+
+**Open items this creates.**
+
+- **Panel outline is still unknown, and audit X5 now bites earlier.** `panel_module_outline_mm`,
+  `display_active_mm` and `display_stack_mm` stay `null` until the chosen module's drawing is on file;
+  never enter an estimate. ED103TC2 measures 216.7 × 174.4 mm (AUDIT_6 §X5) against a 170 mm chassis
+  depth, so either the chassis is re-derived or a narrower glass is chosen **before** enclosure
+  drawings (gate G2).
+- **VCOM trim and VCOM-vs-temperature compensation** become bench bring-up items. `HARDWARE_SPEC.md`
+  §2.2 already routes a backplate TMP112 to the controller `TEMP_REG` for waveform pulse voltage; VCOM
+  is a separate register and is not yet covered by any procedure.
+- **Ghost-ledger thresholds** (`GHOST_DEBT_THRESHOLD`, `GHOST_DEBT_CAP` in
+  `src/daemons/eink-refreshd/refreshd.h`) are modelled; measure them on the mono panel before quoting
+  any ghosting claim.
+- **EMR stack decision** (an EMR-laminated module vs a separate sensor layer) is now due before the
+  cavity is drawn. ADR-050 stays in force; it finally has a confirmed panel to quote the sensor against.
+
+## ADR-052 — Open design, instrument price, kits before certification (2026-10-27)
+
+Written 2026-10-27 01:15 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017.
+
+**Owner decision.** Asked what the open route and an instrument price meant and whether any margin
+existed; answered with the numbers below, then "go".
+
+**Decision.** One commercial model, three parts, which only work together:
+
+1. **The design stays open.** CERN-OHL-S-2.0 (hardware), MIT (firmware), CC-BY-SA (docs) — see
+   `LICENSES/PATHS.md`. No relicensing, no closed enclosure. The licence already lets anyone build and
+   sell SolarDeck, so the model is built *on* that fact rather than against it.
+2. **V1 sells as an instrument, direct only**, at `unit_economics.price_usd.instrument`. The buyer is
+   comparing it with a rugged field computer, not with an e-reader. Bundled in the price: three-year
+   warranty, a spare panel and pack, the factory VCOM/calibration record, the first map pack, and named
+   support. No retail channel, no discounting, no marketplace.
+3. **Kits first, certification later.** A kit SKU at `unit_economics.price_usd.kit` exists to fund the
+   bench work, find field failures and produce customers — not to make money. Assembled sales start
+   only after FCC Part 15B plus the CM5 module integration memo, and a pack whose UN38.3 documentation
+   comes from the supplier.
+
+**The money, as modelled** (all figures in `unit_economics`, checked by `scripts/check_docs_numbers.py`):
+
+| SKU | Price | COGS | Cert/RMA/freight | Gross profit |
+| :--- | ---: | ---: | ---: | ---: |
+| Instrument | $1,799 | $710 | $141 | **$948 (53%)** |
+| Thin consumer | $1,099 | $650 | $85 | $364 (33%) |
+| Kit | $699 | $560 | — | $139 (20%) |
+
+At `unit_economics.target_units_per_year` instrument sales the model leaves
+`unit_economics.owner_profit_usd_per_year` a year before tax and before the owner's wages; starting
+capital to first revenue is `unit_economics.capital_to_first_revenue_usd`, staged in
+`unit_economics.starter_batch_units`-unit batches.
+
+**Because.** (1) The core BOM alone is `bom_total_low` with `cm5.price_usd` inside it, before panel and
+pack — at $499 the parts cost more than a Kindle Scribe's retail price, so a consumer price cannot work
+at any volume this project can fund. (2) Under CERN-OHL-S a BOM-plus-margin price is undercuttable to
+zero by anyone with better purchasing, so the only defensible price is one attached to what the licence
+does **not** grant: the name (OHL grants no trademark rights), the per-batch VCOM and waveform
+calibration data, the rendered map packs, the certificate, the spares, and a person to call. (3) The
+durable margin is the accessory, spares and services tail — Hotpacks, panels, packs, map packs, support
+— not the tablet.
+
+**Costs accepted.** Publishing invites a competitor to undercut the instrument price; that is the price
+of the project's reason to exist, and it is cheaper than losing the community that makes a niche device
+viable at all. The instrument price caps volume around 100–150 units a year: this is a business that
+pays a person, not one that sells. A kit containing a radio is still a device that the seller markets,
+so kit sales are a legal-review item and are labelled prototype/uncertified — never treated as a
+certification-free channel. `unit_economics.spares_held_pct_of_units` of every build is held as dead
+stock to keep the 30-year parts promise (`LONGEVITY_30Y.md`), which is real money in a warehouse.
+
+**What would reverse it.** A distributor quote putting `cm5.price_usd` at ≤$200 makes the thin-consumer
+SKU viable and the price drops; an ODM panel at ≤$110 with assembly at ≤$60 puts COGS near $450 and the
+whole table re-derives. Conversely, if compliance quotes above ~$20,000 or no pack supplier will supply
+UN38.3 documentation, assembled sales stop and the project remains kits and services.
+
+**Open items this creates.** Five quotes decide everything else, in this order: CM5 through a
+distributor; the mono panel module direct from an ODM at 100 and 500; enclosure CNC versus die-cast at
+400 units; the EEMB pack with documentation; a compliance lab for Part 15B plus the module memo. Every
+number in `unit_economics` is `modelled` until those land — replace them and re-run the check, never
+nudge them.
+
+---
+
+## ADR-053 — No China-origin parts, TAA origins, assembled in the USA (2026-10-29)
+
+**Superseded by ADR-054 (2026-10-29): the sourcing gate is lifted.** Kept as the record of what was weighed.
+
+Written 2026-10-29 00:05 UTC in Claude Code by anthropic/claude-opus-5-5. Owner asked "if I had to do it
+with all domestic parts how would I do it?", was shown the four meanings of "domestic" below, and said
+yes to recording this standard.
+
+**Decision.** The assembled V1 instrument meets `supply_chain.sourcing_standard`: no China-origin part,
+every part's country of origin the US or a Trade Agreements Act (TAA) designated country, and final
+assembly in the US. It is labelled "Assembled in USA", never an unqualified "Made in USA". This joins the
+ADR-052 gates (FCC Part 15B, pack UN38.3) for assembled sales. Bench, EVT and kit builds may keep current
+sources. The core BOM gains an **Origin** column, and the rows whose current source is China-based are
+listed in `supply_chain.china_origin_open`, which Phase 16 holds to the table. Adding to that list needs an ADR.
+
+**Because.** (1) An all-US BOM is not available. No US maker produces E-Ink panels, the CM5's SoC and
+the RP2350 are fabricated in Taiwan, and almost no small-format Li-ion cells are made in the US. So the
+FTC "all or virtually all" test for an unqualified "Made in USA" claim cannot be met. (2) What buyers
+actually check is achievable:
+- federal buyers check TAA and Buy American;
+- DoD checks NDAA Section 889, the Section 154 battery restriction (from 2027-10-01) and the magnet
+  restrictions;
+- island and field customers check supply resilience.
+
+(3) The SBIR/STTR applications under consideration make "no China, assembled in the USA" part of the stewardship
+case. SBIR itself only requires the R&D to be done in the US.
+
+**What changes, in priority order.**
+1. **Battery cells (critical path).** EEMB (ADR-048/049) is China-based. Replace it with a TAA-origin cell
+   (Japanese or Korean makers, with country of origin stated per lot, since some lines are in China) or a
+   US specialty cell maker. The pack itself is built in the US around the existing TI protector and gauge.
+   A cylindrical cell changes the chassis stack, so it needs its own ADR before anyone commits to it.
+   The charge limit and every pack safety rule in AGENTS §4.1 stay as they are. A US-built pack has no
+   supplier UN38.3 report to inherit, so that ADR must also replace ADR-052's assumption that
+   `unit_economics.certification_usd.pack_un383` stays null (enforced in `scripts/check_docs_numbers.py`)
+   with a quoted UN38.3 cost.
+2. **Panel origin.** Require a Taiwan-origin certificate for the mono module. Some E Ink modules are
+   assembled in China, and the low-cost integrators are Chinese.
+3. **EMR sensor.** Wacom (Japan) only, which narrows ADR-050's vendor list.
+4. **Magnets.** The N52 ring needs a non-China NdFeB source, or it leaves V1.
+5. **Fabrication.** The listed PCB, assembly, passives and enclosure sources (JLCPCB, LCSC, JLC3D) move
+   to US or TAA-country vendors for production.
+6. **Solar strip.** PowerFilm (US) is already the listed alternate. Making it primary is a separate
+   change, because `solar_w.bezel_strip` is datasheet-derived.
+
+**Costs accepted.** Production PCBs, assembly and cells cost materially more than the current Chinese
+quotes. No number is entered until US and TAA quotes exist. Several `TBD` origins will stay `TBD` until a
+distributor record confirms them. That is honest, but it means the standard is not yet demonstrated.
+
+**Still assumes.** The Buy American component test is waived for COTS end products, which is unverified;
+confirm it with an APEX Accelerator before quoting it to a buyer. A TAA-origin cell can meet the pack's
+capacity and the chassis envelope.
+
+**What would reverse it.** No TAA-origin cell fits the chassis at an acceptable capacity, or the cost
+increase breaks the `unit_economics` instrument margin once quotes land.
+
+---
+
+## ADR-054 — The sourcing gate is lifted; parts come from wherever they are available (2026-10-29)
+
+Written 2026-10-29 07:20 UTC in Claude Code by anthropic/claude-opus-5-5. Supersedes ADR-053. Owner
+decision: "lets lift the domestic thing, we can get whatever part from wherever its available."
+
+**Decision.** No country-of-origin rule applies to any build. The ADR-053 enforcement is removed: the
+BOM `Origin` column, `supply_chain.sourcing_standard` and `supply_chain.china_origin_open`, and the
+Phase 16 origin check. Parts are chosen on availability, datasheet fit, price and lifetime, as before
+ADR-053.
+
+**Because.** The findings behind ADR-053 showed the display, the pen layer, the small-lot cells and the
+embedded magnets have no practical non-China source at this volume, and no funding path the owner is
+pursuing (NSF, USDA, NOAA, the Hawaiʻi match) requires domestic content.
+
+**Still true, and now costs rather than gates.** Tariffs on imported parts belong in the unit
+economics (ADR-052); a federal sale above the TAA threshold or to DoD would need origin paperwork
+then; an "Assembled in USA" label still needs substantial US assembly. The research stays under
+`reports/` and `research_notes/` (untracked).
+
+**Reverse if** a buyer or a grant requires origin rules; then reopen ADR-053, not a new standard.
+
+---
+
+## ADR-055 — LoRa and Bluetooth LE return to V1 on an always-on radio MCU; the ambient clock ticks once a minute (2026-10-29)
+
+Written 2026-10-29 07:20 UTC in Claude Code by anthropic/claude-opus-5-5. Supersedes ADR-044's scope
+decision; its RF-limit rule stays. Owner decisions: "lets put lora in v1, and lets go with your rec of
+putting both radios on the coprocessor"; "tick every minute sounds good".
+
+**Trigger.** The owner wants an idle command centre that runs with Linux off: a clock, sensor alerts,
+and notifications from a phone, a home station or the mesh. Every V1 radio was on the CM5, so with the
+CM5 off nothing could receive.
+
+**Decision.**
+- **A radio MCU on the always-on side owns both radios.** A Bluetooth LE MCU module
+  (nRF52840 class, part TBD) drives the existing SX1262 module (`U36`, E22-900M22S) on its own SPI
+  bus. The RP2350 talks to it over a PIO UART: GPIO 22 out through a single-gate I_off buffer on the
+  radio rail (the radio rail can be off), GPIO 45 in, GPIO 39 as the radio's wake interrupt. Expander
+  lines 9 and 10 become its reset (through a second such gate) and load switch. GPIO 1 and 47 become
+  spares.
+  *Why not on the RP2350 directly:* all 48 RP2350 GPIO were assigned (ADR-045). The SX1262 alone needs
+  five lines and a BLE chip needs more; the radio MCU needs three.
+- **Three ways in, one default.**
+  1. *Station check-in (default).* A home station (internet plus LoRa, mains or solar) holds messages;
+     the device listens on each minute wake. Low power, because the receiver is off between wakes.
+  2. *Meshtastic peer (opt-in).* The receiver stays on, so the device is a full mesh node with Linux
+     off. Meshtastic already runs on an nRF52840 with an SX1262 and speaks a serial API. This mode
+     costs far more than the idle budget; it is a mode the user chooses, not the ambient default.
+  3. *Bluetooth LE to a phone.* The phone relays push notifications, as a smartwatch does.
+  The CM5's own Wi-Fi/BT is unchanged; pairing an external Meshtastic node still works.
+- **Every radio power figure is `null` until measured** (`radio.*`). The modelled
+  `power.rp2350_idle_mw` was sized with a scheduled LoRa listen slot but not the radio MCU's own draw.
+  Phase 14 adds `radio.station_mode_idle_mw` to the idle load once it is measured; until then the
+  solar-strip claim covers the RP2350 only. Meshtastic-peer mode is outside that claim.
+- **The ambient clock updates once a minute** (`radio.ambient_clock_update_s`), on the RTC's minute
+  interrupt: a partial refresh of the digits, a periodic clean refresh at an interval the bench sets,
+  and alerts drawn at once. A per-second tick was rejected for panel energy, ghosting and wear; seconds
+  on demand (tap or pick-up) can come later. The station check-in rides the same wake.
+- **FULL BLACKOUT cuts the radio rail in hardware,** as it does the GNSS rail: `PRIVACY_BLACKOUT_N`
+  gates the radio load switch, so a firmware fault cannot leave a transmitter on (HARDWARE_SPEC §2.25).
+- **Region before transmit (AGENTS §4.4).** The radio MCU refuses to transmit until a region is set.
+- The register map keeps `REG_LORA_RX_*`, `SD_WAKE_LORA` and `SD_EVENT_LORA_RX` at their offsets; they
+  now carry the radio MCU's messages. Renaming waits for firmware (ADR-046).
+
+**Costs, now V1's (they were why ADR-044 deferred LoRa).** FCC Part 15.247 and EN 300 220 for LoRa
+and Part 15.247 for BLE: use modules with a modular grant, and the end product still needs its own
+testing. RF exposure at up to +22 dBm near the body may need SAR, not just MPE (AUDIT 6 H18); capping
+transmit power is the fallback. The SMA bulkhead is an aperture against the IP54 target (an IP67
+bulkhead is in the BOM). Three BOM rows move into the core BOM and one TBD row is added.
+
+**Open at capture (code review, 2026-10-29).**
+- *Back-powering the radio rail (resolved 2026-10-30).* Each TXU0104 has one B-side supply, and the
+  CM5-domain lines need both of them, so the GNSS UART, the radio UART and `RADIO_NRESET` each go
+  through their own SN74LVC1G125 powered from the rail they feed (`pins.gate_buffers`, BOM "Rail
+  Gates", price TBD). The lines out of the radio (`RADIO_UART_RX`, `RADIO_IRQ`), and the GNSS UART and
+  PPS, get an external pull-down on the RP2350 side, never a pull-up toward the switched rail
+  (PIN_BUDGET rule 2). Phase 15 now fails a TXU0104 line that leaves the CM5 domain and a gate count
+  that disagrees with the pins.
+- *Idle-power rule (resolved 2026-10-30).* AGENTS §4.2 said every TPS22918 load is hard off with the
+  CM5 off; the radio rail is the one exception, while station or peer mode is on. The <25 mW floor is
+  measured with the radio rail off, and the radio's draw is measured on its own
+  (`radio.station_mode_idle_mw`). FULL BLACKOUT still cuts it.
+- *Module grants and antennas.* The E22-900M22S's FCC modular grant is unverified; if it has none,
+  pick a SX1262 module that does, or budget full Part 15.247 testing. The whip in the BOM is 915 MHz
+  only; an 868 MHz unit needs its own antenna.
+- *Money.* `unit_economics` (ADR-052) is not re-derived for the new rows, and its certification
+  budget does not yet include Part 15.247, EN 300 220 or SAR.
+
+**Reverse if** certification or SAR cost forces it out, or the bench shows station mode does not fit
+the ambient budget.
+
+---
+
+## ADR-056 — The panel refreshes only inside its operating temperature; the bench buys the rigid ED103TC2 (2026-10-30)
+
+Written 2026-10-30 17:25 UTC in Claude Code by anthropic/claude-opus-5-5. Owner decision: "ok do it"
+(record Waveshare's answers, add a refresh temperature gate that both pauses and warns, fix the
+sunlight overclaims, update the bench list).
+
+**Trigger.** Waveshare answered the panel inquiry (support ticket 261670, 2026-10-30): the rigid
+10.3″ HAT and raw panel use **ED103TC2**, the flexible HAT (D) uses **ES103TC1**, both Carta 1200;
+"refreshing under direct sunlight is not allowed", because of temperature and UV; the safe operating
+range is `panel_sku.operating_temp_c`; the waveform is stored in the driver board's flash and its
+firmware reads the temperature and picks the waveform; no datasheet beyond the wiki; bare panels are
+for sale. The repo had no panel temperature range at all. The waveform matrix in
+`SOFTWARE_SPEC.md` §11 only paused A2 above the range and kept refreshing, and prose claimed SolarDeck
+"operates continuously" in noon sun.
+
+**Decision.**
+- **No refresh outside `panel_sku.operating_temp_c`, from either brain.** `eink-refreshd` on the CM5
+  and the RP2350's ambient renderer (the minute clock, ADR-055) both read the backplate TMP112 and
+  skip the refresh. E Ink holds its image with no power, so the panel freezes on the last frame; it
+  does not go blank or break. Refreshing resumes when the panel is back inside the range.
+- **Warn first.** When the panel is within `panel_sku.refresh_warn_margin_c` of either limit, the next
+  refresh draws a banner ("panel hot, refreshes will pause"). That banner is then the image held while
+  paused, so the user sees why the screen stopped changing. The pause is also sent to the paired phone
+  over BLE (ADR-055) and logged. The margin is `null` until the bench measures it.
+- **UV is handled by the stack, not the gate.** The UV-blocking optical lamination already in
+  `HARDWARE_SPEC.md` §7.5 (item 3) stays mandatory. No UV dose limit is known; it waits for the datasheet.
+- **Bench panel: the rigid ED103TC2 HAT** (`panel_sku.bench_module_pn`), not the flexible ES103TC1.
+  ED103TC2 is sold by more than one vendor (Good Display's GDEP103TC2), so the bench keeps a second
+  source; ES103TC1 is a different stack, and Waveshare's glass (G) HAT is discontinued.
+- **The bench HAT needs no separate `.wbf`:** its waveform is in the board's flash. The rule "no
+  waveform, no purchase" still applies to production, where our own controller board needs the file.
+- The values are tagged as a vendor statement, not a datasheet, until the E Ink datasheet is on file.
+
+**Because.** A panel driven outside its range ghosts and can be damaged for good (AGENTS §4.3 already
+treats pigment damage as permanent). In Hawaiʻi sun a dark device on a dashboard or a rock can pass
+the upper limit. Holding the last image is the cheapest safe failure E Ink offers.
+
+**Costs.** Pillar P3 is "readable" in direct sun, not "refreshing": in sustained noon sun the device
+holds the last page until it cools, which is worst for the always-on clock. The superseded claims were
+removed (`SOFTWARE_SPEC.md` §11 and §18.1, `HARDWARE_SPEC.md` §2.30).
+
+**Open.**
+- *Sensor offset.* The TMP112 is on the aluminium backplate; in sun the panel front can be hotter than
+  the back. The bench measures the offset, and the warning margin must cover it.
+- *Wide-temperature panels.* Ask E Ink and Good Display whether a wider-range 10.3″ module exists.
+- *Datasheet.* Storage range (`panel_sku.storage_temp_c`), outline and UV guidance stay `null` until the
+  E Ink datasheet is on file; Waveshare publishes only its wiki.
+- *Bare-panel price and lead time* are not yet quoted.
+
+**Reverse if** the E Ink datasheet gives a different range (change the key, not the gate), or a
+wide-temperature module is chosen.
+
+---
+
+## ADR-057 — The chassis grows to fit the 10.3″ module; the glass is not cut (2026-10-30)
+
+Written 2026-10-30 17:50 UTC in Claude Code by anthropic/claude-opus-5-5. Owner decision: "Please go
+with your recommendation on this."
+
+**Trigger.** ADR-056 confirmed the bench panel is ED103TC2. AUDIT_6 §X5 records that module at
+216.7 × 174.4 mm (eink.com product page), and `chassis_mm` is 170 mm on that side, so the confirmed
+panel cannot fit the case as drawn.
+
+**Decision.** The chassis is re-derived from the module, never the reverse. Its short side becomes
+the module's short side plus the walls and whatever the top and bottom bezels carry (the solar strip,
+ADR-041). The figure is derived once the module drawing is on file, not from the product page: until
+then `panel_module_outline_mm` stays `null` (ADR-051) and `chassis_mm` keeps its current value with a
+comment saying it does not fit. Entering the outline turns Phase 10's existing geometry check red until
+`chassis_mm` and `hardware/enclosure/solardeck_chassis.scad` clear it, so the fix cannot be skipped.
+
+**Rejected.**
+- *Cutting the glass.* The E Ink module's glass is the TFT backplane, with the FPC bonded to it;
+  cutting it destroys the panel.
+- *A different 10.3″ panel.* Every 10.3″ Carta module checked is wider than 170 mm on the short side
+  (ED103KC2 is 172.9 mm, AUDIT_6 §X5), so swapping panels does not close the gap.
+- *A smaller panel.* It would give up the 10.3″ page that ADR-051 chose, and Good Display has already
+  marked the 9.7″ part end-of-life.
+
+**Costs.** The device gets somewhat taller on the short side and a little heavier: `mass_g` (P4,
+modelled) and the enclosure CAD are re-derived with the chassis. Neither is measured yet, so no
+measured claim is lost.
+
+**Reverse if** the module drawing shows an outline that already fits, or a narrower 10.3″ module with a
+drawing on file turns up.

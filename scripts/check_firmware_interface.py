@@ -42,7 +42,7 @@ CM5_FN = {0: {"id_sd"}, 1: {"id_sc"}, 2: {"i2c1_sda"}, 3: {"i2c1_scl"}, 4: {"spi
 # RP1 I2S0 is clock master only, I2S1 is the clock target (CM5 datasheet, peripheral list).
 # Ways a net from the always-on RP2350 into the CM5 domain avoids back-powering it. Every driven line
 # needs hardware (TMUX or an I_off buffer); firmware tri-stating alone does not survive a hang.
-ISOLATION = {"tmux", "buffer", "rp_input", "od"}
+ISOLATION = {"tmux", "buffer", "gate", "rp_input", "od"}
 
 
 def rp2350_fn_ok(pin, fn):
@@ -111,6 +111,13 @@ def pin_errors(spec_text, state_hdr, pin_doc):
     buffered = sum(e.get("iso") == "buffer" for e in rp.values())
     if buffered > pins["buffer_channels"]:
         errors.append(f"{buffered} buffered lines exceed {pins['buffer_channels']} I_off buffer channels")
+    # ADR-055: a TXU0104 has one B-side supply, the CM5 rail; a line into another switched rail needs its own gate.
+    for pin, e in list(rp.items()) + list(ex.items()):
+        if e.get("iso") == "buffer" and e["net"] not in cm5_nets:
+            errors.append(f"GPIO{pin} {e['net']} uses a CM5-rail TXU0104 but does not enter the CM5 domain")
+    gates = sum(e.get("iso") == "gate" for e in list(rp.values()) + list(ex.values()))
+    if gates != pins["gate_buffers"]:
+        errors.append(f"{gates} gated lines, but pins.gate_buffers is {pins['gate_buffers']}")
     tmux = [sum(e.get("iso") == "tmux" for e in t.values()) for t in (rp, cm)]
     if tmux[0] != tmux[1] or tmux[0] > pins["tmux_channels"]:
         errors.append(f"TMUX lines RP2350={tmux[0]} CM5={tmux[1]} must pair within "
@@ -154,7 +161,11 @@ def selftest(spec_text, state_hdr, pin_doc):
     for broken in (spec_text.replace('"fn": "spi0_sck"', '"fn": "spi0_tx"', 1),      # wrong SPI role
                    spec_text.replace('"iso": "buffer"', '"iso": "tmux"', 1),          # unisolated line
                    spec_text.replace('"net": "GNSS_PPS"', '"net": "GNSS_EN"'),        # net on two pins
-                   spec_text.replace('"46": {\n        "net": "PIEZO"', '"45": {\n        "net": "PIEZO"')):  # pin twice
+                   spec_text.replace('"46": {\n        "net": "PIEZO"', '"45": {\n        "net": "PIEZO"'),  # pin twice
+                   spec_text.replace('"uart1_tx",\n        "use": "v1",\n        "iso": "gate"',
+                                     '"uart1_tx",\n        "use": "v1",\n        "iso": "buffer"'),  # GNSS on a CM5-rail TXU0104
+                   spec_text.replace('"RADIO_NRESET",\n        "fn": "gpio",\n        "use": "v1",\n        "iso": "gate"',
+                                     '"RADIO_NRESET",\n        "fn": "gpio",\n        "use": "v1"')):  # reset back-powers the radio
         assert broken != spec_text and pin_errors(broken, state_hdr, pin_doc)
     assert pin_errors(spec_text, state_hdr.replace("PIN_SOLAR_ADC           40", "PIN_SOLAR_ADC           26"),
                       pin_doc)

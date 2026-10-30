@@ -1,6 +1,7 @@
 {
   "_comment": "Single source of truth for every quantitative claim repeated across docs. Change a number HERE, then run scripts/check_docs_numbers.py to find the docs that still disagree. Written 2026-10-20 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017",
-  "ppi": null,
+  "ppi": 227,
+  "_comment_ppi": "datasheet, class figure (ADR-051): the 10.3in mono module is 1872 x 1404 over a 10.3in diagonal, i.e. 227 PPI. Confirmed per module on the purchase order; scripts/check_docs_numbers.py treats any other figure as a defect. The Kaleido colour sub-pixel PPI is a different number and stays null (panel_sku.colour_variant.colour_ppi, V2).",
   "display_active_mm": null,
   "panel_module_outline_mm": null,
   "chassis_mm": [
@@ -8,6 +9,7 @@
     170.0,
     14.0
   ],
+  "_comment_chassis_mm": "Known not to hold the bench panel: ED103TC2 is 174.4 mm on the short side (AUDIT_6 X5, eink.com product page). The chassis grows to fit the module, never the reverse (ADR-057). The new depth is derived when the module drawing is on file: enter panel_module_outline_mm, and Phase 10's geometry check stays red until this key and the enclosure CAD clear it.",
   "chassis_cavity_depth_mm": 12.5,
   "display_stack_mm": null,
   "battery_cell_mm": [
@@ -27,12 +29,14 @@
   },
   "epdc_spi_mhz": null,
   "refresh_modes": {
+    "mono_grey_levels": 16,
     "full_frame_1bit_fps": null,
     "partial_rect_latency_ms": null,
     "small_rect_fps_equivalent": null,
     "colour_full_refresh_s": null,
     "colour_motion_supported": false,
-    "kaleido4_fps": null
+    "kaleido4_fps": null,
+    "_comment": "ADR-051: V1 is the mono panel, so mono_grey_levels is the real tonal budget (16 levels, 4-bit, from the IT8951). Every timing here stays null until measured on the bench; the colour keys describe the V2 variant only."
   },
   "token_stream": {
     "guaranteed_wpm": 120,
@@ -43,16 +47,38 @@
     "full_screen_video": "via USB-C monitor sink (Pillar 8); colour motion unsupported on-panel"
   },
   "panel_sku": {
-    "_comment": "ADR-032: Kaleido 4 is the only panel; every fact below is null until E Ink publishes the 10.3\" datasheet and drawing. The IT8951 + Kaleido 3/Carta module is a bench stand-in only (ADR-025).",
-    "standard": "Kaleido 4",
-    "resolution_px": null,
-    "ppi": null,
-    "colour_ppi": null,
+    "_comment": "ADR-051 (supersedes ADR-032): the V1 panel is a 10.3in mono Carta 1200 module with an IT8951-class controller, bought as commodity multi-source hardware. Resolution and PPI are datasheet class figures; the mechanical drawing is not on file yet, so active area, outline and stack stay null (audit X5). Kaleido 4 / Kaleido 3 are the V2 colour variant on the same chassis, behind a pluggable EPDC daughter board.",
+    "standard": "Carta 1200 (mono), 10.3in",
+    "resolution_px": [
+      1872,
+      1404
+    ],
+    "ppi": 227,
     "module_outline_mm": null,
-    "controller": null,
-    "availability": "awaiting E Ink release",
-    "bench_stand_in": "Kaleido 3 / Carta + IT8951 module (ADR-025)",
-    "kaleido4_dye_lifespan_years": null,
+    "_comment_module_outline_mm": "null until the chosen module's drawing is on file (ADR-051). Do not enter an estimate: AUDIT_6 §X5 records ED103TC2 at 216.7 x 174.4 mm against a 170 mm chassis depth, so the chassis or the glass must change first (gate G2).",
+    "controller": "IT8951-class EPDC",
+    "availability": "commodity, multiple vendors (Waveshare / GoodDisplay / DKE class)",
+    "waveform_file": "production: required on the PO, per module (ADR-051): no .wbf, no purchase. Bench HAT: the waveform is in the driver board's flash and its firmware picks it by temperature, so the bench needs no separate file (ADR-056)",
+    "bench_module_pn": "ED103TC2",
+    "_comment_bench_module_pn": "Vendor statement, Waveshare support ticket 261670 (2026-10-30): the rigid 10.3in HAT and raw panel are ED103TC2, the flexible HAT (D) is ES103TC1, and both are Carta 1200. Good Display sells ED103TC2 as GDEP103TC2 and lists it as Carta 1000; the E Ink datasheet settles it. The bench buys the rigid ED103TC2 (ADR-056). The V1 module is still open (module_outline_mm).",
+    "operating_temp_c": [
+      0,
+      50
+    ],
+    "_comment_operating_temp_c": "Vendor statement, Waveshare ticket 261670 (2026-10-30), not a datasheet: the safe range for refreshing. No refresh outside it, from either brain (ADR-056). Promote to datasheet when the E Ink datasheet is on file.",
+    "storage_temp_c": null,
+    "_comment_storage_temp_c": "null until the E Ink datasheet is on file; Waveshare publishes only its wiki (ADR-056).",
+    "refresh_warn_margin_c": null,
+    "_comment_refresh_warn_margin_c": "How far inside operating_temp_c the 'refreshes will pause' warning is drawn (ADR-056). null until the bench measures how fast the panel heats in sun and the offset between the backplate TMP112 and the panel front.",
+    "vcom_trim": null,
+    "_comment_vcom_trim": "null until measured at bring-up; VCOM-vs-temperature compensation is an open item (ADR-051), and it is not the same register as the TEMP_REG waveform-voltage adjustment in HARDWARE_SPEC §2.2.",
+    "colour_variant": {
+      "standard": "Kaleido 4 (V2 variant, ADR-051)",
+      "colour_ppi": null,
+      "module_outline_mm": null,
+      "kaleido4_dye_lifespan_years": null,
+      "status": "not buyable as a standalone panel; the EPDC daughter board carries DSI + SPI + bias rails so the swap is a board, not a carrier redesign"
+    },
     "v1_panel_mount": "bonded (VHB on glass, service-kit part)",
     "future_service_hatch": "connectorized EPDC + IP67 hatch, gasket as P/N'd wear item"
   },
@@ -65,7 +91,7 @@
   "standout_pillars": 7,
   "engineering_pillars": 9,
   "verification_phases": 16,
-  "core_bom_line_items": 53,
+  "core_bom_line_items": 58,
   "schematic_coverage_baseline": 40,
   "pcb_thickness_mm": 1.0,
   "rear_wall_mm": 1.5,
@@ -96,7 +122,7 @@
       },
       {
         "id": "P5",
-        "name": "Field hardening: airgap, GNSS, IP54 (V1) / IP67 (V2), rain-lock; LoRa in V2",
+        "name": "Field hardening: airgap, GNSS, IP54 (V1) / IP67 (V2), rain-lock; LoRa + BLE with Linux off (ADR-055)",
         "status": "aspirational"
       },
       {
@@ -586,8 +612,27 @@
     "unpowered_months": 12,
     "drop_orientations": 26
   },
-  "bom_total_low": 524.76,
-  "bom_total_high": 526.76,
+  "bom_total_low": 540.96,
+  "bom_total_high": 542.96,
+  "unit_economics": {
+    "_comment": "MODELLED, 2026-10-27 (ADR-052), not measured and not a claim that the device sells. Derived from bom_total_low/high (qty-1 retail parts), cm5.price_usd, and public turnkey-assembly quotes. Every figure is replaced -- never adjusted -- when the five quotes land: CM5 distributor, panel ODM, enclosure CNC-vs-die-cast, EEMB pack, compliance lab. cogs_usd is keyed by SKU: instrument = 500-off volume, thin_consumer = 1000-off, bench = one unit bought retail.",
+    "cogs_usd": { "bench": 1125, "instrument": 710, "kit": 560, "thin_consumer": 650 },
+    "price_usd": { "instrument": 1799, "kit": 699, "thin_consumer": 1099 },
+    "overhead_usd_per_unit": {
+      "instrument": { "cert": 24, "rma": 72, "freight": 45 },
+      "kit": { "cert": 0, "rma": 0, "freight": 0 },
+      "thin_consumer": { "cert": 12, "rma": 33, "freight": 40 }
+    },
+    "gross_profit_usd": { "instrument": 948, "kit": 139, "thin_consumer": 364 },
+    "certification_usd": { "fcc_part15b_and_module_integration": 12000, "pack_un383": null },
+    "_comment_certification": "US-only floor. pack_un383 is null because it should be inherited from EEMB's pack documentation, not bought; CE/RED for the EU is a separate, larger quote that is not budgeted (ADR-052 open items).",
+    "operating_costs_usd_per_year": 18000,
+    "target_units_per_year": 100,
+    "owner_profit_usd_per_year": 76800,
+    "starter_batch_units": 25,
+    "capital_to_first_revenue_usd": 40000,
+    "spares_held_pct_of_units": 3
+  },
   "cm5": {
     "_comment": "CM5 pivot (ADR-031, 2026): V1 moves from CM4 8 GB/32 GB eMMC to CM5 16 GB/64 GB eMMC wireless (CM5116064 / SC1608). 16 GB DRAM is the LLM-resident assumption: the 1-3B local model tier runs in RAM without swap/heritage modes. eMMC 64 GB holds the base image, reader cache, and full offline corpus. Wireless variant carries the Wi-Fi/BT that CM4 needed a USB dongle for — one less peripheral spine. The BOM compute row is priced at price_usd; Phase 14 totals were re-derived on 2026-10-21.",
     "sku": "CM5116064",
@@ -608,6 +653,14 @@
     "solar_strip_w": 0.15,
     "rp2350_idle_mw": 4.5
   },
+  "radio": {
+    "_comment": "ADR-055: an always-on radio MCU (BLE, nRF52840 class, part TBD) owns the SX1262 module; the RP2350 reaches it over a PIO UART. Power figures stay null until measured on the bench. Station mode: the receiver listens on the minute wake for a home station that holds messages. Meshtastic-peer mode keeps the receiver on and is outside the solar-strip claim.",
+    "mcu_part": null,
+    "lora_module": "E22-900M22S",
+    "station_mode_idle_mw": null,
+    "meshtastic_mode_idle_mw": null,
+    "ambient_clock_update_s": 60
+  },
   "usb": {
     "sink_cc_rd_ohm": 5100,
     "sink_cc_rd_tolerance_pct": 1,
@@ -627,9 +680,9 @@
     "_comment_roles": "ADR-049: port 1 is the only power input (STUSB4500 PD sink, dead-battery Rd) and the CM5's USB device / nRPI_BOOT port; port 2 is the host port and the only power output (5 V boost through the TPS2051B at port2_current_limit_a), with the TUSB320 as its source-only CC controller. The BQ25798's OTG mode is not used."
   },
   "reliability": {
-    "fit_total": 935,
-    "mtbf_hours": 1069519,
-    "mtbf_years": 122,
+    "fit_total": 995,
+    "mtbf_hours": 1005025,
+    "mtbf_years": 115,
     "first_wearout_years": 3,
     "first_wearout_item": "desiccant (annual swap); first hard item is the Li-ion cell at 3 y (user-replaceable pack, ADR-048)",
     "model_status": "modelled",
@@ -641,11 +694,10 @@
     "cm5_shortfall_years": null,
     "_cm5_comment": "CM5 end-of-production commitment not yet published by Raspberry Pi (ADR-031 will lock the number the day a source confirms it; then re-derive cm5_shortfall_years = design_life_years - (year - 2026)).",
     "single_source_parts": [
-      "Kaleido 4 panel (E Ink, sole source)",
-      "Kaleido 4 display controller (TBD, ADR-032)",
       "CM5 (Raspberry Pi)",
       "RP2350 (Raspberry Pi)"
     ],
+    "_comment_single_source_parts": "ADR-051 removed the panel and its EPDC from this list: the mono 10.3in IT8951 module is multi-vendor, which is the main supply-chain reason the panel changed.",
     "active_confirmed": [
       "CM5"
     ],
@@ -662,7 +714,7 @@
     "wake_trigger": "button (always available); hands-free wake word opt-in with measured battery cost (ADR-036)"
   },
   "reader": {
-    "_comment": "SOFTWARE_SPEC §55 Zero-Kernel Reader Tier: pre-rendered page-flip engine; the RP2350 flips, it never renders PDFs. Page geometry and flip time are null until the Kaleido 4 datasheet (ADR-032).",
+    "_comment": "SOFTWARE_SPEC §55 Zero-Kernel Reader Tier: pre-rendered page-flip engine; the RP2350 flips, it never renders PDFs. The raster is spec_values.panel_sku.resolution_px; reader page geometry and flip time stay null until the V1 mono module's drawing is on file (ADR-051).",
     "native_read_mw": 4.5,
     "page_cache_psram_mb": 8,
     "page_width_px": null,
@@ -713,7 +765,7 @@
   "telemetry": {
     "_comment": "LLM sensory surface (Deck-Builder guide section 4): counts enforced by check_docs_numbers.py",
     "thermal_zones": 6,
-    "gated_rails": 4,
+    "gated_rails": 5,
     "module_health_registers": 8
   },
   "self_heal": {
@@ -725,7 +777,7 @@
     "powercycle_hold_ms": 500,
     "baseband_retry_polls": "N consecutive radio RSSI polls below baseline, modelled (applies to the V2 modem and LoRa, ADR-034/044)"
   },
-  "_comment_adr032": "ADR-032: ppi, display_active_mm, panel_module_outline_mm, display_stack_mm, epdc_spi_mhz, refresh timings and reader page geometry are null until E Ink publishes the 10.3\" Kaleido 4 datasheet. Gates skip them loudly; they never fall back to stand-in values.",
+  "_comment_panel": "ADR-051 (supersedes ADR-032): ppi and resolution are now datasheet class figures for the V1 mono module. display_active_mm, panel_module_outline_mm, display_stack_mm, epdc_spi_mhz, refresh timings and reader page geometry stay null until that module's drawing and waveform are on file. Gates skip them loudly; they never fall back to estimates or to the old colour-stand-in values.",
   "battery": {
     "chemistry": "Li-ion",
     "charge_limit_v": 4.2,
@@ -798,9 +850,10 @@
     "_comment": "ADR-039"
   },
   "pins": {
-    "_comment": "ADR-045 pin budget; docs/PIN_BUDGET.md is the readable copy. buffer_channels = 2x TXU0104 (BOM I/O Isolators). Phase 15 checks function per datasheet mux, PWM slices, uniqueness, cross-domain isolation, TMUX and buffer channel counts, expander size and firmware PIN_* defines.",
+    "_comment": "ADR-045 pin budget; docs/PIN_BUDGET.md is the readable copy. buffer_channels = 2x TXU0104 (BOM I/O Isolators), B side on the CM5 rail, so only CM5-domain lines use them. gate_buffers = single-gate I_off buffers (SN74LVC1G125) powered from the switched rail they feed (BOM Rail Gates, ADR-055). Phase 15 checks function per datasheet mux, PWM slices, uniqueness, cross-domain isolation, TMUX, buffer and gate counts, buffer domains, expander size and firmware PIN_* defines.",
     "tmux_channels": 8,
     "buffer_channels": 8,
+    "gate_buffers": 3,
     "aon_expander_pins": 16,
     "rp2350b": {
       "0": {
@@ -809,9 +862,9 @@
         "use": "v1"
       },
       "1": {
-        "net": "LORA_NSS",
+        "net": "SPARE_GPIO1",
         "fn": "sio",
-        "use": "v2"
+        "use": "reserved"
       },
       "2": {
         "net": "EPDC_HRDY_RP",
@@ -924,7 +977,7 @@
         "net": "GNSS_UART_TX",
         "fn": "uart1_tx",
         "use": "v1",
-        "iso": "buffer"
+        "iso": "gate"
       },
       "21": {
         "net": "GNSS_UART_RX",
@@ -932,9 +985,10 @@
         "use": "v1"
       },
       "22": {
-        "net": "LORA_BUSY",
-        "fn": "sio",
-        "use": "v2"
+        "net": "RADIO_UART_TX",
+        "fn": "pio",
+        "use": "v1",
+        "iso": "gate"
       },
       "23": {
         "net": "GNSS_PPS",
@@ -1020,9 +1074,9 @@
         "use": "v1"
       },
       "39": {
-        "net": "LORA_DIO1",
+        "net": "RADIO_IRQ",
         "fn": "sio",
-        "use": "v2"
+        "use": "v1"
       },
       "40": {
         "net": "SOLAR_ADC",
@@ -1051,9 +1105,9 @@
         "use": "v1"
       },
       "45": {
-        "net": "LORA_RXEN",
-        "fn": "sio",
-        "use": "v2"
+        "net": "RADIO_UART_RX",
+        "fn": "pio",
+        "use": "v1"
       },
       "46": {
         "net": "PIEZO",
@@ -1061,9 +1115,9 @@
         "use": "v1"
       },
       "47": {
-        "net": "LORA_TXEN",
+        "net": "SPARE_GPIO47",
         "fn": "sio",
-        "use": "v2"
+        "use": "reserved"
       }
     },
     "aon_expander": {
@@ -1113,14 +1167,15 @@
         "use": "v1"
       },
       "9": {
-        "net": "LORA_NRESET",
+        "net": "RADIO_NRESET",
         "fn": "gpio",
-        "use": "v2"
+        "use": "v1",
+        "iso": "gate"
       },
       "10": {
-        "net": "LORA_PWR_EN",
+        "net": "RADIO_PWR_EN",
         "fn": "gpio",
-        "use": "v2"
+        "use": "v1"
       },
       "11": {
         "net": "LTE_PWR_EN",

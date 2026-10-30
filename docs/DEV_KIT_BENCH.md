@@ -11,6 +11,9 @@ Revised 2026-10-21 17:22 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa t
 Revised 2026-10-21 19:12 UTC in Claude Code by anthropic/claude-opus-5-5 (EVT-0 power board, ADR-043).
 
 Revised 2026-10-21 19:44 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion smart pack, ADR-048).
+Revised 2026-10-27 01:10 UTC in the Pi harness by openrouter/deepseek/deepseek-v4.1-flash-1017 (mono V1 panel, ADR-051).
+Revised 2026-10-29 07:20 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa and BLE in V1 on a radio MCU, ADR-055).
+Revised 2026-10-30 17:25 UTC in Claude Code by anthropic/claude-opus-5-5 (rigid ED103TC2 bench panel, panel temperature gate, Honolulu sourcing, tinker-tablet extras; ADR-056).
 
 Purpose: buy the minimum bench hardware that proves the three make-or-break gate claims (G1, G2,
 G12) and the Li-ion charge path (ADR-035, ADR-048) as **measured** values, before any PCB fabrication money is spent. This is the physical
@@ -27,9 +30,9 @@ or **modelled**, not measured.
 | :--- | :--- | :--- | :--- |
 | **G1** | <20 ms typewriter DU ink latency | Bench stand-in panel + IT8951 (ADR-025) + CM5, low-latency DU waveform | PASS = frame swap + partial update under 20 ms |
 | **G2** | Linux resumes from off/hibernate in seconds (`sleep_ladder.r3_resume_s`); the S2idle target is withdrawn (R2 `null`, ADR-036) | Same rig, wake-trigger timing loop | PASS = resume time measured and recorded; ambient modes stay instant on the RP2350 |
-| **G12** | Ambient (CM5-off) floor < 25 mW with TPS22918 loads hard off, R3 hibernate 0.000 W idle | **µA-resolution DMM** on the always-on rail | PASS = measured floor within spec_values.safety/sleep gate |
+| **G12** | Ambient (CM5-off) floor < 25 mW with TPS22918 loads hard off (the radio rail too; its draw is measured separately, ADR-055), R3 hibernate 0.000 W idle | **µA-resolution DMM** on the always-on rail | PASS = measured floor within spec_values.safety/sleep gate |
 | **Charge path** (ADR-035) | Charging held off until VREG = `battery.charge_limit_v` is written; JEITA zones and NTC cutoff behave on a real cell | BQ25798 evaluation board + one Li-ion cell (with protector) + NTC, DMM on VBAT | PASS = no charge current before VREG is written; VREG read back; termination at the limit; NTC cutoff trips |
-| Color (Kaleido 4) | fps is `null` (vendor-TCON-dependent, ADR-017/018) | **Not provable on this bench** — the IT8951 cannot drive Kaleido 4 (ADR-025, ADR-032) | Bench uses the Carta stand-in panel; Kaleido 4 colour stays `null` |
+| Panel class (mono Carta) | 16 grey levels, DU/A2/GLR16/GC16 timings, VCOM stability over temperature (ADR-051) | This bench plus a panel TMP112 and a thermal chamber substitute (fridge / oven + thermocouple) | PASS = timings measured, VCOM drift tabulated; colour (Kaleido 4, V2 variant) stays `null` and is **not** provable on this bench |
 
 The board-level gates (thermal, EMI, mechanical, a fully populated carrier) are explicitly NOT in
 this bench's scope — they need the PCB. The bench exists to answer "do the signature numbers even
@@ -41,22 +44,23 @@ exist on real silicon" for a bench total that is TBD (§2) before a ~$1.5 k PCB 
 
 | # | Item | Why it's on the bench | Use | Price (USD) | Where to buy *(Honolulu-friendly)* | Notes |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 1 | **Waveshare 10.3" e-Paper HAT (IT8951 + Carta panel)** | The display controller + panel pair. Every G1/G2/ink-latency number runs through this | Display + EPDC | **$198** | Waveshare official / AliExpress flagship / Amazon reseller | Mono Carta, 1872×1404 — **bench stand-in only** (ADR-025, ADR-032): the product is Kaleido 4, which the IT8951 cannot drive; results are tagged with the stand-in panel and never promoted to Kaleido 4 numbers; colour fps stays `null` (ADR-017) |
-| 2 | **Raspberry Pi CM5 (CM5116064 / SC1608, ADR-031)** | The Linux brain — runs the daemons under test; same module as production | Host compute | **$375** (`spec_values.cm5.price_usd`) | Raspberry Pi approved resellers | Stock and HI shipping TBD |
-| 3 | **Raspberry Pi CM5 IO Board** | Carrier for the CM5 on the bench | Bench carrier | **TBD** | Raspberry Pi approved resellers | Not the production carrier — bench only |
+| 1 | **10.3" e-Paper HAT, rigid ED103TC2 + IT8951** (`panel_sku.bench_module_pn`, ADR-056) | The display controller + panel pair. Every G1/G2/ink-latency number runs through this | Display + EPDC | **$198** (2026-10-20); stock TBD | [Waveshare 10.3" HAT](https://www.waveshare.com/10.3inch-e-paper-hat.htm) (orders: sales@waveshare.com). If out of stock: Good Display GDEP103TC2 + its DEJA-TC103 IT8951 board, by quote | Mono Carta 1200, 1872×1404, 227 PPI — **this is the V1 panel class** (ADR-051), not a stand-in. **Not** the flexible HAT (D) (ES103TC1) and not AliExpress resellers. **Buy two or three:** one gets damaged during lamination and ESD work, and an untouched reference panel is what makes ghosting measurements comparable. The HAT keeps its waveform in its own flash and picks it by temperature, so no separate `.wbf` is needed for the bench; ask for the VCOM value. Refresh only inside `panel_sku.operating_temp_c`: no refreshing in direct sun |
+| 2 | **Raspberry Pi CM5 (CM5116064 / SC1608, ADR-031)** | The Linux brain — runs the daemons under test; same module as production | Host compute | **$375** (`spec_values.cm5.price_usd`) | [PiShop.us](https://www.pishop.us/product/raspberry-pi-compute-module-5-wireless-16gb-ram-64gb-emmc-cm5116064/) or another approved reseller | Stock and HI shipping TBD; add a CM5 cooler (heatsink) |
+| 3 | **Raspberry Pi CM5 IO Board** | Carrier for the CM5 on the bench | Bench carrier | **~$31** (SparkFun, 2026-10-29) | [PiShop.us](https://www.pishop.us/product/raspberry-pi-compute-module-5-io-board/) / SparkFun | Not the production carrier — bench only |
 | 4a | **Pimoroni PGA2350 — the actual RP2350B + 8 MB PSRAM** (DigiKey PIM722) | This is the real co-processor silicon the spec names (RP2350B, 48 GPIO, PSRAM frame cache) — flash **our own firmware** on it, tweak power-sipping modes (1 M Hz sleep, reader/dashboard states) on production-identical silicon | Co-proc bring-up + power-tuning | **$12 (PIM722)** | Pimoroni (UK), PiShop.us, DigiKey | Real dev board for the B chip: no USB-C (BOOTSEL bridging + jumper wiring to program), SWD probe for debug — slightly more friction than a Pico, but this is the chip that ships. Available in single unit, no MOQ |
 | 4b | **Raspberry Pi Pico 2 (RP2350A) (SC1631)** | Same RP2350 core as (4a) but plug-and-play USB-C + MicroPython/C out of the box — the low-friction daily driver for first bring-up before touching the PGA | Bring-up speed | **$6 (SC1631)** | DigiKey | Kept because it is the zero-friction path for initial bring-up; 4a is the fidelity target. Total co-proc spend **$18** |
 | 5 | **UNI-T UT61E+ DMM** | µA resolution + data logging — *the* G12 instrument | Sleep-current measurement | **$80** | Amazon / UNI-T direct | Do **not** buy a Fluke 115 — 1 mA resolution cannot read a µA sleep floor; high-burden volts also reset the DUT (see §4) |
-| 6 | 5 V / 3 A bench PSU w/ current display | Wall power + coarse current for bring-up | Power | **$20** | Amazon | Powers the CM5/display side; the Li-ion cell (item 10) feeds only the charger board (see §5) |
+| 6 | **Raspberry Pi 27 W USB-C power supply** (US plug) | The CM5 IO Board wants 5 V / 5 A over USB-C; a 3 A supply limits its USB ports | Power | **~$12** | PiShop.us | Confirm the IO Board's input against its documentation before buying (one reseller lists a 12 V barrel input). Powers the CM5/display side; the Li-ion cell (item 10) feeds only the charger board (see §5) |
+| 6a | **Raspberry Pi Debug Probe** | Programs and debugs the PGA2350 over SWD (it has no USB-C); also a USB serial console | Tooling | **~$12** | PiShop.us | Needed for item 4a |
 | 7 | Protoboard, jumpers, duponts, 40-pin GPIO extender, assorted | Wiring everything loose | Interconnect | **$25** | Amazon / local | |
 | 8 | USB-C hub + cables (CM5 eMMC is flashed over USB with `rpiboot`/usbboot — TBD, verify CM5 procedure) | Flashing, debug console | Tooling | **$20** | Amazon | |
-| 9 | **TI BQ25798 evaluation board** | The production charger (ADR-035): proves VREG hold-off, the charge limit, JEITA and NTC cutoff before EVT-0 | Charge-path gate | **TBD** | TI store / DigiKey | First item of the build order (ADR-043): power carries the safety risk |
-| 10 | **EEMB LP7545135 cells or EEMB's sample 1S2P pack** (ADR-049) + NTC thermistor | A real pack on the charger board | Charge-path gate | **TBD** | US-side cell vendor (UN38.3 shipping, §5) | Wh stays `null` until its datasheet is in hand (ADR-040) |
-| 11 | **u-blox MAX-M10S breakout** | The V1 GNSS (ADR-038): RP2350 UART bring-up and tracking power vs `gnss.tracking_mw` | GNSS bring-up | **TBD** | DigiKey / SparkFun | Wired to item 4a; passive antenna |
-| | **Bench total** | | | **TBD** (CM5 IO board and items 9–11 TBD) | | Shipped total TBD (2–3 vendors, HI freight) |
+| 9 | **TI BQ25798 evaluation board** (BQ25798EVM) | The production charger (ADR-035): proves VREG hold-off, the charge limit, JEITA and NTC cutoff before EVT-0 | Charge-path gate | **~$149–179** (2026-10-29 listings, not a quote) | [TI](https://www.ti.com/tool/BQ25798EVM) / DigiKey | Drive it over I²C from item 4b, which is the firmware gate under test; TI's USB2ANY/EV2400 adapter is only needed for TI's GUI. First item of the build order (ADR-043): power carries the safety risk |
+| 10 | **2–3 loose EEMB LP7545135 cells** (ADR-049) + 10 kΩ NTC thermistors | A real cell on the charger board | Charge-path gate | **TBD** | EEMB, shipped with UN38.3 dangerous-goods paperwork; NTCs from DigiKey | Mainland US stores mostly refuse loose lithium cells to Hawaiʻi (SparkFun does not ship batteries there), §5. Until a cell arrives, every gate except the charge path runs on wall power. Wh stays `null` until its datasheet is in hand (ADR-040) |
+| 11 | **u-blox MAX-M10S breakout** (SparkFun GPS-18037) | The V1 GNSS (ADR-038): RP2350 UART bring-up and tracking power vs `gnss.tracking_mw` | GNSS bring-up | **$45.95** (SparkFun, 2026-10-29) | DigiKey / SparkFun | Wired to item 4a; passive antenna |
+| | **Bench total** | | | **TBD** (item 10 TBD; about $1,000 without it, from 2026-10-29 listings) | | Shipped total TBD (PiShop, DigiKey, Amazon, panel vendor; HI freight) |
 
 **What is deliberately NOT on the bench:** the panel's Wacom EMR (pen arbiter comes later, after the
-core gates pass), the audio array, LoRa (V2, ADR-044), and the solar strip
+core gates pass), the audio array, the radio MCU and LoRa (ADR-055), and the solar strip
 (0.15 W trickle is a charge-tree question, not a gate). LTE, camera and NFC are V2 (ADR-034) and have no
 bench item.
 
@@ -64,6 +68,19 @@ bench item.
 orders — DigiKey ships free over $99 and Waveshare direct ships US-side; worst case one Amazon order to fill gaps).
 Instruments for the *second* bench round (EMR + USB-C PD meter at ~$160) are deferred until the
 gates above are green — see §5.
+
+**Tinker-tablet extras (optional, owner's own use).** Items 1–8 already make a working E Ink Linux
+computer: CM5 on the IO Board, the panel over USB or SPI, a keyboard. Four extras make it portable and
+let an agent see the panel. None of them is a gate.
+
+| Item | Why | Price (USD) | Where |
+| :--- | :--- | :--- | :--- |
+| USB-C PD power bank, 20,000 mAh or more, 5 V / 5 A if available | Portable power with its own protector and thermal cutoff, instead of a loose cell | ~$30–60 | Amazon |
+| Bluetooth keyboard | Input (ADR-001: external keyboards only) | ~$20–40 | Amazon |
+| USB webcam on a small stand, aimed at the panel | Lets an agent photograph the panel after each refresh; it cannot time G1 (use 240 fps phone video) | ~$30–50 | Amazon |
+| Plywood or a 3D-printed frame, standoffs, screws | Holds the boards and panel together | ~$10–30 | Amazon / local |
+
+Prices are 2026-10-29 search results, not quotes.
 
 ---
 
@@ -88,7 +105,7 @@ design has been through a DFM-for-hand pass. Here is the honest ladder:
      *DFM-for-hand-assembly* pads at quoting time; JLCPCB/Seeed will happily fab enlarged-pad
      variants.
    - **Castellated SMD modules** (KiCad 8 feature, already referenced in `HARDWARE_SPEC.md:793` for
-     the V2 SX1262 footprint, ADR-045): each IC gets a castellated footprint with a sacrificial trace ring — a
+     the SX1262 module, ADR-055): each IC gets a castellated footprint with a sacrificial trace ring — a
      hand-solder pattern that drags tin across pads and is then cleaned off. This is the *right*
      hand-assembly answer for the RF/co-proc parts.
    - **Precision tools, when you do it:** hot-air rework station (~$120–250, the solder sucker +
@@ -133,8 +150,8 @@ then go into `spec_values.json` under a `measured <date>` tag — this bench's w
 
 Battery: **one real protected Li-ion cell, on the charger board only.** G12's *idle* numbers are rail-side (wall
 PSU is fine); the cell exists to prove the charge path (items 9–10) before EVT-0 (ADR-043). Verify NTC
-cutoff before leaving it on charge (AGENTS §4.1). Shipping a cell to HI has UN38.3 friction — buy one
-single cell from a US-side vendor, not a pack.
+cutoff before leaving it on charge (AGENTS §4.1). Shipping a cell to HI has UN38.3 friction: mainland
+stores mostly refuse loose cells to Hawaiʻi, so ask EEMB to ship 2–3 loose cells with the sample order.
 
 **Bottom line:** yes, buy Tranche 1 all at once (landed total TBD, §2); defer Tranche 2 until the
 gates pass; do not hand-solder anything until a DFM-for-hand pass makes it sensible.

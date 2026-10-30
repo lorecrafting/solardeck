@@ -6,6 +6,7 @@ Revised 2026-10-21 16:45 UTC in Claude Code by anthropic/claude-opus-5-5 (V1 sco
 Revised 2026-10-21 17:22 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa to V2, ADR-044/045).
 Revised 2026-10-21 17:53 UTC in Claude Code by anthropic/claude-opus-5-5 (RTC chip, jack removed, ADR-046).
 Revised 2026-10-21 19:43 UTC in Claude Code by anthropic/claude-opus-5-5 (Li-ion smart pack, ADR-048).
+Revised 2026-10-29 07:20 UTC in Claude Code by anthropic/claude-opus-5-5 (LoRa and BLE in V1 on a radio MCU, ADR-055).
 
 ---
 
@@ -23,7 +24,7 @@ The seven pillars, as named in `spec_values.features.product_pillars` (Pillar N 
 | P2 | Typewriter-on-paper latency (1-bit DU keystroke, EMR ink, LRA haptics) |
 | P3 | Sunlight-readable; solar tops up the idle co-processor outdoors (ADR-041) |
 | P4 | Form-morphology: 620 g slate, desk easel, modular grips |
-| P5 | Field hardening: airgap, GNSS, IP54 (V1) / IP67 (V2), rain-lock; LoRa in V2 |
+| P5 | Field hardening: airgap, GNSS, IP54 (V1) / IP67 (V2), rain-lock; LoRa + BLE with Linux off (ADR-055) |
 | P6 | Modular upgrade bridge: ARM/RISC-V SOM, RAM, NVMe |
 | P7 | Voice-first control: hold-to-talk button, opt-in hands-free wake word, barge-in (ADR-036) |
 
@@ -156,11 +157,11 @@ In an era of cloud-locked, fragile, spy-by-design hardware, SolarDeck is an **in
 
 ### The Three Hardening Anchors:
 1. **Physical Hardware Airgap Switch (0.000 dBm / Zero Phantom Bleed):**
-   * The FULL BLACKOUT position of the single 3-position privacy switch (HARDWARE_SPEC §2.25) cuts the u-blox MAX-M10S GNSS rail to **0.000V** and pulls the CM5's `WL_nDisable` / `BT_nDisable` low, disabling the on-module Wi-Fi/BT (docs/PIN_BUDGET.md). (No cellular modem in V1, ADR-034; no on-board LoRa in V1, ADR-044.)
+   * The FULL BLACKOUT position of the single 3-position privacy switch (HARDWARE_SPEC §2.25) cuts the u-blox MAX-M10S GNSS rail to **0.000V** and pulls the CM5's `WL_nDisable` / `BT_nDisable` low, disabling the on-module Wi-Fi/BT (docs/PIN_BUDGET.md). It also holds the radio MCU's load switch off, cutting LoRa and its Bluetooth LE in hardware (ADR-055). (No cellular modem in V1, ADR-034.)
    * Digital lines are isolated via **TI TXU0104** buffers, eliminating parasitic back-powering through silicon clamping diodes.
    * 100% immune to software baseband exploits; completely invisible to RF spectrum analyzers.
 2. **Off-Grid Mesh and GNSS:**
-   * On-board LoRa radio: Deferred to V2 (ADR-044); the V1 board reserves the footprint and pins (ADR-045, docs/PIN_BUDGET.md). In V1 the CM5 talks to a paired external Meshtastic node over Bluetooth LE when Linux is up.
+   * On-board LoRa and Bluetooth LE on an always-on radio MCU (ADR-055): station check-in by default, Meshtastic-peer mode opt-in, phone notifications over BLE, all with Linux off. The CM5 can still pair an external Meshtastic node over Bluetooth LE. Radio software not written (ADR-046).
    * A **u-blox MAX-M10S** GNSS receiver on an RP2350 UART, behind a load switch, with a passive antenna at the top edge (ADR-038, amended by ADR-044): the RP2350 keeps time and logs position with Linux off, and the PPS line disciplines its RTC (tracking power `spec_values.gnss.tracking_mw`).
 3. **IP54 (V1 target) / IP67 (V2 target) Enclosure & All-Weather "Water-Lock":**
    * SLS 3D-printed PA12 nylon prototypes and PC/ABS production enclosure (ADR-039) with continuous silicone perimeter gaskets and a GORE ePTFE hydrophobic pressure-equalization vent. IP67 waits for V2, once every aperture has a named sealing part.
@@ -300,7 +301,7 @@ By orchestrating and cross-wiring the existing hardware components in innovative
 * SolarDeck learns to distinguish *its desk* from *the van* or *the workshop* purely acoustically.
 * **Result:** theft alarm arms only outside the known home-zone; notification and brightness policy switch silently when the device knows where it is; zero camera, zero RF, zero GPS involved.
 
-*(Further out: cooperative barometer mesh forecasting across the Meshtastic fleet, golden-hour chrono-locked crypto signing gated on verified presence, and the LoRa (V2, ADR-044) → LTE (V2, ADR-034) → placard comms escalation ladder. Adding any of them touches the same code surface as the three above.)*
+*(Further out: cooperative barometer mesh forecasting across the Meshtastic fleet, golden-hour chrono-locked crypto signing gated on verified presence, and the LoRa (ADR-055) → LTE (V2, ADR-034) → placard comms escalation ladder. Adding any of them touches the same code surface as the three above.)*
 
 ---
 
@@ -314,7 +315,7 @@ When ultra-low-power microcontrollers (RP2350), bistable electrophoretic physics
 ├─────────────────────┬───────────────────────┬───────────────────────────────┤
 │ EMERGENT FEATURE    │ HARDWARE SYNERGY      │ OPERATIONAL RESULT            │
 ├─────────────────────┼───────────────────────┼───────────────────────────────┤
-│ 1. Zero-Power Pager │ On-board LoRa         │ V2 (ADR-044)                  │
+│ 1. Zero-Power Pager │ Radio MCU + LoRa      │ HW in V1 (ADR-055); SW later  │
 │    & Mailbox        │                       │                               │
 ├─────────────────────┼───────────────────────┼───────────────────────────────┤
 │ 2. Shadow-Gesture   │ Bezel Solar Strip     │ Linux wake without buttons;   │
@@ -335,7 +336,7 @@ When ultra-low-power microcontrollers (RP2350), bistable electrophoretic physics
 ```
 
 ### 1. The Zero-Power Dead-Drop LoRa Pager & Mailbox
-* V2 (ADR-044): needs the deferred on-board LoRa radio, which receives while Linux is off. In V1, messages from a paired Meshtastic node reach the CM5 over Bluetooth LE when Linux is up.
+* Hardware in V1 (ADR-055): the radio MCU receives with Linux off, from a home station on the minute wake (default) or continuously as a Meshtastic peer (opt-in; costs more than the idle budget, radio power null until measured), and the bistable panel keeps the message up. The software not written (ADR-046).
 
 ### 2. Shadow-Gesture Wake & Solar Auto-Inversion
 * **The Synergy:** The front-bezel monocrystalline solar panel generates open-circuit voltage ($V_{OC}$) continuously sampled by the RP2350 ADC every 100ms ($<5\,\mu\text{A}$ budget).
@@ -346,7 +347,7 @@ When ultra-low-power microcontrollers (RP2350), bistable electrophoretic physics
 * V2 (ADR-034): needs the deferred rear camera.
 
 ### 4. Whisper Voice-to-LoRa PTT Tactical Dictaphone
-* **The Synergy:** Two MEMS microphones + CM5 ARM NEON SIMD vector processing + a paired external Meshtastic node over Bluetooth LE (on-board LoRa is V2, ADR-044).
+* **The Synergy:** Two MEMS microphones + CM5 ARM NEON SIMD vector processing + a paired external Meshtastic node over Bluetooth LE (or the on-board radio MCU, ADR-055).
 * **The Workflow:** Typing lengthy tactical sitreps on an e-ink screen while wearing heavy gloves or walking is cumbersome. The operator presses and holds the voice button (Push-to-Talk, ADR-036). Spoken audio is recorded at 16 kHz. As soon as the button is released, a quantized `whisper.cpp` engine runs across the 4x Cortex-A76 cores, transcribing speech to plain text in **<600 milliseconds**. The text is instantly encrypted (AES-256) and handed over Bluetooth LE to the paired Meshtastic node, which sends it across the mesh as a compact 60-byte packet. Field operators communicate silently and digitally with voice ergonomics.
 
 ### 5. Optical Celestial Dead-Reckoning (Zero-Satellite Navigation)
@@ -415,7 +416,7 @@ Carrying a giant 6.7" glass smartphone alongside a 10.3" sovereign e-ink termina
 * **Wayland Multi-Head Orchestration:** `solardeck-dockd` automatically binds high-density workspaces 1–8 to the big monitor, pins van telemetry (Victron battery, water tanks, Meshtastic chat) to the 10.3" internal screen, and locks Wacom stylus input strictly to the internal display.
 
 ### 2. Low-Battery Emergency SOS Placard
-* **Before the pack runs out:** at the power-fail alarm (`battery.low_alarm_v`) the RP2350 draws a distress placard with the last GNSS (MAX-M10S) fix and the time; the bistable panel keeps it visible with no power. It does not boot from solar with a flat or missing pack (ADR-049). The radio SOS burst is V2 (ADR-044).
+* **Before the pack runs out:** at the power-fail alarm (`battery.low_alarm_v`) the RP2350 draws a distress placard with the last GNSS (MAX-M10S) fix and the time; the bistable panel keeps it visible with no power. It does not boot from solar with a flat or missing pack (ADR-049). A radio SOS burst through the radio MCU is V1 hardware (ADR-055); its software not written (ADR-046).
 
 ### 3. Zero-Hardware Wacom Field Caliper & CAD Digitizer
 * **10mm Hover Tracking:** The Wacom EMR digitizer senses the stylus tip up to 10 mm above the glass with **0.1 mm precision**, allowing contact-free measurement of delicate physical specimens without touching the screen.
@@ -495,7 +496,7 @@ SolarDeck as a low-power ambient station and off-grid mind gym running on the RP
 1. **Full-Width Dual-Bezel IBC Solar Array:** SunPower Maxeon Gen 7 back-contact monocrystalline strips ($51.6\text{ cm}^2$ total area across top and bottom bezels) generate **1.24W peak in direct sunlight** and **120 mW to 240 mW in indirect shade**—an **8× to 20× surplus** over the 4.5 mW to 15 mW required for RP2350 operation.
 2. **No batteryless mode (ADR-049):** solar reaches only the pack, through its hardware temperature gate, so it never boots the device with a flat or missing pack.
 3. **Mind Games & Intellectual Entertainment:** Infinite E-Ink chess, Infocom interactive fiction (*Zork*), procedural daily Sudoku/Wordle, and stoic philosophy oracles run completely offline with **zero battery drain** between user actions.
-4. **Perpetual Solar Mesh Relay:** V2 (ADR-044): needs the deferred on-board LoRa radio.
+4. **Perpetual Solar Mesh Relay:** the LoRa hardware is in V1 (ADR-055) and the relay software not written (ADR-046); a relay keeps the receiver on, which costs more than the idle budget and is outside the solar-strip claim (radio power null until measured).
 5. **Snap-On MagSafe 7.1W "Solar Armor" Backplate & 2.5m Remote Shade Tether (`SOLAR-ARMOR-V1`):**
    * Snaps via the embedded MagSafe N52 magnetic ring with a 2.0mm convective chimney to dissipate heat, harvesting **7.13W Peak** in direct tropical sun—surpassing the 5.5W full turbo compilation load of the quad-core CM5.
    * **The Remote Shade Tether:** Features an integrated 2.5-meter Kevlar-reinforced flat ribbon cable that unspools from the backplate. The panel sits out on a sunlit boulder or vehicle roof generating 7.1W, while the operator sits comfortably in the cool shade using the tablet with **no solar heat load on the battery pack**. Doubles as an independent 7.1W USB-C solar charger for phones and flashlights.

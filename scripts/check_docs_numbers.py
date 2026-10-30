@@ -77,7 +77,7 @@ def check_geometry(err):
         err(f"geometry: chassis {h}mm leaves <0.8mm wall around a {SPEC['chassis_cavity_depth_mm']}mm cavity")
     if SPEC["panel_module_outline_mm"] is None:
         print("  UNVERIFIED: panel outline, active area, stack depth and reader geometry are null until "
-              "the Kaleido 4 datasheet (ADR-032); panel-fit and page-cache checks skipped.")
+              "the mono module's drawing is on file (ADR-051); panel-fit and page-cache checks skipped.")
         return
     pw, pd = SPEC["panel_module_outline_mm"]
     aw, ad = SPEC["display_active_mm"]
@@ -105,10 +105,33 @@ def check_geometry(err):
         err("reader: 1-bit single-buffer exceeds PSRAM cache")
 
 
+def check_unit_economics(err):
+    """ADR-052: price - cogs - overhead must equal the recorded gross profit, and the headline
+    owner-profit figure must equal target volume x instrument GP - operating costs. Editing a price
+    without re-deriving the rest fails here instead of shipping an inconsistent business case."""
+    ue = SPEC.get("unit_economics") or {}
+    for model, price in (ue.get("price_usd") or {}).items():
+        oh = sum((ue["overhead_usd_per_unit"].get(model) or {}).values())
+        got = price - ue["cogs_usd"][model] - oh
+        if got != ue["gross_profit_usd"].get(model):
+            err(f"unit_economics.{model}: {price} - {ue['cogs_usd'][model]} - {oh} = {got}, "
+                f"but gross_profit_usd is {ue['gross_profit_usd'].get(model)}")
+    gp = (ue.get("gross_profit_usd") or {}).get("instrument")
+    units, ops = ue.get("target_units_per_year"), ue.get("operating_costs_usd_per_year")
+    if None not in (gp, units, ops):
+        derived = units * gp - ops
+        if derived != ue.get("owner_profit_usd_per_year"):
+            err(f"unit_economics: {units} units x {gp} - {ops} = {derived}, but "
+                f"owner_profit_usd_per_year is {ue.get('owner_profit_usd_per_year')}")
+    if ue.get("certification_usd", {}).get("pack_un383") is not None:
+        err("unit_economics.certification_usd.pack_un383 must stay null: UN38.3 is inherited from the "
+            "pack supplier's documentation, not bought (ADR-052)")
+
+
 def check_numbers(path, text, err):
     for m in re.finditer(r"(\d{2,3})\s*PPI", text):
         if SPEC["ppi"] is None:
-            err(f"{path}: '{m.group(0)}' -- panel PPI is null until the Kaleido 4 datasheet (ADR-032)")
+            err(f"{path}: '{m.group(0)}' -- panel PPI is null until the V1 module's datasheet (ADR-051)")
             continue
         win = (text[m.end():m.end() + 12] + text[max(0, m.start() - 20):m.start()]).lower()
         if "colo" in win:
@@ -147,6 +170,18 @@ def check_spec_keys(path, text, err):
             node = node[p]
 
 
+def check_panel_temp(pk):
+    """ADR-056: the refresh gate needs a real window, and the warning bands at both ends must not overlap."""
+    t, margin = pk.get("operating_temp_c"), pk.get("refresh_warn_margin_c")
+    num = (int, float)
+    if not (isinstance(t, list) and len(t) == 2 and all(isinstance(x, num) for x in t) and t[0] < t[1]):
+        return ["panel_sku.operating_temp_c must be [min, max] with min < max (ADR-056)"]
+    if margin is not None and not (isinstance(margin, num) and 0 < margin < (t[1] - t[0]) / 2):
+        return [f"panel_sku.refresh_warn_margin_c={margin!r} must be null or a number > 0 and "
+                f"< half of operating_temp_c {t} (ADR-056)"]
+    return []
+
+
 def check_links(path, text, err):
     for target in re.findall(r"\]\((?!https?:|#)([^)#]+)", text):
         resolved = os.path.normpath(os.path.join(os.path.dirname(os.path.join(ROOT, path)), target))
@@ -157,6 +192,7 @@ def check_links(path, text, err):
 def main():
     errors = []
     check_geometry(errors.append)
+    check_unit_economics(errors.append)
 
     # ADR-027: the streaming-text guarantee must stay self-consistent. A streaming update IS one
     # partial rectangle, so the two latencies cannot drift apart; and the video answer must name
@@ -169,6 +205,13 @@ def main():
     for req in ("guaranteed_wpm", "zero_flash", "ghost_residue_threshold_db", "bench_duration_min"):
         if req not in ts:
             errors.append(f"token_stream.{req} missing (ADR-027)")
+
+    # Red controls: each broken panel window must be rejected, the shipped one accepted.
+    for bad in ({}, {"operating_temp_c": [50, 0]}, {"operating_temp_c": [0, 50], "refresh_warn_margin_c": 30},
+                {"operating_temp_c": [0, 50], "refresh_warn_margin_c": "TBD"}):
+        assert check_panel_temp(bad), f"panel temperature check accepted {bad}"
+    assert not check_panel_temp({"operating_temp_c": [0, 50], "refresh_warn_margin_c": 5})
+    errors += check_panel_temp(SPEC["panel_sku"])
 
     for rel in docs():
         text = open(os.path.join(ROOT, rel), encoding="utf-8", errors="ignore").read()
